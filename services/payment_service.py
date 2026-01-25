@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from database.external_db import make_supabase_request, add_credits, check_and_expire_user_credits
 from utils.credit_units import credits_to_units, format_credits, units_to_credits
-from services.paynow_service import paynow_service
+from services.paynow_service import paynow_service, get_debug_log_path
 
 logger = logging.getLogger(__name__)
 
@@ -582,8 +582,9 @@ class PaymentService:
             
             # #region agent log
             import json
+            from services.paynow_service import get_debug_log_path
             try:
-                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                     f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"E","location":"payment_service.py:583","message":"BEFORE calling paynow_service.create_usd_ecocash_payment","data":{"phone_number":phone_number,"amount":package['price'],"reference_code":reference_code},"timestamp":int(__import__('time').time()*1000)})+'\n')
             except: pass
             # #endregion

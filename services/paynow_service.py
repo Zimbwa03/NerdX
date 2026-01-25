@@ -16,7 +16,12 @@ import uuid
 logger = logging.getLogger(__name__)
 
 # Debug log path - works on both local Windows and Render Linux
-DEBUG_LOG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.cursor', 'debug.log')
+def get_debug_log_path():
+    """Get debug log path that works on both Windows and Linux"""
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    log_dir = os.path.join(base_dir, '.cursor')
+    os.makedirs(log_dir, exist_ok=True)
+    return os.path.join(log_dir, 'debug.log')
 
 class PaynowService:
     """
@@ -62,7 +67,7 @@ class PaynowService:
         # #region agent log
         import json
         try:
-            with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+            with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                 f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"paynow_service.py:59","message":"Paynow service initialization check","data":{"has_integration_id":bool(self.integration_id),"has_integration_key":bool(self.integration_key),"integration_id_length":len(self.integration_id) if self.integration_id else 0},"timestamp":int(__import__('time').time()*1000)})+'\n')
         except: pass
         # #endregion
@@ -77,7 +82,7 @@ class PaynowService:
             logger.info("✅ Paynow service initialized successfully")
             # #region agent log
             try:
-                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                     f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"paynow_service.py:68","message":"Paynow client created successfully","data":{"test_mode":self.test_mode},"timestamp":int(__import__('time').time()*1000)})+'\n')
             except: pass
             # #endregion
@@ -86,7 +91,7 @@ class PaynowService:
             logger.warning("⚠️ Paynow credentials not configured - using fallback mode")
             # #region agent log
             try:
-                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                     f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"paynow_service.py:72","message":"Paynow client NOT created - missing credentials","data":{},"timestamp":int(__import__('time').time()*1000)})+'\n')
             except: pass
             # #endregion
@@ -117,21 +122,21 @@ class PaynowService:
         # #region agent log
         import json
         try:
-            with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+            with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                 f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"paynow_service.py:95","message":"create_usd_ecocash_payment ENTRY","data":{"phone_number":phone_number,"amount":amount,"reference":reference,"email":email},"timestamp":int(__import__('time').time()*1000)})+'\n')
         except: pass
         # #endregion
         try:
             # #region agent log
             try:
-                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                     f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"paynow_service.py:102","message":"Checking Paynow availability","data":{"is_available":self.is_available(),"has_client":self.paynow_client is not None,"integration_id_set":self.integration_id is not None,"integration_key_set":self.integration_key is not None},"timestamp":int(__import__('time').time()*1000)})+'\n')
             except: pass
             # #endregion
             if not self.is_available():
                 # #region agent log
                 try:
-                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                         f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"paynow_service.py:107","message":"Paynow service NOT available - EXIT","data":{},"timestamp":int(__import__('time').time()*1000)})+'\n')
                 except: pass
                 # #endregion
@@ -144,14 +149,14 @@ class PaynowService:
             # Validate phone number format
             # #region agent log
             try:
-                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                     f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"B","location":"paynow_service.py:113","message":"BEFORE phone validation","data":{"phone_number":phone_number,"phone_length":len(phone_number)},"timestamp":int(__import__('time').time()*1000)})+'\n')
             except: pass
             # #endregion
             is_valid = self._is_valid_phone_number(phone_number)
             # #region agent log
             try:
-                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                     f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"B","location":"paynow_service.py:116","message":"AFTER phone validation","data":{"is_valid":is_valid,"phone_number":phone_number},"timestamp":int(__import__('time').time()*1000)})+'\n')
             except: pass
             # #endregion
@@ -159,7 +164,7 @@ class PaynowService:
                 logger.error(f"❌ Invalid phone number format: {phone_number}")
                 # #region agent log
                 try:
-                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                         f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"B","location":"paynow_service.py:120","message":"Phone validation FAILED - EXIT","data":{"phone_number":phone_number},"timestamp":int(__import__('time').time()*1000)})+'\n')
                 except: pass
                 # #endregion
@@ -189,7 +194,7 @@ class PaynowService:
             logger.info(f"📲 Sending mobile payment request to Paynow API for {phone_number}...")
             # #region agent log
             try:
-                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                     f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"C","location":"paynow_service.py:130","message":"BEFORE send_mobile API call","data":{"phone_number":phone_number,"amount":amount,"reference":reference,"test_mode":self.test_mode},"timestamp":int(__import__('time').time()*1000)})+'\n')
             except: pass
             # #endregion
@@ -197,7 +202,7 @@ class PaynowService:
                 response = self.paynow_client.send_mobile(payment, phone_number, 'ecocash')
                 # #region agent log
                 try:
-                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                         response_data = {"success":response.success if hasattr(response,'success') else None,"has_error":hasattr(response,'error'),"has_poll_url":hasattr(response,'poll_url'),"has_instructions":hasattr(response,'instructions')}
                         if hasattr(response,'error'): response_data["error"] = str(response.error)
                         if hasattr(response,'poll_url'): response_data["poll_url"] = str(response.poll_url)
@@ -207,7 +212,7 @@ class PaynowService:
             except Exception as api_exception:
                 # #region agent log
                 try:
-                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                         f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"D","location":"paynow_service.py:136","message":"send_mobile API call EXCEPTION","data":{"exception_type":type(api_exception).__name__,"exception_message":str(api_exception)},"timestamp":int(__import__('time').time()*1000)})+'\n')
                 except: pass
                 # #endregion
@@ -221,8 +226,28 @@ class PaynowService:
                 error_value = response.error
                 logger.warning(f"🔍 Response has error attribute: {error_value} (type: {type(error_value)})")
             
-            if hasattr(response, 'instructions'):
-                logger.info(f"📋 Paynow provided instructions: {response.instructions}")
+            # Log Paynow response details for debugging
+            paynow_instructions = getattr(response, 'instructions', None)
+            if paynow_instructions:
+                logger.info(f"📋 Paynow provided instructions: {paynow_instructions}")
+            else:
+                logger.warning(f"⚠️ Paynow response has NO instructions attribute")
+            
+            # #region agent log
+            try:
+                with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
+                    response_debug = {
+                        "success": response.success if hasattr(response, 'success') else None,
+                        "has_instructions": hasattr(response, 'instructions'),
+                        "instructions": str(paynow_instructions) if paynow_instructions else None,
+                        "has_poll_url": hasattr(response, 'poll_url'),
+                        "poll_url": str(getattr(response, 'poll_url', '')) if hasattr(response, 'poll_url') else None,
+                        "has_error": hasattr(response, 'error'),
+                        "error": str(response.error) if hasattr(response, 'error') else None
+                    }
+                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"C","location":"paynow_service.py:232","message":"Paynow response details","data":response_debug,"timestamp":int(__import__('time').time()*1000)})+'\n')
+            except: pass
+            # #endregion
             
             if response.success:
                 poll_url = getattr(response, 'poll_url', '')
@@ -230,18 +255,16 @@ class PaynowService:
                 logger.info(f"🔗 Poll URL: {poll_url}")
                 logger.info(f"📱 USSD prompt should be sent to {phone_number} by Paynow")
                 logger.info(f"⏰ User should check their phone for payment prompt now")
-                # #region agent log
-                try:
-                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                        f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"C","location":"paynow_service.py:150","message":"Response.success=TRUE - Payment initiated","data":{"phone_number":phone_number,"poll_url":str(poll_url),"test_mode":self.test_mode},"timestamp":int(__import__('time').time()*1000)})+'\n')
-                except: pass
-                # #endregion
                 
-                # For mobile payments, generate proper instructions
-                # Paynow sends USSD prompt automatically, but we provide clear instructions
-                
-                # Generate proper payment instructions
-                instructions = self._get_payment_instructions(phone_number, amount, self.test_mode)
+                # Use Paynow's instructions if available, otherwise generate our own
+                # According to Paynow docs: response.instructions contains the instructions to show the user
+                if paynow_instructions:
+                    instructions = str(paynow_instructions)
+                    logger.info(f"✅ Using Paynow-provided instructions")
+                else:
+                    # Fallback: Generate our own instructions if Paynow didn't provide them
+                    logger.warning(f"⚠️ Paynow didn't provide instructions, generating our own")
+                    instructions = self._get_payment_instructions(phone_number, amount, self.test_mode)
                 
                 result = {
                     'success': True,
@@ -256,7 +279,7 @@ class PaynowService:
                 }
                 # #region agent log
                 try:
-                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                         f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"C","location":"paynow_service.py:166","message":"RETURNING success result","data":{"has_poll_url":bool(result.get('poll_url')),"phone_number":result.get('phone_number')},"timestamp":int(__import__('time').time()*1000)})+'\n')
                 except: pass
                 # #endregion
@@ -276,7 +299,7 @@ class PaynowService:
                 
                 # #region agent log
                 try:
-                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                         f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"C","location":"paynow_service.py:175","message":"Response.success=FALSE - Payment failed","data":{"error_detail":error_detail,"raw_error":str(raw_error) if raw_error else None},"timestamp":int(__import__('time').time()*1000)})+'\n')
                 except: pass
                 # #endregion
@@ -296,7 +319,7 @@ class PaynowService:
             logger.error(f"🚨 Paynow payment creation error: {e}")
             # #region agent log
             try:
-                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                     f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"D","location":"paynow_service.py:195","message":"EXCEPTION in create_usd_ecocash_payment","data":{"exception_type":type(e).__name__,"exception_message":str(e)},"timestamp":int(__import__('time').time()*1000)})+'\n')
             except: pass
             # #endregion
@@ -419,7 +442,7 @@ class PaynowService:
         # #region agent log
         import json
         try:
-            with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+            with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                 f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"paynow_service.py:406","message":"check_payment_status ENTRY","data":{"poll_url":poll_url},"timestamp":int(__import__('time').time()*1000)})+'\n')
         except: pass
         # #endregion
@@ -433,7 +456,7 @@ class PaynowService:
             
             # #region agent log
             try:
-                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                     f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"paynow_service.py:424","message":"BEFORE calling check_transaction_status","data":{"poll_url":poll_url},"timestamp":int(__import__('time').time()*1000)})+'\n')
             except: pass
             # #endregion
@@ -442,7 +465,7 @@ class PaynowService:
             
             # #region agent log
             try:
-                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                     status_data = {"status":status.status if hasattr(status,'status') else None,"paid":status.paid if hasattr(status,'paid') else None}
                     if hasattr(status,'amount'): status_data["amount"] = status.amount
                     if hasattr(status,'reference'): status_data["reference"] = status.reference
@@ -467,7 +490,7 @@ class PaynowService:
             logger.error(f"🚨 Status check error: {e}")
             # #region agent log
             try:
-                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                     f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"paynow_service.py:445","message":"EXCEPTION in check_payment_status","data":{"exception_type":type(e).__name__,"exception_message":str(e)},"timestamp":int(__import__('time').time()*1000)})+'\n')
             except: pass
             # #endregion
