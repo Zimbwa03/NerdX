@@ -466,14 +466,31 @@ class PaynowService:
             # #region agent log
             try:
                 with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
-                    status_data = {"status":status.status if hasattr(status,'status') else None,"paid":status.paid if hasattr(status,'paid') else None}
-                    if hasattr(status,'amount'): status_data["amount"] = status.amount
-                    if hasattr(status,'reference'): status_data["reference"] = status.reference
+                    # Capture all available status attributes
+                    status_data = {
+                        "status": status.status if hasattr(status, 'status') else None,
+                        "paid": status.paid if hasattr(status, 'paid') else None,
+                        "poll_url": poll_url
+                    }
+                    # Capture all possible attributes from Paynow status object
+                    for attr in ['amount', 'reference', 'paynow_reference', 'hash', 'error', 'instructions']:
+                        if hasattr(status, attr):
+                            try:
+                                status_data[attr] = str(getattr(status, attr))
+                            except:
+                                status_data[attr] = f"<{type(getattr(status, attr)).__name__}>"
                     f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"paynow_service.py:430","message":"AFTER calling check_transaction_status","data":status_data,"timestamp":int(__import__('time').time()*1000)})+'\n')
-            except: pass
+            except Exception as log_err:
+                logger.warning(f"Debug log error: {log_err}")
             # #endregion
             
-            logger.info(f"📊 Payment status check: {status.status}")
+            status_str = status.status if hasattr(status, 'status') else 'UNKNOWN'
+            logger.info(f"📊 Payment status check: {status_str}")
+            
+            # Log warning if status is cancelled - this might indicate a configuration issue
+            if status_str and status_str.lower() == 'cancelled':
+                logger.warning(f"⚠️ Paynow returned 'cancelled' status for poll_url: {poll_url}")
+                logger.warning(f"⚠️ This might indicate: EcoCash not enabled, invalid phone number, or payment rejected by Paynow")
             
             return {
                 'success': True,
