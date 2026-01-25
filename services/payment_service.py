@@ -724,7 +724,7 @@ class PaymentService:
                 # #region agent log
                 import json
                 try:
-                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                         f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"payment_service.py:723","message":"BEFORE checking Paynow status","data":{"reference_code":reference_code,"current_status":current_status,"poll_url":poll_url},"timestamp":int(__import__('time').time()*1000)})+'\n')
                 except: pass
                 # #endregion
@@ -733,7 +733,7 @@ class PaymentService:
                 
                 # #region agent log
                 try:
-                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                         f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"payment_service.py:727","message":"AFTER checking Paynow status","data":{"paynow_success":paynow_status.get('success'),"paynow_status":paynow_status.get('status'),"paynow_paid":paynow_status.get('paid')},"timestamp":int(__import__('time').time()*1000)})+'\n')
                 except: pass
                 # #endregion
