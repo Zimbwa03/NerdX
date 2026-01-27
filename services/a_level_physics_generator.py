@@ -625,16 +625,13 @@ Always respond with valid JSON containing step-by-step solutions."""
         
         logger.error("All DeepSeek retry attempts failed for Physics question, trying Vertex AI fallback")
         
-        # FALLBACK: Try Vertex AI when DeepSeek fails
+        # FALLBACK: Try Vertex AI when DeepSeek fails (same prompt as DeepSeek: system + user)
         try:
             from services.vertex_service import vertex_service
             
             if vertex_service.is_available():
                 logger.info(f"🔄 Falling back to Vertex AI for Physics {question_type}")
-                
-                system_message = """You are a SENIOR A-LEVEL PHYSICS TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH ZIMSEC A Level Physics and Cambridge International AS & A Level Physics 9702. Always respond with valid JSON containing step-by-step solutions."""
-                full_prompt = f"{system_message}\n\n{prompt}"
-                
+                full_prompt = f"{self._system_prompt()}\n\n{prompt}"
                 result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
                 
                 if result and result.get('success'):

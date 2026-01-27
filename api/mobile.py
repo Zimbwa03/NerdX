@@ -18,7 +18,7 @@ import os
 import base64
 from database.external_db import (
     get_user_registration, create_user_registration, is_user_registered,
-    get_user_stats, get_user_credits, add_credits, deduct_credits,
+    get_user_stats, get_user_credits, add_credits, deduct_credits, deduct_credits_with_balance,
     get_user_by_nerdx_id, add_xp, update_streak,
     claim_welcome_bonus, get_credit_breakdown,
     make_supabase_request,
@@ -46,6 +46,7 @@ from services.exam_session_service import exam_session_service
 from utils.url_utils import convert_local_path_to_public_url
 from utils.credit_units import format_credits, units_to_credits, credits_to_units
 from utils.question_cache import QuestionCacheService
+from utils.latex_converter import LaTeXConverter
 from config import Config
 
 logger = logging.getLogger(__name__)
@@ -80,12 +81,14 @@ def _credits_remaining(user_id: str) -> int:
 
 def _deduct_credits_or_fail(user_id: str, cost_units: int, transaction_type: str, description: str):
     """
-    Deduct credits and return remaining displayed credits.
-    Returns int (credits remaining) on success, None on failure.
+    Deduct credits and return remaining displayed credits (real-time from RPC when possible).
+    Returns int (credits remaining, display units) on success, None on failure.
     """
-    ok = deduct_credits(user_id, cost_units, transaction_type, description)
+    ok, new_units = deduct_credits_with_balance(user_id, cost_units, transaction_type, description)
     if not ok:
         return None
+    if new_units is not None:
+        return _credits_display(new_units)
     return _credits_remaining(user_id)
 
 
@@ -1899,6 +1902,21 @@ def generate_question():
             'teaching_explanation': question_data.get('teaching_explanation', '') or question_data.get('real_world_application', '')
         }
         
+        # Convert LaTeX to readable text and normalize spacing for mathematics, A-Level Pure Math, and science
+        if subject in ('mathematics', 'a_level_pure_math', 'combined_science'):
+            try:
+                lc = LaTeXConverter()
+                spacing_keys = ('solution', 'explanation', 'teaching_explanation', 'concept_explanation')
+                for key in ('question_text', 'solution', 'explanation', 'teaching_explanation', 'concept_explanation', 'hint', 'hint_level_1', 'hint_level_2', 'hint_level_3'):
+                    if question.get(key) and isinstance(question[key], str):
+                        s = lc.latex_to_readable_text(question[key])
+                        if key in spacing_keys:
+                            s = LaTeXConverter.normalize_explanation_spacing(s)
+                        question[key] = s
+                # structured_question stem/parts are converted later, after it is attached to question
+            except Exception as e:
+                logger.warning(f"LaTeX conversion in quiz payload failed (non-blocking): {e}")
+        
         # Include structured payload for the app (so it can render parts and resubmit for marking)
         if subject == 'combined_science' and question_type_mobile == 'structured':
             question['structured_question'] = {
@@ -1988,6 +2006,20 @@ def generate_question():
                         essay_solution_parts.append(f"{grade}: {desc}")
                 if essay_solution_parts:
                     question['solution'] = '\n'.join(essay_solution_parts)
+        
+        # Convert LaTeX in structured_question (stem/parts) when it was added in blocks above
+        if subject in ('mathematics', 'a_level_pure_math', 'combined_science') and question.get('structured_question'):
+            try:
+                lc = LaTeXConverter()
+                sq = question['structured_question']
+                if sq.get('stem') and isinstance(sq['stem'], str):
+                    sq['stem'] = lc.latex_to_readable_text(sq['stem'])
+                for p in (sq.get('parts') or []):
+                    for f in ('model_answer', 'question', 'content'):
+                        if p.get(f) and isinstance(p[f], str):
+                            p[f] = lc.latex_to_readable_text(p[f])
+            except Exception as e:
+                logger.warning(f"LaTeX conversion for structured_question failed (non-blocking): {e}")
         
         # Deduct credits ONLY after we have successfully produced a question payload.
         credits_remaining = _deduct_credits_or_fail(
@@ -2506,6 +2538,23 @@ Step 3: Identify where your approach differed and learn from it.
                         formatted_solution.append(line)
                 if formatted_solution:
                     detailed_solution = '\n'.join(formatted_solution)
+        
+        # Convert LaTeX to readable text, normalize spacing, and apply professional formatting for Vertex/AI-derived answers and explanations
+        if subject in ('mathematics', 'a_level_pure_math', 'combined_science'):
+            try:
+                lc = LaTeXConverter()
+                detailed_solution = lc.latex_to_readable_text(detailed_solution or '')
+                detailed_solution = LaTeXConverter.normalize_explanation_spacing(detailed_solution)
+                detailed_solution = LaTeXConverter.format_explanation_professionally(detailed_solution, max_length=2000)
+                feedback = LaTeXConverter.format_explanation_professionally(feedback or '', max_length=600)
+                for k in ('what_went_right', 'what_went_wrong', 'improvement_tips', 'encouragement', 'related_topic', 'step_by_step_explanation'):
+                    v = analysis_result.get(k)
+                    if v and isinstance(v, str):
+                        v = lc.latex_to_readable_text(v)
+                        v = LaTeXConverter.normalize_explanation_spacing(v)
+                        analysis_result[k] = LaTeXConverter.format_explanation_professionally(v, max_length=800)
+            except Exception as e:
+                logger.warning(f"LaTeX conversion in submit-answer failed (non-blocking): {e}")
         
         return jsonify({
             'success': True,
@@ -3307,7 +3356,7 @@ def generate_math_graph():
 @mobile_bp.route('/english/comprehension', methods=['POST'])
 @require_auth
 def generate_comprehension():
-    """Generate English comprehension passage"""
+    """Generate English comprehension passage (long story 900-1200 words, 10 questions). Vertex primary, DeepSeek fallback."""
     try:
         # Check credits
         credit_cost = advanced_credit_service.get_credit_cost('english_comprehension')
@@ -3319,9 +3368,13 @@ def generate_comprehension():
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 402
         
-        # Generate comprehension
+        data = request.get_json() or {}
+        theme = (data.get('theme') or '').strip() or None
+        form_level = int(data.get('form_level', 4))
+        
+        # Generate comprehension (Vertex primary; passage 900-1200 words, exactly 10 questions)
         english_service = EnglishService()
-        comprehension = english_service.generate_comprehension()
+        comprehension = english_service.generate_comprehension(theme=theme, form_level=form_level)
         
         credits_remaining = _deduct_credits_or_fail(
             g.current_user_id,
@@ -3335,6 +3388,7 @@ def generate_comprehension():
         return jsonify({
             'success': True,
             'data': {
+                'title': comprehension.get('title', ''),
                 'passage': comprehension.get('passage', ''),
                 'questions': comprehension.get('questions', []),
                 'credits_remaining': credits_remaining
@@ -4107,6 +4161,19 @@ def send_teacher_message():
             except Exception as e:
                 logger.error(f"Error checking DIAGRAM media triggers: {e}", exc_info=True)
         
+        # Convert LaTeX to readable text, normalize spacing, and apply professional step-by-step formatting for O-Level/Pure Math and Science
+        if is_mathematics or session_key == 'science_teacher':
+            try:
+                latex_converter = LaTeXConverter()
+                response_text = latex_converter.latex_to_readable_text(response_text or '')
+                response_text = LaTeXConverter.normalize_explanation_spacing(response_text)
+                response_text = LaTeXConverter.format_explanation_professionally(response_text, max_length=3500)
+                conversation_history[-1]['content'] = response_text
+                session_data['conversation_history'] = conversation_history[-20:]
+                session_manager.set_data(g.current_user_id, session_key, session_data)
+            except Exception as e:
+                logger.warning(f"LaTeX conversion in Teacher Mode failed (non-blocking): {e}")
+        
         # Clean formatting (both services should have this method)
         if hasattr(teacher_service, '_clean_whatsapp_formatting'):
             clean_response = teacher_service._clean_whatsapp_formatting(response_text)
@@ -4281,6 +4348,20 @@ def teacher_multimodal_message():
         if not message and not attachments:
             return jsonify({'success': False, 'message': 'Message or attachments required'}), 400
         
+        # Credit check and deduction (same as teacher/message follow-up)
+        credit_cost = advanced_credit_service.get_credit_cost('teacher_mode_followup')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        if user_credits <= 0:
+            return jsonify({
+                'success': False,
+                'message': 'Access denied. You have 0 credits. Teacher Mode requires credits.'
+            }), 402
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
+            }), 402
+        
         from services.combined_science_teacher_service import CombinedScienceTeacherService
         teacher_service = CombinedScienceTeacherService()
         
@@ -4289,11 +4370,19 @@ def teacher_multimodal_message():
         )
         
         if result.get('success'):
+            credits_remaining = _deduct_credits_or_fail(
+                g.current_user_id,
+                int(credit_cost),
+                'teacher_mode_followup',
+                'Teacher multimodal message'
+            )
+            if credits_remaining is None:
+                return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
             return jsonify({
                 'success': True,
                 'data': {
                     'response': result.get('response'),
-                    'credits_remaining': result.get('credits_remaining')
+                    'credits_remaining': credits_remaining
                 }
             }), 200
         else:
@@ -5113,6 +5202,14 @@ def generate_graph():
         if credits_remaining is None:
             return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
         
+        # Convert LaTeX to readable text for question/solution
+        try:
+            lc = LaTeXConverter()
+            question = lc.latex_to_readable_text(question or '')
+            solution = lc.latex_to_readable_text(solution or '')
+        except Exception as e:
+            logger.warning(f"LaTeX conversion in math graph failed (non-blocking): {e}")
+        
         return jsonify({
             'success': True,
             'data': {
@@ -5246,6 +5343,14 @@ def generate_custom_graph():
         )
         if credits_remaining is None:
             return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+        
+        # Convert LaTeX to readable text for question/solution
+        try:
+            lc = LaTeXConverter()
+            question = lc.latex_to_readable_text(question or '')
+            solution = lc.latex_to_readable_text(solution or '')
+        except Exception as e:
+            logger.warning(f"LaTeX conversion in custom graph failed (non-blocking): {e}")
         
         return jsonify({
             'success': True,

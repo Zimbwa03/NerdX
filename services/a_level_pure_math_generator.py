@@ -690,16 +690,13 @@ Keep explanations concise (2-3 sentences). Always respond with valid, complete J
         
         logger.error("All DeepSeek retry attempts failed for Pure Math question, trying Vertex AI fallback")
         
-        # FALLBACK: Try Vertex AI when DeepSeek fails
+        # FALLBACK: Try Vertex AI when DeepSeek fails (same prompt as DeepSeek: system + user)
         try:
             from services.vertex_service import vertex_service
             
             if vertex_service.is_available():
                 logger.info(f"🔄 Falling back to Vertex AI for Pure Math {question_type}")
-                
-                system_message = """You are an expert A Level Pure Mathematics examiner for ZIMSEC examinations. Generate questions with clear solutions. Always respond with valid, complete JSON only."""
-                full_prompt = f"{system_message}\n\n{prompt}"
-                
+                full_prompt = f"{self._system_prompt()}\n\n{prompt}"
                 result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
                 
                 if result and result.get('success'):

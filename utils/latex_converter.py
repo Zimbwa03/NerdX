@@ -146,6 +146,55 @@ class LaTeXConverter:
             logger.error(f"Error converting LaTeX to readable text: {e}")
             return text
     
+    @staticmethod
+    def normalize_explanation_spacing(text: str) -> str:
+        """Make explanations well spaced: collapse excess newlines, trim lines, clean paragraphs."""
+        if not text or not isinstance(text, str):
+            return text or ''
+        try:
+            import re
+            text = re.sub(r'\n{3,}', '\n\n', text.strip())
+            lines = [ln.strip() for ln in text.split('\n')]
+            return '\n\n'.join(p for p in '\n'.join(lines).split('\n\n') if p.strip())
+        except Exception as e:
+            logger.error(f"Error normalizing explanation spacing: {e}")
+            return text
+    
+    @staticmethod
+    def format_explanation_professionally(text: str, max_length: int = 2000) -> str:
+        """Make Vertex/AI-derived explanations professional: step-by-step, clear highlighting, proper spacing, not too long."""
+        if not text or not isinstance(text, str):
+            return text or ''
+        try:
+            import re
+            # 1. Normalize spacing
+            text = LaTeXConverter.normalize_explanation_spacing(text)
+            # 2. Ensure step-by-step structure when missing
+            if 'Step 1' not in text and 'Step' not in text:
+                parts = [p.strip() for p in re.split(r'\n\n+', text) if p.strip()]
+                if len(parts) > 1:
+                    text = '\n\n'.join(f"Step {i + 1}: {p}" for i, p in enumerate(parts))
+            # 3. Light highlighting for common section headers at line start
+            highlights = [
+                (r'(?m)^(What went right[:\s])', r'✓ \1'),
+                (r'(?m)^(What went wrong[:\s])', r'• \1'),
+                (r'(?m)^(Improvement tips?[:\s])', r'→ \1'),
+                (r'(?m)^(Key point[s]?[:\s])', r'💡 \1'),
+                (r'(?m)^(Remember[:\s])', r'💡 \1'),
+                (r'(?m)^(Correct approach[:\s])', r'✓ \1'),
+                (r'(?m)^(Next steps?[:\s])', r'→ \1'),
+            ]
+            for pattern, repl in highlights:
+                text = re.sub(pattern, repl, text, flags=re.IGNORECASE)
+            # 4. Cap length so it stays professional and not too long
+            if len(text) > max_length:
+                truncated = text[:max_length].rsplit(' ', 1)
+                text = (truncated[0] if truncated else text[:max_length]) + ' …'
+            return text
+        except Exception as e:
+            logger.error(f"Error in format_explanation_professionally: {e}")
+            return text
+    
     def _render_with_online_service(self, latex: str, filename: str) -> Optional[str]:
         """Use online LaTeX rendering service"""
         try:

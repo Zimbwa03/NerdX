@@ -1108,13 +1108,9 @@ Return ONLY valid JSON:
             'question_data': fallback
         }
 
-    def generate_gemini_comprehension_passage(self, theme: str, form_level: int = 4) -> Optional[Dict]:
-        """Generate comprehension passage using Gemini AI"""
-        if not self._is_configured or not self.client:
-            return None
-            
-        try:
-            prompt = f"""You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience setting professional comprehension exercises for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
+    def _build_comprehension_prompt(self, theme: str, form_level: int = 4) -> str:
+        """Build the comprehension prompt (same for Vertex and Gemini). Passage 900-1200 words, exactly 10 questions."""
+        return f"""You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience setting professional comprehension exercises for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
 
 ROLE: EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER & TEACHER
 
@@ -1129,20 +1125,20 @@ THEME: {theme}
 LEVEL: Form {form_level} (O-Level, Age 15-17)
 
 ZIMSEC FORMAT REQUIREMENTS:
-- Length: 400-500 words (appropriate for shorter comprehension exercises)
+- Length: 900-1200 words (a full, substantial story - this MUST be an extremely long passage, not a short excerpt). Write a rich, engaging narrative that feels like a complete story or extended article.
 - Level: Form {form_level} (O-Level Zimbabwe)
-- Include 5 comprehension questions (mix of literal and inferential)
+- Include exactly 10 comprehension questions (mix of literal and inferential)
 - Include answers for grading with ZIMSEC marking criteria
 - Use authentic Zimbabwean context
 
-QUESTION DISTRIBUTION (Must sum to 5):
-- Literal (Direct Recall): 2-3 questions - Test information directly stated in the text
-- Inferential (Reading between lines): 2-3 questions - Test ability to draw conclusions from implied information
+QUESTION DISTRIBUTION (Must sum to 10):
+- Literal (Direct Recall): 4-5 questions - Test information directly stated in the text
+- Inferential (Reading between lines): 5-6 questions - Test ability to draw conclusions from implied information
 
 EXPERT EXAMINER GUIDELINES:
 - Literal questions: Test direct recall of facts, details, and information explicitly stated
 - Inferential questions: Require students to read between lines, understand implied meaning, make connections
-- Mark allocation: Typically 2 marks per question (total 10 marks)
+- Mark allocation: Typically 2 marks per question (total 20 marks for this exercise)
 - Questions should feel like professional ZIMSEC exam questions, not generic textbook exercises
 
 FRESHNESS REQUIREMENTS:
@@ -1153,19 +1149,28 @@ FRESHNESS REQUIREMENTS:
 Return ONLY valid JSON (NO markdown formatting, NO additional text):
 {{
     "title": "Title Relevant to {theme}",
-    "passage": "The full passage text with authentic Zimbabwean context (400-500 words)...",
+    "passage": "The full passage text with authentic Zimbabwean context (900-1200 words - a long, complete story or article)...",
     "zimsec_paper_reference": "Paper 2 Section A (Comprehension)",
     "questions": [
         {{"question": "Clear ZIMSEC exam-style question", "answer": "Model answer with evidence from passage", "type": "literal/inferential", "marks": 2, "explanation": "Why this answer is correct with reference to passage"}}
     ]
-}}"""
+}}
+You MUST return exactly 10 items in the "questions" array. The passage MUST be 900-1200 words long."""
+
+    def generate_gemini_comprehension_passage(self, theme: str, form_level: int = 4) -> Optional[Dict]:
+        """Generate comprehension passage using Gemini AI"""
+        if not self._is_configured or not self.client:
+            return None
             
+        try:
+            prompt = self._build_comprehension_prompt(theme, form_level)
             model = self.client.GenerativeModel('gemini-2.0-flash-exp')
             response = model.generate_content(
                 prompt, 
                 generation_config=self.client.types.GenerationConfig(
                     response_mime_type="application/json",
-                    temperature=0.7
+                    temperature=0.7,
+                    max_output_tokens=8192
                 )
             )
             
@@ -1198,7 +1203,20 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
             ]
             theme = random.choice(themes)
 
-        # Vertex AI primary via Gemini client
+        # Vertex AI primary (explicit vertex_service so comprehension is generated with Vertex when available)
+        try:
+            from services.vertex_service import vertex_service
+            from utils.vertex_ai_helper import try_vertex_json
+            if vertex_service.is_available():
+                prompt = self._build_comprehension_prompt(theme, form_level)
+                vertex_result = try_vertex_json(prompt, logger=logger, context="english_comprehension")
+                if vertex_result and isinstance(vertex_result, dict) and vertex_result.get("passage") and isinstance(vertex_result.get("questions"), list):
+                    logger.info("Generated comprehension using Vertex AI")
+                    return vertex_result
+        except Exception as e:
+            logger.warning(f"Vertex comprehension generation failed, trying Gemini/DeepSeek: {e}")
+
+        # Gemini client (Vertex-backed when use_vertex_ai, or API key)
         gemini_result = self.generate_gemini_comprehension_passage(theme, form_level)
         if gemini_result:
             logger.info("Generated comprehension using Vertex/Gemini AI")
@@ -1258,20 +1276,20 @@ THEME: {theme}
 LEVEL: Form {form_level} (Age 15-17, O-Level Zimbabwe)
 
 ZIMSEC FORMAT REQUIREMENTS:
-- Length: 400-500 words (appropriate for shorter comprehension exercises)
+- Length: 900-1200 words (a full, substantial story - this MUST be an extremely long passage, not a short excerpt). Write a rich, engaging narrative that feels like a complete story or extended article.
 - Level: Form {form_level} (O-Level Zimbabwe)
-- Include 5 comprehension questions (mix of literal and inferential)
+- Include exactly 10 comprehension questions (mix of literal and inferential)
 - Include model answers for grading with ZIMSEC marking criteria
 - Use Zimbabwean context where appropriate
 
-QUESTION DISTRIBUTION (Must sum to 5):
-- Literal (Direct Recall): 2-3 questions - Test information directly stated in the text
-- Inferential (Reading between lines): 2-3 questions - Test ability to draw conclusions from implied information
+QUESTION DISTRIBUTION (Must sum to 10):
+- Literal (Direct Recall): 4-5 questions - Test information directly stated in the text
+- Inferential (Reading between lines): 5-6 questions - Test ability to draw conclusions from implied information
 
 EXPERT EXAMINER GUIDELINES:
 - Literal questions: Should test direct recall of facts, details, and information explicitly stated
 - Inferential questions: Should require students to read between lines, understand implied meaning, make connections
-- Mark allocation: Typically 2 marks per question (total 10 marks for this exercise)
+- Mark allocation: Typically 2 marks per question (total 20 marks for this exercise)
 - Ensure questions progress from easier (literal) to more challenging (inferential)
 - Questions should feel like professional ZIMSEC exam questions, not generic textbook exercises
 
@@ -1284,13 +1302,14 @@ FRESHNESS REQUIREMENTS:
 Return ONLY valid JSON in this exact format (NO markdown formatting, NO additional text):
 {{
     "title": "Passage Title Relevant to {theme}",
-    "passage": "The full passage text with authentic Zimbabwean context (400-500 words)...",
+    "passage": "The full passage text with authentic Zimbabwean context (900-1200 words - a long, complete story or article)...",
     "zimsec_paper_reference": "Paper 2 Section A (Comprehension)",
     "questions": [
         {{"question": "Clear ZIMSEC exam-style question", "answer": "Model answer with evidence from passage", "type": "literal", "marks": 2, "explanation": "Why this answer is correct with reference to passage"}},
         {{"question": "Clear ZIMSEC exam-style question", "answer": "Model answer with evidence from passage", "type": "inferential", "marks": 2, "explanation": "Why this answer is correct with reference to passage"}}
     ]
-}}"""
+}}
+You MUST return exactly 10 items in the "questions" array. The passage MUST be 900-1200 words long."""
             
             response = requests.post(
                 "https://api.deepseek.com/v1/chat/completions",
@@ -1301,13 +1320,13 @@ Return ONLY valid JSON in this exact format (NO markdown formatting, NO addition
                 json={
                     "model": DEEPSEEK_CHAT_MODEL,
                     "messages": [
-                        {"role": "system", "content": "You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience. You create professional ZIMSEC-aligned comprehension exercises for Zimbabwean students. Strictly ZIMSEC format only - no foreign syllabus contamination."},
+                        {"role": "system", "content": "You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience. You create professional ZIMSEC-aligned comprehension exercises for Zimbabwean students. Strictly ZIMSEC format only - no foreign syllabus contamination. Always produce passages of 900-1200 words and exactly 10 questions."},
                         {"role": "user", "content": prompt}
                     ],
                     "temperature": 0.7,
-                    "max_tokens": 2000
+                    "max_tokens": 8000
                 },
-                timeout=30
+                timeout=60
             )
             
             if response.status_code == 200:

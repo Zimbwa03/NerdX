@@ -10,7 +10,7 @@ import random
 import json
 import string
 from datetime import datetime, timedelta
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Tuple
 import logging
 
 from utils.credit_units import CREDIT_UNITS_PER_CREDIT, format_credits
@@ -536,19 +536,19 @@ def get_user_credits(user_id: str, check_expiry: bool = True) -> int:
     """
     Get user's current credit balance in units from users_registration table (primary source).
     Automatically checks and expires credits if subscription has expired.
-    
-    Args:
-        user_id: User ID
-        check_expiry: Whether to check and expire credits (default: True)
+    Resolves user_id (email/phone/chat_id) to users_registration.chat_id for lookup.
     """
     try:
-        # Check and expire credits if needed
         if check_expiry:
             check_and_expire_user_credits(user_id)
-        
-        result = make_supabase_request("GET", "users_registration", 
-                                     select="credits,purchased_credits", 
-                                     filters={"chat_id": f"eq.{user_id}"})
+        reg = get_user_registration(user_id)
+        creds_id = str((reg.get("chat_id") or user_id)) if (reg and isinstance(reg, dict)) else str(user_id or "")
+        result = make_supabase_request(
+            "GET", "users_registration",
+            select="credits,purchased_credits",
+            filters={"chat_id": f"eq.{creds_id}"},
+            use_service_role=True,
+        )
 
         if result and len(result) > 0:
             free_credits = int(result[0].get('credits', 0) or 0)
@@ -567,12 +567,17 @@ def check_and_expire_user_credits(user_id: str) -> bool:
     """
     Check if user's subscription has expired and expire purchased credits if so.
     Returns True if credits were expired, False otherwise.
+    Resolves user_id (email/phone/chat_id) to users_registration.chat_id for lookup.
     """
     try:
-        # Get user's subscription expiry
-        result = make_supabase_request("GET", "users_registration", 
-                                     select="subscription_expires_at,purchased_credits", 
-                                     filters={"chat_id": f"eq.{user_id}"})
+        reg = get_user_registration(user_id)
+        creds_id = str((reg.get("chat_id") or user_id)) if (reg and isinstance(reg, dict)) else str(user_id or "")
+        result = make_supabase_request(
+            "GET", "users_registration",
+            select="subscription_expires_at,purchased_credits",
+            filters={"chat_id": f"eq.{creds_id}"},
+            use_service_role=True,
+        )
         
         if not result or len(result) == 0:
             return False
@@ -600,9 +605,8 @@ def check_and_expire_user_credits(user_id: str) -> bool:
                 "purchased_credits": 0,
                 "last_credit_expiry_check": datetime.now().isoformat()
             }
-            make_supabase_request("PATCH", "users_registration", update_data, 
-                                filters={"chat_id": f"eq.{user_id}"}, use_service_role=True)
-            
+            make_supabase_request("PATCH", "users_registration", update_data,
+                                 filters={"chat_id": f"eq.{creds_id}"}, use_service_role=True)
             logger.info(f"⏰ Expired {purchased_credits} purchased credits for {user_id} (expired on {expiry_date.strftime('%Y-%m-%d')})")
             return True
         
@@ -679,85 +683,97 @@ def get_subscription_status(user_id: str) -> Dict:
             "purchased_credits": 0
         }
 
+def _resolve_credits_user_id(user_id: str) -> str:
+    """
+    Resolve user_id (email, phone, or chat_id) to the chat_id used in users_registration
+    so that credit lookups/deductions work for mobile (email) and WhatsApp (chat_id).
+    """
+    if not user_id:
+        return user_id or ""
+    reg = get_user_registration(user_id)
+    if reg and isinstance(reg, dict):
+        return str(reg.get("chat_id") or user_id)
+    return str(user_id)
+
+
 def deduct_credits(user_id: str, amount: int, transaction_type: str, description: str) -> bool:
+    ok, _ = deduct_credits_with_balance(user_id, amount, transaction_type, description)
+    return ok
+
+
+def deduct_credits_with_balance(
+    user_id: str, amount: int, transaction_type: str, description: str
+) -> Tuple[bool, Optional[int]]:
     """
     Deduct credit units from user account with transaction logging.
-    Priority: Purchased Credits -> Free/Bonus Credits
-    Uses 'deduct_credits_atomic' RPC if available for atomic operations.
+    Returns (success, new_balance_units). new_balance_units is None on failure or if unavailable.
+    Uses 'deduct_credits_atomic' RPC when available for atomic ops and real-time balance.
     """
+    creds_id = _resolve_credits_user_id(user_id)
     try:
         # 1. Try RPC atomic deduction first
         rpc_payload = {
-            "p_user_id": user_id,
+            "p_user_id": creds_id,
             "p_amount": amount,
             "p_transaction_type": transaction_type,
-            "p_description": description
+            "p_description": description,
         }
-        
-        # Use RPC endpoint
-        # Start with service role for write access
         api_key = SUPABASE_SERVICE_ROLE_KEY
         headers = {
             "apikey": api_key,
             "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
-        
         rpc_url = f"{SUPABASE_URL}/rest/v1/rpc/deduct_credits_atomic"
-        
         try:
             rpc_response = requests.post(rpc_url, headers=headers, json=rpc_payload, timeout=10)
-            
             if rpc_response.status_code == 200:
                 result = rpc_response.json()
-                # Parse boolean result or json object
                 if isinstance(result, bool):
-                     if result:
-                         logger.info(f"✅ RPC Credit deduction successful for {user_id} (-{amount})")
-                         return True
-                     else:
-                         # RPC returned false (insufficient credits)
-                         return False
-                elif isinstance(result, dict):
-                    if result.get('success'):
-                        logger.info(f"✅ RPC Credit deduction successful for {user_id} (-{amount}). New bal: {result.get('new_balance')}")
-                        return True
-                    else:
-                        logger.warning(f"RPC deduction failed for {user_id}: {result.get('message')}")
-                        return False
-            else:
-                logger.warning(f"RPC call failed (Status {rpc_response.status_code}), falling back to legacy method: {rpc_response.text}")
+                    if result:
+                        logger.info(f"✅ RPC credit deduction successful for {user_id} (-{amount})")
+                        # No balance from bool; caller can re-fetch
+                        return True, None
+                    return False, None
+                if isinstance(result, dict):
+                    if result.get("success"):
+                        new_bal = result.get("credits_remaining")
+                        if new_bal is not None:
+                            new_bal = int(new_bal)
+                        logger.info(
+                            f"✅ RPC credit deduction successful for {user_id} (-{amount}). credits_remaining={new_bal}"
+                        )
+                        return True, new_bal
+                    err = result.get("error") or result.get("message") or "unknown"
+                    logger.warning(f"RPC deduction failed for {user_id}: {err}")
+                    return False, None
+            logger.warning(
+                f"RPC call failed (Status {rpc_response.status_code}), falling back to legacy: {rpc_response.text[:200]}"
+            )
         except Exception as rpc_error:
             logger.warning(f"RPC connection failed ({rpc_error}), falling back to legacy method")
 
-        # 2. Legacy Fallback (Subject to Race Conditions but keeps system running)
+        # 2. Legacy Fallback (subject to race conditions but keeps system running)
         logger.info("Using legacy deduction method (non-atomic)")
-        
-        # Get current credits from users_registration table
-        result = make_supabase_request("GET", "users_registration", 
-                                      select="credits,purchased_credits", 
-                                      filters={"chat_id": f"eq.{user_id}"})
-        
+        result = make_supabase_request(
+            "GET", "users_registration",
+            select="credits,purchased_credits",
+            filters={"chat_id": f"eq.{creds_id}"},
+            use_service_role=True,
+        )
         if not result or len(result) == 0:
-            logger.warning(f"User {user_id} not found for deduction")
-            return False
-            
+            logger.warning(f"User {user_id} (creds_id={creds_id}) not found for deduction")
+            return False, None
         user_data = result[0]
-        current_free = user_data.get('credits', 0) or 0
-        current_purchased = user_data.get('purchased_credits', 0) or 0
+        current_free = int(user_data.get("credits", 0) or 0)
+        current_purchased = int(user_data.get("purchased_credits", 0) or 0)
         total_available = current_free + current_purchased
-        
         if total_available < amount:
             logger.warning(f"Insufficient credits for {user_id}: has {total_available}, needs {amount}")
-            return False
-
-        # Calculate new balances
+            return False, None
+        remaining_deduction = amount
         new_purchased = current_purchased
         new_free = current_free
-        
-        remaining_deduction = amount
-        
-        # 1. Deduct from Purchased First
         if new_purchased > 0:
             if new_purchased >= remaining_deduction:
                 new_purchased -= remaining_deduction
@@ -765,55 +781,46 @@ def deduct_credits(user_id: str, amount: int, transaction_type: str, description
             else:
                 remaining_deduction -= new_purchased
                 new_purchased = 0
-                
-        # 2. Deduct from Free/Daily Second
         if remaining_deduction > 0:
             new_free -= remaining_deduction
-            remaining_deduction = 0
-
-        # Update user credits in users_registration table (primary source)
-        update_data = {
-            "credits": new_free,
-            "purchased_credits": new_purchased
-        }
-        
-        result = make_supabase_request("PATCH", "users_registration", update_data, 
-                                     filters={"chat_id": f"eq.{user_id}"})
-
-        if result:
-            # Also update user_stats table for consistency
-            try:
-                make_supabase_request("PATCH", "user_stats", update_data, 
-                                    filters={"user_id": f"eq.{user_id}"})
-            except Exception as stats_error:
-                logger.warning(f"Failed to sync credits to user_stats: {stats_error}")
-
-            # Log the transaction (use try-catch to not fail credit deduction if logging fails)
-            try:
-                transaction = {
-                    "user_id": user_id,
-                    "transaction_type": transaction_type,
-                    "action": transaction_type,
-                    "credits_change": -amount,  # Negative for deduction
-                    "balance_before": total_available,
-                    "balance_after": new_free + new_purchased,
-                    "description": description,
-                    "transaction_date": datetime.now().isoformat()
-                }
-                make_supabase_request("POST", "credit_transactions", transaction, use_service_role=True)
-                logger.info(f"✅ Credit deduction transaction logged for {user_id}")
-            except Exception as tx_error:
-                logger.warning(f"⚠️ Credit deduction successful but transaction logging failed: {tx_error}")
-
-            logger.info(f"Deducted {amount} units from {user_id}. New Total: {new_free + new_purchased} (Free: {new_free}, Purchased: {new_purchased})")
-            return True
-        else:
+        new_total = new_free + new_purchased
+        update_data = {"credits": new_free, "purchased_credits": new_purchased}
+        patch_ok = make_supabase_request(
+            "PATCH", "users_registration", update_data,
+            filters={"chat_id": f"eq.{creds_id}"},
+            use_service_role=True,
+        )
+        if not patch_ok:
             logger.error(f"Failed to update credits for {user_id}")
-            return False
-
+            return False, None
+        try:
+            make_supabase_request(
+                "PATCH", "user_stats", update_data,
+                filters={"user_id": f"eq.{creds_id}"},
+                use_service_role=True,
+            )
+        except Exception as stats_error:
+            logger.warning(f"Failed to sync credits to user_stats: {stats_error}")
+        try:
+            transaction = {
+                "user_id": creds_id,
+                "transaction_type": transaction_type,
+                "action": transaction_type,
+                "credits_change": -amount,
+                "balance_before": total_available,
+                "balance_after": new_total,
+                "description": description,
+                "transaction_date": datetime.now().isoformat(),
+            }
+            make_supabase_request("POST", "credit_transactions", transaction, use_service_role=True)
+            logger.info(f"✅ Credit deduction transaction logged for {user_id}")
+        except Exception as tx_error:
+            logger.warning(f"⚠️ Credit deduction successful but transaction logging failed: {tx_error}")
+        logger.info(f"Deducted {amount} units from {user_id}. New total: {new_total} (free: {new_free}, purchased: {new_purchased})")
+        return True, new_total
     except Exception as e:
         logger.error(f"Error deducting credits for {user_id}: {e}")
-        return False
+        return False, None
 
 def add_credits(user_id, amount, transaction_type="purchase", description="Credit purchase", is_monthly_subscription=True):
     """

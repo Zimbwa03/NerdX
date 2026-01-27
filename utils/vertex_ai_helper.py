@@ -66,6 +66,10 @@ def try_vertex_json(
     """
     Attempt Vertex AI generation and parse a JSON object from the response.
     Returns None if Vertex AI is unavailable or parsing fails.
+
+    IMPORTANT: Callers must pass the same full prompt string that DeepSeek receives.
+    When DeepSeek uses system + user messages, pass (system + "\\n\\n" + user) so only
+    the model/API changes, not the prompt structure or content.
     """
     if not vertex_service.is_available():
         if logger:

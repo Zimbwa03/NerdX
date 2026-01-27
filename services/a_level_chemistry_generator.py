@@ -740,10 +740,7 @@ Always respond with valid JSON containing step-by-step solutions."""
             
             if vertex_service.is_available():
                 logger.info(f"🔄 Falling back to Vertex AI for Chemistry {question_type}")
-                
-                system_message = """You are a SENIOR A-LEVEL CHEMISTRY TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH ZIMSEC A-Level Chemistry and Cambridge International AS & A Level Chemistry 9701. Always respond with valid JSON containing step-by-step solutions."""
-                full_prompt = f"{system_message}\n\n{prompt}"
-                
+                full_prompt = f"{self._system_prompt()}\n\n{prompt}"
                 result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
                 
                 if result and result.get('success'):

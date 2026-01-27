@@ -1287,14 +1287,21 @@ Generate a high-quality, professional exam-style {question_style.replace('_', ' 
 
         return prompt
 
-    def _generate_with_ai(self, prompt: str, generation_type: str, platform: str = 'mobile') -> Optional[Dict]:
-        """Generate content with Vertex AI primary and DeepSeek fallback."""
-        system_message = (
+    def _get_deepseek_system_message(self) -> str:
+        """Single source of truth for DeepSeek system message. Vertex gets the same (system + user) as DeepSeek."""
+        return (
             "You are a professional O-Level science tutor with 10+ years experience teaching "
             "ZIMSEC Combined Science to Zimbabwean teenagers. You create engaging, age-appropriate "
             "questions that help students understand concepts clearly. Your explanations are simple, "
             "encouraging, and educational."
         )
+
+    def _generate_with_ai(self, prompt: str, generation_type: str, platform: str = 'mobile') -> Optional[Dict]:
+        """Generate content with Vertex AI primary and DeepSeek fallback.
+        Vertex receives the exact same full prompt as DeepSeek: system message + user prompt.
+        Only the model/API changes; prompt structure and content stay identical.
+        """
+        system_message = self._get_deepseek_system_message()
         full_prompt = f"{system_message}\n\n{prompt}"
         context = f"{generation_type}:{platform}"
 
@@ -1309,15 +1316,8 @@ Generate a high-quality, professional exam-style {question_style.replace('_', ' 
         return self._call_deepseek_api(prompt, generation_type)
 
     def _call_deepseek_api(self, prompt: str, generation_type: str) -> Optional[Dict]:
-        """Call DeepSeek API with O-Level appropriate settings (used by mobile app and as fallback)
-        Falls back to Vertex AI if DeepSeek fails
-        
-        Enhanced with:
-        - Connection pooling via session reuse
-        - Progressive timeouts
-        - Exponential backoff with jitter
-        - Better rate limit handling
-        - Pre-flight validation
+        """Call DeepSeek API with O-Level appropriate settings (used by mobile app and as fallback).
+        Uses the same system message as Vertex so prompt structure is identical; only the model changes.
         """
         
         # Pre-flight validation
@@ -1334,13 +1334,15 @@ Generate a high-quality, professional exam-style {question_style.replace('_', ' 
             'Authorization': f'Bearer {self.api_key}'
         }
         
-        # Prepare request data
+        # Same system message as Vertex - single source of truth
+        system_message = self._get_deepseek_system_message()
+        # Prepare request data (DeepSeek format: system + user; same content as Vertex's full_prompt)
         data = {
             "model": self.deepseek_model,
             "messages": [
                 {
                     "role": "system",
-                    "content": "You are a professional O-Level science tutor with 10+ years experience teaching ZIMSEC Combined Science to Zimbabwean teenagers. You create engaging, age-appropriate questions that help students understand concepts clearly. Your explanations are simple, encouraging, and educational."
+                    "content": system_message
                 },
                 {
                     "role": "user",
@@ -1431,16 +1433,13 @@ Generate a high-quality, professional exam-style {question_style.replace('_', ' 
         
         logger.error(f"Failed to generate {generation_type} after {self.max_retries} attempts, trying Vertex AI fallback")
         
-        # FALLBACK: Try Vertex AI if DeepSeek fails
+        # FALLBACK: Try Vertex AI if DeepSeek fails (same prompt as DeepSeek: system + user)
         try:
             from services.vertex_service import vertex_service
             
             if vertex_service.is_available():
                 logger.info(f"🔄 Falling back to Vertex AI for {generation_type} after DeepSeek failure")
-                
-                system_message = "You are a professional O-Level science tutor with 10+ years experience teaching ZIMSEC Combined Science to Zimbabwean teenagers. You create engaging, age-appropriate questions that help students understand concepts clearly. Your explanations are simple, encouraging, and educational."
-                full_prompt = f"{system_message}\n\n{prompt}"
-                
+                full_prompt = f"{self._get_deepseek_system_message()}\n\n{prompt}"
                 result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
                 
                 if result and result.get('success'):
