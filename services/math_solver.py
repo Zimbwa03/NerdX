@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Mathematics Solution Analyzer using DeepSeek AI
-Provides detailed explanations and alternative solution methods
+Mathematics Solution Analyzer using Vertex AI (DeepSeek fallback).
+Provides detailed explanations and alternative solution methods.
 """
 
 import logging
@@ -12,22 +12,25 @@ import time
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime
 from utils.deepseek import get_deepseek_chat_model
+from services.vertex_service import vertex_service
+from utils.vertex_ai_helper import extract_json_object
 
 logger = logging.getLogger(__name__)
 
 
 class MathSolver:
-    """DeepSeek AI-powered mathematics solution analyzer"""
+    """Vertex AI-powered mathematics solution analyzer with DeepSeek fallback."""
     
     def __init__(self):
         self.api_key = os.environ.get('DEEPSEEK_API_KEY')
         self.api_url = 'https://api.deepseek.com/chat/completions'
         self.deepseek_model = get_deepseek_chat_model()
+        self._is_vertex_configured = bool(vertex_service and vertex_service.is_available())
         
     def analyze_answer(self, question: str, user_answer: str, correct_answer: str, solution: str) -> Dict:
-        """Analyze user's answer and provide detailed feedback using DeepSeek AI"""
+        """Analyze answers with Vertex AI primary and DeepSeek fallback."""
         try:
-            if not self.api_key:
+            if not self.api_key and not self._is_vertex_configured:
                 return self._generate_basic_feedback(user_answer, correct_answer, solution)
             
             # Create prompt for answer analysis
@@ -48,7 +51,7 @@ class MathSolver:
     def get_progressive_hint(self, question: str, difficulty: str, level: int = 1) -> Optional[str]:
         """Get a progressive hint based on the requested level (1-3)"""
         try:
-            if not self.api_key:
+            if not self.api_key and not self._is_vertex_configured:
                 hints = [
                     "💡 Hint Level 1: Read the question carefully and identify the key values.",
                     "💡 Hint Level 2: Think about which formula applies to this type of problem.",
@@ -97,7 +100,7 @@ Provide your hint:"""
     def get_worked_example(self, topic: str, difficulty: str) -> Optional[Dict]:
         """Generate a similar worked example problem with solution"""
         try:
-            if not self.api_key:
+            if not self.api_key and not self._is_vertex_configured:
                 return None
                 
             prompt = f"""You are MathMentor, expert ZIMSEC mathematics tutor.
@@ -146,9 +149,9 @@ Generate the worked example:"""
             return None
 
     def get_alternative_solution(self, question: str, answer: str) -> Optional[str]:
-        """Get alternative solution method using DeepSeek AI"""
+        """Get alternative solution method with Vertex AI primary"""
         try:
-            if not self.api_key:
+            if not self.api_key and not self._is_vertex_configured:
                 return None
                 
             prompt = f"""You are MathMentor, expert ZIMSEC mathematics tutor. 
@@ -194,9 +197,9 @@ Provide your alternative solution:"""
             return None
 
     def explain_concept(self, topic: str, difficulty: str) -> Optional[str]:
-        """Get concept explanation using DeepSeek AI"""
+        """Get concept explanation with Vertex AI primary"""
         try:
-            if not self.api_key:
+            if not self.api_key and not self._is_vertex_configured:
                 return None
                 
             prompt = f"""You are MathMentor, expert ZIMSEC mathematics tutor.
@@ -308,8 +311,36 @@ Provide your analysis:"""
         return prompt
 
     def _send_analysis_request(self, prompt: str) -> Optional[Dict]:
-        """Send analysis request to DeepSeek API"""
-        
+        """Send analysis request to Vertex AI primary; DeepSeek fallback."""
+
+        # Vertex AI primary attempt
+        if self._is_vertex_configured:
+            try:
+                result = vertex_service.generate_text(
+                    prompt=prompt,
+                    model="gemini-2.5-flash",
+                )
+                if result and result.get("success"):
+                    text_response = (result.get("text") or "").strip()
+                    if text_response:
+                        parsed = extract_json_object(
+                            text_response,
+                            logger=logger,
+                            context="math_solver:analysis",
+                        )
+                        if parsed is not None:
+                            parsed.setdefault("ai_model", "vertex_ai")
+                            return parsed
+                        # Fall back to raw text if no JSON was found.
+                        return text_response
+            except Exception as exc:  # pragma: no cover - defensive logging
+                logger.error("Vertex AI analysis failed: %s", exc, exc_info=True)
+
+        # DeepSeek fallback
+        if not self.api_key:
+            logger.warning("DeepSeek API key missing for math_solver fallback")
+            return None
+
         headers = {
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json'
@@ -333,27 +364,29 @@ Provide your analysis:"""
             if response.status_code == 200:
                 result = response.json()
                 content = result['choices'][0]['message']['content']
-                
+
                 # Try to extract JSON
                 try:
                     json_start = content.find('{')
                     json_end = content.rfind('}') + 1
-                    
+
                     if json_start >= 0 and json_end > json_start:
                         json_str = content[json_start:json_end]
-                        return json.loads(json_str)
-                    else:
-                        # Return raw content if no JSON found
-                        return content
-                        
+                        parsed = json.loads(json_str)
+                        if isinstance(parsed, dict):
+                            parsed.setdefault('ai_model', 'deepseek_fallback')
+                        return parsed
+
+                    # Return raw content if no JSON found
+                    return content
+
                 except json.JSONDecodeError:
                     # Return raw content if JSON parsing fails
                     return content
-                    
-            else:
-                logger.error(f"DeepSeek analysis API error: {response.status_code}")
-                return None
-                
+
+            logger.error(f"DeepSeek analysis API error: {response.status_code}")
+            return None
+
         except Exception as e:
             logger.error(f"Error sending analysis request: {e}")
             return None

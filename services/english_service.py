@@ -304,11 +304,7 @@ class EnglishService:
         }
 
     def generate_ai_grammar_question(self, last_question_type: Optional[str] = None) -> Optional[Dict]:
-        """Generate grammar question using Gemini AI persona prompt"""
-        if not self._is_configured or not self.client:
-            logger.warning("Gemini AI not configured - skipping AI grammar generation")
-            return None
-
+        """Generate grammar question using Vertex/Gemini primary (same JSON path as math/science), then Gemini client fallback."""
         try:
             question_types = [
                 "Sentence Transformation",
@@ -384,7 +380,30 @@ Additional Instructions:
 - Keep hints concise and escalating without revealing the answer directly.
 - Use Zimbabwean contexts or names where appropriate.
 - Do not include any explanations outside the JSON payload.
+
+CRITICAL: Return valid JSON only. Use \\n for line breaks inside string values; do not insert raw newlines in strings. Escape any double quote inside a string as \\".
 """
+
+            # Primary: Vertex AI via try_vertex_json (same JSON extraction as math/combined science)
+            try:
+                from utils.vertex_ai_helper import try_vertex_json
+                payload = try_vertex_json(prompt.strip(), logger=logger, context="grammar")
+                if payload:
+                    normalized = self._normalize_ai_grammar_payload(payload)
+                    if normalized:
+                        normalized['source'] = 'ai'
+                        logger.info(f"Generated AI grammar question via Vertex - Type: {normalized.get('question_type')} | Focus: {normalized.get('topic_area')}")
+                        return {
+                            'success': True,
+                            'question_data': normalized
+                        }
+            except Exception as v_err:
+                logger.debug("Vertex grammar path failed, trying Gemini client: %s", v_err)
+
+            # Fallback: direct Gemini client (when Vertex unavailable or Vertex returned no/invalid JSON)
+            if not self._is_configured or not self.client:
+                logger.warning("Gemini AI not configured - skipping AI grammar generation")
+                return None
 
             try:
                 response = self.client.models.generate_content(
@@ -408,17 +427,27 @@ Additional Instructions:
             try:
                 logger.debug(f"Raw Gemini response (first 500 chars): {response.text[:500]}...")
                 clean_text = self._clean_json_block(response.text)
-                logger.debug(f"Cleaned Gemini response (first 500 chars): {clean_text[:500]}...")
-                payload = json.loads(clean_text)
-                normalized = self._normalize_ai_grammar_payload(payload)
-                if normalized:
-                    normalized['source'] = 'ai'
-                    logger.info(f"Generated AI grammar question - Type: {normalized.get('question_type')} | Focus: {normalized.get('topic_area')}")
-                    return {
-                        'success': True,
-                        'question_data': normalized
-                    }
-                logger.warning("AI grammar payload missing required fields")
+                payload = None
+                try:
+                    payload = json.loads(clean_text)
+                except json.JSONDecodeError:
+                    try:
+                        from utils.vertex_ai_helper import extract_json_object
+                        payload = extract_json_object(response.text, logger=logger, context="grammar")
+                    except Exception:
+                        pass
+                if payload:
+                    normalized = self._normalize_ai_grammar_payload(payload)
+                    if normalized:
+                        normalized['source'] = 'ai'
+                        logger.info(f"Generated AI grammar question - Type: {normalized.get('question_type')} | Focus: {normalized.get('topic_area')}")
+                        return {
+                            'success': True,
+                            'question_data': normalized
+                        }
+                    logger.warning("AI grammar payload missing required fields")
+                else:
+                    logger.error("Grammar AI JSON decode failed after clean + extract_json_object fallback")
             except json.JSONDecodeError as e:
                 logger.error(f"Grammar AI JSON decode error: {e}")
             except Exception as error:
@@ -569,43 +598,41 @@ Return ONLY valid JSON strictly using this structure (no markdown fences or comm
 
     def generate_grammar_question(self, last_question_type: Optional[str] = None, platform: str = 'mobile') -> Optional[Dict]:
         """
-        Retrieve grammar questions using AI based on platform
-        
+        Retrieve grammar questions with Vertex/Gemini primary and DeepSeek fallback.
+
         Args:
-            last_question_type: Last question type to avoid repetition
-            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
+            last_question_type: Last question type to avoid repetition.
+            platform: Platform hint (kept for compatibility).
         """
-        # WhatsApp bot: Use Vertex AI
-        if platform == 'whatsapp':
-            return self._generate_grammar_with_vertex_ai(last_question_type)
-        
-        # Mobile app: Use DeepSeek AI first with Gemini fallback (unchanged)
-        deepseek_response = self.generate_deepseek_grammar_question(last_question_type=last_question_type)
-        if deepseek_response and deepseek_response.get('success'):
-            return deepseek_response
-        
-        # Secondary: Gemini AI fallback
+        # Vertex AI primary via Gemini client
         gemini_response = self.generate_ai_grammar_question(last_question_type=last_question_type)
         if gemini_response and gemini_response.get('success'):
             return gemini_response
 
-        # Tertiary: Database question
+        # DeepSeek fallback
+        deepseek_response = self.generate_deepseek_grammar_question(last_question_type=last_question_type)
+        if deepseek_response and deepseek_response.get('success'):
+            return deepseek_response
+
+        # Database question
         try:
             from database.external_db import get_random_grammar_question
 
             question_data = get_random_grammar_question()
             if question_data:
-                logger.info(f"Retrieved grammar question from database - Topic: {question_data.get('topic_area', 'Unknown')}")
+                logger.info(
+                    "Retrieved grammar question from database - Topic: %s",
+                    question_data.get('topic_area', 'Unknown'),
+                )
                 normalized = self._wrap_legacy_grammar_question(question_data)
                 normalized['source'] = 'database'
                 return {
                     'success': True,
                     'question_data': normalized
                 }
-            else:
-                logger.warning("No questions found in database")
+            logger.warning("No grammar questions found in database")
         except Exception as e:
-            logger.error(f"Error retrieving question from database: {e}")
+            logger.error(f"Error retrieving grammar question from database: {e}")
 
         # Final fallback
         logger.warning("Using fallback grammar question")
@@ -1153,15 +1180,7 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
 
     def generate_comprehension(self, theme: str = None, form_level: int = 4, platform: str = 'mobile') -> Dict:
         """
-        Generate comprehension passage using AI based on platform
-        
-        Args:
-            theme: Optional theme for the passage
-            form_level: ZIMSEC form level (1-4), defaults to 4 for O-Level
-            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
-            
-        Returns:
-            Dictionary with passage, title, and questions
+        Generate a comprehension passage with Vertex/Gemini primary and DeepSeek fallback.
         """
         # Select random theme if not provided
         if not theme:
@@ -1175,41 +1194,30 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
                 "community development",
                 "health and nutrition",
                 "wildlife conservation",
-                "entrepreneurship"
+                "entrepreneurship",
             ]
             theme = random.choice(themes)
-        
-        # WhatsApp bot: Use Vertex AI
-        if platform == 'whatsapp':
-            result = self._generate_comprehension_with_vertex_ai(theme, form_level)
-            if result:
-                logger.info("Generated comprehension using Vertex AI for WhatsApp")
-                return result
-            # Fallback to DeepSeek if Vertex AI fails
-            logger.info("Vertex AI failed, falling back to DeepSeek for WhatsApp")
-            platform = 'mobile'
-        
-        # Mobile app: Try DeepSeek first, then Gemini, then fallback (unchanged)
-        if platform == 'mobile':
-            if self.deepseek_api_key:
-                try:
-                    deepseek_result = self._generate_deepseek_comprehension(theme, form_level)
-                    if deepseek_result:
-                        logger.info("Generated comprehension using DeepSeek AI")
-                        return deepseek_result
-                except Exception as e:
-                    logger.warning(f"DeepSeek comprehension generation failed: {e}")
-            
-            # Try Gemini as fallback
-            gemini_result = self.generate_gemini_comprehension_passage(theme, form_level)
-            if gemini_result:
-                logger.info("Generated comprehension using Gemini AI")
-                return gemini_result
-        
+
+        # Vertex AI primary via Gemini client
+        gemini_result = self.generate_gemini_comprehension_passage(theme, form_level)
+        if gemini_result:
+            logger.info("Generated comprehension using Vertex/Gemini AI")
+            return gemini_result
+
+        # DeepSeek fallback
+        if self.deepseek_api_key:
+            try:
+                deepseek_result = self._generate_deepseek_comprehension(theme, form_level)
+                if deepseek_result:
+                    logger.info("Generated comprehension using DeepSeek fallback")
+                    return deepseek_result
+            except Exception as e:
+                logger.warning(f"DeepSeek comprehension generation failed: {e}")
+
         # Final fallback
         logger.info("Using fallback comprehension passage")
         return self._get_fallback_comprehension()
-    
+
     def _generate_deepseek_comprehension(self, theme: str, form_level: int = 4) -> Optional[Dict]:
         """Generate comprehension passage using DeepSeek AI"""
         if not self.deepseek_api_key:
@@ -1350,14 +1358,9 @@ Return ONLY valid JSON in this exact format (NO markdown formatting, NO addition
         }
 
     def generate_essay_marking(self, marking_prompt: str) -> Optional[str]:
-        """Generate essay marking using DeepSeek AI with robust error handling and improved marking criteria"""
-        if not self.deepseek_api_key:
-            logger.warning("DeepSeek API key not configured for essay marking")
-            return self._generate_fallback_essay_marking()
-
-        try:
-            # Enhanced marking prompt for better scoring
-            enhanced_prompt = f"""
+        """Generate essay marking with Vertex AI primary and DeepSeek fallback."""
+        # Enhanced marking prompt for better scoring
+        enhanced_prompt = f"""
 {marking_prompt}
 
 IMPROVED MARKING GUIDELINES:
@@ -1378,6 +1381,32 @@ Count the actual errors in grammar, spelling, and structure. For every 3-4 signi
 
 Return valid JSON with the exact format requested (no markdown, no code blocks, just pure JSON)."""
 
+        # Vertex AI primary via Gemini client
+        if self._is_configured and self.client:
+            try:
+                response = self.client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=enhanced_prompt,
+                    config={
+                        "response_mime_type": "application/json",
+                        "temperature": 0.3,
+                        "max_output_tokens": 2500,
+                    },
+                )
+                if response and getattr(response, 'text', None):
+                    clean_text = self._clean_json_block(response.text)
+                    parsed = json.loads(clean_text)
+                    logger.info("Essay marking completed successfully using Vertex/Gemini")
+                    return json.dumps(parsed)
+            except Exception as e:
+                logger.error(f"Error generating essay marking with Vertex/Gemini: {e}")
+
+        # DeepSeek fallback
+        if not self.deepseek_api_key:
+            logger.warning("DeepSeek API key not configured for essay marking fallback")
+            return self._generate_fallback_essay_marking()
+
+        try:
             headers = {
                 'Content-Type': 'application/json',
                 'Authorization': f'Bearer {self.deepseek_api_key}',
@@ -1397,26 +1426,20 @@ Return valid JSON with the exact format requested (no markdown, no code blocks, 
                 if 'choices' in data and len(data['choices']) > 0:
                     content = data['choices'][0].get('message', {}).get('content', '')
                     if content and content.strip():
-                        try:
-                            clean_text = content.strip()
-                            if clean_text.startswith('```json'):
-                                clean_text = clean_text[7:]
-                            if clean_text.startswith('```'):
-                                clean_text = clean_text[3:]
-                            if clean_text.endswith('```'):
-                                clean_text = clean_text[:-3]
-                            clean_text = clean_text.strip()
-
-                            logger.info("Essay marking completed successfully using DeepSeek")
-                            return clean_text
-                        except Exception as e:
-                            logger.error(f"Error processing DeepSeek essay marking response: {e}")
-                    else:
-                        logger.error("Empty response from DeepSeek essay marking")
+                        clean_text = self._clean_json_block(content)
+                        # Validate JSON before returning string
+                        json.loads(clean_text)
+                        logger.info("Essay marking completed successfully using DeepSeek fallback")
+                        return clean_text
+                    logger.error("Empty response from DeepSeek essay marking")
                 else:
                     logger.warning("DeepSeek essay marking response missing choices")
             else:
-                logger.error(f"DeepSeek API error for essay marking: {response.status_code} - {response.text}")
+                logger.error(
+                    "DeepSeek API error for essay marking: %s - %s",
+                    response.status_code,
+                    response.text,
+                )
 
         except requests.exceptions.RequestException as e:
             logger.error(f"DeepSeek essay marking request error: {e}")
@@ -1426,11 +1449,7 @@ Return valid JSON with the exact format requested (no markdown, no code blocks, 
         return self._generate_fallback_essay_marking()
 
     def grade_comprehension_answers(self, passage: str, questions: List[Dict], user_answers: Dict[str, str]) -> Dict:
-        """Grade comprehension answers using DeepSeek AI"""
-        if not self.deepseek_api_key:
-            logger.warning("DeepSeek API key not configured for comprehension grading")
-            return self._fallback_comprehension_grading(questions, user_answers)
-
+        """Grade comprehension answers with Vertex AI primary and DeepSeek fallback."""
         try:
             prompt = f"""Grade these ZIMSEC O-Level English comprehension answers.
 
@@ -1444,7 +1463,7 @@ Questions and Student Answers:
                 q_mark = q.get('marks', 2)
                 q_correct = q.get('correct_answer', '')
                 u_answer = user_answers.get(str(i), user_answers.get(i, ''))
-                
+
                 prompt += f"""
 Q{i+1}: {q_text} ({q_mark} marks)
 Correct Answer: {q_correct}
@@ -1473,27 +1492,55 @@ Return ONLY valid JSON:
     "overall_feedback": "General comment..."
 }
 """
-            headers = {
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {self.deepseek_api_key}',
-            }
 
-            payload = {
-                'model': DEEPSEEK_CHAT_MODEL,
-                'messages': [{'role': 'user', 'content': prompt}],
-                'max_tokens': 2000,
-                'temperature': 0.3
-            }
+            # Vertex AI primary via Gemini client
+            if self._is_configured and self.client:
+                try:
+                    response = self.client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=prompt,
+                        config={
+                            "response_mime_type": "application/json",
+                            "temperature": 0.3,
+                            "max_output_tokens": 2000,
+                        },
+                    )
+                    if response and getattr(response, 'text', None):
+                        clean_text = self._clean_json_block(response.text)
+                        data = json.loads(clean_text)
+                        data.setdefault('ai_model', 'vertex_ai')
+                        return data
+                except Exception as e:
+                    logger.error(f"Error grading comprehension with Vertex/Gemini: {e}")
 
-            response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=60)
-            if response.status_code == 200:
-                content = response.json()['choices'][0]['message']['content']
-                clean_text = self._clean_json_block(content)
-                return json.loads(clean_text)
-            
+            # DeepSeek fallback
+            if self.deepseek_api_key:
+                try:
+                    headers = {
+                        'Content-Type': 'application/json',
+                        'Authorization': f'Bearer {self.deepseek_api_key}',
+                    }
+
+                    payload = {
+                        'model': DEEPSEEK_CHAT_MODEL,
+                        'messages': [{'role': 'user', 'content': prompt}],
+                        'max_tokens': 2000,
+                        'temperature': 0.3
+                    }
+
+                    response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=60)
+                    if response.status_code == 200:
+                        content = response.json()['choices'][0]['message']['content']
+                        clean_text = self._clean_json_block(content)
+                        data = json.loads(clean_text)
+                        data.setdefault('ai_model', 'deepseek_fallback')
+                        return data
+                except Exception as e:
+                    logger.error(f"Error grading comprehension with DeepSeek fallback: {e}")
+
         except Exception as e:
-            logger.error(f"Error grading comprehension: {e}")
-            
+            logger.error(f"Error preparing comprehension grading: {e}")
+
         return self._fallback_comprehension_grading(questions, user_answers)
 
     def _fallback_comprehension_grading(self, questions: List[Dict], user_answers: Dict[str, str]) -> Dict:
@@ -1535,10 +1582,7 @@ Return ONLY valid JSON:
         }
 
     def grade_summary(self, passage: str, summary_prompt: str, user_summary: str) -> Dict:
-        """Grade summary writing using DeepSeek AI"""
-        if not self.deepseek_api_key:
-            return {"score": 0, "feedback": "AI grading unavailable"}
-
+        """Grade summary writing with Vertex AI primary and DeepSeek fallback."""
         try:
             prompt = f"""You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience marking professional summary exercises for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
 
@@ -1605,23 +1649,51 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
     "zimsec_paper_reference": "Paper 2 Section B (Summary)"
 }}
 """
-            headers = {
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {self.deepseek_api_key}',
-            }
 
-            payload = {
-                'model': DEEPSEEK_CHAT_MODEL,
-                'messages': [{'role': 'user', 'content': prompt}],
-                'max_tokens': 1500,
-                'temperature': 0.3
-            }
+            # Vertex AI primary via Gemini client
+            if self._is_configured and self.client:
+                try:
+                    response = self.client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=prompt,
+                        config={
+                            "response_mime_type": "application/json",
+                            "temperature": 0.3,
+                            "max_output_tokens": 1500,
+                        },
+                    )
+                    if response and getattr(response, 'text', None):
+                        clean_text = self._clean_json_block(response.text)
+                        data = json.loads(clean_text)
+                        data.setdefault('ai_model', 'vertex_ai')
+                        return data
+                except Exception as e:
+                    logger.error(f"Error grading summary with Vertex/Gemini: {e}")
 
-            response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=60)
-            if response.status_code == 200:
-                content = response.json()['choices'][0]['message']['content']
-                clean_text = self._clean_json_block(content)
-                return json.loads(clean_text)
+            # DeepSeek fallback
+            if self.deepseek_api_key:
+                try:
+                    headers = {
+                        'Content-Type': 'application/json',
+                        'Authorization': f'Bearer {self.deepseek_api_key}',
+                    }
+
+                    payload = {
+                        'model': DEEPSEEK_CHAT_MODEL,
+                        'messages': [{'role': 'user', 'content': prompt}],
+                        'max_tokens': 1500,
+                        'temperature': 0.3
+                    }
+
+                    response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=60)
+                    if response.status_code == 200:
+                        content = response.json()['choices'][0]['message']['content']
+                        clean_text = self._clean_json_block(content)
+                        data = json.loads(clean_text)
+                        data.setdefault('ai_model', 'deepseek_fallback')
+                        return data
+                except Exception as e:
+                    logger.error(f"Error grading summary with DeepSeek fallback: {e}")
 
         except Exception as e:
             logger.error(f"Error grading summary: {e}")
@@ -1747,22 +1819,8 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
         return self._get_fallback_long_comprehension(theme)
 
     def generate_free_response_topics(self) -> Optional[Dict]:
-        """Generate free response essay topics using DeepSeek first, then Gemini fallback"""
-        
-        # Try DeepSeek first (primary AI)
-        if self.deepseek_api_key:
-            try:
-                deepseek_result = self._generate_deepseek_free_response_topics()
-                if deepseek_result:
-                    logger.info("✅ Generated 7 free response topics using DeepSeek AI")
-                    return deepseek_result
-            except Exception as e:
-                logger.warning(f"DeepSeek free response topics failed: {e}")
-        
-        # Try Gemini as fallback
-        if self._is_configured and self.client:
-            try:
-                prompt = """You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience setting professional free response composition topics for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
+        """Generate free response topics with Vertex AI primary and DeepSeek fallback."""
+        prompt = """You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience setting professional free response composition topics for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
 
 ROLE: EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER & TEACHER
 
@@ -1795,35 +1853,47 @@ Return ONLY valid JSON (no markdown fences):
       "description": "Write about a memorable day in your life that left a lasting impression on you.",
       "type": "narrative",
       "suggested_length": "350-450 words"
-    },
-    ... (6 more topics)
+    }
   ]
 }"""
-                
-                model = self.client.GenerativeModel('gemini-2.5-flash')
-                response = model.generate_content(
-                    prompt,
-                    generation_config=self.client.types.GenerationConfig(
-                        response_mime_type="application/json",
-                        temperature=0.8,
-                        max_output_tokens=2000
-                    ),
+
+        # Vertex AI primary via Gemini client
+        if self._is_configured and self.client:
+            try:
+                response = self.client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=prompt,
+                    config={
+                        "response_mime_type": "application/json",
+                        "temperature": 0.8,
+                        "max_output_tokens": 2000,
+                    },
                 )
-                
-                if response and hasattr(response, 'text') and response.text:
+                if response and getattr(response, 'text', None):
                     clean_text = self._clean_json_block(response.text)
                     data = json.loads(clean_text)
-                    logger.info("✅ Generated 7 free response topics using Gemini 2.5 Flash (fallback)")
+                    logger.info("Generated 7 free response topics using Vertex/Gemini")
                     return {
                         'success': True,
-                        'topics': data.get('topics', [])
+                        'topics': data.get('topics', []),
+                        'ai_model': 'vertex_ai',
                     }
-                
             except Exception as e:
-                logger.error(f"Gemini free response topics error: {e}")
-        
+                logger.error(f"Vertex/Gemini free response topics error: {e}")
+
+        # DeepSeek fallback
+        if self.deepseek_api_key:
+            try:
+                deepseek_result = self._generate_deepseek_free_response_topics()
+                if deepseek_result:
+                    logger.info("Generated free response topics using DeepSeek fallback")
+                    deepseek_result.setdefault('ai_model', 'deepseek_fallback')
+                    return deepseek_result
+            except Exception as e:
+                logger.warning(f"DeepSeek free response topics failed: {e}")
+
         return self._get_fallback_free_response_topics()
-    
+
     def _generate_deepseek_free_response_topics(self) -> Optional[Dict]:
         """Generate free response topics using DeepSeek AI"""
         if not self.deepseek_api_key:
@@ -1966,22 +2036,8 @@ Return ONLY valid JSON:
         }
 
     def generate_guided_composition_prompt(self) -> Optional[Dict]:
-        """Generate a guided composition prompt for ZIMSEC using DeepSeek first, then Gemini fallback"""
-        
-        # Try DeepSeek first (primary AI)
-        if self.deepseek_api_key:
-            try:
-                deepseek_result = self._generate_deepseek_guided_composition()
-                if deepseek_result:
-                    logger.info("✅ Generated guided composition prompt using DeepSeek AI")
-                    return deepseek_result
-            except Exception as e:
-                logger.warning(f"DeepSeek guided composition failed: {e}")
-        
-        # Try Gemini as fallback
-        if self._is_configured and self.client:
-            try:
-                prompt = """You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience setting professional guided composition prompts for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
+        """Generate guided composition prompt with Vertex AI primary and DeepSeek fallback."""
+        prompt = """You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience setting professional guided composition prompts for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
 
 ROLE: EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER & TEACHER
 
@@ -2051,31 +2107,44 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
   "zimsec_paper_reference": "Paper 1 Section B (Guided Composition)",
   "marking_focus": "Brief note on what examiners will focus on (structure, register, relevance, accuracy)"
 }"""
-                
-                model = self.client.GenerativeModel('gemini-2.5-flash')
-                response = model.generate_content(
-                    prompt,
-                    generation_config=self.client.types.GenerationConfig(
-                        response_mime_type="application/json",
-                        temperature=0.8,
-                        max_output_tokens=1500
-                    ),
+
+        # Vertex AI primary via Gemini client
+        if self._is_configured and self.client:
+            try:
+                response = self.client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=prompt,
+                    config={
+                        "response_mime_type": "application/json",
+                        "temperature": 0.7,
+                        "max_output_tokens": 2000,
+                    },
                 )
-                
-                if response and hasattr(response, 'text') and response.text:
+                if response and getattr(response, 'text', None):
                     clean_text = self._clean_json_block(response.text)
                     data = json.loads(clean_text)
-                    logger.info("✅ Generated guided composition prompt using Gemini 2.5 Flash (fallback)")
+                    logger.info("Generated guided composition prompt using Vertex/Gemini")
                     return {
                         'success': True,
-                        'prompt': data
+                        'prompt': data,
+                        'ai_model': 'vertex_ai',
                     }
-                
             except Exception as e:
-                logger.error(f"Gemini guided composition error: {e}")
-        
+                logger.error(f"Vertex/Gemini guided composition error: {e}")
+
+        # DeepSeek fallback
+        if self.deepseek_api_key:
+            try:
+                deepseek_result = self._generate_deepseek_guided_composition()
+                if deepseek_result:
+                    logger.info("Generated guided composition prompt using DeepSeek fallback")
+                    deepseek_result.setdefault('ai_model', 'deepseek_fallback')
+                    return deepseek_result
+            except Exception as e:
+                logger.warning(f"DeepSeek guided composition failed: {e}")
+
         return self._get_fallback_guided_composition()
-    
+
     def _generate_deepseek_guided_composition(self) -> Optional[Dict]:
         """Generate guided composition prompt using DeepSeek AI"""
         if not self.deepseek_api_key:
@@ -2187,29 +2256,27 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
             }
         }
 
-    def mark_free_response_essay(self, student_name: str, student_surname: str, 
+    def mark_free_response_essay(self, student_name: str, student_surname: str,
                                  essay_text: str, topic: Dict) -> Optional[Dict]:
-        """Mark free response essay out of 30 using DeepSeek first, then Gemini fallback"""
-        # Primary: DeepSeek AI
-        if self.deepseek_api_key:
+        """Mark free response essays with Vertex AI primary and DeepSeek fallback."""
+        # Vertex AI primary via Gemini client
+        if self._is_configured and self.client:
             try:
-                deepseek_result = self._mark_deepseek_free_response_essay(student_name, student_surname, essay_text, topic)
-                if deepseek_result:
-                    logger.info("✅ Marked free response essay using DeepSeek AI")
-                    return deepseek_result
-            except Exception as e:
-                logger.warning(f"DeepSeek free response marking failed: {e}")
+                prompt_intro = f"""You are a professional ZIMSEC O-Level English examiner marking Paper 1 Section A (Free Response).
 
-        # Secondary: Gemini AI fallback
-        if not self._is_configured or not self.client:
-            logger.warning("Gemini AI not configured and DeepSeek failed - cannot mark essay")
-            return self._fallback_free_marking(student_name, student_surname)
-        
-        try:
-            # Using concatenation to avoid potential f-string parsing issues with large blocks
-            prompt_intro = f"You are a professional ZIMSEC O-Level English examiner marking Paper 1 Section A (Free Response).\n\nSTUDENT INFORMATION:\nName: {student_name} {student_surname}\n\nESSAY TOPIC:\n{topic.get('title', '')}\n{topic.get('description', '')}\n\nSTUDENT ESSAY:\n{essay_text}\n\n"
-            
-            prompt_criteria = """ZIMSEC MARKING CRITERIA (Total: 30 marks) - Use EXACTLY these criteria as a ZIMSEC examiner would:
+STUDENT INFORMATION:
+Name: {student_name} {student_surname}
+
+ESSAY TOPIC:
+{topic.get('title', '')}
+{topic.get('description', '')}
+
+STUDENT ESSAY:
+{essay_text}
+
+"""
+
+                prompt_criteria = """ZIMSEC MARKING CRITERIA (Total: 30 marks) - Use EXACTLY these criteria as a ZIMSEC examiner would:
 
 1. CONTENT (15 marks):
    - Relevance to topic (addresses the topic directly and fully) - 4 marks
@@ -2271,47 +2338,64 @@ Return ONLY valid JSON (no markdown fences):
   "corrected_essay": "Full corrected version of the essay with all errors fixed...",
   "detailed_feedback": "Specific feedback on strengths and areas for improvement..."
 }"""
-            prompt = prompt_intro + prompt_criteria
-            
-            model = self.client.GenerativeModel('gemini-2.5-flash')
-            response = model.generate_content(
-                prompt,
-                generation_config=self.client.types.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.3,
-                    max_output_tokens=4000
-                ),
-            )
-            
-            if response and hasattr(response, 'text') and response.text:
-                clean_text = self._clean_json_block(response.text)
-                data = json.loads(clean_text)
-                
-                # Add teacher comment based on score
-                score = data.get('score', 0)
-                max_score = data.get('max_score', 30)
-                
-                # Ensure max_score is valid to prevent division by zero
-                if not max_score or max_score <= 0:
-                    max_score = 30
-                    data['max_score'] = max_score
-                    
-                teacher_comment = self._get_teacher_comment_by_score(score, max_score, student_name)
-                
-                data['teacher_comment'] = teacher_comment
-                data['essay_type'] = 'free_response'
-                
-                logger.info(f"✅ Marked free response essay using Gemini 2.5 Flash - Score: {score}/{max_score}")
-                return {
-                    'success': True,
-                    'result': data
-                }
-            
-        except Exception as e:
-            logger.error(f"Error marking free response essay with Gemini: {e}")
-        
+                prompt = prompt_intro + prompt_criteria
+
+                response = self.client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=prompt,
+                    config={
+                        "response_mime_type": "application/json",
+                        "temperature": 0.3,
+                        "max_output_tokens": 4000,
+                    },
+                )
+
+                if response and getattr(response, 'text', None):
+                    clean_text = self._clean_json_block(response.text)
+                    data = json.loads(clean_text)
+
+                    score = data.get('score', 0)
+                    max_score = data.get('max_score', 30)
+                    if not max_score or max_score <= 0:
+                        max_score = 30
+                        data['max_score'] = max_score
+
+                    teacher_comment = self._get_teacher_comment_by_score(score, max_score, student_name)
+                    data['teacher_comment'] = teacher_comment
+                    data['essay_type'] = 'free_response'
+                    data['ai_model'] = 'vertex_ai'
+
+                    logger.info(
+                        "Marked free response essay using Vertex/Gemini - Score: %s/%s",
+                        score,
+                        max_score,
+                    )
+                    return {
+                        'success': True,
+                        'result': data,
+                    }
+
+            except Exception as e:
+                logger.error(f"Error marking free response essay with Vertex/Gemini: {e}")
+
+        # DeepSeek fallback
+        if self.deepseek_api_key:
+            try:
+                deepseek_result = self._mark_deepseek_free_response_essay(
+                    student_name,
+                    student_surname,
+                    essay_text,
+                    topic,
+                )
+                if deepseek_result:
+                    logger.info("Marked free response essay using DeepSeek fallback")
+                    deepseek_result.setdefault('ai_model', 'deepseek_fallback')
+                    return deepseek_result
+            except Exception as e:
+                logger.warning(f"DeepSeek free response marking failed: {e}")
+
         return self._fallback_free_marking(student_name, student_surname)
-    
+
     def _mark_deepseek_free_response_essay(self, student_name: str, student_surname: str, 
                                  essay_text: str, topic: Dict) -> Optional[Dict]:
         """Mark free response essay using DeepSeek AI"""
@@ -2457,26 +2541,11 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
 
     def mark_guided_composition(self, student_name: str, student_surname: str,
                                essay_text: str, prompt: Dict) -> Optional[Dict]:
-        """Mark guided composition out of 20 using DeepSeek first, then Gemini fallback"""
-        
-        # Primary: DeepSeek AI
-        if self.deepseek_api_key:
+        """Mark guided compositions with Vertex AI primary and DeepSeek fallback."""
+        # Vertex AI primary via Gemini client
+        if self._is_configured and self.client:
             try:
-                deepseek_result = self._mark_deepseek_guided_composition(student_name, student_surname, essay_text, prompt)
-                if deepseek_result:
-                    logger.info("✅ Marked guided composition using DeepSeek AI")
-                    return deepseek_result
-            except Exception as e:
-                logger.warning(f"DeepSeek guided composition marking failed: {e}")
-
-        # Secondary: Gemini AI
-        if not self._is_configured or not self.client:
-            logger.warning("Gemini AI not configured and DeepSeek failed - cannot mark composition")
-            return self._fallback_guided_marking(student_name, student_surname)
-        
-        try:
-            # Using concatenation to avoid f-string issues
-            prompt_intro = f"""You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience marking professional guided compositions for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
+                prompt_intro = f"""You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience marking professional guided compositions for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
 
 ROLE: EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER & MARKER
 
@@ -2499,8 +2568,8 @@ STUDENT COMPOSITION:
 {essay_text}
 
 """
-            
-            prompt_criteria = """ZIMSEC MARKING CRITERIA (Total: 20 marks) - Use EXACTLY these criteria as a ZIMSEC examiner would:
+
+                prompt_criteria = f"""ZIMSEC MARKING CRITERIA (Total: 20 marks) - Use EXACTLY these criteria as a ZIMSEC examiner would:
 
 1. CONTENT & FORMAT (12 marks):
    - Adherence to specified format ({prompt.get('format', '')}) - 3 marks
@@ -2530,65 +2599,82 @@ INSTRUCTIONS:
 5. Be strict on format requirements
 
 Return ONLY valid JSON (no markdown fences):
-{
+{{
   "score": 16,
   "max_score": 20,
-  "breakdown": {
+  "breakdown": {{
     "content_and_format": 10,
     "language": 6
-  },
+  }},
   "corrections": [
-    {
+    {{
       "wrong": "Dear friend",
       "correct": "Dear Sir/Madam",
       "type": "format",
       "explanation": "Formal letter requires formal salutation"
-    }
+    }}
   ],
   "corrected_essay": "Full corrected version...",
   "detailed_feedback": "Specific feedback on format adherence and content..."
-}"""
-            marking_prompt = prompt_intro + prompt_criteria
-            
-            model = self.client.GenerativeModel('gemini-2.5-flash')
-            response = model.generate_content(
-                marking_prompt,
-                generation_config=self.client.types.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.3,
-                    max_output_tokens=4000
-                ),
-            )
-            
-            if response and hasattr(response, 'text') and response.text:
-                clean_text = self._clean_json_block(response.text)
-                data = json.loads(clean_text)
-                
-                # Add teacher comment based on score
-                score = data.get('score', 0)
-                max_score = data.get('max_score', 20)
-                
-                # Ensure max_score is valid to prevent division by zero
-                if not max_score or max_score <= 0:
-                    max_score = 20
-                    data['max_score'] = max_score
-                    
-                teacher_comment = self._get_teacher_comment_by_score(score, max_score, student_name)
-                
-                data['teacher_comment'] = teacher_comment
-                data['essay_type'] = 'guided'
-                
-                logger.info(f"✅ Marked guided composition using Gemini 2.5 Flash - Score: {score}/{max_score}")
-                return {
-                    'success': True,
-                    'result': data
-                }
-            
-        except Exception as e:
-            logger.error(f"Error marking guided composition with Gemini: {e}")
-        
+}}"""
+                marking_prompt = prompt_intro + prompt_criteria
+
+                response = self.client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=marking_prompt,
+                    config={
+                        "response_mime_type": "application/json",
+                        "temperature": 0.3,
+                        "max_output_tokens": 4000,
+                    },
+                )
+
+                if response and getattr(response, 'text', None):
+                    clean_text = self._clean_json_block(response.text)
+                    data = json.loads(clean_text)
+
+                    score = data.get('score', 0)
+                    max_score = data.get('max_score', 20)
+                    if not max_score or max_score <= 0:
+                        max_score = 20
+                        data['max_score'] = max_score
+
+                    teacher_comment = self._get_teacher_comment_by_score(score, max_score, student_name)
+                    data['teacher_comment'] = teacher_comment
+                    data['essay_type'] = 'guided'
+                    data['ai_model'] = 'vertex_ai'
+
+                    logger.info(
+                        "Marked guided composition using Vertex/Gemini - Score: %s/%s",
+                        score,
+                        max_score,
+                    )
+                    return {
+                        'success': True,
+                        'result': data,
+                    }
+
+            except Exception as e:
+                logger.error(f"Error marking guided composition with Vertex/Gemini: {e}")
+
+        # DeepSeek fallback
+        if self.deepseek_api_key:
+            try:
+                deepseek_result = self._mark_deepseek_guided_composition(
+                    student_name,
+                    student_surname,
+                    essay_text,
+                    prompt,
+                )
+                if deepseek_result:
+                    logger.info("Marked guided composition using DeepSeek fallback")
+                    deepseek_result.setdefault('ai_model', 'deepseek_fallback')
+                    return deepseek_result
+            except Exception as e:
+                logger.warning(f"DeepSeek guided composition marking failed: {e}")
+
         return self._fallback_guided_marking(student_name, student_surname)
-    
+
     def _mark_deepseek_guided_composition(self, student_name: str, student_surname: str,
                                          essay_text: str, prompt_data: Dict) -> Optional[Dict]:
         """Mark guided composition using DeepSeek AI"""

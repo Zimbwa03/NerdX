@@ -1,7 +1,7 @@
 """
 ZIMSEC Project Assistant Service - Conversational AI Version
-A ChatGPT-style chatbot where DeepSeek AI acts as a professional teacher
-guiding students through their ZIMSEC School-Based Projects
+A ChatGPT-style chatbot where Vertex AI (Gemini) is primary and DeepSeek is fallback,
+guiding students through their ZIMSEC School-Based Projects.
 """
 
 import logging
@@ -17,6 +17,7 @@ from database.external_db import make_supabase_request, get_user_credits, deduct
 from utils.credit_units import format_credits, units_to_credits
 from services.advanced_credit_service import advanced_credit_service
 from utils.deepseek import get_deepseek_chat_model
+from utils.vertex_ai_helper import extract_json_object
 
 logger = logging.getLogger(__name__)
 DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
@@ -54,7 +55,7 @@ except ImportError:
 class ProjectAssistantService:
     """
     Conversational AI Project Assistant - like ChatGPT for ZIMSEC projects
-    Students chat naturally with DeepSeek AI acting as a professional teacher
+    Students chat naturally with Vertex AI acting as a professional teacher
     """
     
     def __init__(self):
@@ -3020,7 +3021,7 @@ Please provide accurate, current information with sources where possible. Focus 
             return {'success': False, 'error': str(e)}
 
     def generate_project_document(self, user_id: str, project_id: int) -> dict:
-        """Generate a complete ZIMSEC project document as PDF using DeepSeek AI"""
+        """Generate a complete ZIMSEC project document as PDF with Vertex AI primary."""
         try:
             import requests
             from utils.project_pdf_generator import ProjectDocumentGenerator
@@ -3040,7 +3041,7 @@ Please provide accurate, current information with sources where possible. Focus 
             project_title = project.get('project_title', 'Untitled Project')
             subject = project.get('subject', 'Not specified')
             
-            # Use DeepSeek to generate comprehensive project content
+            # Use Vertex AI (Gemini) primary with DeepSeek fallback
             enhanced_data = self._generate_project_content_with_ai(
                 project_title, subject, conversation_history, project_data
             )
@@ -3072,28 +3073,18 @@ Please provide accurate, current information with sources where possible. Focus 
             logger.error(f"Error generating project document for {user_id}: {e}", exc_info=True)
             raise
     
-    def _generate_project_content_with_ai(self, title: str, subject: str, 
-                                           conversation_history: list, 
+    def _generate_project_content_with_ai(self, title: str, subject: str,
+                                           conversation_history: list,
                                            existing_data: dict) -> dict:
-        """Use DeepSeek AI to generate comprehensive project content"""
-        
+        """Generate comprehensive project content with Vertex AI primary and DeepSeek fallback."""
+
         # Build context from conversation history
         conversation_text = ""
         for msg in conversation_history[-20:]:  # Last 20 messages
             role = "Student" if msg.get('role') == 'user' else "NerdX AI"
             conversation_text += f"{role}: {msg.get('content', '')}\n\n"
-        
-        prompt = f"""Based on this ZIMSEC School-Based Project conversation, generate comprehensive project document content.
 
-PROJECT TITLE: {title}
-SUBJECT: {subject}
-
-CONVERSATION HISTORY:
-{conversation_text if conversation_text else "No conversation history available."}
-
-Generate content for each section. Be detailed and professional. Return ONLY valid JSON:
-
-{{
+        json_schema = """{
     "problem_definition": "Detailed problem statement explaining the issue this project addresses...",
     "investigation": "Investigation of the current system, its limitations and stakeholder analysis...",
     "requirements": ["Requirement 1", "Requirement 2", "Requirement 3"],
@@ -3108,49 +3099,81 @@ Generate content for each section. Be detailed and professional. Return ONLY val
     "technical_documentation": "Technical specifications and developer notes...",
     "evaluation": "Evaluation of project success against objectives...",
     "conclusion": "Summary of outcomes, lessons learned and recommendations..."
-}}"""
+}"""
 
-        # Try DeepSeek first
+        prompt = (
+            "Based on this ZIMSEC School-Based Project conversation, generate comprehensive project document content.\n\n"
+            f"PROJECT TITLE: {title}\n"
+            f"SUBJECT: {subject}\n\n"
+            "CONVERSATION HISTORY:\n"
+            f"{conversation_text if conversation_text else 'No conversation history available.'}\n"
+            "Generate content for each section. Be detailed and professional. Return ONLY valid JSON:\n\n"
+            f"{json_schema}"
+        )
+
+        # Vertex/Gemini primary
+        if self._is_gemini_configured and self.gemini_client:
+            try:
+                response = self.gemini_client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=prompt,
+                    config={
+                        "temperature": 0.7,
+                        "max_output_tokens": 4000,
+                        "response_mime_type": "application/json",
+                    },
+                )
+                if response and response.text:
+                    parsed = extract_json_object(
+                        response.text,
+                        logger=logger,
+                        context="project_assistant:document",
+                    )
+                    if parsed:
+                        logger.info("Generated project content using Vertex/Gemini")
+                        return parsed
+            except Exception as gemini_error:
+                logger.error(f"Vertex/Gemini project content generation failed: {gemini_error}")
+
+        # DeepSeek fallback
         if self.deepseek_api_key:
             try:
                 response = requests.post(
                     "https://api.deepseek.com/v1/chat/completions",
                     headers={
                         "Authorization": f"Bearer {self.deepseek_api_key}",
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
                     },
                     json={
                         "model": DEEPSEEK_CHAT_MODEL,
                         "messages": [
-                            {"role": "system", "content": "You are a ZIMSEC project document writer. Generate professional, detailed content for school-based projects."},
-                            {"role": "user", "content": prompt}
+                            {
+                                "role": "system",
+                                "content": "You are a ZIMSEC project document writer. Generate professional, detailed content for school-based projects.",
+                            },
+                            {"role": "user", "content": prompt},
                         ],
                         "temperature": 0.7,
-                        "max_tokens": 4000
+                        "max_tokens": 4000,
                     },
-                    timeout=60
+                    timeout=60,
                 )
-                
+
                 if response.status_code == 200:
                     result = response.json()
                     content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-                    if content:
-                        import json
-                        # Clean JSON
-                        content = content.strip()
-                        if content.startswith("```json"):
-                            content = content[7:]
-                        if content.startswith("```"):
-                            content = content[3:]
-                        if content.endswith("```"):
-                            content = content[:-3]
-                        
-                        logger.info("✅ Generated project content using DeepSeek AI")
-                        return json.loads(content.strip())
-                        
+                    parsed = extract_json_object(
+                        content,
+                        logger=logger,
+                        context="project_assistant:document:deepseek",
+                    )
+                    if parsed:
+                        logger.info("Generated project content using DeepSeek fallback")
+                        return parsed
+
             except Exception as e:
                 logger.error(f"DeepSeek project content generation failed: {e}")
-        
+
         # Fallback content if AI fails
         logger.warning("Using fallback project content")
         return {
@@ -3159,12 +3182,12 @@ Generate content for each section. Be detailed and professional. Return ONLY val
             "requirements": [
                 "The solution must be practical and affordable",
                 "It should be sustainable and environmentally friendly",
-                "It must meet the needs of the target users"
+                "It must meet the needs of the target users",
             ],
             "objectives": [
                 "To develop an effective solution to the identified problem",
                 "To implement and test the solution",
-                "To evaluate the impact and make recommendations"
+                "To evaluate the impact and make recommendations",
             ],
             "alternatives": "Several alternative approaches were considered before selecting the final solution based on feasibility, cost, and effectiveness.",
             "input_design": "The inputs required include user data, resources, and materials necessary for implementation.",
@@ -3175,5 +3198,5 @@ Generate content for each section. Be detailed and professional. Return ONLY val
             "user_documentation": "This document serves as a guide for users on how to operate and maintain the solution.",
             "technical_documentation": "Technical specifications and maintenance procedures are documented for future reference.",
             "evaluation": "The project was evaluated against the original objectives, demonstrating significant achievement of goals.",
-            "conclusion": "This project successfully addressed the identified problem and provides a sustainable solution with recommendations for future improvements."
+            "conclusion": "This project successfully addressed the identified problem and provides a sustainable solution with recommendations for future improvements.",
         }

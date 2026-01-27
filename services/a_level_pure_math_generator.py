@@ -1,7 +1,7 @@
 """
-A Level Pure Mathematics Question Generator
-Uses DeepSeek AI to generate advanced mathematics questions for ZIMSEC A Level syllabus (Code 6042)
-Supports MCQ, structured questions, and worked solutions
+A Level Pure Mathematics Question Generator.
+Uses Vertex AI as primary with DeepSeek fallback.
+Supports MCQ, structured questions, and worked solutions.
 """
 
 import json
@@ -12,6 +12,7 @@ import re
 from typing import Dict, Optional, List
 from constants import A_LEVEL_PURE_MATH_TOPICS, A_LEVEL_PURE_MATH_ALL_TOPICS
 from utils.deepseek import get_deepseek_chat_model
+from utils.vertex_ai_helper import try_vertex_json
 
 logger = logging.getLogger(__name__)
 
@@ -185,43 +186,49 @@ class ALevelPureMathGenerator:
         })
         self.graph_service = None  # Lazy init to avoid heavy imports unless needed
     
+
     def generate_question(self, topic: str, difficulty: str = "medium", user_id: str = None, question_type: str = "mcq") -> Optional[Dict]:
-        """
-        Generate an A Level Pure Mathematics question
-        
-        Args:
-            topic: The topic identifier (e.g., 'polynomials', 'complex_numbers')
-            difficulty: 'easy', 'medium', or 'difficult'
-            user_id: Optional user ID for tracking
-            question_type: 'mcq' for multiple choice, 'structured' for long-form
-        
-        Returns:
-            Dictionary containing question data or None on failure
-        """
+        """Generate an A Level Pure Mathematics question with Vertex primary."""
         try:
-            # Map topic ID to display name
             topic_name = self._get_topic_name(topic)
             if not topic_name:
                 logger.error(f"Invalid A Level Pure Math topic: {topic}")
                 return None
-            
+
             topic_details = A_LEVEL_PURE_MATH_TOPIC_DETAILS.get(topic_name, {})
             level = topic_details.get("level", "A Level")
             key_concepts = topic_details.get("key_concepts", [])
             key_formulas = topic_details.get("key_formulas", [])
             question_types = topic_details.get("question_types", [])
-            
-            # Create detailed prompt for DeepSeek
+
             if question_type == "structured":
                 prompt = self._create_structured_prompt(topic_name, difficulty, level, key_concepts, key_formulas, question_types)
             else:
                 prompt = self._create_mcq_prompt(topic_name, difficulty, level, key_concepts, key_formulas, question_types)
-            
-            # Generate question using DeepSeek
-            question_data = self._call_deepseek(prompt, question_type)
-            
+
+            def _is_valid_candidate(data: Dict) -> bool:
+                if not isinstance(data, dict):
+                    return False
+                if question_type == "structured":
+                    return bool(data.get("stem") and data.get("parts"))
+                return bool(data.get("question") and data.get("options"))
+
+            provider = "vertex_ai"
+            context = f"a_level_pure_math:{question_type}:{topic_name}:{difficulty}"
+            vertex_prompt = f"{self._system_prompt()}\n\n{prompt}"
+
+            logger.info(f"Trying Vertex AI (primary) for {context}")
+            question_data = try_vertex_json(vertex_prompt, logger=logger, context=context)
+            if question_data and not _is_valid_candidate(question_data):
+                logger.warning(f"Vertex AI returned invalid structure for {context}")
+                question_data = None
+
+            if not question_data:
+                provider = "deepseek_fallback"
+                logger.info(f"Falling back to DeepSeek for {context}")
+                question_data = self._call_deepseek(prompt, question_type)
+
             if question_data:
-                # Optionally attach visualization using matplotlib for graph/shape topics
                 question_data = self._maybe_attach_visualization(question_data, topic_name)
                 question_data['subject'] = 'A Level Pure Mathematics'
                 question_data['topic'] = topic_name
@@ -229,28 +236,25 @@ class ALevelPureMathGenerator:
                 question_data['difficulty'] = difficulty
                 question_data['level'] = level
                 question_data['source'] = 'ai_generated_a_level_pure_math'
-                question_data['ai_model'] = 'deepseek'
-                # Enable image upload for pure mathematics (like regular mathematics)
+                question_data['ai_model'] = provider
                 question_data['allows_text_input'] = True
                 question_data['allows_image_upload'] = True
                 return question_data
-            
-            # If AI generation failed, use fallback question
+
             logger.warning(f"AI generation failed for {topic_name}, using fallback")
             fallback = self._get_fallback_question(topic_name, difficulty)
             fallback['subject'] = 'A Level Pure Mathematics'
             fallback['level'] = level
             return fallback
-            
+
         except Exception as e:
             logger.error(f"Error generating A Level Pure Math question: {e}")
-            # Return fallback on exception too
             try:
                 topic_name = self._get_topic_name(topic) or topic
                 return self._get_fallback_question(topic_name, difficulty)
-            except:
+            except Exception:
                 return None
-    
+
     def _get_topic_name(self, topic_id: str) -> Optional[str]:
         """Convert topic ID to display name"""
         # Map of topic IDs to display names
@@ -587,6 +591,23 @@ Generate ONE A Level Pure Mathematics structured question now:"""
 
         return prompt
     
+
+
+    def _system_prompt(self) -> str:
+        """System prompt shared by Vertex AI and DeepSeek."""
+        return """You are an expert A Level Pure Mathematics examiner for ZIMSEC examinations.
+Generate questions with clear solutions.
+
+CRITICAL: Use plain text math notation and never use LaTeX or $ symbols:
+- Do not include $ delimiters.
+- Use x^2, x^3, x^n for powers (no LaTeX).
+- Use fractions as a/b or (a+b)/(c+d) (no LaTeX).
+- Use sqrt(...) for square roots.
+- Use symbols like sum, pi, infinity, +/- in plain text.
+- Use asin, acos, atan for inverse trig.
+
+Keep explanations concise (2-3 sentences). Always respond with valid, complete JSON only."""
+
     def _call_deepseek(self, prompt: str, question_type: str = "mcq") -> Optional[Dict]:
         """Call DeepSeek API to generate question with retries"""
         
@@ -606,18 +627,7 @@ Generate ONE A Level Pure Mathematics structured question now:"""
                     "messages": [
                         {
                             "role": "system",
-                            "content": """You are an expert A Level Pure Mathematics examiner for ZIMSEC examinations. 
-Generate questions with clear solutions.
-
-CRITICAL: Use PLAIN TEXT Unicode math notation - NEVER use LaTeX or $ symbols:
-- ABSOLUTELY NO delimiters like $.
-- Use x², x³, xⁿ for powers (NOT $x^2$ or x^2)
-- Use fractions as a/b or (a+b)/(c+d) (NOT $\\frac{a}{b}$)
-- Use √ for square roots (NOT $\\sqrt{}$)
-- Use ∑, π, ∞, ±, →, ⟹ for math symbols
-- Use sin⁻¹, cos⁻¹, tan⁻¹ for inverse trig
-
-Keep explanations concise (2-3 sentences). Always respond with valid, complete JSON only."""
+                            "content": self._system_prompt()
                         },
                         {
                             "role": "user",
@@ -1163,4 +1173,3 @@ Keep explanations concise (2-3 sentences). Always respond with valid, complete J
 
 # Singleton instance
 a_level_pure_math_generator = ALevelPureMathGenerator()
-

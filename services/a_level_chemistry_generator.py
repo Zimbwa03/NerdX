@@ -1,6 +1,6 @@
 """
-A Level Chemistry Question Generator
-Uses DeepSeek AI to generate advanced chemistry MCQ questions for Cambridge/ZIMSEC A Level syllabus
+A Level Chemistry Question Generator.
+Uses Vertex AI as primary with DeepSeek fallback.
 """
 
 import json
@@ -10,6 +10,7 @@ import os
 from typing import Dict, Optional
 from constants import A_LEVEL_CHEMISTRY_TOPICS, A_LEVEL_CHEMISTRY_ALL_TOPICS
 from utils.deepseek import get_deepseek_chat_model
+from utils.vertex_ai_helper import try_vertex_json
 
 logger = logging.getLogger(__name__)
 
@@ -294,42 +295,48 @@ class ALevelChemistryGenerator:
             return topic_id
         return slug_map.get(topic_id)
     
+
     def generate_question(self, topic: str, difficulty: str = "medium", user_id: str = None, question_type: str = "mcq") -> Optional[Dict]:
-        """
-        Generate an A Level Chemistry question
-        
-        Args:
-            topic: The topic identifier
-            difficulty: 'easy', 'medium', or 'difficult'
-            user_id: Optional user ID for tracking
-            question_type: 'mcq' for multiple choice, 'structured' for Paper 2 style
-        
-        Returns:
-            Dictionary containing question data or None on failure
-        """
+        """Generate an A Level Chemistry question with Vertex primary."""
         try:
             topic_name = self._get_topic_name(topic) or topic
-            
-            # Validate topic
             if topic_name not in A_LEVEL_CHEMISTRY_ALL_TOPICS:
                 logger.error(f"Invalid A Level Chemistry topic: {topic}")
                 return None
-            
+
             topic_details = A_LEVEL_CHEMISTRY_TOPIC_DETAILS.get(topic_name, {})
             level = topic_details.get("level", "A Level")
             category = topic_details.get("category", "Chemistry")
             key_concepts = topic_details.get("key_concepts", [])
             key_formulas = topic_details.get("key_formulas", [])
-            
-            # Create detailed prompt for DeepSeek based on question type
+
             if question_type == "structured":
                 prompt = self._create_structured_prompt(topic_name, difficulty, level, category, key_concepts, key_formulas)
             else:
                 prompt = self._create_question_prompt(topic_name, difficulty, level, category, key_concepts, key_formulas)
-            
-            # Generate question using DeepSeek
-            question_data = self._call_deepseek(prompt, question_type)
-            
+
+            def _is_valid_candidate(data: Dict) -> bool:
+                if not isinstance(data, dict):
+                    return False
+                if question_type == "structured":
+                    return bool(data.get("stem") and data.get("parts"))
+                return bool(data.get("question") and data.get("options"))
+
+            provider = "vertex_ai"
+            context = f"a_level_chemistry:{question_type}:{topic_name}:{difficulty}"
+            vertex_prompt = f"{self._system_prompt()}\n\n{prompt}"
+
+            logger.info(f"Trying Vertex AI (primary) for {context}")
+            question_data = try_vertex_json(vertex_prompt, logger=logger, context=context)
+            if question_data and not _is_valid_candidate(question_data):
+                logger.warning(f"Vertex AI returned invalid structure for {context}")
+                question_data = None
+
+            if not question_data:
+                provider = "deepseek_fallback"
+                logger.info(f"Falling back to DeepSeek for {context}")
+                question_data = self._call_deepseek(prompt, question_type)
+
             if question_data:
                 question_data['subject'] = 'A Level Chemistry'
                 question_data['topic'] = topic_name
@@ -338,17 +345,17 @@ class ALevelChemistryGenerator:
                 question_data['level'] = level
                 question_data['source'] = 'ai_generated_a_level'
                 question_data['question_type'] = question_type
-                # Enable voice input for structured questions
+                question_data['ai_model'] = provider
                 question_data['allows_text_input'] = True
                 question_data['allows_voice_input'] = True
                 return question_data
-            
+
             return None
-            
+
         except Exception as e:
             logger.error(f"Error generating A Level Chemistry question: {e}")
             return None
-    
+
     def _create_question_prompt(self, topic: str, difficulty: str, level: str, category: str, key_concepts: list, key_formulas: list) -> str:
         """Create a detailed prompt for A Level Chemistry MCQ generation"""
         
@@ -580,6 +587,30 @@ Generate ONE A Level Chemistry structured question now:"""
 
         return prompt
     
+
+    def _system_prompt(self) -> str:
+        """System prompt shared by Vertex AI and DeepSeek."""
+        return """You are a senior A Level Chemistry teacher (15+ years) and examiner-style question designer.
+You teach and assess for BOTH ZIMSEC A Level Chemistry and Cambridge International AS & A Level Chemistry 9701.
+
+NON-NEGOTIABLE RULES:
+1. Syllabus locked: only generate examinable content for ZIMSEC A Level and Cambridge 9701
+2. No leakage: do not introduce off-syllabus or university-level methods
+3. Exam authenticity: use real exam command words and structure
+4. Originality: generate original questions with the same skill pattern
+5. Marking realism: provide method marks, accuracy marks, and common errors
+6. Topic integration: combine topics the way real papers do
+
+CRITICAL: Use plain text notation and never use LaTeX or $ symbols:
+- Do not include $ delimiters
+- Use chemical formulas like H2O, CO2, SO4^2-, CH3COOH (no LaTeX)
+- Use charges like Cu2+, Fe3+, SO4^2- in plain text
+- Use fractions as a/b
+- Use arrows like -> and <-> for reactions and equilibrium
+- Use plain text scientific notation like [H+], Kc, Ecell
+
+Always respond with valid JSON containing step-by-step solutions."""
+
     def _call_deepseek(self, prompt: str, question_type: str = "mcq") -> Optional[Dict]:
         """Call DeepSeek API to generate question with retry logic"""
         import time
@@ -596,27 +627,7 @@ Generate ONE A Level Chemistry structured question now:"""
                     "Content-Type": "application/json"
                 }
                 
-                system_content = """You are a SENIOR A-LEVEL CHEMISTRY TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH ZIMSEC A-Level Chemistry and Cambridge International AS & A Level Chemistry 9701.
-
-ROLE: SENIOR A-LEVEL CHEMISTRY TEACHER & EXAMINER
-
-NON-NEGOTIABLE RULES:
-1. SYLLABUS-LOCKED: Only generate content examinable for ZIMSEC A-Level and Cambridge 9701
-2. NO LEAKAGE: Do NOT introduce off-syllabus topics or university-level methods
-3. EXAM AUTHENTICITY: Use real exam command words and structure
-4. ORIGINALITY: Generate ORIGINAL questions with the same SKILL pattern (not verbatim past papers)
-5. MARKING REALISM: Provide method marks + accuracy marks + common errors
-6. TOPIC INTEGRATION: Use mixed questions combining topics the way real papers do
-
-CRITICAL: Use PLAIN TEXT Unicode notation - NEVER use LaTeX or $ symbols:
-- ABSOLUTELY NO delimiters like $.
-- Use subscripts: H₂O, CO₂, SO₄²⁻, CH₃COOH (NOT H_2O or $H_2O$)
-- Use superscripts for charges: Cu²⁺, Fe³⁺, SO₄²⁻ (NOT Cu^2+)
-- Use fractions as a/b (NOT $\\frac{a}{b}$)
-- Use → for arrows, ⇌ for equilibrium, Δ for delta
-- Use proper chemical notation: [H⁺], Kc, E°cell
-
-Always respond with valid JSON containing step-by-step solutions."""
+                system_content = self._system_prompt()
                 
                 payload = {
                     "model": self.deepseek_model,
@@ -655,73 +666,71 @@ Always respond with valid JSON containing step-by-step solutions."""
                         json=payload,
                         timeout=(self.connect_timeout, timeout)
                     )
-                
-                if response.status_code == 429:
-                    # Rate limit - use Retry-After header if available
-                    retry_after = int(response.headers.get('Retry-After', 10))
-                    logger.warning(f"DeepSeek rate limit hit (429) on attempt {attempt + 1}, waiting {retry_after}s")
+                    if response.status_code == 429:
+                        # Rate limit - use Retry-After header if available
+                        retry_after = int(response.headers.get('Retry-After', 10))
+                        logger.warning(f"DeepSeek rate limit hit (429) on attempt {attempt + 1}, waiting {retry_after}s")
+                        if attempt < self.max_retries - 1:
+                            time.sleep(retry_after)
+                            continue
+                    elif response.status_code == 503:
+                        # Service unavailable
+                        logger.warning(f"DeepSeek service unavailable (503) on attempt {attempt + 1}")
+                        if attempt < self.max_retries - 1:
+                            continue
+                    elif response.status_code != 200:
+                        logger.error(f"DeepSeek API error: {response.status_code} - {response.text[:200]}")
+                        if attempt < self.max_retries - 1:
+                            continue
+                    result = response.json()
+                    content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
+                    # Parse JSON from response
+                    question_data = self._parse_question_response(content, question_type)
+                    if question_data:
+                        return question_data
+                    else:
+                        logger.warning(f"Failed to parse response on attempt {attempt + 1}")
+                        if attempt < self.max_retries - 1:
+                            time.sleep(2)
+                            continue
+                except (requests.Timeout, requests.exceptions.ReadTimeout) as e:
+                    timeout_str = f" (timeout: {timeout}s)" if timeout else ""
+                    logger.warning(f"DeepSeek timeout on attempt {attempt + 1}/{self.max_retries}{timeout_str}")
+                    # Reduce max_tokens for retry to speed up
                     if attempt < self.max_retries - 1:
-                        time.sleep(retry_after)
-                        continue
-                elif response.status_code == 503:
-                    # Service unavailable
-                    logger.warning(f"DeepSeek service unavailable (503) on attempt {attempt + 1}")
-                    if attempt < self.max_retries - 1:
-                        continue
-                elif response.status_code != 200:
-                    logger.error(f"DeepSeek API error: {response.status_code} - {response.text[:200]}")
-                    if attempt < self.max_retries - 1:
-                        continue
-                
-                result = response.json()
-                content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
-                
-                # Parse JSON from response
-                question_data = self._parse_question_response(content, question_type)
-                if question_data:
-                    return question_data
-                else:
-                    logger.warning(f"Failed to parse response on attempt {attempt + 1}")
-                    if attempt < self.max_retries - 1:
-                        time.sleep(2)
-                        continue
-                    
-            except (requests.Timeout, requests.exceptions.ReadTimeout) as e:
-                timeout_str = f" (timeout: {timeout}s)" if timeout else ""
-                logger.warning(f"DeepSeek timeout on attempt {attempt + 1}/{self.max_retries}{timeout_str}")
-                # Reduce max_tokens for retry to speed up
-                if attempt < self.max_retries - 1:
-                    payload['max_tokens'] = int(payload.get('max_tokens', 2000) * 0.85)  # Reduce by 15%
-                    logger.info(f"Retrying with reduced max_tokens ({payload['max_tokens']})")
-                    time.sleep(1)  # Brief wait before retry
+                        payload['max_tokens'] = int(payload.get('max_tokens', 2000) * 0.85)  # Reduce by 15%
+                        logger.info(f"Retrying with reduced max_tokens ({payload['max_tokens']})")
+                        time.sleep(1)  # Brief wait before retry
                     continue
-            except requests.exceptions.ConnectionError as e:
-                logger.error(f"DeepSeek connection error on attempt {attempt + 1}: {e}")
-                # Exponential backoff for connection errors
-                if attempt < self.max_retries - 1:
-                    wait_time = min(2 ** attempt, 5)  # Cap at 5 seconds: 1s, 2s, 4s, 5s
-                    logger.info(f"Connection error, waiting {wait_time}s before retry...")
-                    time.sleep(wait_time)
-                    continue
-            except requests.exceptions.HTTPError as e:
-                status_code = getattr(e.response, 'status_code', None)
-                if status_code == 429:  # Rate limit
-                    logger.warning(f"DeepSeek rate limit hit on attempt {attempt + 1}")
+                except requests.exceptions.ConnectionError as e:
+                    logger.error(f"DeepSeek connection error on attempt {attempt + 1}: {e}")
+                    # Exponential backoff for connection errors
                     if attempt < self.max_retries - 1:
-                        wait_time = 5 * (attempt + 1)  # Wait longer for rate limits
-                        logger.info(f"Rate limited, waiting {wait_time}s before retry...")
+                        wait_time = min(2 ** attempt, 5)  # Cap at 5 seconds: 1s, 2s, 4s, 5s
+                        logger.info(f"Connection error, waiting {wait_time}s before retry...")
                         time.sleep(wait_time)
-                        continue
-                else:
-                    logger.error(f"DeepSeek HTTP error {status_code} on attempt {attempt + 1}: {e}")
-                    if attempt < self.max_retries - 1:
-                        time.sleep(2)
-                        continue
-            except Exception as e:
-                logger.error(f"Error calling DeepSeek API on attempt {attempt + 1}: {e}", exc_info=True)
-                if attempt < self.max_retries - 1:
-                    time.sleep(1)  # Brief wait before retry
                     continue
+                except requests.exceptions.HTTPError as e:
+                    status_code = getattr(e.response, 'status_code', None)
+                    if status_code == 429:  # Rate limit
+                        logger.warning(f"DeepSeek rate limit hit on attempt {attempt + 1}")
+                        if attempt < self.max_retries - 1:
+                            wait_time = 5 * (attempt + 1)  # Wait longer for rate limits
+                            logger.info(f"Rate limited, waiting {wait_time}s before retry...")
+                            time.sleep(wait_time)
+                        continue
+                    else:
+                        logger.error(f"DeepSeek HTTP error {status_code} on attempt {attempt + 1}: {e}")
+                        if attempt < self.max_retries - 1:
+                            time.sleep(2)
+                        continue
+                except Exception as e:
+                    logger.error(f"Error calling DeepSeek API on attempt {attempt + 1}: {e}", exc_info=True)
+                    if attempt < self.max_retries - 1:
+                        time.sleep(1)  # Brief wait before retry
+                    continue
+            except Exception:
+                continue  # outer try: continue to next attempt on any unexpected error
         
         logger.error("All DeepSeek retry attempts failed for Chemistry question, trying Vertex AI fallback")
         

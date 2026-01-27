@@ -262,7 +262,7 @@ class ExamSessionService:
         }
     
     # =========================================================================
-    # QUESTION GENERATION (DeepSeek)
+    # QUESTION GENERATION (Vertex AI primary)
     # =========================================================================
     
     def generate_next_question(
@@ -272,13 +272,13 @@ class ExamSessionService:
         platform: str = 'mobile',
     ) -> Optional[Dict]:
         """
-        Generate the next question using AI based on platform.
+        Generate the next question using Vertex AI primary with DeepSeek fallback.
         One question at a time, no pre-generation.
         
         Args:
             session_id: Exam session ID
             question_index: Optional question index
-            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
+            platform: Platform hint (kept for compatibility)
         """
         session = self._sessions.get(session_id)
         if not session:
@@ -300,7 +300,7 @@ class ExamSessionService:
         if idx < len(session["questions"]) and session["questions"][idx].get("id"):
             return session["questions"][idx]
         
-        # Generate with DeepSeek (retry for diversity / duplicates)
+        # Generate with Vertex primary (retry for diversity / duplicates)
         question = None
         max_attempts = 3
         target_topic = self._get_topic_for_index(session, idx)
@@ -347,33 +347,34 @@ class ExamSessionService:
         return question
     
     def _call_deepseek_generate(self, session: Dict, question_index: int, platform: str = 'mobile') -> Optional[Dict]:
-        """
-        Call AI API to generate a single question based on platform
-        
-        Args:
-            session: Exam session dict
-            question_index: Index of the question
-            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
-        """
-        if not self.api_key:
-            logger.error("DEEPSEEK_API_KEY not configured")
-            return self._get_fallback_question(session)
-        
+        """Generate a single question with Vertex AI primary and DeepSeek fallback."""
         # Determine question type for this index
         question_type = self._get_question_type_for_index(session, question_index)
-        
+
         # Build prompt
         prompt = self._build_question_prompt(session, question_index, question_type)
-        
-        # WhatsApp bot: Use Vertex AI
-        if platform == 'whatsapp':
-            return self._generate_with_vertex_ai(session, question_index, prompt)
-        
-        # Mobile app: Use DeepSeek (unchanged)
+
+        # Vertex/Gemini primary
+        vertex_question = self._generate_with_vertex_ai(session, question_index, prompt)
+        if vertex_question:
+            vertex_question.setdefault("question_type", question_type)
+            return vertex_question
+
+        # DeepSeek fallback
+        return self._call_deepseek_only(session, question_index, prompt, question_type)
+
+    def _call_deepseek_only(
+        self,
+        session: Dict,
+        question_index: int,
+        prompt: str,
+        question_type: str,
+    ) -> Optional[Dict]:
+        """DeepSeek-only fallback generation."""
         if not self.api_key:
             logger.error("DEEPSEEK_API_KEY not configured")
             return self._get_fallback_question(session)
-        
+
         try:
             response = requests.post(
                 self.api_url,
@@ -386,9 +387,12 @@ class ExamSessionService:
                     "messages": [
                         {
                             "role": "system",
-                            "content": "You are a professional exam question generator for ZIMSEC/Cambridge-style exams. Generate exactly one question in the specified JSON format. Be rigorous but fair."
+                            "content": (
+                                "You are a professional exam question generator for ZIMSEC/Cambridge-style exams. "
+                                "Generate exactly one question in the specified JSON format. Be rigorous but fair."
+                            ),
                         },
-                        {"role": "user", "content": prompt}
+                        {"role": "user", "content": prompt},
                     ],
                     "temperature": 0.7,
                     "max_tokens": 2000,
@@ -396,97 +400,65 @@ class ExamSessionService:
                 },
                 timeout=45,
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                
+
                 # Try to extract JSON from response (handle markdown formatting)
                 try:
-                    # Remove markdown code blocks if present
-                    if '```json' in content:
-                        start = content.find('```json') + 7
-                        end = content.find('```', start)
-                        if end > start:
-                            content = content[start:end].strip()
-                    elif '```' in content:
-                        start = content.find('```') + 3
-                        end = content.find('```', start)
-                        if end > start:
-                            content = content[start:end].strip()
-                    
-                    # Find JSON object boundaries
-                    json_start = content.find('{')
-                    json_end = content.rfind('}') + 1
-                    
+                    if "```json" in content:
+                        start_idx = content.find("```json") + 7
+                        end_idx = content.find("```", start_idx)
+                        if end_idx > start_idx:
+                            content = content[start_idx:end_idx].strip()
+                    elif "```" in content:
+                        start_idx = content.find("```") + 3
+                        end_idx = content.find("```", start_idx)
+                        if end_idx > start_idx:
+                            content = content[start_idx:end_idx].strip()
+
+                    json_start = content.find("{")
+                    json_end = content.rfind("}") + 1
+
                     if json_start >= 0 and json_end > json_start:
                         json_str = content[json_start:json_end]
                         question_data = json.loads(json_str)
                     else:
-                        # Try parsing the whole content
                         question_data = json.loads(content)
-                        
+
+                    # Metadata
+                    question_data.setdefault("question_type", question_type)
+                    question_data["id"] = str(uuid.uuid4())
+                    question_data["generated_at"] = datetime.utcnow().isoformat()
+                    question_data["question_index"] = question_index
+                    question_data.setdefault("ai_model", "deepseek_fallback")
+
+                    username = session.get("username", "Student")
+                    if question_index == 0:
+                        question_data["prompt_to_student"] = f"Let's go, {username}! Here's your first question."
+                    else:
+                        question_data["prompt_to_student"] = (
+                            f"Great work, {username}! Here's question {question_index + 1}."
+                        )
+
+                    logger.info("Generated exam question %s with DeepSeek fallback", question_index + 1)
+                    return question_data
+
                 except json.JSONDecodeError as e:
-                    logger.error(f"JSON parsing error in exam session: {e}. Content preview: {content[:500]}")
-                    # Try to recover partial JSON
-                    try:
-                        # Attempt to fix common JSON issues
-                        json_start = content.find('{')
-                        if json_start >= 0:
-                            # Try to find a valid JSON object by progressively removing trailing characters
-                            for end_pos in range(len(content), json_start, -1):
-                                try:
-                                    json_str = content[json_start:end_pos]
-                                    question_data = json.loads(json_str)
-                                    logger.warning(f"Recovered partial JSON by truncating at position {end_pos}")
-                                    break
-                                except json.JSONDecodeError:
-                                    continue
-                            else:
-                                raise json.JSONDecodeError("Could not recover JSON", content, 0)
-                        else:
-                            raise json.JSONDecodeError("No JSON object found", content, 0)
-                    except Exception as recovery_error:
-                        logger.error(f"Failed to recover JSON: {recovery_error}")
-                        return self._get_fallback_question(session)
-                
-                # Add metadata
-                question_data["id"] = str(uuid.uuid4())
-                question_data["generated_at"] = datetime.utcnow().isoformat()
-                question_data["question_index"] = question_index
-                
-                # Add personalized prompt
-                username = session.get("username", "Student")
-                if question_index == 0:
-                    question_data["prompt_to_student"] = f"Let's go, {username}! Here's your first question."
-                elif question_index == session["total_questions"] - 1:
-                    question_data["prompt_to_student"] = f"Last question, {username}. Give it your best!"
-                else:
-                    question_data["prompt_to_student"] = f"Question {question_index + 1}, {username}."
-                
-                logger.info(f"Generated question {question_index + 1} for session {session['id']}")
-                return question_data
-            else:
-                logger.error(f"DeepSeek API error: {response.status_code} - {response.text}")
-                return self._get_fallback_question(session)
-                
+                    logger.error(f"DeepSeek JSON parsing error: {e}")
+                    logger.debug(f"Raw content: {content[:500]}")
+                    return self._get_fallback_question(session)
+
+            logger.error("DeepSeek API error: %s - %s", response.status_code, response.text)
+            return self._get_fallback_question(session)
+
         except Exception as e:
             logger.error(f"DeepSeek API exception: {e}")
             return self._get_fallback_question(session)
-    
-    def _get_question_type_for_index(self, session: Dict, index: int) -> str:
-        """Determine if this index should be MCQ or STRUCTURED."""
-        mode = session.get("question_mode", "MCQ_ONLY")
-        
-        if mode == "MCQ_ONLY":
-            return "MCQ"
-        elif mode == "STRUCTURED_ONLY":
-            return "STRUCTURED"
-        else:  # MIXED - alternate
-            return "MCQ" if index % 2 == 0 else "STRUCTURED"
-    
+
     def _build_question_prompt(self, session: Dict, index: int, question_type: str) -> str:
-        """Build the generation prompt for DeepSeek."""
+        """Build the generation prompt for the AI question generator."""
         subject = session["subject"]
         level = session["level"]
         difficulty = session["difficulty"]
@@ -578,72 +550,74 @@ Requirements:
 - Exam-appropriate language"""
     
     def _generate_with_vertex_ai(self, session: Dict, question_index: int, prompt: str) -> Optional[Dict]:
-        """Generate exam question using Vertex AI (for WhatsApp bot)"""
+        """Generate an exam question using Vertex AI (Gemini) as primary."""
         try:
             from services.vertex_service import vertex_service
-            
+
             if not vertex_service.is_available():
-                logger.warning("Vertex AI not available, falling back to DeepSeek")
-                return self._call_deepseek_generate(session, question_index, platform='mobile')
-            
-            system_message = "You are a professional exam question generator for ZIMSEC/Cambridge-style exams. Generate exactly one question in the specified JSON format. Be rigorous but fair."
+                logger.warning("Vertex AI not available for exam generation")
+                return None
+
+            system_message = (
+                "You are a professional exam question generator for ZIMSEC/Cambridge-style exams. "
+                "Generate exactly one question in the specified JSON format. Be rigorous but fair."
+            )
             full_prompt = f"{system_message}\n\n{prompt}"
-            
+
             result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
-            
-            if result and result.get('success'):
-                content = result['text']
-                
-                # Extract JSON (same logic as DeepSeek)
-                try:
-                    if '```json' in content:
-                        start = content.find('```json') + 7
-                        end = content.find('```', start)
-                        if end > start:
-                            content = content[start:end].strip()
-                    elif '```' in content:
-                        start = content.find('```') + 3
-                        end = content.find('```', start)
-                        if end > start:
-                            content = content[start:end].strip()
-                    
-                    json_start = content.find('{')
-                    json_end = content.rfind('}') + 1
-                    
-                    if json_start >= 0 and json_end > json_start:
-                        json_str = content[json_start:json_end]
-                        question_data = json.loads(json_str)
-                    else:
-                        question_data = json.loads(content)
-                    
-                    # Add metadata (same as DeepSeek)
-                    import uuid
-                    from datetime import datetime
-                    question_data["id"] = str(uuid.uuid4())
-                    question_data["generated_at"] = datetime.utcnow().isoformat()
-                    question_data["question_index"] = question_index
-                    
-                    username = session.get("username", "Student")
-                    if question_index == 0:
-                        question_data["prompt_to_student"] = f"Let's go, {username}! Here's your first question."
-                    else:
-                        question_data["prompt_to_student"] = f"Great work, {username}! Here's question {question_index + 1}."
-                    
-                    logger.info(f"✅ Generated exam question {question_index + 1} with Vertex AI")
-                    return question_data
-                    
-                except json.JSONDecodeError as e:
-                    logger.error(f"JSON parsing error in Vertex AI exam session: {e}")
-                    return self._call_deepseek_generate(session, question_index, platform='mobile')
-            
-            # Fallback to DeepSeek
-            logger.info("Vertex AI exam generation failed, falling back to DeepSeek")
-            return self._call_deepseek_generate(session, question_index, platform='mobile')
-            
+            if not result or not result.get('success'):
+                logger.warning("Vertex AI exam generation returned no result")
+                return None
+
+            content = (result.get('text') or "").strip()
+            if not content:
+                return None
+
+            try:
+                if '```json' in content:
+                    start_idx = content.find('```json') + 7
+                    end_idx = content.find('```', start_idx)
+                    if end_idx > start_idx:
+                        content = content[start_idx:end_idx].strip()
+                elif '```' in content:
+                    start_idx = content.find('```') + 3
+                    end_idx = content.find('```', start_idx)
+                    if end_idx > start_idx:
+                        content = content[start_idx:end_idx].strip()
+
+                json_start = content.find('{')
+                json_end = content.rfind('}') + 1
+
+                if json_start >= 0 and json_end > json_start:
+                    json_str = content[json_start:json_end]
+                    question_data = json.loads(json_str)
+                else:
+                    question_data = json.loads(content)
+
+                question_data.setdefault('ai_model', 'vertex_ai')
+                question_data['id'] = str(uuid.uuid4())
+                question_data['generated_at'] = datetime.utcnow().isoformat()
+                question_data['question_index'] = question_index
+
+                username = session.get('username', 'Student')
+                if question_index == 0:
+                    question_data['prompt_to_student'] = f"Let's go, {username}! Here's your first question."
+                else:
+                    question_data['prompt_to_student'] = (
+                        f"Great work, {username}! Here's question {question_index + 1}."
+                    )
+
+                logger.info("Generated exam question %s with Vertex AI", question_index + 1)
+                return question_data
+
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON parsing error in Vertex AI exam session: {e}")
+                return None
+
         except Exception as e:
             logger.error(f"Error generating exam question with Vertex AI: {e}")
-            return self._call_deepseek_generate(session, question_index, platform='mobile')
-    
+            return None
+
     def _get_fallback_question(self, session: Dict) -> Dict:
         """Return a fallback question when AI fails."""
         subject = session["subject"].lower()

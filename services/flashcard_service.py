@@ -1,6 +1,6 @@
 """
 Flashcard Generation Service
-Generates AI-powered educational flashcards using DeepSeek AI for O-Level and Vertex AI for A-Level Science Notes revision.
+Generates AI-powered educational flashcards using Vertex AI as primary and DeepSeek as fallback for all subjects (O-Level and A-Level).
 """
 
 import os
@@ -27,7 +27,7 @@ class Flashcard:
 
 class FlashcardService:
     """
-    Service for generating educational flashcards using DeepSeek AI (O-Level) and Vertex AI (A-Level).
+    Service for generating educational flashcards using Vertex AI as primary and DeepSeek as fallback for all subjects.
     
     Supports two modes:
     - Batch mode: Generate up to 100 cards at once
@@ -40,20 +40,20 @@ class FlashcardService:
         self.max_batch_size = 100
         self.timeout = 60  # seconds
         
-        # Initialize Vertex AI service for A-level subjects
+        # Vertex AI service (primary for all subjects)
         self.vertex_service = None
         try:
             from services.vertex_service import vertex_service
             self.vertex_service = vertex_service
             if self.vertex_service.is_available():
-                logger.info("✅ Vertex AI service available for A-level flashcards")
+                logger.info("✅ Vertex AI service available for flashcards (primary)")
             else:
-                logger.warning("⚠️ Vertex AI service not available - A-level flashcards will use fallback")
+                logger.warning("⚠️ Vertex AI service not available - flashcards will use DeepSeek fallback")
         except Exception as e:
             logger.warning(f"⚠️ Could not initialize Vertex AI service: {e}")
         
         if not self.api_key:
-            logger.warning("DEEPSEEK_API_KEY not configured - O-level flashcard generation will be limited")
+            logger.warning("DEEPSEEK_API_KEY not configured - DeepSeek fallback will be unavailable")
     
     def _is_a_level_subject(self, subject: str) -> bool:
         """Check if subject is an A-level subject"""
@@ -79,8 +79,9 @@ class FlashcardService:
         Returns:
             List of flashcard dictionaries
         """
-        if not self.api_key:
-            logger.error("DEEPSEEK_API_KEY not available")
+        # Require at least one provider (Vertex primary or DeepSeek fallback)
+        if not (self.vertex_service and self.vertex_service.is_available()) and not self.api_key:
+            logger.error("Neither Vertex AI nor DEEPSEEK_API_KEY available")
             return self._generate_fallback_flashcards(topic, count)
         
         # Limit batch size
@@ -89,10 +90,15 @@ class FlashcardService:
         try:
             prompt = self._create_batch_prompt(subject, topic, notes_content, actual_count)
             
-            # Use Vertex AI for A-level subjects, DeepSeek for O-level
-            if self._is_a_level_subject(subject):
+            # Primary: Vertex AI for all subjects
+            response = None
+            if self.vertex_service and self.vertex_service.is_available():
                 response = self._send_vertex_ai_request(prompt)
-            else:
+                if response:
+                    logger.info(f"Generated flashcards for {topic} via Vertex AI (primary)")
+            # Fallback: DeepSeek
+            if not response and self.api_key:
+                logger.info(f"Falling back to DeepSeek for flashcards ({topic})")
                 response = self._send_api_request(prompt)
             
             if response:
@@ -128,16 +134,22 @@ class FlashcardService:
         Returns:
             Single flashcard dictionary or None
         """
-        if not self.api_key:
+        # Require at least one provider (Vertex primary or DeepSeek fallback)
+        if not (self.vertex_service and self.vertex_service.is_available()) and not self.api_key:
             return self._generate_single_fallback(topic, index)
         
         try:
             prompt = self._create_single_prompt(subject, topic, notes_content, index, previous_questions)
             
-            # Use Vertex AI for A-level subjects, DeepSeek for O-level
-            if self._is_a_level_subject(subject):
+            # Primary: Vertex AI for all subjects
+            response = None
+            if self.vertex_service and self.vertex_service.is_available():
                 response = self._send_vertex_ai_request(prompt)
-            else:
+                if response:
+                    logger.info(f"Generated single flashcard for {topic} via Vertex AI (primary)")
+            # Fallback: DeepSeek
+            if not response and self.api_key:
+                logger.info(f"Falling back to DeepSeek for single flashcard ({topic})")
                 response = self._send_api_request(prompt, timeout=30)
             
             if response:
@@ -381,7 +393,7 @@ Generate the flashcard now (JSON only):"""
         return None
     
     def _send_vertex_ai_request(self, prompt: str) -> Optional[str]:
-        """Send request to Vertex AI Gemini for A-level flashcards"""
+        """Send request to Vertex AI Gemini (primary for all subjects)."""
         
         if not self.vertex_service or not self.vertex_service.is_available():
             logger.error("Vertex AI service not available")

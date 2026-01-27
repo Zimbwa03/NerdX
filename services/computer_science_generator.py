@@ -1,6 +1,6 @@
 """
-Professional Computer Science Question Generator for ZIMSEC/Cambridge O-Level
-Generates age-appropriate questions with clear explanations for 15-17 year old students
+Professional Computer Science Question Generator for ZIMSEC/Cambridge O-Level.
+Uses Vertex AI as primary with DeepSeek fallback.
 """
 import os
 import json
@@ -10,12 +10,17 @@ import logging
 import random
 from typing import Dict, List, Optional, Any, Tuple
 from utils.deepseek import get_deepseek_chat_model
+from utils.vertex_ai_helper import try_vertex_json
 
 logger = logging.getLogger(__name__)
 
+CS_SYSTEM_MESSAGE = (
+    "You are an expert O-Level Computer Science examiner. Generate educational questions in valid JSON format only."
+)
+
 
 class ComputerScienceGenerator:
-    """Professional O-Level Computer Science question generator using DeepSeek AI"""
+    """Professional O-Level Computer Science generator with Vertex primary."""
     
     def __init__(self):
         self.api_key = os.environ.get('DEEPSEEK_API_KEY')
@@ -277,52 +282,76 @@ class ComputerScienceGenerator:
     
     def generate_topical_question(self, topic: str, difficulty: str = 'medium', 
                                   user_id: str = None) -> Dict[str, Any]:
-        """Generate O-Level appropriate MCQ question with professional explanation"""
+        """Generate O-Level appropriate MCQ question with Vertex primary."""
         try:
             prompt = self._create_olevel_mcq_prompt(topic, difficulty)
+            context = f"cs:mcq:{topic}:{difficulty}"
+            vertex_prompt = f"{CS_SYSTEM_MESSAGE}\n\n{prompt}"
+
+            logger.info(f"Trying Vertex AI (primary) for {context}")
+            vertex_response = try_vertex_json(vertex_prompt, logger=logger, context=context)
+            if vertex_response and 'question' in vertex_response:
+                return self._validate_and_enhance_question(vertex_response, topic, difficulty, user_id, source='vertex_ai')
+
+            logger.info(f"Falling back to DeepSeek for {context}")
             response = self._call_deepseek_api(prompt, "mcq")
-            
             if response and 'question' in response:
-                return self._validate_and_enhance_question(response, topic, difficulty, user_id)
-            else:
-                return self._get_fallback_mcq_question(topic, difficulty, user_id)
-                
+                return self._validate_and_enhance_question(response, topic, difficulty, user_id, source='deepseek_fallback')
+
+            return self._get_fallback_mcq_question(topic, difficulty, user_id)
+
         except Exception as e:
             logger.error(f"Error generating CS MCQ question: {e}")
             return self._get_fallback_mcq_question(topic, difficulty, user_id)
-    
+
     def generate_structured_question(self, topic: str, difficulty: str = 'medium',
                                     user_id: str = None) -> Dict[str, Any]:
-        """Generate ZIMSEC-style O-Level structured question"""
+        """Generate ZIMSEC-style O-Level structured question with Vertex primary."""
         try:
             prompt = self._create_structured_prompt(topic, difficulty)
+            context = f"cs:structured:{topic}:{difficulty}"
+            vertex_prompt = f"{CS_SYSTEM_MESSAGE}\n\n{prompt}"
+
+            logger.info(f"Trying Vertex AI (primary) for {context}")
+            vertex_response = try_vertex_json(vertex_prompt, logger=logger, context=context)
+            if vertex_response:
+                return self._validate_and_enhance_structured_question(vertex_response, topic, difficulty, user_id, source='vertex_ai')
+
+            logger.info(f"Falling back to DeepSeek for {context}")
             response = self._call_deepseek_api(prompt, "structured")
-            
             if response:
-                return self._validate_and_enhance_structured_question(response, topic, difficulty, user_id)
-            else:
-                return self._get_fallback_structured_question(topic, difficulty, user_id)
-                
+                return self._validate_and_enhance_structured_question(response, topic, difficulty, user_id, source='deepseek_fallback')
+
+            return self._get_fallback_structured_question(topic, difficulty, user_id)
+
         except Exception as e:
             logger.error(f"Error generating CS structured question: {e}")
             return self._get_fallback_structured_question(topic, difficulty, user_id)
-    
+
     def generate_essay_question(self, topic: str, difficulty: str = 'medium',
                                user_id: str = None) -> Dict[str, Any]:
-        """Generate essay/oral question requiring deeper analysis"""
+        """Generate essay/oral question requiring deeper analysis with Vertex primary."""
         try:
             prompt = self._create_essay_prompt(topic, difficulty)
+            context = f"cs:essay:{topic}:{difficulty}"
+            vertex_prompt = f"{CS_SYSTEM_MESSAGE}\n\n{prompt}"
+
+            logger.info(f"Trying Vertex AI (primary) for {context}")
+            vertex_response = try_vertex_json(vertex_prompt, logger=logger, context=context)
+            if vertex_response:
+                return self._validate_and_enhance_essay_question(vertex_response, topic, difficulty, user_id, source='vertex_ai')
+
+            logger.info(f"Falling back to DeepSeek for {context}")
             response = self._call_deepseek_api(prompt, "essay")
-            
             if response:
-                return self._validate_and_enhance_essay_question(response, topic, difficulty, user_id)
-            else:
-                return self._get_fallback_essay_question(topic, difficulty, user_id)
-                
+                return self._validate_and_enhance_essay_question(response, topic, difficulty, user_id, source='deepseek_fallback')
+
+            return self._get_fallback_essay_question(topic, difficulty, user_id)
+
         except Exception as e:
             logger.error(f"Error generating CS essay question: {e}")
             return self._get_fallback_essay_question(topic, difficulty, user_id)
-    
+
     def _create_olevel_mcq_prompt(self, topic: str, difficulty: str) -> str:
         """Create O-Level appropriate MCQ prompt for Computer Science"""
         topic_info = self.topics.get(topic, {})
@@ -494,7 +523,7 @@ Generate an essay question now:"""
             "messages": [
                 {
                     "role": "system",
-                    "content": "You are an expert O-Level Computer Science examiner. Generate educational questions in valid JSON format only."
+                    "content": CS_SYSTEM_MESSAGE
                 },
                 {
                     "role": "user",
@@ -629,8 +658,8 @@ Generate an essay question now:"""
         return None
     
     def _validate_and_enhance_question(self, question_data: Dict, topic: str, 
-                                       difficulty: str, user_id: str = None) -> Dict:
-        """Validate and enhance MCQ question"""
+                                       difficulty: str, user_id: str = None, source: str = "deepseek") -> Dict:
+        """Validate and enhance MCQ question."""
         return {
             "question": question_data.get('question', ''),
             "options": question_data.get('options', {}),
@@ -641,13 +670,13 @@ Generate an essay question now:"""
             "difficulty": difficulty,
             "question_type": "mcq",
             "subject": "computer_science",
-            "source": "deepseek",
+            "source": source,
             "user_id": user_id
         }
-    
+
     def _validate_and_enhance_structured_question(self, question_data: Dict, topic: str,
-                                                  difficulty: str, user_id: str = None) -> Dict:
-        """Validate and enhance structured question"""
+                                                  difficulty: str, user_id: str = None, source: str = "deepseek") -> Dict:
+        """Validate and enhance structured question."""
         return {
             "question_type": "structured",
             "context": question_data.get('context', ''),
@@ -658,13 +687,13 @@ Generate an essay question now:"""
             "subtopic": question_data.get('subtopic', topic),
             "difficulty": difficulty,
             "subject": "computer_science",
-            "source": "deepseek",
+            "source": source,
             "user_id": user_id
         }
-    
+
     def _validate_and_enhance_essay_question(self, question_data: Dict, topic: str,
-                                             difficulty: str, user_id: str = None) -> Dict:
-        """Validate and enhance essay question"""
+                                             difficulty: str, user_id: str = None, source: str = "deepseek") -> Dict:
+        """Validate and enhance essay question."""
         return {
             "question_type": "essay",
             "question": question_data.get('question', ''),
@@ -677,10 +706,10 @@ Generate an essay question now:"""
             "subtopic": question_data.get('subtopic', topic),
             "difficulty": difficulty,
             "subject": "computer_science",
-            "source": "deepseek",
+            "source": source,
             "user_id": user_id
         }
-    
+
     def _get_fallback_mcq_question(self, topic: str, difficulty: str, user_id: str = None) -> Dict:
         """Provide fallback MCQ questions when AI fails"""
         fallback_questions = {

@@ -5,15 +5,16 @@ import requests
 import time
 from typing import Dict, List, Optional
 from config import Config
+from utils.vertex_ai_helper import try_vertex_json
 
 logger = logging.getLogger(__name__)
 
 class AIService:
-    """Service for AI-powered question generation using DeepSeek AI (primary provider)"""
+    """Service for AI-powered question generation with Vertex primary and DeepSeek fallback."""
 
     def __init__(self):
         self.deepseek_api_key = Config.DEEPSEEK_API_KEY
-        # DeepSeek is now the primary AI provider for all subjects
+        # DeepSeek is used as a fallback when Vertex AI is unavailable
         self.deepseek_model = Config.DEEPSEEK_CHAT_MODEL
         self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
 
@@ -435,60 +436,24 @@ Generate a high-quality, professional ZIMSEC exam-style question now!"""
             logger.error(f"Error generating English question: {e}")
             return None
 
+
     def _generate_with_ai(self, prompt: str, platform: str = 'mobile', fallback_to_deepseek: bool = True) -> Optional[Dict]:
-        """
-        Generate text using AI based on platform
-        
-        Args:
-            prompt: The prompt for AI generation
-            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
-            fallback_to_deepseek: If True, fallback to DeepSeek if Vertex AI unavailable
-        
-        Returns:
-            Dict with question data or None
-        """
-        # WhatsApp bot: Use Vertex AI
-        if platform == 'whatsapp':
-            from services.vertex_service import vertex_service
-            
-            if vertex_service.is_available():
-                logger.info("Using Vertex AI for WhatsApp bot")
-                result = vertex_service.generate_text(prompt=prompt, model="gemini-2.5-flash")
-                if result and result.get('success'):
-                    text = result['text']
-                    # Extract JSON from response (same logic as DeepSeek)
-                    try:
-                        json_start = text.find('{')
-                        json_end = text.rfind('}') + 1
-                        if json_start >= 0 and json_end > json_start:
-                            json_str = text[json_start:json_end]
-                            question_data = json.loads(json_str)
-                            
-                            # Validate response structure
-                            if self._validate_question_data(question_data):
-                                logger.info("✅ Successfully generated question with Vertex AI")
-                                return question_data
-                            else:
-                                logger.warning("Invalid question format from Vertex AI")
-                        else:
-                            logger.warning("No JSON found in Vertex AI response")
-                    except json.JSONDecodeError as e:
-                        logger.error(f"Failed to parse JSON from Vertex AI response: {e}")
-                
-                # Fallback to DeepSeek if Vertex AI unavailable or failed
-                if fallback_to_deepseek:
-                    logger.info("Falling back to DeepSeek for WhatsApp bot")
-                    return self._call_deepseek_api(prompt)
-            else:
-                # Vertex AI not available, fallback to DeepSeek
-                if fallback_to_deepseek:
-                    logger.info("Vertex AI not available, falling back to DeepSeek")
-                    return self._call_deepseek_api(prompt)
-        
-        # Mobile app: Always use DeepSeek (unchanged)
-        else:
+        """Generate text with Vertex AI primary and DeepSeek fallback."""
+        context = f"ai_service:{platform}"
+
+        logger.info(f"Trying Vertex AI (primary) for {context}")
+        vertex_data = try_vertex_json(prompt, logger=logger, context=context)
+        if vertex_data:
+            if self._validate_question_data(vertex_data):
+                vertex_data.setdefault('source', 'vertex_ai')
+                logger.info("Vertex AI generated valid question data")
+                return vertex_data
+            logger.warning("Vertex AI returned invalid question format")
+
+        if fallback_to_deepseek:
+            logger.info("Falling back to DeepSeek")
             return self._call_deepseek_api(prompt)
-        
+
         return None
 
     def _call_deepseek_api(self, prompt: str) -> Optional[Dict]:

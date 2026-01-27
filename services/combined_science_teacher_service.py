@@ -677,23 +677,42 @@ You have 0 credits. Teacher Mode requires credits to use.
             subject = session_data.get('subject', 'Science')
             grade_level = session_data.get('grade_level', 'O-Level')
             
-            # Use DeepSeek to pick a random topic (primary)
+            prompt = (
+                f"Pick one random important topic for {grade_level} {subject} that ZIMSEC students should learn. "
+                "Respond with ONLY the topic name, nothing else."
+            )
+
+            # Vertex/Gemini primary
+            if self._is_gemini_configured and self.gemini_client:
+                try:
+                    response = self.gemini_client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=prompt,
+                        config={"temperature": 0.4, "max_output_tokens": 80},
+                    )
+                    topic = (response.text or "").strip() if response else ""
+                    if topic:
+                        self.start_teaching_session(user_id, topic)
+                        return
+                except Exception as e:
+                    logger.error(f"Gemini error picking random topic: {e}")
+
+            # DeepSeek fallback
             if self._is_deepseek_configured:
-                prompt = f"Pick one random important topic for {grade_level} {subject} that ZIMSEC students should learn. Respond with ONLY the topic name, nothing else."
-                
                 try:
                     response = requests.post(
                         self.deepseek_api_url,
                         headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
                         json={'model': DEEPSEEK_CHAT_MODEL, 'messages': [{'role': 'user', 'content': prompt}], 'max_tokens': 100},
-                        timeout=15
+                        timeout=15,
                     )
                     if response.status_code == 200:
                         topic = response.json()['choices'][0]['message']['content'].strip()
-                        self.start_teaching_session(user_id, topic)
-                        return
+                        if topic:
+                            self.start_teaching_session(user_id, topic)
+                            return
                 except Exception as e:
-                    logger.error(f"DeepSeek error picking random topic: {e}")
+                    logger.error(f"DeepSeek fallback error picking random topic: {e}")
             
             # Fallback to static topics
             fallback_topics = {
@@ -709,39 +728,61 @@ You have 0 credits. Teacher Mode requires credits to use.
             logger.error(f"Error handling random topic for {user_id}: {e}")
     
     def suggest_topics(self, user_id: str):
-        """Suggest relevant topics based on subject and grade level"""
+        """Suggest relevant topics based on subject and grade level."""
         try:
             session_data = session_manager.get_data(user_id, 'science_teacher') or {}
             subject = session_data.get('subject', 'Science')
             grade_level = session_data.get('grade_level', 'O-Level')
-            
-            # Use DeepSeek to suggest topics (primary)
+
+            prompt = (
+                f"List 5 important topics for {grade_level} {subject} that ZIMSEC students should learn. "
+                "Format as a simple numbered list."
+            )
+
+            def _send_suggestions(suggestions: str) -> None:
+                message = f"Suggested {subject} topics for {grade_level}:\n\n"
+                message += suggestions
+                message += "\n\nType any topic name to start learning!"
+                self.whatsapp_service.send_message(user_id, message)
+
+            # Vertex/Gemini primary
+            if self._is_gemini_configured and self.gemini_client:
+                try:
+                    response = self.gemini_client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=prompt,
+                        config={"temperature": 0.6, "max_output_tokens": 300},
+                    )
+                    suggestions = (response.text or "").strip() if response else ""
+                    if suggestions:
+                        _send_suggestions(suggestions)
+                        return
+                except Exception as e:
+                    logger.error(f"Gemini error suggesting topics: {e}")
+
+            # DeepSeek fallback
             if self._is_deepseek_configured:
-                prompt = f"List 5 important topics for {grade_level} {subject} that ZIMSEC students should learn. Format as a simple numbered list."
-                
                 try:
                     response = requests.post(
                         self.deepseek_api_url,
                         headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
                         json={'model': DEEPSEEK_CHAT_MODEL, 'messages': [{'role': 'user', 'content': prompt}], 'max_tokens': 300},
-                        timeout=20
+                        timeout=20,
                     )
                     if response.status_code == 200:
                         suggestions = response.json()['choices'][0]['message']['content'].strip()
-                        message = f"📚 *Suggested {subject} Topics for {grade_level}:*\n\n"
-                        message += suggestions
-                        message += "\n\n💬 Type any topic name to start learning!"
-                        self.whatsapp_service.send_message(user_id, message)
-                        return
+                        if suggestions:
+                            _send_suggestions(suggestions)
+                            return
                 except Exception as e:
-                    logger.error(f"DeepSeek error suggesting topics: {e}")
-            
+                    logger.error(f"DeepSeek fallback error suggesting topics: {e}")
+
             # Fallback to static topic suggestions
             self._send_fallback_topic_suggestions(user_id, subject, grade_level)
-        
+
         except Exception as e:
             logger.error(f"Error suggesting topics for {user_id}: {e}")
-    
+
     def _send_fallback_topic_suggestions(self, user_id: str, subject: str, grade_level: str):
         """Send fallback topic suggestions when AI is unavailable"""
         topic_suggestions = {
@@ -834,7 +875,7 @@ You have 0 credits. Teacher Mode requires credits to use.
             subject = session_data.get('subject', 'Science')
             grade_level = session_data.get('grade_level', 'O-Level')
             
-            # Get initial teaching from AI (DeepSeek primary, Gemini fallback)
+            # Get initial teaching from AI (Vertex/Gemini primary, DeepSeek fallback)
             if self._is_deepseek_configured or self._is_gemini_configured:
                 initial_message = f"Start teaching {topic} to a {grade_level} student studying {subject}. Begin with a warm greeting and introduction to the topic."
                 
@@ -948,7 +989,7 @@ You have 0 credits. Teacher Mode requires credits to use.
                 'content': message_text
             })
             
-            # Get AI response (DeepSeek primary, Gemini fallback)
+            # Get AI response (Vertex/Gemini primary, DeepSeek fallback)
             if self._is_deepseek_configured or self._is_gemini_configured:
                 response_text = self._get_gemini_teaching_response(user_id, message_text, session_data)
                 
@@ -1293,15 +1334,15 @@ You have 0 credits. Teacher Mode requires credits to use.
                 "📝 Generating your personalized notes... This will take a moment."
             )
             
-            # Request notes from AI (DeepSeek primary, Gemini fallback)
+            # Request notes from AI (Vertex/Gemini primary, DeepSeek fallback)
             if self._is_deepseek_configured or self._is_gemini_configured:
                 subject = session_data.get('subject', 'Science')
                 grade_level = session_data.get('grade_level', 'O-Level')
                 conversation_history = session_data.get('conversation_history', [])
-                
+
                 # Build dynamic system prompt
                 system_prompt = self._build_subject_specific_prompt(subject, grade_level, topic)
-                
+
                 # Build context from conversation
                 conversation_context = ""
                 if conversation_history:
@@ -1309,13 +1350,40 @@ You have 0 credits. Teacher Mode requires credits to use.
                     for msg in conversation_history:
                         role = "Student" if msg['role'] == 'user' else "Teacher"
                         conversation_context += f"{role}: {msg['content'][:200]}\n"
-                
-                prompt = f"{system_prompt}\n\nSubject: {subject}\nGrade Level: {grade_level}\nTopic: {topic}{conversation_context}\n\nStudent request: Generate notes\n\nProvide comprehensive personalized notes in valid JSON format."
-                
+
+                prompt = (
+                    f"{system_prompt}\n\nSubject: {subject}\nGrade Level: {grade_level}\n"
+                    f"Topic: {topic}{conversation_context}\n\nStudent request: Generate notes\n\n"
+                    "Provide comprehensive personalized notes in valid JSON format."
+                )
+
                 notes_data = None
-                
-                # Try DeepSeek first
-                if self._is_deepseek_configured:
+
+                # Vertex/Gemini primary
+                if self._is_gemini_configured and self.gemini_client:
+                    try:
+                        response = self.gemini_client.models.generate_content(
+                            model="gemini-2.5-flash",
+                            contents=prompt,
+                            config={
+                                "temperature": 0.7,
+                                "max_output_tokens": 4000,
+                                "response_mime_type": "application/json",
+                            },
+                        )
+                        if response and response.text:
+                            notes_data = self._parse_notes_response(response.text)
+                            if notes_data:
+                                logger.info(
+                                    "Gemini via Vertex generated notes for %s (Subject: %s)",
+                                    user_id,
+                                    subject,
+                                )
+                    except Exception as gemini_error:
+                        logger.error(f"Gemini notes error: {gemini_error}")
+
+                # DeepSeek fallback
+                if not notes_data and self._is_deepseek_configured:
                     try:
                         response = requests.post(
                             self.deepseek_api_url,
@@ -1327,32 +1395,32 @@ You have 0 credits. Teacher Mode requires credits to use.
                                 'model': DEEPSEEK_CHAT_MODEL,
                                 'messages': [
                                     {'role': 'system', 'content': system_prompt},
-                                    {'role': 'user', 'content': f"Subject: {subject}\nGrade Level: {grade_level}\nTopic: {topic}{conversation_context}\n\nStudent request: Generate notes\n\nProvide comprehensive personalized notes in valid JSON format."}
+                                    {'role': 'user', 'content': (
+                                        f"Subject: {subject}\nGrade Level: {grade_level}\nTopic: {topic}"
+                                        f"{conversation_context}\n\nStudent request: Generate notes\n\n"
+                                        "Provide comprehensive personalized notes in valid JSON format."
+                                    )}
                                 ],
                                 'temperature': 0.7,
                                 'max_tokens': 4000
                             },
-                            timeout=60  # Optimized: Reduced from 90s - DeepSeek typically responds faster
+                            timeout=60,
                         )
-                        
+
                         if response.status_code == 200:
                             data = response.json()
                             if 'choices' in data and len(data['choices']) > 0:
                                 ai_text = data['choices'][0]['message']['content'].strip()
                                 notes_data = self._parse_notes_response(ai_text)
-                                logger.info(f"✅ DeepSeek generated notes for {user_id} (Subject: {subject})")
+                                if notes_data:
+                                    logger.info(
+                                        "DeepSeek fallback generated notes for %s (Subject: %s)",
+                                        user_id,
+                                        subject,
+                                    )
                     except Exception as deepseek_error:
                         logger.error(f"DeepSeek notes error: {deepseek_error}")
-                
-                # Fallback to Gemini if DeepSeek failed
-                if not notes_data and self._is_gemini_configured and self.gemini_model:
-                    try:
-                        response = self.gemini_model.generate_content(prompt)
-                        notes_data = self._parse_notes_response(response.text)
-                        logger.info(f"✅ Gemini fallback generated notes for {user_id} (Subject: {subject})")
-                    except Exception as gemini_error:
-                        logger.error(f"Gemini notes error: {gemini_error}")
-                
+
                 if notes_data:
                     # Generate PDF using the notes generator
                     from utils.science_notes_pdf_generator import ScienceNotesPDFGenerator

@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=lzteiewcvxoazqfxfjgg"
+    },
+    "user-render": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@render/mcp-server-render"
+      ],
+      "env": {
+        "RENDER_API_KEY": "rnd_HJYcgOwwy49wVwjpFQXyZ2XWP7Cn"
+      }
+    }
+  }
+}

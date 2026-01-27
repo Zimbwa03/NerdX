@@ -9,6 +9,7 @@ from typing import Dict, Optional
 
 import requests
 from utils.deepseek import get_deepseek_chat_model
+from services.vertex_service import vertex_service
 
 logger = logging.getLogger(__name__)
 DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
@@ -17,13 +18,14 @@ DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
 class EnglishTeacherService:
     """
     NerdX Teacher - Conversational AI English Tutor
-    Uses DeepSeek as primary (consistent with other teacher services) and can fall back to Gemini API if configured.
+    Uses Vertex AI as primary with DeepSeek fallback.
     """
 
     def __init__(self):
         self.deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
         self.deepseek_api_url = "https://api.deepseek.com/chat/completions"
         self._is_deepseek_configured = bool(self.deepseek_api_key)
+        self._is_vertex_configured = bool(vertex_service and vertex_service.is_available())
 
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
         self._is_gemini_configured = bool(self.gemini_api_key)
@@ -170,7 +172,19 @@ Current conversation context will be provided with each message."""
         parts.append("Teacher response:")
         full_prompt = "\n".join(parts)
 
-        # DeepSeek primary
+        # Vertex AI primary
+        if self._is_vertex_configured:
+            try:
+                vertex_prompt = f"{system_prompt}\n\n{full_prompt}"
+                result = vertex_service.generate_text(vertex_prompt, model="gemini-2.5-flash")
+                if result and result.get("success"):
+                    text = (result.get("text") or "").strip()
+                    if text:
+                        return text
+            except Exception as e:
+                logger.error(f"Vertex EnglishTeacher error: {e}", exc_info=True)
+
+        # DeepSeek fallback
         if self._is_deepseek_configured:
             try:
                 headers = {

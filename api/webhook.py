@@ -5299,8 +5299,9 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
             
             # #region agent log
             import json
+            from services.paynow_service import get_debug_log_path
             try:
-                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                     f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"webhook.py:5300","message":"Checking payment_creation result","data":{"success":payment_creation.get('success'),"has_error":'error' in payment_creation,"error":payment_creation.get('error'),"message":payment_creation.get('message')},"timestamp":int(__import__('time').time()*1000)})+'\n')
             except: pass
             # #endregion

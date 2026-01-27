@@ -1,6 +1,6 @@
 """
-Professional Combined Science Question Generator for ZIMSEC O-Level
-Generates age-appropriate questions with clear explanations for 15-17 year old students
+Professional Combined Science Question Generator for ZIMSEC O-Level.
+Uses Vertex AI as primary with DeepSeek fallback.
 """
 import os
 import json
@@ -10,11 +10,12 @@ import logging
 import random
 from typing import Dict, List, Optional, Any, Tuple
 from utils.deepseek import get_deepseek_chat_model
+from utils.vertex_ai_helper import try_vertex_json
 
 logger = logging.getLogger(__name__)
 
 class CombinedScienceGenerator:
-    """Professional O-Level Combined Science question generator using DeepSeek AI"""
+    """Professional O-Level Combined Science generator with Vertex primary."""
     
     def __init__(self):
         self.api_key = os.environ.get('DEEPSEEK_API_KEY')
@@ -532,7 +533,7 @@ class CombinedScienceGenerator:
             topic: Topic name
             difficulty: Difficulty level (easy, medium, difficult)
             user_id: User ID for tracking
-            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
+            platform: Vertex AI primary, DeepSeek fallback; used for logging/context only (e.g. 'mobile', 'whatsapp').
         """
         try:
             # Create O-Level appropriate prompt
@@ -567,7 +568,7 @@ class CombinedScienceGenerator:
             topic: Topic name
             difficulty: Difficulty level (easy, medium, difficult)
             user_id: User ID for tracking
-            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
+            platform: Vertex AI primary, DeepSeek fallback; used for logging/context only (e.g. 'mobile', 'whatsapp').
         """
         try:
             prompt = self._create_olevel_structured_prompt(subject, topic, difficulty)
@@ -585,13 +586,13 @@ class CombinedScienceGenerator:
 
     def evaluate_structured_answer(self, structured_question: Dict[str, Any], student_answer: str, platform: str = 'mobile') -> Dict[str, Any]:
         """
-        Evaluate a student's answer to a structured question using AI based on platform,
-        falling back to a heuristic rubric matcher if needed.
+        Evaluate a student's answer to a structured question using AI
+        (Vertex AI primary, DeepSeek fallback), falling back to a heuristic rubric matcher if needed.
         
         Args:
             structured_question: The structured question dict
             student_answer: The student's answer text
-            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
+            platform: Vertex AI primary, DeepSeek fallback; used for logging/context only (e.g. 'mobile', 'whatsapp').
         """
         try:
             if not structured_question or structured_question.get('question_type') != 'structured':
@@ -1287,63 +1288,26 @@ Generate a high-quality, professional exam-style {question_style.replace('_', ' 
         return prompt
 
     def _generate_with_ai(self, prompt: str, generation_type: str, platform: str = 'mobile') -> Optional[Dict]:
-        """
-        Generate content using AI based on platform
-        
-        Args:
-            prompt: The prompt for generation
-            generation_type: Type of generation (for logging)
-            platform: 'whatsapp' for Vertex AI, 'mobile' for DeepSeek (default)
-        
-        Returns:
-            Dict with generated content or None
-        """
-        # WhatsApp bot: Use Vertex AI
-        if platform == 'whatsapp':
-            from services.vertex_service import vertex_service
-            
-            if vertex_service.is_available():
-                logger.info(f"Using Vertex AI for WhatsApp bot: {generation_type}")
-                
-                # Create system message for Vertex AI
-                system_message = "You are a professional O-Level science tutor with 10+ years experience teaching ZIMSEC Combined Science to Zimbabwean teenagers. You create engaging, age-appropriate questions that help students understand concepts clearly. Your explanations are simple, encouraging, and educational."
-                
-                # Combine system and user messages for Vertex AI
-                full_prompt = f"{system_message}\n\n{prompt}"
-                
-                result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
-                
-                if result and result.get('success'):
-                    text = result['text']
-                    logger.info(f"Raw Vertex AI response for {generation_type}: {text[:200]}...")
-                    
-                    # Extract JSON from response (same logic as DeepSeek)
-                    json_start = text.find('{')
-                    json_end = text.rfind('}') + 1
-                    
-                    if json_start >= 0 and json_end > json_start:
-                        json_str = text[json_start:json_end]
-                        try:
-                            question_data = json.loads(json_str)
-                            logger.info(f"✅ Successfully generated {generation_type} with Vertex AI")
-                            return question_data
-                        except json.JSONDecodeError as e:
-                            logger.error(f"JSON parsing failed from Vertex AI for {generation_type}: {e}. Raw JSON: {json_str[:200]}...")
-                    else:
-                        logger.error(f"No valid JSON found in Vertex AI response for {generation_type}. Content: {text[:500]}...")
-                
-                # Fallback to DeepSeek if Vertex AI unavailable or failed
-                logger.info(f"Falling back to DeepSeek for {generation_type}")
-                return self._call_deepseek_api(prompt, generation_type)
-            else:
-                # Vertex AI not available, fallback to DeepSeek
-                logger.info(f"Vertex AI not available, falling back to DeepSeek for {generation_type}")
-                return self._call_deepseek_api(prompt, generation_type)
-        
-        # Mobile app: Always use DeepSeek (unchanged)
-        else:
-            return self._call_deepseek_api(prompt, generation_type)
-    
+        """Generate content with Vertex AI primary and DeepSeek fallback."""
+        system_message = (
+            "You are a professional O-Level science tutor with 10+ years experience teaching "
+            "ZIMSEC Combined Science to Zimbabwean teenagers. You create engaging, age-appropriate "
+            "questions that help students understand concepts clearly. Your explanations are simple, "
+            "encouraging, and educational."
+        )
+        full_prompt = f"{system_message}\n\n{prompt}"
+        context = f"{generation_type}:{platform}"
+
+        logger.info(f"Trying Vertex AI (primary) for {context}")
+        vertex_data = try_vertex_json(full_prompt, logger=logger, context=context)
+        if vertex_data:
+            vertex_data.setdefault('source', 'vertex_ai')
+            logger.info(f"Vertex AI generated {generation_type} successfully")
+            return vertex_data
+
+        logger.info(f"Falling back to DeepSeek for {generation_type}")
+        return self._call_deepseek_api(prompt, generation_type)
+
     def _call_deepseek_api(self, prompt: str, generation_type: str) -> Optional[Dict]:
         """Call DeepSeek API with O-Level appropriate settings (used by mobile app and as fallback)
         Falls back to Vertex AI if DeepSeek fails
