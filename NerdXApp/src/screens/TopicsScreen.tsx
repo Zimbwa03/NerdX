@@ -31,8 +31,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { calculateQuizCreditCost, formatCreditCost, getMinimumCreditsForQuiz } from '../utils/creditCalculator';
 import { getSubjectDisplayName, getSubjectLoadingSteps } from '../utils/loadingProgress';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
+
+const CS_BOARD_STORAGE_KEY = '@nerdx_cs_board';
 
 const TopicsScreen: React.FC = () => {
   const route = useRoute();
@@ -71,6 +74,11 @@ const TopicsScreen: React.FC = () => {
   const [selectedCsTopic, setSelectedCsTopic] = useState<Topic | null>(null);
   const [selectedCsQuestionType, setSelectedCsQuestionType] = useState<'mcq' | 'structured' | 'essay'>('mcq');
 
+  // Computer Science board (ZimSec vs Cambridge) — O-Level
+  const [csBoard, setCsBoard] = useState<'zimsec' | 'cambridge'>('zimsec');
+  // A-Level Computer Science board (ZIMSEC vs Cambridge 9618)
+  const [aLevelCsBoard, setALevelCsBoard] = useState<'zimsec' | 'cambridge'>('zimsec');
+
   // Start Quiz Modal (single popup with Visual Learning toggle)
   const [startQuizModalVisible, setStartQuizModalVisible] = useState(false);
   const [pendingTopic, setPendingTopic] = useState<Topic | null>(null);
@@ -81,15 +89,27 @@ const TopicsScreen: React.FC = () => {
   // Exam Setup Modal state
   const [examSetupModalVisible, setExamSetupModalVisible] = useState(false);
 
+  // Load persisted CS board when entering Computer Science (O-Level or A-Level)
+  useEffect(() => {
+    if (subject.id === 'computer_science') {
+      AsyncStorage.getItem(CS_BOARD_STORAGE_KEY).then((v) => {
+        if (v === 'cambridge' || v === 'zimsec') setCsBoard(v);
+      });
+    }
+    if (subject.id === 'a_level_computer_science') {
+      AsyncStorage.getItem(A_LEVEL_CS_BOARD_STORAGE_KEY).then((v) => {
+        if (v === 'cambridge' || v === 'zimsec') setALevelCsBoard(v);
+      });
+    }
+  }, [subject.id]);
+
   useEffect(() => {
     if (subject.id === 'combined_science') {
-      // For Combined Science, load topics based on the active tab
       loadTopics(activeTab);
     } else {
-      // For other subjects, load normally
       loadTopics(currentParentSubject);
     }
-  }, [currentParentSubject, activeTab, subject.id]);
+  }, [currentParentSubject, activeTab, subject.id, csBoard, aLevelCsBoard]);
 
   const loadTopics = async (parent?: string) => {
     try {
@@ -97,7 +117,11 @@ const TopicsScreen: React.FC = () => {
       // If it's Combined Science, we always want to fetch topics for the specific sub-subject (Biology/Chemistry/Physics)
       const targetParent = subject.id === 'combined_science' ? parent : currentParentSubject;
 
-      const data = await quizApi.getTopics(subject.id, targetParent);
+      const data = await quizApi.getTopics(
+        subject.id,
+        targetParent,
+        subject.id === 'computer_science' ? csBoard : subject.id === 'a_level_computer_science' ? aLevelCsBoard : undefined
+      );
 
       // Fallback for Mathematics if API returns empty
       if (subject.id === 'mathematics' && (!data || data.length === 0)) {
@@ -230,6 +254,21 @@ const TopicsScreen: React.FC = () => {
     } as never);
   };
 
+  // Computer Science handlers
+  const handleCsNotes = () => {
+    navigation.navigate('ComputerScienceNotes' as never);
+  };
+
+  const handleCsVirtualLab = () => {
+    navigation.navigate('VirtualLab' as never);
+  };
+
+  const handleCsTeacherMode = () => {
+    navigation.navigate('TeacherModeSetup' as never, {
+      preselectedSubject: 'Computer Science',
+    } as never);
+  };
+
 
   const handleMathNotes = (topicName: string) => {
     navigation.navigate('MathNotesDetail' as never, { topic: topicName } as never);
@@ -342,7 +381,9 @@ const TopicsScreen: React.FC = () => {
           questionType,  // Pass question type (e.g., for Pharmacology)
           questionFormat,  // Pass question format (mcq or structured for Paper 1/2)
           undefined,
-          mixImages
+          mixImages,
+          undefined,  // questionCount
+          subject.id === 'computer_science' ? csBoard : subject.id === 'a_level_computer_science' ? aLevelCsBoard : undefined  // board for CS (O-Level or A-Level)
         );
       }
 
@@ -368,7 +409,13 @@ const TopicsScreen: React.FC = () => {
           }
         }
 
-        navigation.navigate('Quiz' as never, { question, subject, topic, mixImagesEnabled: !!mixImages } as never);
+        navigation.navigate('Quiz' as never, {
+          question,
+          subject,
+          topic,
+          mixImagesEnabled: !!mixImages,
+          ...(subject.id === 'computer_science' ? { board: csBoard } : subject.id === 'a_level_computer_science' ? { board: aLevelCsBoard } : {}),
+        } as never);
       } else {
         showError('❌ Failed to generate question. Please try again.', 4000);
       }
@@ -780,7 +827,54 @@ const TopicsScreen: React.FC = () => {
                 : (currentParentSubject ? 'Choose a subtopic' : 'Choose a topic or start an exam')}
             </Text>
           </View>
-          {getSubjectIcon(subject.id)}
+          {(subject.id === 'computer_science' || subject.id === 'a_level_computer_science') ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              {(() => {
+                const isALevel = subject.id === 'a_level_computer_science';
+                const board = isALevel ? aLevelCsBoard : csBoard;
+                const setBoard = isALevel ? setALevelCsBoard : setCsBoard;
+                const storageKey = isALevel ? A_LEVEL_CS_BOARD_STORAGE_KEY : CS_BOARD_STORAGE_KEY;
+                return (
+                  <>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setBoard('zimsec');
+                        AsyncStorage.setItem(storageKey, 'zimsec');
+                      }}
+                      style={{
+                        paddingVertical: 6,
+                        paddingHorizontal: 12,
+                        borderRadius: 20,
+                        backgroundColor: board === 'zimsec' ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.3)',
+                      }}
+                    >
+                      <Text style={{ color: board === 'zimsec' ? '#1976d2' : '#fff', fontWeight: '600', fontSize: 13 }}>
+                        ZIMSEC
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setBoard('cambridge');
+                        AsyncStorage.setItem(storageKey, 'cambridge');
+                      }}
+                      style={{
+                        paddingVertical: 6,
+                        paddingHorizontal: 12,
+                        borderRadius: 20,
+                        backgroundColor: board === 'cambridge' ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.3)',
+                      }}
+                    >
+                      <Text style={{ color: board === 'cambridge' ? '#1976d2' : '#fff', fontWeight: '600', fontSize: 13 }}>
+                        Cambridge
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                );
+              })()}
+            </View>
+          ) : (
+            getSubjectIcon(subject.id)
+          )}
         </View>
       </LinearGradient>
 
@@ -995,6 +1089,55 @@ const TopicsScreen: React.FC = () => {
             </>
           )}
 
+          {/* Computer Science Features - Notes, Virtual Labs, Teacher Mode */}
+          {subject.id === 'computer_science' && !currentParentSubject && (
+            <>
+              <Card variant="elevated" onPress={handleCsNotes} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="document-text-outline" size={28} color="#0288D1" />}
+                    size={56}
+                    backgroundColor="rgba(2, 136, 209, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Computer Science Notes</Text>
+                    <Text style={styles.featureSubtitle}>Comprehensive notes for all topics</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              <Card variant="elevated" onPress={handleCsVirtualLab} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="flask-outline" size={28} color="#0288D1" />}
+                    size={56}
+                    backgroundColor="rgba(2, 136, 209, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Virtual Labs</Text>
+                    <Text style={styles.featureSubtitle}>Interactive computer science experiments</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              <Card variant="elevated" onPress={handleCsTeacherMode} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="school-outline" size={28} color="#0288D1" />}
+                    size={56}
+                    backgroundColor="rgba(2, 136, 209, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Teacher Mode</Text>
+                    <Text style={styles.featureSubtitle}>AI tutor for Computer Science topics</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+            </>
+          )}
 
           {/* Exam Quiz Card - Only show at top level or for Combined Science tabs */}
           {(!currentParentSubject || subject.id === 'combined_science') && (
@@ -1003,13 +1146,14 @@ const TopicsScreen: React.FC = () => {
               gradientColors={getHeaderGradient()}
               onPress={() => {
                 if (subject.id === 'mathematics') {
-                  // For Mathematics, open the exam setup modal
                   setExamSetupModalVisible(true);
                 } else if (subject.id === 'combined_science') {
-                  // For Combined Science (Biology/Chemistry/Physics), open exam modal
                   setExamSetupModalVisible(true);
                 } else if (subject.id === 'english') {
-                  // For English, open exam setup modal
+                  setExamSetupModalVisible(true);
+                } else if (subject.id === 'computer_science') {
+                  setExamSetupModalVisible(true);
+                } else if (subject.id === 'a_level_computer_science') {
                   setExamSetupModalVisible(true);
                 } else {
                   openStartQuizModal();
@@ -1024,8 +1168,8 @@ const TopicsScreen: React.FC = () => {
                   backgroundColor="rgba(255, 255, 255, 0.2)"
                 />
                 <View style={styles.examInfo}>
-                  <Text style={styles.examTitle}>Start {subject.id === 'combined_science' ? activeTab : ''} Exam</Text>
-                  <Text style={styles.examSubtitle}>Mixed questions from all {subject.id === 'combined_science' ? activeTab : ''} topics</Text>
+                  <Text style={styles.examTitle}>Start {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : ''} Exam</Text>
+                  <Text style={styles.examSubtitle}>Mixed questions from all {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : ''} topics</Text>
                 </View>
               </View>
             </Card>
@@ -1351,7 +1495,9 @@ const TopicsScreen: React.FC = () => {
         initialSubject={subject.id === 'combined_science' ? activeTab.toLowerCase() : subject.id}
         userCredits={user?.credits || 0}
         availableTopics={topics.map(t => t.name)}
+        csBoard={subject.id === 'computer_science' ? csBoard : subject.id === 'a_level_computer_science' ? aLevelCsBoard : undefined}
       />
+
     </View>
   );
 };

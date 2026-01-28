@@ -1,0 +1,13 @@
+export { default as SyntaxHighlighter } from './SyntaxHighlighter';
+export { default as ErrorHighlighter } from './ErrorHighlighter';
+export { default as EditorTopBar } from './EditorTopBar';
+export { default as FileTabBar } from './FileTabBar';
+export { default as LineNumberDisplay } from './LineNumberDisplay';
+export { default as ExecutionPanel } from './ExecutionPanel';
+export { default as FloatingActionMenu } from './FloatingActionMenu';
+export { default as AIAssistantPanel } from './AIAssistantPanel';
+export { default as HintPanel } from './HintPanel';
+export { default as DocumentationPanel } from './DocumentationPanel';
+export { default as SidePanelTabs } from './SidePanelTabs';
+export type { SidePanelTabId } from './SidePanelTabs';
+export type { FloatingAction } from './FloatingActionMenu';

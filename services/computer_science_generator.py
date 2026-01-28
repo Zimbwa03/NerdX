@@ -1,6 +1,8 @@
 """
-Professional Computer Science Question Generator for ZIMSEC/Cambridge O-Level.
-Uses Vertex AI as primary with DeepSeek fallback.
+Professional Computer Science Question Generator.
+- ZIMSEC O-Level (7014) and A-Level (6023); Cambridge O-Level (2210) and AS & A Level (9618).
+- Theory: Paper 1 (MCQ), Paper 2 (structured), essay.
+- AI: Vertex AI (primary), DeepSeek (fallback). Always try Vertex first; use DeepSeek only if Vertex is unavailable or returns no valid JSON.
 """
 import os
 import json
@@ -12,10 +14,63 @@ from typing import Dict, List, Optional, Any, Tuple
 from utils.deepseek import get_deepseek_chat_model
 from utils.vertex_ai_helper import try_vertex_json
 
+try:
+    from services.zimsec_cs_syllabus import (
+        ZIMSEC_CS_TOPIC_OBJECTIVES,
+        ZIMSEC_CS_CODE,
+        get_topic_objectives,
+        get_paper1_prompt_guidance,
+        get_paper2_prompt_guidance,
+    )
+except ImportError:
+    ZIMSEC_CS_TOPIC_OBJECTIVES = {}
+    ZIMSEC_CS_CODE = "7014"
+    def get_topic_objectives(topic_name): return {}
+    def get_paper1_prompt_guidance(): return "ZIMSEC Paper 1: MCQ testing breadth of knowledge."
+    def get_paper2_prompt_guidance(): return "ZIMSEC Paper 2: Structured, deep understanding and problem-solving."
+
+try:
+    from services.cambridge_cs_syllabus import (
+        get_topic_objectives_cambridge,
+        get_paper1_prompt_guidance_cambridge,
+        get_paper2_prompt_guidance_cambridge,
+        get_essay_prompt_guidance_cambridge,
+    )
+except ImportError:
+    def get_topic_objectives_cambridge(topic_name): return {"subtopics": [], "learning_objectives": []}
+    def get_paper1_prompt_guidance_cambridge(): return "Cambridge 2210 Paper 1 (Computer Systems): short-answer and structured; use command words and AOs."
+    def get_paper2_prompt_guidance_cambridge(): return "Cambridge 2210 Paper 2 (Algorithms, Programming and Logic): structured and scenario; use command words and AOs."
+    def get_essay_prompt_guidance_cambridge(): return "Cambridge 2210: extended responses using command words Demonstrate, Describe, Evaluate, Explain."
+
+try:
+    from services.cambridge_a_level_cs_syllabus import (
+        get_topic_objectives_cambridge_a_level,
+        get_paper1_prompt_guidance_cambridge_a_level,
+        get_paper2_prompt_guidance_cambridge_a_level,
+        get_paper3_prompt_guidance_cambridge_a_level,
+        get_essay_prompt_guidance_cambridge_a_level,
+    )
+except ImportError:
+    def get_topic_objectives_cambridge_a_level(topic_name): return {"subtopics": [], "learning_objectives": []}
+    def get_paper1_prompt_guidance_cambridge_a_level(): return "Cambridge 9618 Paper 1 (Theory Fundamentals): Sections 1–8; use command words and AOs."
+    def get_paper2_prompt_guidance_cambridge_a_level(): return "Cambridge 9618 Paper 2 (Problem-solving & Programming): Sections 9–12; pseudocode where required."
+    def get_paper3_prompt_guidance_cambridge_a_level(): return "Cambridge 9618 Paper 3 (Advanced Theory): Sections 13–20."
+    def get_essay_prompt_guidance_cambridge_a_level(): return "Cambridge 9618: extended responses using command words Demonstrate, Describe, Evaluate, Explain."
+
 logger = logging.getLogger(__name__)
 
 CS_SYSTEM_MESSAGE = (
-    "You are an expert O-Level Computer Science examiner. Generate educational questions in valid JSON format only."
+    "You are an expert ZIMSEC O-Level Computer Science examiner (syllabus 7014). "
+    "Generate educational questions in valid JSON format only. Focus on THEORY; practical work is in Virtual Labs."
+)
+CS_SYSTEM_MESSAGE_CAMBRIDGE = (
+    "You are an expert Cambridge O Level Computer Science examiner (syllabus 2210). "
+    "Generate educational questions in valid JSON format only. Use command words and assessment objectives (AO1, AO2, AO3) as per the syllabus."
+)
+CS_SYSTEM_MESSAGE_CAMBRIDGE_A_LEVEL = (
+    "You are an expert Cambridge International AS & A Level Computer Science examiner (syllabus 9618). "
+    "Generate educational questions in valid JSON format only. Use command words and assessment objectives (AO1, AO2, AO3). "
+    "Align to Sections 1–12 (AS) and 13–20 (A Level) as appropriate."
 )
 
 
@@ -38,8 +93,14 @@ class ComputerScienceGenerator:
             'User-Agent': 'NerdX-Education/1.0'
         })
         
-        # Computer Science Topics with Subtopics (ZIMSEC & Cambridge O-Level 2210)
-        self.topics = {
+        # ZIMSEC O-Level Computer Science 7014 — 11 topics (theory-only; practical in Virtual Labs)
+        self.topics = dict(ZIMSEC_CS_TOPIC_OBJECTIVES) if ZIMSEC_CS_TOPIC_OBJECTIVES else {}
+        if not self.topics:
+            self.topics = self._fallback_topics()
+
+    def _fallback_topics(self) -> dict:
+        """Fallback topic map if ZIMSEC syllabus not loaded."""
+        return {
             "Hardware and Software": {
                 "subtopics": [
                     "Input devices (keyboard, mouse, scanner, microphone, webcam, touchscreen)",
@@ -59,22 +120,14 @@ class ComputerScienceGenerator:
                     "Explain the role of operating systems"
                 ]
             },
-            "Applications of Computer Science": {
+            "Application of Computer Science": {
                 "subtopics": [
-                    "Computers in agriculture (precision farming, livestock management)",
-                    "Computers in banking (ATMs, online banking, mobile banking)",
-                    "Computers in education (e-learning, LMS, virtual classrooms)",
-                    "Computers in transport (GPS, traffic management, booking systems)",
-                    "Computers in health (electronic health records, telemedicine, diagnostic equipment)",
-                    "Computers in environmental management (monitoring, modeling)",
-                    "Robotics and automation in industry",
-                    "Technopreneurship and digital innovation"
+                    "Computers in agriculture, banking, education, transport, health, environmental management",
+                    "Robotics and automation; technopreneurship and digital innovation",
                 ],
                 "learning_objectives": [
                     "Describe real-world applications of computer systems",
-                    "Evaluate benefits and drawbacks of computerization",
-                    "Explain how computers improve efficiency in various sectors",
-                    "Discuss the impact of technology on employment"
+                    "Evaluate benefits and drawbacks of computerization; use Zimbabwean examples where relevant",
                 ]
             },
             "Data Representation": {
@@ -142,25 +195,14 @@ class ComputerScienceGenerator:
                     "Evaluate authentication methods"
                 ]
             },
-            "System Analysis and Design": {
+            "Systems Analysis and Design": {
                 "subtopics": [
-                    "Software Development Life Cycle (SDLC)",
-                    "Problem identification and feasibility study",
-                    "Requirements analysis and specification",
-                    "System design (input, output, process design)",
-                    "Development and coding",
-                    "Testing strategies (unit, integration, system, acceptance)",
-                    "Documentation (user manual, technical documentation)",
-                    "User training and implementation",
-                    "System evaluation and maintenance",
-                    "Prototyping and iterative development"
+                    "SDLC (problem identification, feasibility, analysis, design, development, testing, implementation, maintenance)",
+                    "Data collection (questionnaire, interview, observation); feasibility types; testing strategies",
                 ],
                 "learning_objectives": [
-                    "Describe the stages of the SDLC",
-                    "Explain feasibility study components",
-                    "Create appropriate documentation",
-                    "Describe different testing strategies",
-                    "Discuss implementation and maintenance"
+                    "Describe the stages of the SDLC and apply problem identification and data collection techniques",
+                    "Explain feasibility study components and testing strategies",
                 ]
             },
             "Algorithm Design and Problem-Solving": {
@@ -280,13 +322,18 @@ class ComputerScienceGenerator:
             "Calculate", "Convert", "Draw", "Design", "Outline"
         ]
     
-    def generate_topical_question(self, topic: str, difficulty: str = 'medium', 
-                                  user_id: str = None) -> Dict[str, Any]:
-        """Generate O-Level appropriate MCQ question with Vertex primary."""
+    def generate_topical_question(self, topic: str, difficulty: str = 'medium',
+                                  user_id: str = None, board: str = 'zimsec',
+                                  a_level_cambridge: bool = False) -> Dict[str, Any]:
+        """Generate MCQ question. board: 'zimsec' or 'cambridge'; a_level_cambridge=True for Cambridge 9618."""
         try:
-            prompt = self._create_olevel_mcq_prompt(topic, difficulty)
-            context = f"cs:mcq:{topic}:{difficulty}"
-            vertex_prompt = f"{CS_SYSTEM_MESSAGE}\n\n{prompt}"
+            prompt = self._create_olevel_mcq_prompt(topic, difficulty, board=board, a_level_cambridge=a_level_cambridge)
+            context = f"cs:mcq:{topic}:{difficulty}:{board}"
+            if a_level_cambridge:
+                sys_msg = CS_SYSTEM_MESSAGE_CAMBRIDGE_A_LEVEL
+            else:
+                sys_msg = CS_SYSTEM_MESSAGE_CAMBRIDGE if (board or '').lower() == 'cambridge' else CS_SYSTEM_MESSAGE
+            vertex_prompt = f"{sys_msg}\n\n{prompt}"
 
             logger.info(f"Trying Vertex AI (primary) for {context}")
             vertex_response = try_vertex_json(vertex_prompt, logger=logger, context=context)
@@ -305,12 +352,17 @@ class ComputerScienceGenerator:
             return self._get_fallback_mcq_question(topic, difficulty, user_id)
 
     def generate_structured_question(self, topic: str, difficulty: str = 'medium',
-                                    user_id: str = None) -> Dict[str, Any]:
-        """Generate ZIMSEC-style O-Level structured question with Vertex primary."""
+                                    user_id: str = None, board: str = 'zimsec',
+                                    a_level_cambridge: bool = False) -> Dict[str, Any]:
+        """Generate structured question. board: 'zimsec' or 'cambridge'; a_level_cambridge=True for Cambridge 9618."""
         try:
-            prompt = self._create_structured_prompt(topic, difficulty)
-            context = f"cs:structured:{topic}:{difficulty}"
-            vertex_prompt = f"{CS_SYSTEM_MESSAGE}\n\n{prompt}"
+            prompt = self._create_structured_prompt(topic, difficulty, board=board, a_level_cambridge=a_level_cambridge)
+            context = f"cs:structured:{topic}:{difficulty}:{board}"
+            if a_level_cambridge:
+                sys_msg = CS_SYSTEM_MESSAGE_CAMBRIDGE_A_LEVEL
+            else:
+                sys_msg = CS_SYSTEM_MESSAGE_CAMBRIDGE if (board or '').lower() == 'cambridge' else CS_SYSTEM_MESSAGE
+            vertex_prompt = f"{sys_msg}\n\n{prompt}"
 
             logger.info(f"Trying Vertex AI (primary) for {context}")
             vertex_response = try_vertex_json(vertex_prompt, logger=logger, context=context)
@@ -329,12 +381,17 @@ class ComputerScienceGenerator:
             return self._get_fallback_structured_question(topic, difficulty, user_id)
 
     def generate_essay_question(self, topic: str, difficulty: str = 'medium',
-                               user_id: str = None) -> Dict[str, Any]:
-        """Generate essay/oral question requiring deeper analysis with Vertex primary."""
+                               user_id: str = None, board: str = 'zimsec',
+                               a_level_cambridge: bool = False) -> Dict[str, Any]:
+        """Generate essay question. board: 'zimsec' or 'cambridge'; a_level_cambridge=True for Cambridge 9618."""
         try:
-            prompt = self._create_essay_prompt(topic, difficulty)
-            context = f"cs:essay:{topic}:{difficulty}"
-            vertex_prompt = f"{CS_SYSTEM_MESSAGE}\n\n{prompt}"
+            prompt = self._create_essay_prompt(topic, difficulty, board=board, a_level_cambridge=a_level_cambridge)
+            context = f"cs:essay:{topic}:{difficulty}:{board}"
+            if a_level_cambridge:
+                sys_msg = CS_SYSTEM_MESSAGE_CAMBRIDGE_A_LEVEL
+            else:
+                sys_msg = CS_SYSTEM_MESSAGE_CAMBRIDGE if (board or '').lower() == 'cambridge' else CS_SYSTEM_MESSAGE
+            vertex_prompt = f"{sys_msg}\n\n{prompt}"
 
             logger.info(f"Trying Vertex AI (primary) for {context}")
             vertex_response = try_vertex_json(vertex_prompt, logger=logger, context=context)
@@ -352,38 +409,73 @@ class ComputerScienceGenerator:
             logger.error(f"Error generating CS essay question: {e}")
             return self._get_fallback_essay_question(topic, difficulty, user_id)
 
-    def _create_olevel_mcq_prompt(self, topic: str, difficulty: str) -> str:
-        """Create O-Level appropriate MCQ prompt for Computer Science"""
-        topic_info = self.topics.get(topic, {})
+    def _topic_info(self, topic: str) -> dict:
+        """Resolve topic to syllabus objectives; supports ZIMSEC and legacy topic names."""
+        try:
+            info = get_topic_objectives(topic)
+            if info and (info.get("subtopics") or info.get("learning_objectives")):
+                return info
+        except Exception:
+            pass
+        return self.topics.get(topic, {})
+
+    def _topic_info_cambridge(self, topic: str) -> dict:
+        """Resolve topic to Cambridge 2210 syllabus objectives."""
+        try:
+            return get_topic_objectives_cambridge(topic)
+        except Exception:
+            return {"subtopics": [], "learning_objectives": []}
+
+    def _topic_info_cambridge_a_level(self, topic: str) -> dict:
+        """Resolve topic to Cambridge 9618 AS & A Level syllabus objectives."""
+        try:
+            return get_topic_objectives_cambridge_a_level(topic)
+        except Exception:
+            return {"subtopics": [], "learning_objectives": []}
+
+    def _create_olevel_mcq_prompt(self, topic: str, difficulty: str, board: str = 'zimsec',
+                                  a_level_cambridge: bool = False) -> str:
+        """Create MCQ prompt — ZIMSEC, Cambridge 2210, or Cambridge 9618 Paper 1 style."""
+        if a_level_cambridge:
+            topic_info = self._topic_info_cambridge_a_level(topic)
+            is_cambridge = True
+        else:
+            is_cambridge = (board or '').lower() == 'cambridge'
+            topic_info = self._topic_info_cambridge(topic) if is_cambridge else self._topic_info(topic)
         subtopics = topic_info.get('subtopics', [])
         objectives = topic_info.get('learning_objectives', [])
-        
         selected_subtopic = random.choice(subtopics) if subtopics else topic
-        
         difficulty_guidance = {
-            'easy': "Focus on basic definitions, identification, and simple concepts. Suitable for Form 1-2 students.",
-            'medium': "Include application of concepts and some analysis. Suitable for Form 3 students.",
+            'easy': "Focus on basic definitions, identification, and simple concepts. Suitable for Form 1-2.",
+            'medium': "Include application of concepts and some analysis. Suitable for Form 3.",
             'difficult': "Require deeper understanding, analysis, and synthesis. Suitable for Form 4 exam preparation."
         }
-        
-        return f"""You are an expert ZIMSEC and Cambridge O-Level Computer Science examiner.
+        if a_level_cambridge:
+            paper1_guide = get_paper1_prompt_guidance_cambridge_a_level()
+            examiner_line = "You are an expert Cambridge International AS & A Level Computer Science examiner (syllabus 9618). Paper 1 (Theory Fundamentals) = Sections 1–8. Use command words: State, Define, Identify, Describe, Explain, Calculate, Show (that)."
+            req4 = "Ensure the explanation teaches the concept clearly. Align to syllabus 9618 learning objectives."
+        else:
+            paper1_guide = get_paper1_prompt_guidance_cambridge() if is_cambridge else get_paper1_prompt_guidance()
+            examiner_line = "You are an expert Cambridge O Level Computer Science examiner (syllabus 2210). Paper 1 (Computer Systems) = short-answer/structured style multiple choice. Use command words: State, Define, Identify, Describe, Explain, Calculate." if is_cambridge else f"You are an expert ZIMSEC O-Level Computer Science examiner (syllabus {ZIMSEC_CS_CODE}). Paper 1 = multiple choice testing BREADTH OF KNOWLEDGE. Focus on THEORY only (practical work is in Virtual Labs)."
+            req4 = "Ensure the explanation teaches the concept clearly. Use international/Cambridge contexts where relevant." if is_cambridge else "Use Zimbabwean/regional contexts where relevant (e.g. EcoCash, ZIMSEC, local sectors). Ensure the explanation teaches the concept clearly."
+        objs_text = chr(10).join(f"- {obj}" for obj in (objectives[:4] if objectives else ["Align to syllabus learning outcomes for this topic."]))
+        return f"""{examiner_line}
 
-Generate a high-quality multiple choice question for O-Level students (ages 15-17).
+**Syllabus / Paper 1**: {paper1_guide}
 
 **Topic**: {topic}
 **Subtopic Focus**: {selected_subtopic}
 **Difficulty**: {difficulty}
 **Difficulty Guidance**: {difficulty_guidance.get(difficulty, difficulty_guidance['medium'])}
 
-**Learning Objectives to Test**:
-{chr(10).join(f"- {obj}" for obj in objectives[:3])}
+**Learning objectives to test (syllabus-aligned)**:
+{objs_text}
 
 **Requirements**:
-1. Question must be clear, unambiguous, and age-appropriate
+1. Question must be clear, unambiguous, and age-appropriate (14-16 / Forms 1-4)
 2. All 4 options must be plausible but only ONE correct
 3. Avoid "All of the above" or "None of the above" options
-4. Use practical, real-world contexts where possible
-5. Ensure the explanation teaches the concept clearly
+4. {req4}
 
 **Response Format (JSON)**:
 {{
@@ -403,24 +495,41 @@ Generate a high-quality multiple choice question for O-Level students (ages 15-1
 
 Generate a unique, high-quality question now:"""
 
-    def _create_structured_prompt(self, topic: str, difficulty: str) -> str:
-        """Create structured question prompt"""
-        topic_info = self.topics.get(topic, {})
+    def _create_structured_prompt(self, topic: str, difficulty: str, board: str = 'zimsec',
+                                  a_level_cambridge: bool = False) -> str:
+        """Create structured prompt — ZIMSEC Paper 2, Cambridge 2210 Paper 2, or Cambridge 9618 Paper 2 style."""
+        if a_level_cambridge:
+            topic_info = self._topic_info_cambridge_a_level(topic)
+            paper2_guide = get_paper2_prompt_guidance_cambridge_a_level()
+            examiner_line = "You are an expert Cambridge International AS & A Level Computer Science examiner (syllabus 9618). Paper 2 (Problem-solving & Programming) = Sections 9–12. Use pseudocode where relevant. Use command words: Calculate, Compare, Define, Demonstrate, Describe, Evaluate, Explain, Give, Identify, Outline, Show (that), State, Suggest."
+            req5 = "Align to syllabus 9618 Sections 9–12; use AO1/AO2/AO3."
+        else:
+            is_cambridge = (board or '').lower() == 'cambridge'
+            topic_info = self._topic_info_cambridge(topic) if is_cambridge else self._topic_info(topic)
+            paper2_guide = get_paper2_prompt_guidance_cambridge() if is_cambridge else get_paper2_prompt_guidance()
+            examiner_line = "You are an expert Cambridge O Level Computer Science examiner (syllabus 2210). Paper 2 (Algorithms, Programming and Logic) = structured and scenario-based questions. Use command words: Calculate, Compare, Define, Demonstrate, Describe, Evaluate, Explain, Give, Identify, Outline, Show (that), State, Suggest." if is_cambridge else f"You are an expert ZIMSEC O-Level Computer Science examiner (syllabus {ZIMSEC_CS_CODE}). Paper 2 = structured questions testing DEEP UNDERSTANDING and problem-solving. Focus on THEORY only (practical work is in Virtual Labs)."
+            req5 = "Use international/Cambridge-style contexts where relevant. Align to AO1/AO2/AO3." if is_cambridge else "Use Zimbabwean/regional contexts where relevant."
         subtopics = topic_info.get('subtopics', [])
-        
+        objectives = topic_info.get('learning_objectives', [])
         selected_subtopic = random.choice(subtopics) if subtopics else topic
-        
-        return f"""You are an expert ZIMSEC and Cambridge O-Level Computer Science examiner.
+        objs_text = chr(10).join(f"- {obj}" for obj in (objectives[:4] if objectives else ["Align to syllabus learning outcomes for this topic."]))
+        return f"""{examiner_line}
 
-Generate a structured question for O-Level students on: **{topic}** (Focus: {selected_subtopic})
-Difficulty: {difficulty}
+**Syllabus / Paper 2**: {paper2_guide}
+
+**Topic**: {topic}
+**Subtopic Focus**: {selected_subtopic}
+**Difficulty**: {difficulty}
+
+**Learning objectives to target (syllabus-aligned)**:
+{objs_text}
 
 **Requirements**:
-1. The question should have multiple parts (a, b, c) with mark allocations
-2. Parts should progress from simple recall to application/analysis
-3. Total marks should be between 8-15 marks
-4. Include a context/scenario where appropriate
-5. Provide detailed marking scheme
+1. Multiple parts (a), (b), (c)... with mark allocations; total 8-15 marks
+2. Parts progress from recall → application → analysis
+3. Include a short context/scenario where appropriate
+4. Provide detailed marking scheme (marking_points) per part
+5. {req5}
 
 **Response Format (JSON)**:
 {{
@@ -458,24 +567,38 @@ Difficulty: {difficulty}
 
 Generate a structured question now:"""
 
-    def _create_essay_prompt(self, topic: str, difficulty: str) -> str:
-        """Create essay/oral question prompt"""
-        topic_info = self.topics.get(topic, {})
+    def _create_essay_prompt(self, topic: str, difficulty: str, board: str = 'zimsec',
+                             a_level_cambridge: bool = False) -> str:
+        """Create essay prompt — ZIMSEC, Cambridge 2210, or Cambridge 9618 style."""
+        if a_level_cambridge:
+            topic_info = self._topic_info_cambridge_a_level(topic)
+            essay_guide = get_essay_prompt_guidance_cambridge_a_level()
+            examiner_line = "You are an expert Cambridge International AS & A Level Computer Science examiner (syllabus 9618). Extended responses: use command words Demonstrate, Describe, Evaluate, Explain. " + (essay_guide or "")
+            req3 = "Include a clear context or scenario; align to syllabus 9618 learning objectives."
+        else:
+            is_cambridge = (board or '').lower() == 'cambridge'
+            topic_info = self._topic_info_cambridge(topic) if is_cambridge else self._topic_info(topic)
+            essay_guide = get_essay_prompt_guidance_cambridge() if is_cambridge else ""
+            examiner_line = "You are an expert Cambridge O Level Computer Science examiner (syllabus 2210). Extended responses: use command words Demonstrate, Describe, Evaluate, Explain. " + (essay_guide or "") if is_cambridge else f"You are an expert ZIMSEC O-Level Computer Science examiner (syllabus {ZIMSEC_CS_CODE}). Focus on THEORY only (practical work is in Virtual Labs). Essay questions test analysis, evaluation, and discussion aligned to syllabus."
+            req3 = "Include a clear context or scenario; use international/Cambridge-style examples where relevant." if is_cambridge else "Include a clear context or scenario; use Zimbabwean/regional examples where relevant."
         subtopics = topic_info.get('subtopics', [])
-        
+        objectives = topic_info.get('learning_objectives', [])
         selected_subtopic = random.choice(subtopics) if subtopics else topic
-        
-        return f"""You are an expert ZIMSEC and Cambridge O-Level Computer Science examiner.
+        objs_text = chr(10).join(f"- {obj}" for obj in (objectives[:4] if objectives else ["Align to syllabus learning outcomes for this topic."]))
+        return f"""{examiner_line}
 
-Generate an essay/discussion question for O-Level students on: **{topic}** (Focus: {selected_subtopic})
-Difficulty: {difficulty}
+**Topic**: {topic}
+**Subtopic Focus**: {selected_subtopic}
+**Difficulty**: {difficulty}
+
+**Learning objectives to target (syllabus-aligned)**:
+{objs_text}
 
 **Requirements**:
-1. Question should require extended writing (200-400 words expected)
-2. Should test analysis, evaluation, or discussion skills
-3. Include a clear context or scenario
-4. Allow for different valid perspectives or approaches
-5. Provide comprehensive marking guide
+1. Essay question requiring extended writing (200-400 words expected)
+2. Test analysis, evaluation, or discussion skills; allow valid perspectives (AO2/AO3 where relevant)
+3. {req3}
+4. Provide comprehensive marking guide (content, analysis, communication)
 
 **Response Format (JSON)**:
 {{
@@ -790,7 +913,7 @@ Generate an essay question now:"""
                 "correct_answer": "C",
                 "explanation": "SELECT is used to retrieve data from a database. INSERT adds new records, UPDATE modifies existing records, and DELETE removes records."
             },
-            "System Analysis and Design": {
+            "Systems Analysis and Design": {
                 "question": "Which phase of the SDLC involves gathering user requirements?",
                 "options": {
                     "A": "Design",

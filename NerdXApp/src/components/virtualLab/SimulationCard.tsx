@@ -37,6 +37,7 @@ const getIconName = (iconKey: string): keyof typeof Ionicons.glyphMap => {
         'beaker': 'flask-outline',
         'leaf': 'leaf-outline',
         'flask': 'flask-outline',
+        'code-slash': 'code-slash-outline',
     };
     return iconMap[iconKey] || 'help-circle-outline';
 };

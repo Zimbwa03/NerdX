@@ -254,7 +254,26 @@ class CombinedScienceTeacherService:
 - Differentiation (chain, product, quotient rules, implicit, parametric)
 - Integration (by substitution, by parts, partial fractions, differential equations)
 - Vectors (3D, scalar product, vector equations of lines and planes)
-- Numerical methods (iteration, Newton-Raphson, trapezium rule)"""
+- Numerical methods (iteration, Newton-Raphson, trapezium rule)""",
+
+        'computer_science': """**Computer Science Teaching Rules (ZIMSEC O-Level 7014):**
+- Teach THEORY only; practicals (programming, databases, web design hands-on) are in Virtual Labs.
+- Use clear definitions and command words (state, describe, explain, compare, evaluate).
+- Align to ZIMSEC syllabus 7014, Forms 1–4; use Zimbabwean/regional examples (EcoCash, ZIMSEC, local sectors).
+- Use diagrams: [DIAGRAM: flowchart], [DIAGRAM: network], [DIAGRAM: system_lifecycle] when helpful.
+
+**ZIMSEC O-Level Computer Science 7014 — 11 topics (theory):**
+- Hardware and Software (input/output/storage, CPU, system vs application software, OS, maintenance)
+- Application of Computer Science (agriculture, banking, education, transport, health, robotics, GIS, IoT)
+- Data Representation (binary/denary/hex, logic gates, truth tables, ASCII, storage units)
+- Communication Networks and Internet Technologies (LAN/WAN, topologies, protocols, TCP/IP, cloud, wireless)
+- Security and Ethics (cyber wellness, copyright, Cyber and Data Protection Act, backup, Unhu/Ubuntu)
+- Systems Analysis and Design (SDLC, feasibility, data collection, requirements, testing, implementation)
+- Algorithm Design and Problem-Solving (flowcharts, pseudocode, sequence/selection/iteration, trace tables)
+- Programming (variables, types, control structures, procedures/functions, translators) — theory
+- Databases (tables, keys, SQL, relationships, normalization) — theory
+- Web Design and Internet Uses (HTML, CSS, HTTP/HTTPS, CMS) — theory
+- Automated and Emerging Technologies (sensors, IoT, AI basics, technopreneurship)"""
     }
     
     @classmethod
@@ -274,6 +293,9 @@ class CombinedScienceTeacherService:
         elif 'physics' in subject_lower:
             subject_name = "Physics"
             subject_key = "physics"
+        elif 'computer' in subject_lower:
+            subject_name = "Computer Science"
+            subject_key = "computer_science"
         elif 'math' in subject_lower or 'pure' in subject_lower:
             subject_name = "Mathematics"
             subject_key = "mathematics"

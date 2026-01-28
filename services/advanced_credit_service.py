@@ -232,7 +232,15 @@ class AdvancedCreditService:
             'combined_science_topical_mcq': 'combined_science_topical_mcq',
             'combined_science_topical_structured': 'combined_science_topical_structured',
             'combined_science_exam': 'combined_science_exam',
-            
+
+            # Computer Science (O-Level) – MCQ 0.3, Structured 0.5, Essay 1
+            'computer_science_topical_mcq': 'computer_science_topical_mcq',
+            'computer_science_topical_structured': 'computer_science_topical_structured',
+            'computer_science_topical_essay': 'computer_science_topical_essay',
+            'computer_science_exam_mcq': 'computer_science_exam_mcq',
+            'computer_science_exam_structured': 'computer_science_exam_structured',
+            'computer_science_exam_essay': 'computer_science_exam_essay',
+
             # Mathematics
             'math_topical': 'math_topical',
             'math_exam': 'math_exam',

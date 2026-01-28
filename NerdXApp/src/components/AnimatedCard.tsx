@@ -144,6 +144,8 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
         outputRange: [8, 20],
     });
 
+    // Original card sizing: two large cards per row on dashboard,
+    // with full-width variants for wide feature rows.
     const CARD_WIDTH = fullWidth ? width - 48 : (width - 48) / 2;
     const CARD_HEIGHT = fullWidth ? 140 : CARD_WIDTH * 1.2;
 

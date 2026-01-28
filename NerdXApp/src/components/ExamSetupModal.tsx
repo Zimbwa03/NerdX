@@ -41,6 +41,7 @@ interface ExamSetupModalProps {
     initialSubject?: string;
     userCredits: number;
     availableTopics?: string[];  // Topics to select from
+    csBoard?: 'zimsec' | 'cambridge';  // For Computer Science: exam board
 }
 
 const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
@@ -50,6 +51,7 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
     initialSubject = 'mathematics',
     userCredits,
     availableTopics = [],
+    csBoard,
 }) => {
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
@@ -135,8 +137,9 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
                 question_mode: questionMode,
                 difficulty,
                 total_questions: questionCount,
-                paper_style: 'ZIMSEC',
-                // Omit `topics` entirely when "All Topics" is selected to avoid 400 validations.
+                paper_style: ((subject === 'computer_science' || subject === 'a_level_computer_science') && csBoard)
+                    ? (csBoard === 'cambridge' ? 'CAMBRIDGE' : 'ZIMSEC')
+                    : 'ZIMSEC',
                 topics: allTopics ? undefined : selectedTopics,
             };
 
@@ -174,10 +177,24 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
             costPerQuestion = 0.5; // Other A-Level subjects: 0.5 credit per question
         } else if (subjectKey === 'english') {
             costPerQuestion = 1; // English: 1 credit per question
+        } else if (subjectKey === 'computer_science' || subjectKey === 'a_level_computer_science') {
+            // Computer Science (O-Level or A-Level): MCQ = 0.3 credit, Structured = 0.5 credit, Essay = 1 credit
+            if (questionMode === 'MCQ_ONLY') {
+                costPerQuestion = 0.3; // 0.3 credit per exam MCQ (3 units)
+            } else if (questionMode === 'STRUCTURED_ONLY') {
+                costPerQuestion = 0.5; // 0.5 credit per exam structured (5 units)
+            } else if (questionMode === 'MIXED') {
+                // Mixed mode: average between MCQ and structured
+                const mcqCount = Math.floor(questionCount / 2);
+                const structuredCount = questionCount - mcqCount;
+                return (mcqCount * 0.3) + (structuredCount * 0.5);
+            } else {
+                costPerQuestion = 1; // Essay: 1 credit per question (10 units)
+            }
         }
         
-        // For MIXED mode (non-Biology), calculate weighted average
-        if (questionMode === 'MIXED' && subjectKey !== 'a_level_biology') {
+        // For MIXED mode (non-Biology, non-Computer Science), calculate weighted average
+        if (questionMode === 'MIXED' && subjectKey !== 'a_level_biology' && subjectKey !== 'computer_science' && subjectKey !== 'a_level_computer_science') {
             const mcqCount = Math.floor(questionCount / 2);
             const structuredCount = questionCount - mcqCount;
             // Most subjects: MCQ = same as structured (0.5), so just multiply
@@ -479,7 +496,7 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
                                     ⚠️ Insufficient credits. Please top up to start this exam.
                                 </Text>
                             )}
-                            {(subject === 'mathematics' || subject === 'combined_science' || subject.includes('a_level_')) && (
+                            {(subject === 'mathematics' || subject === 'combined_science' || subject === 'computer_science' || subject.includes('a_level_')) && (
                                 <Text style={[styles.creditDiscount, { color: themedColors.text.secondary }]}>
                                     💎 {formatCreditCost(creditCost / questionCount)} per question
                                     {subject === 'a_level_biology' && questionMode === 'MCQ_ONLY' && ' (MCQ)'}

@@ -80,29 +80,19 @@ TOPICS = {
         "Language and Grammar in Context",
         "Grammar Usage and Vocabulary"
     ],
+    # ZIMSEC O-Level Computer Science 7014 — 11 topics (theory; practical in Virtual Labs)
     "Computer Science": [
-        # Hardware and Software
         "Hardware and Software",
-        # Applications of Computer Science
-        "Applications of Computer Science",
-        # Data Representation
+        "Application of Computer Science",
         "Data Representation",
-        # Communication Networks & Internet Technologies
         "Communication Networks and Internet Technologies",
-        # Security and Ethics / Cyber Security
         "Security and Ethics",
-        # System Analysis and Design
-        "System Analysis and Design",
-        # Algorithm Design and Problem-Solving
+        "Systems Analysis and Design",
         "Algorithm Design and Problem-Solving",
-        # Programming
         "Programming",
-        # Databases
         "Databases",
-        # Web Design and Internet Uses
         "Web Design and Internet Uses",
-        # Automated and Emerging Technologies / Technopreneurship
-        "Automated and Emerging Technologies"
+        "Automated and Emerging Technologies",
     ]
 }
 
@@ -263,6 +253,105 @@ A_LEVEL_BIOLOGY_TOPICS = {
 
 # All A Level Biology topics flat list
 A_LEVEL_BIOLOGY_ALL_TOPICS = A_LEVEL_BIOLOGY_TOPICS["Lower Sixth"] + A_LEVEL_BIOLOGY_TOPICS["Upper Sixth"]
+
+# A Level Computer Science Topics (ZIMSEC A Level Syllabus 6023 - Forms 5-6)
+# Valid Period: 2024-2030
+A_LEVEL_COMPUTER_SCIENCE_TOPICS = {
+    "Form 5": [
+        # Topic 1: Data Representation (Form 5)
+        "Data Representation - Number Systems",
+        "Data Representation - Binary Arithmetic",
+        "Data Representation - Character Encoding",
+        "Data Representation - Image Representation",
+        "Data Representation - Sound Representation",
+        # Topic 2: Computer Architecture (Form 5)
+        "Computer Architecture - CPU Structure",
+        "Computer Architecture - Fetch-Decode-Execute Cycle",
+        "Computer Architecture - Memory Hierarchy",
+        "Computer Architecture - I/O Devices",
+        # Topic 3: Networking (Form 5)
+        "Networking - Network Topologies",
+        "Networking - OSI Model",
+        "Networking - Network Protocols",
+        "Networking - Network Hardware",
+        # Topic 4: Systems Development Life Cycle (Form 5)
+        "SDLC - Analysis and Fact-Finding",
+        "SDLC - Feasibility Studies",
+        "SDLC - System Design",
+        "SDLC - Data Flow Diagrams",
+        # Topic 5: Security and Ethics (Form 5)
+        "Security and Ethics - Threats and Countermeasures",
+        "Security and Ethics - Ethical Issues",
+        "Security and Ethics - Data Protection",
+        # Topic 6: Algorithm Design and Data Structures (Form 5)
+        "Algorithms - Algorithm Design",
+        "Algorithms - Basic Data Structures",
+        "Algorithms - Searching Algorithms",
+        "Algorithms - Sorting Algorithms",
+        # Topic 7: Programming (Form 5)
+        "Programming - Programming Fundamentals",
+        "Programming - Control Structures",
+        "Programming - Functions and Procedures",
+        "Programming - File Handling",
+        "Programming - Basic OOP",
+        # Topic 8: Databases (Form 5)
+        "Databases - Database Concepts",
+        "Databases - ERD Design",
+        "Databases - Normalization",
+        "Databases - SQL Queries",
+        # Topic 9: Enterprising (Form 5)
+        "Enterprising - Entrepreneurship in ICT",
+        "Enterprising - Business Planning",
+        "Enterprising - Market Research"
+    ],
+    "Form 6": [
+        # Topic 1: Data Representation (Form 6)
+        "Data Representation - Floating-Point Precision",
+        "Data Representation - Data Compression",
+        "Data Representation - Encryption Representation",
+        # Topic 2: Computer Architecture (Form 6)
+        "Computer Architecture - Pipelining",
+        "Computer Architecture - Parallel Processing",
+        "Computer Architecture - RISC vs CISC",
+        "Computer Architecture - Performance Optimization",
+        # Topic 3: Networking (Form 6)
+        "Networking - Network Security",
+        "Networking - Encryption Protocols",
+        "Networking - Network Design",
+        "Networking - Cloud Computing",
+        # Topic 4: Systems Development Life Cycle (Form 6)
+        "SDLC - SDLC Methodologies",
+        "SDLC - Project Management",
+        "SDLC - Testing Strategies",
+        "SDLC - System Maintenance",
+        # Topic 5: Security and Ethics (Form 6)
+        "Security and Ethics - Cryptography",
+        "Security and Ethics - Legal Frameworks",
+        "Security and Ethics - Professional Ethics",
+        # Topic 6: Algorithm Design and Data Structures (Form 6)
+        "Algorithms - Advanced Data Structures",
+        "Algorithms - Tree Algorithms",
+        "Algorithms - Graph Algorithms",
+        "Algorithms - Algorithm Complexity",
+        # Topic 7: Programming (Form 6)
+        "Programming - Advanced OOP",
+        "Programming - Inheritance and Polymorphism",
+        "Programming - Exception Handling",
+        "Programming - GUI Development",
+        # Topic 8: Databases (Form 6)
+        "Databases - Complex SQL Queries",
+        "Databases - Transactions and ACID",
+        "Databases - Database Optimization",
+        "Databases - Database Security",
+        # Topic 9: Enterprising (Form 6)
+        "Enterprising - Scaling Technology Businesses",
+        "Enterprising - Technology Commercialization",
+        "Enterprising - Social Impact of ICT"
+    ]
+}
+
+# All A Level Computer Science topics flat list
+A_LEVEL_COMPUTER_SCIENCE_ALL_TOPICS = A_LEVEL_COMPUTER_SCIENCE_TOPICS["Form 5"] + A_LEVEL_COMPUTER_SCIENCE_TOPICS["Form 6"]
 
 # Difficulty levels
 DIFFICULTY_LEVELS = {

@@ -5,6 +5,7 @@ import { SimulationMetadata, ChemicalEquation, Badge } from './simulationTypes';
 import { PHASE3_SIMULATIONS } from './phase3Simulations';
 import { MATH_SIMULATIONS } from './mathSimulationsData';
 import { ENGLISH_SIMULATIONS } from './englishSimulationsData';
+import { PROGRAMMING_LAB_SIMULATIONS } from './programmingLabData';
 
 // ============================================
 // PHASE 1 SIMULATIONS
@@ -484,21 +485,6 @@ export const CELL_ORGANELLES = {
         { id: 'ribosome', name: 'Ribosomes', description: 'Make proteins. Found free in cytoplasm or on rough ER.', color: '#795548' },
         { id: 'small-vacuole', name: 'Small Vacuoles', description: 'Temporary storage of water and nutrients. Much smaller than plant vacuoles.', color: '#03A9F4' },
     ],
-};
-
-// Helper function to get simulation by ID
-export const getSimulationById = (id: string): SimulationMetadata | undefined => {
-    return [...PHASE1_SIMULATIONS, ...PHASE2_SIMULATIONS, ...PHASE3_SIMULATIONS, ...MATH_SIMULATIONS, ...ENGLISH_SIMULATIONS].find(sim => sim.id === id);
-};
-
-// Helper function to get simulations by subject
-export const getSimulationsBySubject = (subject: 'biology' | 'chemistry' | 'physics' | 'mathematics' | 'english'): SimulationMetadata[] => {
-    return [...PHASE1_SIMULATIONS, ...PHASE2_SIMULATIONS, ...PHASE3_SIMULATIONS, ...MATH_SIMULATIONS, ...ENGLISH_SIMULATIONS].filter(sim => sim.subject === subject);
-};
-
-// Get all simulations
-export const getAllSimulations = (): SimulationMetadata[] => {
-    return [...PHASE1_SIMULATIONS, ...PHASE2_SIMULATIONS, ...PHASE3_SIMULATIONS, ...MATH_SIMULATIONS, ...ENGLISH_SIMULATIONS];
 };
 
 // ============================================
@@ -1190,4 +1176,33 @@ export const PH_SUBSTANCES: Substance[] = [
     { id: 'ammonia', name: 'Ammonia solution', ph: 11, category: 'alkali', color: '#0033FF' },
     { id: 'bleach', name: 'Household bleach', ph: 13, category: 'alkali', color: '#6600FF' },
 ];
+
+// ============================================
+// ALL SIMULATIONS AGGREGATOR & HELPERS
+// ============================================
+
+const ALL_SIMULATIONS = [
+    ...PHASE1_SIMULATIONS,
+    ...PHASE2_SIMULATIONS,
+    ...PHASE3_SIMULATIONS,
+    ...MATH_SIMULATIONS,
+    ...ENGLISH_SIMULATIONS,
+    ...PROGRAMMING_LAB_SIMULATIONS,
+];
+
+// Helper function to get simulation by ID
+export const getSimulationById = (id: string): SimulationMetadata | undefined => {
+    return ALL_SIMULATIONS.find(sim => sim.id === id);
+};
+
+// Helper function to get simulations by subject
+export const getSimulationsBySubject = (subject: Subject): SimulationMetadata[] => {
+    return ALL_SIMULATIONS.filter(sim => sim.subject === subject);
+};
+
+// Get all simulations
+export const getAllSimulations = (): SimulationMetadata[] => {
+    return [...ALL_SIMULATIONS];
+};
+
 

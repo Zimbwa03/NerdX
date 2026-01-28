@@ -235,11 +235,18 @@ export const quizApi = {
     }
   },
 
-  getTopics: async (subject: string, parentSubject?: string): Promise<Topic[]> => {
+  getTopics: async (
+    subject: string,
+    parentSubject?: string,
+    board?: 'zimsec' | 'cambridge'
+  ): Promise<Topic[]> => {
     try {
       let url = `/api/mobile/quiz/topics?subject=${subject}`;
       if (parentSubject) {
         url += `&parent_subject=${parentSubject}`;
+      }
+      if (subject === 'computer_science' && board) {
+        url += `&board=${board}`;
       }
       const response = await api.get(url);
       return response.data.data || [];
@@ -259,7 +266,8 @@ export const quizApi = {
     questionFormat?: 'mcq' | 'structured',  // For O-Level Paper 2 style structured questions
     question_type?: string,  // Alternative key for backend compatibility
     mixImages?: boolean,  // NEW: Enable visual questions with Vertex AI
-    questionCount?: number  // NEW: Current question number in session
+    questionCount?: number,  // NEW: Current question number in session
+    board?: 'zimsec' | 'cambridge'  // For Computer Science: exam board
   ): Promise<Question | null> => {
     try {
       const payload: any = {
@@ -290,6 +298,9 @@ export const quizApi = {
       }
       if (questionCount !== undefined) {
         payload.question_count = questionCount;
+      }
+      if (board) {
+        payload.board = board;
       }
       // Use extended timeout for AI question generation
       // Essay and structured questions can take longer (up to 90 seconds)

@@ -42,7 +42,7 @@ const QuizScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
   const { showSuccess, showError, showWarning, showInfo } = useNotification();
-  const { question: initialQuestion, subject, topic, isExamMode, year, paper, isReviewMode, reviewItems, questionType, mixImagesEnabled: initialMixImagesEnabled } = route.params as {
+  const { question: initialQuestion, subject, topic, isExamMode, year, paper, isReviewMode, reviewItems, questionType, mixImagesEnabled: initialMixImagesEnabled, board } = route.params as {
     question?: Question;
     subject: any;
     topic?: any;
@@ -53,6 +53,7 @@ const QuizScreen: React.FC = () => {
     reviewItems?: any[];
     questionType?: string; // 'mcq', 'structured', or 'essay'
     mixImagesEnabled?: boolean;
+    board?: 'zimsec' | 'cambridge'; // Computer Science exam board
   };
 
   const normalizeQuestion = useCallback((q: Question | undefined): Question | undefined => {
@@ -110,7 +111,7 @@ const QuizScreen: React.FC = () => {
 
   // Voice/STT support (Wispr Flow) â€” enable for A Level sciences and math
   const isMathSubject = subject?.id === 'mathematics' || subject?.id === 'a_level_pure_math';
-  const supportsVoiceToText = isMathSubject || ['combined_science', 'a_level_physics', 'a_level_chemistry', 'a_level_biology'].includes(subject?.id);
+  const supportsVoiceToText = isMathSubject || ['combined_science', 'a_level_physics', 'a_level_chemistry', 'a_level_biology', 'computer_science'].includes(subject?.id);
   const voiceInputMode: 'math' | 'general' = isMathSubject ? 'math' : 'general';
 
   const loadingSteps = React.useMemo(() => getSubjectLoadingSteps(subject?.id), [subject?.id]);
@@ -611,7 +612,8 @@ const QuizScreen: React.FC = () => {
             nextQuestionFormat,  // questionFormat (keep structured for Combined Science)
             nextQuestionType,  // Also pass as question_type for backend compatibility
             mixImagesEnabled,  // Enable Vertex AI image questions
-            questionCount + 1   // Pass the next question number
+            questionCount + 1,  // Pass the next question number
+            subject?.id === 'computer_science' || subject?.id === 'a_level_computer_science' ? board : undefined  // board for CS (O-Level or A-Level)
           );
         }
       }

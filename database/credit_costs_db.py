@@ -102,6 +102,50 @@ def create_credit_costs_table():
                     'description': '0.5 credit per exam question'
                 },
 
+                # Computer Science (O-Level) – MCQ 0.3, Structured 0.5, Essay 1
+                {
+                    'action_key': 'computer_science_topical_mcq',
+                    'cost': 3,
+                    'category': 'Computer Science',
+                    'component': 'Topical MCQ',
+                    'description': '0.3 credit per MCQ (1 credit = 3 MCQs)'
+                },
+                {
+                    'action_key': 'computer_science_topical_structured',
+                    'cost': 5,
+                    'category': 'Computer Science',
+                    'component': 'Topical Structured',
+                    'description': '0.5 credit per structured question'
+                },
+                {
+                    'action_key': 'computer_science_topical_essay',
+                    'cost': 10,
+                    'category': 'Computer Science',
+                    'component': 'Topical Essay',
+                    'description': '1 credit per essay question'
+                },
+                {
+                    'action_key': 'computer_science_exam_mcq',
+                    'cost': 5,
+                    'category': 'Computer Science',
+                    'component': 'Exam MCQ',
+                    'description': '0.3 credit per exam MCQ'
+                },
+                {
+                    'action_key': 'computer_science_exam_structured',
+                    'cost': 5,
+                    'category': 'Computer Science',
+                    'component': 'Exam Structured',
+                    'description': '0.5 credit per exam structured'
+                },
+                {
+                    'action_key': 'computer_science_exam_essay',
+                    'cost': 5,
+                    'category': 'Computer Science',
+                    'component': 'Exam Essay',
+                    'description': '1 credit per exam essay'
+                },
+
                 # Mathematics (O-Level)
                 {
                     'action_key': 'math_topical',
@@ -455,6 +499,14 @@ class CreditCostService:
             'combined_science_topical_mcq': 3,  # 0.25 credit
             'combined_science_topical_structured': 5,  # 0.5 credit
             'combined_science_exam': 5,  # 0.5 credit
+
+            # Computer Science (O-Level) – MCQ 0.3, Structured 0.5, Essay 1 (10 units = 1 credit)
+            'computer_science_topical_mcq': 3,   # 0.3 credit (3 units) – 1 credit = 3 MCQs
+            'computer_science_topical_structured': 5,  # 0.5 credit (5 units)
+            'computer_science_topical_essay': 10,  # 1 credit (10 units)
+            'computer_science_exam_mcq': 3,   # 0.3 credit per exam MCQ (3 units) - 1 credit = 3 MCQs
+            'computer_science_exam_structured': 5,  # 0.5 credit per exam structured (5 units)
+            'computer_science_exam_essay': 10,  # 1 credit per exam essay (10 units)
 
             # Mathematics (O-Level)
             'math_topical': 5,  # 0.5 credit

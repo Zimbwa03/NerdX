@@ -73,6 +73,14 @@ class Config:
         'combined_science_topical_mcq': 10,         # 1 credit per MCQ
         'combined_science_topical_structured': 10,  # 1 credit per structured question
 
+        # Computer Science (O-Level) – MCQ 0.3, Structured 0.5, Essay 1 (1 credit = 3 MCQs)
+        'computer_science_topical_mcq': 3,         # 0.3 credit per MCQ (3 units)
+        'computer_science_topical_structured': 5,  # 0.5 credit per structured (5 units)
+        'computer_science_topical_essay': 10,      # 1 credit per essay (10 units)
+        'computer_science_exam_mcq': 3,           # 0.3 credit per exam MCQ (3 units) - 1 credit = 3 MCQs
+        'computer_science_exam_structured': 5,     # 0.5 credit per exam structured (5 units)
+        'computer_science_exam_essay': 10,         # 1 credit per exam essay (10 units)
+
         # Mathematics (O-Level)
         'math_topical': 10,                # 1 credit per question
         'math_exam': 10,                   # 1 credit per question
@@ -126,6 +134,13 @@ class Config:
         'a_level_biology_exam_mcq': 20,              # 2 credits
         'a_level_biology_exam_structured': 20,        # 2 credits
         'a_level_biology_exam_essay': 20,            # 2 credits
+        # A-Level Computer Science (Same pricing as O-Level CS: MCQ 0.3, Structured 0.5, Essay 1)
+        'a_level_computer_science_topical_mcq': 3,         # 0.3 credit per MCQ (3 units)
+        'a_level_computer_science_topical_structured': 5,  # 0.5 credit per structured (5 units)
+        'a_level_computer_science_topical_essay': 10,      # 1 credit per essay (10 units)
+        'a_level_computer_science_exam_mcq': 3,           # 0.3 credit per exam MCQ (3 units)
+        'a_level_computer_science_exam_structured': 5,      # 0.5 credit per exam structured (5 units)
+        'a_level_computer_science_exam_essay': 10,        # 1 credit per exam essay (10 units)
 
         # Audio / Live (Complex processing)
         'audio_feature': 20,               # 2 credits - Audio processing + AI

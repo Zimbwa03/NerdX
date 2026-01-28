@@ -62,9 +62,12 @@ export function calculateQuizCreditCost(params: CreditCostParams): number {
     return 1;
   }
 
-  // Computer Science (O-Level)
+  // Computer Science (O-Level) – MCQ 0.3, Structured 0.5, Essay 1 (1 credit = 3 MCQs)
   if (subjectKey === 'computer_science') {
-    return 1; // Same as Combined Science
+    const fmt = (questionFormat || bioQuestionType || 'mcq').toLowerCase();
+    if (fmt === 'structured') return 0.5;
+    if (fmt === 'essay') return 1;
+    return 0.3; // MCQ
   }
 
   // Default fallback
@@ -72,9 +75,12 @@ export function calculateQuizCreditCost(params: CreditCostParams): number {
 }
 
 /**
- * Format credit cost for display (e.g., "0.5 credit" or "1 credit")
+ * Format credit cost for display (e.g., "0.3 credits", "0.5 credit", "1 credit")
  */
 export function formatCreditCost(credits: number): string {
+  if (credits < 1 && credits > 0) {
+    return `${credits} credit${credits === 1 ? '' : 's'}`;
+  }
   const whole = Math.round(credits);
   return `${whole} credit${whole === 1 ? '' : 's'}`;
 }

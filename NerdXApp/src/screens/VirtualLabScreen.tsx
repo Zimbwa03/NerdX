@@ -124,6 +124,9 @@ const VirtualLabScreen: React.FC = () => {
             'logarithms-lab': 'LogarithmsLabScreen',
             'sequences-series-lab': 'SequencesSeriesLabScreen',
             'simultaneous-equations-lab': 'SimultaneousEquationsLabScreen',
+
+            // Computer Science - Programming Lab
+            'programming-lab': 'ProgrammingLabEditor',
         };
 
         const screenName = screenMap[simulationId];
@@ -142,6 +145,7 @@ const VirtualLabScreen: React.FC = () => {
         { key: 'physics', label: 'Physics', color: SUBJECT_COLORS.physics.primary },
         { key: 'mathematics', label: 'Math', color: SUBJECT_COLORS.mathematics.primary },
         { key: 'english', label: 'English', color: SUBJECT_COLORS.english.primary },
+        { key: 'computer_science', label: 'Computer Science', color: SUBJECT_COLORS.computer_science.primary },
     ];
 
     return (
@@ -177,7 +181,7 @@ const VirtualLabScreen: React.FC = () => {
                     </View>
                     <View style={[styles.statDivider, { backgroundColor: '#FFFFFF30' }]} />
                     <View style={styles.statItem}>
-                        <Text style={styles.statNumber}>5</Text>
+                        <Text style={styles.statNumber}>6</Text>
                         <Text style={styles.statLabel}>Subjects</Text>
                     </View>
                     <View style={[styles.statDivider, { backgroundColor: '#FFFFFF30' }]} />

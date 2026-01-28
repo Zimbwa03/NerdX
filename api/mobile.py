@@ -103,12 +103,14 @@ def _get_quiz_credit_action(
     subject: str,
     question_type: str,
     question_format: str,
-    bio_question_type: str
+    bio_question_type: str,
+    cs_question_type: str = None
 ) -> str:
     subject_key = (subject or '').lower()
     qt = (question_type or 'topical').lower()
     qf = (question_format or 'mcq').lower()
     bio_qt = (bio_question_type or 'mcq').lower()
+    cs_fmt = (cs_question_type or qf or 'mcq').lower()
 
     if subject_key == 'mathematics':
         return 'math_topical' if qt == 'topical' else 'math_exam'
@@ -116,6 +118,20 @@ def _get_quiz_credit_action(
         if qt == 'exam':
             return 'combined_science_exam'
         return 'combined_science_topical_structured' if qf == 'structured' else 'combined_science_topical_mcq'
+    if subject_key == 'computer_science':
+        # Exam: per-format keys (0.3 MCQ, 0.5 structured, 1 essay) like other subjects
+        if qt == 'exam':
+            if cs_fmt == 'structured':
+                return 'computer_science_exam_structured'
+            if cs_fmt == 'essay':
+                return 'computer_science_exam_essay'
+            return 'computer_science_exam_mcq'
+        # Topical: MCQ=3 units (0.3), Structured=5 (0.5), Essay=10 (1)
+        if cs_fmt == 'structured':
+            return 'computer_science_topical_structured'
+        if cs_fmt == 'essay':
+            return 'computer_science_topical_essay'
+        return 'computer_science_topical_mcq'
     if subject_key == 'english':
         return 'english_topical'
 
@@ -135,6 +151,20 @@ def _get_quiz_credit_action(
     if subject_key == 'a_level_biology':
         bio_key = bio_qt if bio_qt in ['mcq', 'structured', 'essay'] else 'mcq'
         return f"a_level_biology_{qt}_{bio_key}"
+    if subject_key == 'a_level_computer_science':
+        # Exam: per-format keys (0.3 MCQ, 0.5 structured, 1 essay) like other A-Level subjects
+        if qt == 'exam':
+            if cs_fmt == 'structured':
+                return 'a_level_computer_science_exam_structured'
+            if cs_fmt == 'essay':
+                return 'a_level_computer_science_exam_essay'
+            return 'a_level_computer_science_exam_mcq'
+        # Topical: MCQ=3 units (0.3), Structured=5 (0.5), Essay=10 (1)
+        if cs_fmt == 'structured':
+            return 'a_level_computer_science_topical_structured'
+        if cs_fmt == 'essay':
+            return 'a_level_computer_science_topical_essay'
+        return 'a_level_computer_science_topical_mcq'
 
     return f"{subject}_topical" if qt == 'topical' else f"{subject}_exam"
 
@@ -159,11 +189,13 @@ def _get_exam_session_cost_units(
         if 'math' in subject_key:
             mcq_cost = 5  # 0.5 credit
             structured_cost = 5  # 0.5 credit
+        elif subject_key == 'computer_science':
+            mcq_cost = 3  # 0.3 credit per exam MCQ (3 units) - 1 credit = 3 MCQs
+            structured_cost = 5  # 0.5 credit per exam structured (5 units)
         elif any(key in subject_key for key in ['biology', 'chemistry', 'physics', 'combined_science']):
             mcq_cost = 5  # 0.5 credit
             structured_cost = 5  # 0.5 credit
         else:
-            # English and other subjects
             mcq_cost = 5  # 0.5 credit
             structured_cost = 5  # 0.5 credit
 
@@ -190,10 +222,18 @@ def _get_exam_question_cost_units(subject: str, level: str, question_type: str) 
         return 5  # 0.5 credit
     if 'math' in subject_key:
         return 5  # 0.5 credit
+    if subject_key == 'computer_science':
+        # Computer Science: MCQ = 0.3 credit (3 units), Structured = 0.5 credit (5 units), Essay = 1 credit (10 units)
+        if q_type == 'MCQ':
+            return 3  # 0.3 credit per exam MCQ (3 units)
+        elif q_type in ['STRUCTURED', 'STRUCTURED_ONLY']:
+            return 5  # 0.5 credit per exam structured (5 units)
+        elif q_type in ['ESSAY', 'ESSAY_ONLY']:
+            return 10  # 1 credit per exam essay (10 units)
+        return 5  # Default to structured cost
     if any(key in subject_key for key in ['biology', 'chemistry', 'physics', 'combined_science']):
         return 5  # 0.5 credit
-    # English and other subjects
-    return 5  # 0.5 credit
+    return 5  # 0.5 credit (English and other subjects)
 
 # JWT Secret Key (should be in environment variable)
 JWT_SECRET = os.environ.get('JWT_SECRET', 'nerdx-mobile-secret-key-change-in-production')
@@ -1239,10 +1279,12 @@ def get_topics():
             A_LEVEL_CHEMISTRY_ALL_TOPICS, 
             A_LEVEL_BIOLOGY_ALL_TOPICS, 
             A_LEVEL_PURE_MATH_ALL_TOPICS,
+            A_LEVEL_COMPUTER_SCIENCE_ALL_TOPICS,
             A_LEVEL_PHYSICS_TOPICS,
             A_LEVEL_CHEMISTRY_TOPICS,
             A_LEVEL_BIOLOGY_TOPICS,
-            A_LEVEL_PURE_MATH_TOPICS
+            A_LEVEL_PURE_MATH_TOPICS,
+            A_LEVEL_COMPUTER_SCIENCE_TOPICS
         )
         
         topics = []
@@ -1284,6 +1326,35 @@ def get_topics():
                     'subject': 'a_level_pure_math',
                     'level': 'Lower Sixth' if topic in A_LEVEL_PURE_MATH_TOPICS.get('Lower Sixth', []) else 'Upper Sixth'
                 })
+        elif subject == 'a_level_computer_science' or subject == 'A-Level Computer Science':
+            # Board: zimsec (default) or cambridge — Cambridge 9618 AS & A Level
+            board = (request.args.get('board') or 'zimsec').lower()
+            if board == 'cambridge':
+                try:
+                    from services.cambridge_a_level_cs_syllabus import (
+                        CAMBRIDGE_A_LEVEL_CS_TOPICS_AS,
+                        CAMBRIDGE_A_LEVEL_CS_TOPICS_A2,
+                        CAMBRIDGE_A_LEVEL_CS_ALL_TOPICS,
+                    )
+                    for topic in CAMBRIDGE_A_LEVEL_CS_ALL_TOPICS:
+                        topics.append({
+                            'id': topic.lower().replace(' ', '_').replace(',', '').replace('.', '').replace('-', '_'),
+                            'name': topic,
+                            'subject': 'a_level_computer_science',
+                            'level': 'AS Level' if topic in CAMBRIDGE_A_LEVEL_CS_TOPICS_AS else 'A2 Level',
+                            'board': 'cambridge'
+                        })
+                except ImportError:
+                    board = 'zimsec'
+            if board == 'zimsec':
+                for topic in A_LEVEL_COMPUTER_SCIENCE_ALL_TOPICS:
+                    topics.append({
+                        'id': topic.lower().replace(' ', '_').replace(',', '').replace('.', '').replace('-', '_'),
+                        'name': topic,
+                        'subject': 'a_level_computer_science',
+                        'level': 'Form 5' if topic in A_LEVEL_COMPUTER_SCIENCE_TOPICS.get('Form 5', []) else 'Form 6',
+                        'board': 'zimsec'
+                    })
         
         # Handle Combined Science two-level structure
         elif subject == 'combined_science':
@@ -1331,13 +1402,27 @@ def get_topics():
                     })
 
         elif subject == 'computer_science':
-            # Return all Computer Science topics
-            if 'Computer Science' in TOPICS:
+            # Board: zimsec (default) or cambridge
+            board = (request.args.get('board') or 'zimsec').lower()
+            if board == 'cambridge':
+                try:
+                    from services.cambridge_cs_syllabus import CAMBRIDGE_CS_TOPICS
+                    for topic in CAMBRIDGE_CS_TOPICS:
+                        topics.append({
+                            'id': topic.lower().replace(' ', '_').replace('-', '_'),
+                            'name': topic,
+                            'subject': 'computer_science',
+                            'board': 'cambridge'
+                        })
+                except ImportError:
+                    board = 'zimsec'
+            if board == 'zimsec' and 'Computer Science' in TOPICS:
                 for topic in TOPICS['Computer Science']:
                     topics.append({
                         'id': topic.lower().replace(' ', '_').replace('-', '_'),
                         'name': topic,
-                        'subject': 'computer_science'
+                        'subject': 'computer_science',
+                        'board': 'zimsec'
                     })
         elif subject in TOPICS:
             # Default handling for other subjects
@@ -1387,7 +1472,9 @@ def generate_question():
         
         # For A-Level Biology, use question_type from data (mcq, structured, essay)
         bio_question_type = data.get('question_type', 'mcq') if subject == 'a_level_biology' else 'mcq'
-        credit_action = _get_quiz_credit_action(subject, question_type, question_format, bio_question_type)
+        # For Computer Science, use question_type from data (mcq, structured, essay)
+        cs_question_type = (data.get('question_type') or question_format or 'mcq').lower() if subject == 'computer_science' else None
+        credit_action = _get_quiz_credit_action(subject, question_type, question_format, bio_question_type, cs_question_type)
         if is_image_question:
             credit_cost = get_image_question_credit_cost()
         else:
@@ -1705,25 +1792,71 @@ def generate_question():
                 cs_generator = ComputerScienceGenerator()
                 from constants import TOPICS
                 import random
-                
-                # Handle exam mode - randomly select topic
+                board = (data.get('board') or 'zimsec').lower()
+                # Handle exam mode - randomly select topic (board-specific list)
                 if question_type == 'exam':
-                    cs_topics = TOPICS.get('Computer Science', [])
+                    if board == 'cambridge':
+                        try:
+                            from services.cambridge_cs_syllabus import CAMBRIDGE_CS_TOPICS
+                            cs_topics = list(CAMBRIDGE_CS_TOPICS) if CAMBRIDGE_CS_TOPICS else []
+                        except ImportError:
+                            cs_topics = TOPICS.get('Computer Science', [])
+                    else:
+                        cs_topics = TOPICS.get('Computer Science', [])
                     if cs_topics:
                         topic = random.choice(cs_topics)
+                # Default topic if none specified (board-specific default)
+                default_topic = 'Data representation' if board == 'cambridge' else 'Hardware and Software'
+                selected_topic = topic or default_topic
+                # Determine question format - MCQ, structured, or essay
+                cs_question_type = data.get('question_type', question_format or 'mcq').lower()
+                if cs_question_type == 'essay':
+                    question_data = cs_generator.generate_essay_question(selected_topic, difficulty, g.current_user_id, board=board)
+                elif cs_question_type == 'structured':
+                    question_data = cs_generator.generate_structured_question(selected_topic, difficulty, g.current_user_id, board=board)
+                else:
+                    question_data = cs_generator.generate_topical_question(selected_topic, difficulty, g.current_user_id, board=board)
+            
+            elif subject == 'a_level_computer_science':
+                # A Level Computer Science - ZIMSEC 6023 or Cambridge 9618 (board from client)
+                cs_generator = ComputerScienceGenerator()
+                import random
+                board = (data.get('board') or 'zimsec').lower()
                 
-                # Default topic if none specified
-                selected_topic = topic or 'Hardware and Software'
+                if board == 'cambridge':
+                    try:
+                        from services.cambridge_a_level_cs_syllabus import (
+                            CAMBRIDGE_A_LEVEL_CS_TOPICS_AS,
+                            CAMBRIDGE_A_LEVEL_CS_TOPICS_A2,
+                            CAMBRIDGE_A_LEVEL_CS_ALL_TOPICS,
+                        )
+                        selected_topic = topic or '1.1 Data representation – number systems'
+                        if question_type == 'exam':
+                            level = data.get('parent_subject') or 'AS Level'
+                            level_topics = CAMBRIDGE_A_LEVEL_CS_TOPICS_AS if level == 'AS Level' else CAMBRIDGE_A_LEVEL_CS_TOPICS_A2
+                            if level_topics:
+                                selected_topic = random.choice(level_topics)
+                    except ImportError:
+                        board = 'zimsec'
+                
+                if board == 'zimsec':
+                    from constants import A_LEVEL_COMPUTER_SCIENCE_TOPICS, A_LEVEL_COMPUTER_SCIENCE_ALL_TOPICS
+                    selected_topic = topic or 'Data Representation - Number Systems'
+                    if question_type == 'exam':
+                        level = data.get('parent_subject') or 'Form 5'
+                        level_topics = A_LEVEL_COMPUTER_SCIENCE_TOPICS.get(level, A_LEVEL_COMPUTER_SCIENCE_ALL_TOPICS)
+                        if level_topics:
+                            selected_topic = random.choice(level_topics)
                 
                 # Determine question format - MCQ, structured, or essay
                 cs_question_type = data.get('question_type', question_format or 'mcq').lower()
-                
+                a_level_cambridge = (board == 'cambridge' and subject == 'a_level_computer_science')
                 if cs_question_type == 'essay':
-                    question_data = cs_generator.generate_essay_question(selected_topic, difficulty, g.current_user_id)
+                    question_data = cs_generator.generate_essay_question(selected_topic, difficulty, g.current_user_id, board=board, a_level_cambridge=a_level_cambridge)
                 elif cs_question_type == 'structured':
-                    question_data = cs_generator.generate_structured_question(selected_topic, difficulty, g.current_user_id)
+                    question_data = cs_generator.generate_structured_question(selected_topic, difficulty, g.current_user_id, board=board, a_level_cambridge=a_level_cambridge)
                 else:
-                    question_data = cs_generator.generate_topical_question(selected_topic, difficulty, g.current_user_id)
+                    question_data = cs_generator.generate_topical_question(selected_topic, difficulty, g.current_user_id, board=board, a_level_cambridge=a_level_cambridge)
 
         
         if not question_data:
@@ -1738,9 +1871,11 @@ def generate_question():
                     error_msg = 'Failed to generate structured question. Please try again or switch to MCQ questions.'
                 else:
                     error_msg = f'Failed to generate A-Level Biology {bio_type} question. Please try again.'
-            elif subject in ['a_level_physics', 'a_level_chemistry', 'a_level_pure_math']:
+            elif subject in ['a_level_physics', 'a_level_chemistry', 'a_level_pure_math', 'a_level_computer_science']:
                 if question_format_used == 'structured':
                     error_msg = f'Failed to generate {subject.replace("a_level_", "").replace("_", " ").title()} structured question. Please try again or switch to MCQ questions.'
+                elif question_format_used == 'essay':
+                    error_msg = f'Failed to generate {subject.replace("a_level_", "").replace("_", " ").title()} essay question. The AI service may be experiencing high load. Please try again in a moment.'
                 else:
                     error_msg = f'Failed to generate {subject.replace("a_level_", "").replace("_", " ").title()} question. Please try again.'
             else:
@@ -2022,11 +2157,14 @@ def generate_question():
                 logger.warning(f"LaTeX conversion for structured_question failed (non-blocking): {e}")
         
         # Deduct credits ONLY after we have successfully produced a question payload.
+        # For CS/biology include format (mcq/structured/essay) so Supabase credit_transactions are clear
+        desc_fmt = (cs_question_type or question_format or '') if subject == 'computer_science' else (bio_question_type if subject == 'a_level_biology' else question_format or '')
+        desc = f'Generated {subject} {question_type} {desc_fmt} question'.replace('  ', ' ').strip() if desc_fmt else f'Generated {subject} {question_type} question'
         credits_remaining = _deduct_credits_or_fail(
             g.current_user_id,
             int(credit_cost),
             'quiz_generation',
-            f'Generated {subject} {question_type} question'
+            desc
         )
         if credits_remaining is None:
             # If deduction fails (race condition / DB issue), do not deliver paid content.
@@ -3904,10 +4042,13 @@ def start_teacher_mode():
         subj_lower = (subject or '').lower()
         is_mathematics = ('math' in subj_lower) or ('pure mathematics' in subj_lower)
         is_english = 'english' in subj_lower
+        is_computer_science = 'computer science' in subj_lower
         if is_mathematics:
             session_key = 'math_teacher'
         elif is_english:
             session_key = 'english_teacher'
+        elif is_computer_science:
+            session_key = 'computer_science_teacher'
         else:
             session_key = 'science_teacher'
         
@@ -3939,6 +4080,11 @@ def start_teacher_mode():
         elif is_english:
             subject_emoji = '📚'
             initial_message = f"{subject_emoji} Welcome to English Teacher Mode!\n\nI'm your English teacher. We can work on grammar, comprehension, summaries, and essay writing.\n\nHow can I help you today?"
+            if topic:
+                initial_message += f"\n\n📖 We'll be focusing on: **{topic}**"
+        elif is_computer_science:
+            subject_emoji = '💻'
+            initial_message = f"{subject_emoji} Welcome to Computer Science Teacher Mode!\n\nI'm your O-Level Computer Science tutor. We can cover hardware & software, programming, databases, networks, security, and more (ZIMSEC/Cambridge 2210).\n\nHow can I help you learn today?"
             if topic:
                 initial_message += f"\n\n📖 We'll be focusing on: **{topic}**"
         else:
@@ -3980,20 +4126,25 @@ def send_teacher_message():
         
         from utils.session_manager import session_manager
         
-        # Try to find active session (Math / English / Science)
+        # Try to find active session (Math / English / Computer Science / Science)
         math_session = session_manager.get_data(g.current_user_id, 'math_teacher')
         english_session = session_manager.get_data(g.current_user_id, 'english_teacher')
+        computer_science_session = session_manager.get_data(g.current_user_id, 'computer_science_teacher')
         science_session = session_manager.get_data(g.current_user_id, 'science_teacher')
         
-        # Determine which session is active (priority: math -> english -> science)
+        # Determine which session is active (priority: math -> english -> computer_science -> science)
         is_mathematics = bool(math_session and math_session.get('active'))
         is_english = bool(english_session and english_session.get('active'))
+        is_computer_science = bool(computer_science_session and computer_science_session.get('active'))
         if is_mathematics:
             session_key = 'math_teacher'
             session_data = math_session
         elif is_english:
             session_key = 'english_teacher'
             session_data = english_session
+        elif is_computer_science:
+            session_key = 'computer_science_teacher'
+            session_data = computer_science_session
         else:
             session_key = 'science_teacher'
             session_data = science_session
@@ -4105,6 +4256,13 @@ def send_teacher_message():
             from services.english_teacher_service import EnglishTeacherService
             teacher_service = EnglishTeacherService()
             response_text = teacher_service._get_teaching_response(g.current_user_id, augmented_message, session_data)
+        elif is_computer_science:
+            # Use Combined Science Teacher Service with Computer Science prompt (same Gemini flow)
+            from services.combined_science_teacher_service import CombinedScienceTeacherService
+            teacher_service = CombinedScienceTeacherService()
+            response_text = teacher_service._get_gemini_teaching_response(
+                g.current_user_id, augmented_message, session_data
+            )
         else:
             # Use Combined Science Teacher Service (Biology, Chemistry, Physics)
             from services.combined_science_teacher_service import CombinedScienceTeacherService
@@ -4161,8 +4319,8 @@ def send_teacher_message():
             except Exception as e:
                 logger.error(f"Error checking DIAGRAM media triggers: {e}", exc_info=True)
         
-        # Convert LaTeX to readable text, normalize spacing, and apply professional step-by-step formatting for O-Level/Pure Math and Science
-        if is_mathematics or session_key == 'science_teacher':
+        # Convert LaTeX to readable text, normalize spacing, and apply professional step-by-step formatting for O-Level/Pure Math and Science (incl. Computer Science)
+        if is_mathematics or session_key in ('science_teacher', 'computer_science_teacher'):
             try:
                 latex_converter = LaTeXConverter()
                 response_text = latex_converter.latex_to_readable_text(response_text or '')
@@ -4225,10 +4383,11 @@ def generate_teacher_notes():
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 402
         
-        # Get session data (Math / English / Science)
+        # Get session data (Math / English / Computer Science / Science)
         from utils.session_manager import session_manager
         math_session = session_manager.get_data(g.current_user_id, 'math_teacher')
         english_session = session_manager.get_data(g.current_user_id, 'english_teacher')
+        computer_science_session = session_manager.get_data(g.current_user_id, 'computer_science_teacher')
         science_session = session_manager.get_data(g.current_user_id, 'science_teacher')
 
         session_data = None
@@ -4239,6 +4398,9 @@ def generate_teacher_notes():
         elif english_session and english_session.get('active'):
             session_data = english_session
             session_key = 'english_teacher'
+        elif computer_science_session and computer_science_session.get('active'):
+            session_data = computer_science_session
+            session_key = 'computer_science_teacher'
         elif science_session and science_session.get('active'):
             session_data = science_session
             session_key = 'science_teacher'
@@ -4260,18 +4422,16 @@ def generate_teacher_notes():
             from services.english_teacher_service import EnglishTeacherService
             teacher_service = EnglishTeacherService()
             notes_data = teacher_service.generate_notes(session_id, g.current_user_id)
-        else:
+        elif session_key in ('science_teacher', 'computer_science_teacher'):
+            # Combined Science Teacher (Biology, Chemistry, Physics, Computer Science) – same notes flow
             from services.combined_science_teacher_service import CombinedScienceTeacherService
             teacher_service = CombinedScienceTeacherService()
             notes_prompt = f"Generate comprehensive notes in JSON format for {topic} in {subject}. Use the conversation history as context."
             notes_response = teacher_service._get_gemini_teaching_response(
                 g.current_user_id, notes_prompt, session_data
             )
-
-            # Try to parse JSON from response
             import json as json_lib
             try:
-                # Extract JSON from response if it's wrapped in markdown
                 if '```json' in notes_response:
                     json_start = notes_response.find('```json') + 7
                     json_end = notes_response.find('```', json_start)
@@ -4280,8 +4440,9 @@ def generate_teacher_notes():
                 else:
                     notes_data = json_lib.loads(notes_response)
             except Exception:
-                # If JSON parsing fails, return text response
-                notes_data = {'content': notes_response}
+                notes_data = {'sections': [{'title': 'Notes', 'content': notes_response}]}
+        else:
+            notes_data = {}
         
         # Generate PDF
         from utils.science_notes_pdf_generator import ScienceNotesPDFGenerator
@@ -4545,8 +4706,8 @@ def get_teacher_history():
         
         history_items = []
         
-        # Check all three session types
-        for session_type in ['math_teacher', 'english_teacher', 'science_teacher']:
+        # Check all session types (math, english, computer_science, science)
+        for session_type in ['math_teacher', 'english_teacher', 'computer_science_teacher', 'science_teacher']:
             session_data = session_manager.get_data(g.current_user_id, session_type)
             if session_data and session_data.get('session_id') and not session_data.get('deleted', False):
                 conversation_history = session_data.get('conversation_history', [])
@@ -4600,8 +4761,8 @@ def delete_teacher_session(session_id):
         # Try to find and delete the session
         deleted = False
         
-        # Check all three session types
-        for session_type in ['math_teacher', 'english_teacher', 'science_teacher']:
+        # Check all session types (math, english, computer_science, science)
+        for session_type in ['math_teacher', 'english_teacher', 'computer_science_teacher', 'science_teacher']:
             session_data = session_manager.get_data(g.current_user_id, session_type)
             if session_data and session_data.get('session_id') == session_id:
                 # Clear this specific session by setting it to inactive
@@ -9054,3 +9215,91 @@ Generate ONLY the message text, no explanations or formatting."""
                 'last_updated': datetime.now().isoformat()
             }
         }), 200
+
+
+# ============================================================================
+# VIRTUAL PROGRAMMING LAB - CODE EXECUTION
+# ============================================================================
+
+from services.programming_lab_execution_service import programming_lab_execution_service
+from services.programming_lab_ai_service import programming_lab_ai_service
+
+
+@mobile_bp.route('/virtual-programming-lab/execute', methods=['POST'])
+@require_auth
+def execute_programming_lab_code():
+    """
+    Execute code from the Virtual Programming Lab in a constrained sandbox.
+
+    Request JSON:
+    {
+      "code": string,
+      "language": "python" | "vbnet" | "java",
+      "input": string[]?,
+      "timeoutSeconds": number?,
+      "testCases": [{ "id": string, "name": string, "input": string, "expectedOutput": string }]?
+    }
+    """
+    try:
+        payload = request.get_json(force=True) or {}
+        code = (payload.get('code') or '').strip()
+        language = (payload.get('language') or 'python').lower()
+        stdin_lines = payload.get('input') or []
+        timeout_seconds = payload.get('timeoutSeconds')
+        test_cases = payload.get('testCases') or []
+
+        if not code:
+            return jsonify({
+                'success': False,
+                'message': 'Code is required',
+            }), 400
+
+        # Delegate to execution service
+        result = programming_lab_execution_service.execute(
+            code=code,
+            language=language,
+            stdin_lines=stdin_lines,
+            timeout_seconds=timeout_seconds,
+            test_cases=test_cases,
+        )
+
+        return jsonify({
+            'success': True,
+            'data': result,
+        }), 200
+    except ValueError as ve:
+        # Safety validation errors
+        logger.warning(f"Programming Lab execution rejected: {ve}")
+        return jsonify({
+            'success': False,
+            'message': str(ve),
+        }), 400
+    except Exception as e:
+        logger.error(f"Programming Lab execution error: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'message': 'Server error during code execution',
+        }), 500
+
+
+@mobile_bp.route('/virtual-programming-lab/ai', methods=['POST'])
+@require_auth
+def programming_lab_ai():
+    """
+    AI assistant endpoint for the Virtual Programming Lab.
+
+    Delegates to Vertex AI (Gemini) as primary, DeepSeek as fallback.
+    """
+    try:
+        payload = request.get_json(force=True) or {}
+        result = programming_lab_ai_service.process_request(payload)
+        return jsonify({
+            'success': True,
+            'data': result,
+        }), 200
+    except Exception as e:
+        logger.error(f"Programming Lab AI error: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'message': 'AI assistant error',
+        }), 500

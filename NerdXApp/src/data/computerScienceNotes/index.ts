@@ -6,19 +6,19 @@ import { TopicNotes } from './types';
 // Export types
 export { TopicNotes, NotesSection } from './types';
 
-// Computer Science Topics based on ZIMSEC/Cambridge O-Level 2210 syllabus
+// ZIMSEC O-Level Computer Science 7014 — 11 topics (theory; practical in Virtual Labs)
 export const computerScienceTopics: string[] = [
     "Hardware and Software",
-    "Applications of Computer Science",
+    "Application of Computer Science",
     "Data Representation",
     "Communication Networks and Internet Technologies",
     "Security and Ethics",
-    "System Analysis and Design",
+    "Systems Analysis and Design",
     "Algorithm Design and Problem-Solving",
     "Programming",
     "Databases",
     "Web Design and Internet Uses",
-    "Automated and Emerging Technologies"
+    "Automated and Emerging Technologies",
 ];
 
 // Computer Science Notes - Basic structure for each topic

@@ -21,6 +21,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useCreditMonitor } from '../hooks/useCreditMonitor';
 import { creditsApi } from '../services/api/creditsApi';
+import type { Subject } from '../services/api/quizApi';
 import { Icons, IconCircle } from '../components/Icons';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, getColors } from '../theme/colors';
@@ -67,6 +68,7 @@ const DashboardScreen: React.FC = () => {
     chemistry: '#10B981', // Green
     physics: '#3B82F6', // Blue
     biology: '#14B8A6', // Teal
+    computer_science: '#0D47A1', // Deep blue (Master Code, Algorithms & Systems)
   };
 
   // Load unread notification count and subscribe to realtime updates
@@ -187,6 +189,16 @@ const DashboardScreen: React.FC = () => {
     navigation.navigate('Topics' as never, { subject } as never);
   };
 
+  const handleComputerSciencePress = () => {
+    const subject: Partial<Subject> = {
+      id: 'computer_science',
+      name: 'Computer Science',
+      icon: 'hardware-chip',
+      color: '#0288D1',
+    };
+    navigation.navigate('Topics' as never, { subject } as never);
+  };
+
   const handleTeacherMode = () => {
     navigation.navigate('TeacherModeSetup' as never);
   };
@@ -273,6 +285,18 @@ const DashboardScreen: React.FC = () => {
     // Navigate to dedicated A Level Biology screen
     if (subjectId === 'biology') {
       navigation.navigate('ALevelBiology' as never);
+      return;
+    }
+
+    // Navigate to A Level Computer Science (Topics screen with board selection)
+    if (subjectId === 'computer_science') {
+      const subject: Partial<Subject> = {
+        id: 'a_level_computer_science',
+        name: 'A-Level Computer Science',
+        icon: 'code-working',
+        color: aLevelColors.computer_science,
+      };
+      navigation.navigate('Topics' as never, { subject } as never);
       return;
     }
 
@@ -607,12 +631,22 @@ const DashboardScreen: React.FC = () => {
                   />
 
                   <AnimatedCard
+                    title="Computer Science"
+                    subtitle="ZimSec & Cambridge O Level"
+                    imageSource={require('../../assets/images/olevel_computer_science_card.png')}
+                    onPress={handleComputerSciencePress}
+                    glowColor="#0288D1"
+                    index={3}
+                    hideText={true}
+                  />
+
+                  <AnimatedCard
                     title="Project Assistant"
                     subtitle="Plan, Research & Succeed"
                     imageSource={require('../../assets/images/project_assistant_card_new.png')}
                     onPress={navigateToProjectList}
                     glowColor={Colors.primary.main}
-                    index={3}
+                    index={4}
                     hideText={true}
                   />
                 </>
@@ -658,6 +692,16 @@ const DashboardScreen: React.FC = () => {
                     index={3}
                     hideText={true}
                   />
+
+                  <AnimatedCard
+                    title="A Level Computer Science"
+                    subtitle="Master Code, Algorithms & Systems"
+                    imageSource={require('../../assets/images/alevel_computer_science_card.png')}
+                    onPress={() => navigateToALevelSubject('computer_science', 'Computer Science')}
+                    glowColor={aLevelColors.computer_science}
+                    index={4}
+                    hideText={true}
+                  />
                 </>
               )}
 
@@ -668,7 +712,7 @@ const DashboardScreen: React.FC = () => {
                 imageSource={require('../../assets/images/teacher_mode_card.png')}
                 onPress={handleTeacherMode}
                 glowColor={Colors.subjects.science}
-                index={4}
+                index={5}
                 hideText={true}
               />
 
@@ -678,7 +722,7 @@ const DashboardScreen: React.FC = () => {
                 imageSource={require('../../assets/images/virtual_labs_card.png')}
                 onPress={navigateToVirtualLab}
                 glowColor={Colors.subjects.physics}
-                index={5}
+                index={6}
                 hideText={true}
               />
 

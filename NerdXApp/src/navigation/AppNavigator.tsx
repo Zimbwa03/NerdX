@@ -30,6 +30,7 @@ import VirtualLabScreen from '../screens/VirtualLabScreen';
 import FormulaSheetScreen from '../screens/FormulaSheetScreen';
 import PastPaperScreen from '../screens/PastPaperScreen';
 import ScienceNotesScreen from '../screens/ScienceNotesScreen';
+import ComputerScienceNotesScreen from '../screens/ComputerScienceNotesScreen';
 import TopicNotesDetailScreen from '../screens/TopicNotesDetailScreen';
 import MathSolverScreen from '../screens/MathSolverScreen';
 import OfflineSettingsScreen from '../screens/OfflineSettingsScreen';
@@ -117,6 +118,7 @@ import StatisticsExplorerScreen from '../screens/virtualLab/StatisticsExplorerSc
 import LogarithmsLabScreen from '../screens/virtualLab/LogarithmsLabScreen';
 import SequencesSeriesLabScreen from '../screens/virtualLab/SequencesSeriesLabScreen';
 import SimultaneousEquationsLabScreen from '../screens/virtualLab/SimultaneousEquationsLabScreen';
+import ProgrammingLabEditorScreen from '../screens/virtualLab/ProgrammingLabEditorScreen';
 
 const Stack = createStackNavigator();
 
@@ -565,6 +567,11 @@ const AppNavigator: React.FC = () => {
               component={VirtualLabInteractiveScreen}
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="ProgrammingLabEditor"
+              component={ProgrammingLabEditorScreen}
+              options={{ headerShown: false }}
+            />
             {/* Mathematics Virtual Lab Screens */}
             <Stack.Screen
               name="DifferentiationLab"
@@ -685,6 +692,13 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="ScienceNotes"
               component={ScienceNotesScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="ComputerScienceNotes"
+              component={ComputerScienceNotesScreen}
               options={{
                 headerShown: false,
               }}

@@ -31,6 +31,7 @@ TIME_CONFIG = {
         "a_level_chemistry": 100,  # A-Level Chemistry
         "a_level_physics": 100,  # A-Level Physics
         "english": 70,
+        "computer_science": 85,  # O-Level CS (ZimSec/Cambridge)
         "biology": 80,
         "chemistry": 80,
         "physics": 80,
@@ -187,7 +188,7 @@ class ExamSessionService:
             difficulty=difficulty,
         )
         
-        topic_pool = self._get_subject_topics(subject, level, topics)
+        topic_pool = self._get_subject_topics(subject, level, topics, paper_style=paper_style)
         topic_plan = self._build_topic_plan(topic_pool, total_questions)
 
         session = {
@@ -348,6 +349,11 @@ class ExamSessionService:
     
     def _call_deepseek_generate(self, session: Dict, question_index: int, platform: str = 'mobile') -> Optional[Dict]:
         """Generate a single question with Vertex AI primary and DeepSeek fallback."""
+        subject_key = (session.get("subject") or "").lower().replace(" ", "_").replace("-", "_")
+        if subject_key == "computer_science":
+            question_type = self._get_question_type_for_index(session, question_index)
+            return self._generate_cs_exam_question(session, question_index, question_type)
+
         # Determine question type for this index
         question_type = self._get_question_type_for_index(session, question_index)
 
@@ -362,6 +368,97 @@ class ExamSessionService:
 
         # DeepSeek fallback
         return self._call_deepseek_only(session, question_index, prompt, question_type)
+
+    def _generate_cs_exam_question(
+        self, session: Dict, question_index: int, question_type: str
+    ) -> Optional[Dict]:
+        """Generate a Computer Science exam question using the CS generator (ZimSec or Cambridge)."""
+        try:
+            from services.computer_science_generator import ComputerScienceGenerator
+            cs_gen = ComputerScienceGenerator()
+        except Exception as e:
+            logger.error(f"Failed to load ComputerScienceGenerator: {e}")
+            return self._get_fallback_question(session)
+
+        topic = self._get_topic_for_index(session, question_index)
+        if not topic:
+            allowed = session.get("allowed_topics") or session.get("topic_plan") or []
+            topic = random.choice(allowed) if allowed else "Data Representation"
+        paper_style = (session.get("paper_style") or "ZIMSEC").upper()
+        board = "cambridge" if paper_style == "CAMBRIDGE" else "zimsec"
+        difficulty = (session.get("difficulty") or "standard").lower()
+        if difficulty == "standard":
+            difficulty = "medium"
+        user_id = session.get("user_id")
+
+        raw = None
+        if question_type == "MCQ":
+            raw = cs_gen.generate_topical_question(topic, difficulty, user_id, board=board)
+        else:
+            raw = cs_gen.generate_structured_question(topic, difficulty, user_id, board=board)
+
+        if not raw:
+            return self._get_fallback_question(session)
+
+        # Map CS generator output to exam question format
+        username = session.get("username", "Student")
+        prompt_to_student = (
+            f"Let's go, {username}! Here's your first question."
+            if question_index == 0
+            else f"Great work, {username}! Here's question {question_index + 1}."
+        )
+
+        if question_type == "MCQ":
+            opts = raw.get("options") or {}
+            if isinstance(opts, dict):
+                options = [{"label": k, "text": v} for k, v in opts.items()]
+            else:
+                options = [{"label": str(i + 1), "text": o} for i, o in enumerate(opts)]
+            return {
+                "id": str(uuid.uuid4()),
+                "question_type": "MCQ",
+                "topic": raw.get("topic") or topic,
+                "subtopic": raw.get("subtopic", ""),
+                "stem": raw.get("question") or raw.get("question_text", ""),
+                "options": options,
+                "correct_option": raw.get("correct_answer", "A"),
+                "explanation": raw.get("explanation", ""),
+                "difficulty": difficulty,
+                "prompt_to_student": prompt_to_student,
+                "question_index": question_index,
+                "generated_at": datetime.utcnow().isoformat(),
+                "ai_model": "computer_science_generator",
+            }
+
+        # STRUCTURED
+        sq = raw.get("structured_question") or raw
+        parts_in = sq.get("parts") or []
+        parts_out = []
+        for p in parts_in:
+            if isinstance(p, dict):
+                parts_out.append({
+                    "part": p.get("label", "a"),
+                    "prompt": p.get("question", ""),
+                    "marks": p.get("marks", 2),
+                    "key_points": p.get("marking_points") or [],
+                })
+        stem = sq.get("stem") or sq.get("context") or (parts_out[0]["prompt"] if parts_out else "")
+        return {
+            "id": str(uuid.uuid4()),
+            "question_type": "STRUCTURED",
+            "topic": raw.get("topic") or sq.get("topic") or topic,
+            "subtopic": sq.get("subtopic", ""),
+            "stem": stem,
+            "parts": parts_out,
+            "total_marks": sq.get("total_marks", sum(pp.get("marks", 2) for pp in parts_out)),
+            "marking_scheme": {p.get("part", str(i)): p.get("key_points", []) for i, p in enumerate(parts_out)},
+            "explanation": raw.get("explanation") or sq.get("explanation", ""),
+            "difficulty": difficulty,
+            "prompt_to_student": prompt_to_student,
+            "question_index": question_index,
+            "generated_at": datetime.utcnow().isoformat(),
+            "ai_model": "computer_science_generator",
+        }
 
     def _call_deepseek_only(
         self,
@@ -714,6 +811,21 @@ Requirements:
                 "explanation": "f(2) = (2)² + 3(2) - 4 = 4 + 6 - 4 = 6",
                 "prompt_to_student": "Here's a question while we prepare the next one.",
             },
+            "computer_science": {
+                "id": f"fallback-{uuid.uuid4()}",
+                "question_type": "MCQ",
+                "topic": "Data representation",
+                "stem": "How many bits are there in one byte?",
+                "options": [
+                    {"label": "A", "text": "4"},
+                    {"label": "B", "text": "8"},
+                    {"label": "C", "text": "16"},
+                    {"label": "D", "text": "32"},
+                ],
+                "correct_option": "B",
+                "explanation": "One byte consists of 8 bits. This is a fundamental unit in digital data representation.",
+                "prompt_to_student": "Here's a question while we prepare the next one.",
+            },
         }
         
         # Check for A-Level subjects
@@ -727,15 +839,37 @@ Requirements:
             return fallback_questions["pure_math"]
         elif "biology" in subject_key:
             return fallback_questions["biology"]
+        elif subject_key == "computer_science":
+            return fallback_questions["computer_science"]
         
         return fallback_questions.get(subject, fallback_questions["mathematics"])
 
-    def _get_subject_topics(self, subject: str, level: str, allowed_topics: Optional[List[str]] = None) -> List[str]:
-        """Resolve topic pool for a given subject/level."""
+    def _get_subject_topics(
+        self,
+        subject: str,
+        level: str,
+        allowed_topics: Optional[List[str]] = None,
+        paper_style: str = "ZIMSEC",
+    ) -> List[str]:
+        """Resolve topic pool for a given subject/level. For Computer Science, paper_style selects ZimSec vs Cambridge topics."""
         if allowed_topics:
             return [t for t in allowed_topics if isinstance(t, str) and t.strip()]
 
         subject_key = (subject or "").lower().replace(" ", "_").replace("-", "_")
+        # Computer Science: board-specific topic list
+        if subject_key == "computer_science":
+            try:
+                if (paper_style or "").upper() == "CAMBRIDGE":
+                    from services.cambridge_cs_syllabus import CAMBRIDGE_CS_TOPICS
+                    return list(CAMBRIDGE_CS_TOPICS) if CAMBRIDGE_CS_TOPICS else []
+                from constants import TOPICS
+                return list(TOPICS.get("Computer Science", []))
+            except Exception:
+                try:
+                    from constants import TOPICS
+                    return list(TOPICS.get("Computer Science", []))
+                except Exception:
+                    return []
         try:
             from constants import (
                 TOPICS,

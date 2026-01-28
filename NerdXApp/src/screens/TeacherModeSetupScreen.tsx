@@ -105,6 +105,19 @@ const SUBJECT_TOPICS: Record<string, string[]> = {
     'Magnetism and Electromagnetism',
     'Radioactivity',
   ],
+  'Computer Science': [
+    'Hardware and Software',
+    'Application of Computer Science',
+    'Data Representation',
+    'Communication Networks and Internet Technologies',
+    'Security and Ethics',
+    'Systems Analysis and Design',
+    'Algorithm Design and Problem-Solving',
+    'Programming',
+    'Databases',
+    'Web Design and Internet Uses',
+    'Automated and Emerging Technologies',
+  ],
 };
 
 // A-Level Topics by Subject
@@ -235,6 +248,79 @@ const A_LEVEL_TOPICS: Record<string, string[]> = {
     'Nuclear Physics',
     'Astronomy and Cosmology',
   ],
+  'A-Level Computer Science': [
+    // Form 5 Topics
+    'Data Representation - Number Systems',
+    'Data Representation - Binary Arithmetic',
+    'Data Representation - Character Encoding',
+    'Data Representation - Image Representation',
+    'Data Representation - Sound Representation',
+    'Computer Architecture - CPU Structure',
+    'Computer Architecture - Fetch-Decode-Execute Cycle',
+    'Computer Architecture - Memory Hierarchy',
+    'Computer Architecture - I/O Devices',
+    'Networking - Network Topologies',
+    'Networking - OSI Model',
+    'Networking - Network Protocols',
+    'Networking - Network Hardware',
+    'SDLC - Analysis and Fact-Finding',
+    'SDLC - Feasibility Studies',
+    'SDLC - System Design',
+    'SDLC - Data Flow Diagrams',
+    'Security and Ethics - Threats and Countermeasures',
+    'Security and Ethics - Ethical Issues',
+    'Security and Ethics - Data Protection',
+    'Algorithms - Algorithm Design',
+    'Algorithms - Basic Data Structures',
+    'Algorithms - Searching Algorithms',
+    'Algorithms - Sorting Algorithms',
+    'Programming - Programming Fundamentals',
+    'Programming - Control Structures',
+    'Programming - Functions and Procedures',
+    'Programming - File Handling',
+    'Programming - Basic OOP',
+    'Databases - Database Concepts',
+    'Databases - ERD Design',
+    'Databases - Normalization',
+    'Databases - SQL Queries',
+    'Enterprising - Entrepreneurship in ICT',
+    'Enterprising - Business Planning',
+    'Enterprising - Market Research',
+    // Form 6 Topics
+    'Data Representation - Floating-Point Precision',
+    'Data Representation - Data Compression',
+    'Data Representation - Encryption Representation',
+    'Computer Architecture - Pipelining',
+    'Computer Architecture - Parallel Processing',
+    'Computer Architecture - RISC vs CISC',
+    'Computer Architecture - Performance Optimization',
+    'Networking - Network Security',
+    'Networking - Encryption Protocols',
+    'Networking - Network Design',
+    'Networking - Cloud Computing',
+    'SDLC - SDLC Methodologies',
+    'SDLC - Project Management',
+    'SDLC - Testing Strategies',
+    'SDLC - System Maintenance',
+    'Security and Ethics - Cryptography',
+    'Security and Ethics - Legal Frameworks',
+    'Security and Ethics - Professional Ethics',
+    'Algorithms - Advanced Data Structures',
+    'Algorithms - Tree Algorithms',
+    'Algorithms - Graph Algorithms',
+    'Algorithms - Algorithm Complexity',
+    'Programming - Advanced OOP',
+    'Programming - Inheritance and Polymorphism',
+    'Programming - Exception Handling',
+    'Programming - GUI Development',
+    'Databases - Complex SQL Queries',
+    'Databases - Transactions and ACID',
+    'Databases - Database Optimization',
+    'Databases - Database Security',
+    'Enterprising - Scaling Technology Businesses',
+    'Enterprising - Technology Commercialization',
+    'Enterprising - Social Impact of ICT',
+  ],
 };
 
 const SUBJECT_COLORS: Record<string, string> = {
@@ -244,6 +330,7 @@ const SUBJECT_COLORS: Record<string, string> = {
   Biology: '#4CAF50',
   Chemistry: '#FF9800',
   Physics: '#2196F3',
+  'Computer Science': '#009688',
 };
 
 const SUBJECT_ICONS: Record<string, string> = {
@@ -253,6 +340,7 @@ const SUBJECT_ICONS: Record<string, string> = {
   Biology: '🧬',
   Chemistry: '⚗️',
   Physics: '⚛️',
+  'Computer Science': '💻',
 };
 
 const TeacherModeSetupScreen: React.FC = () => {
@@ -272,12 +360,12 @@ const TeacherModeSetupScreen: React.FC = () => {
   const [selectedGradeLevel, setSelectedGradeLevel] = useState<string>('Form 3-4 (O-Level)');
   const [selectedTopic, setSelectedTopic] = useState<string>(preselectedTopic || '');
 
-  const subjects = ['O Level Mathematics', 'Pure Mathematics', 'English', 'Biology', 'Chemistry', 'Physics'];
+  const subjects = ['O Level Mathematics', 'Pure Mathematics', 'English', 'Biology', 'Chemistry', 'Physics', 'Computer Science'];
   const gradeLevels = ['Form 1-2', 'Form 3-4 (O-Level)', 'A-Level'];
 
-  // Get topics for selected subject
+  // Get topics for selected subject (Computer Science is O-Level only – always use SUBJECT_TOPICS)
   const availableTopics = selectedSubject
-    ? (selectedGradeLevel === 'A-Level'
+    ? (selectedGradeLevel === 'A-Level' && selectedSubject !== 'Computer Science'
       ? A_LEVEL_TOPICS[selectedSubject] || []
       : SUBJECT_TOPICS[selectedSubject] || [])
     : [];
