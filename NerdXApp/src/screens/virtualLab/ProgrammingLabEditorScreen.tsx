@@ -32,6 +32,8 @@ import { syntaxValidator } from '../../utils/programmingLab/syntaxValidator';
 import { programmingLabApi } from '../../services/api/programmingLabApi';
 import { gamificationService } from '../../services/GamificationService';
 import { findExerciseById } from '../../data/virtualLab/programmingLab/curriculum';
+import { PROGRAMMING_TEMPLATES, type ProgrammingTemplate } from '../../data/virtualLab/programmingLab/templates';
+import { Modal, ModalOptionCard } from '../../components/Modal';
 
 type RouteParams = {
     exerciseId?: string;
@@ -93,6 +95,7 @@ const ProgrammingLabEditorScreen: React.FC = () => {
     const [executionResult, setExecutionResult] = useState<ExecutionResult | null>(null);
     const [activeSideTab, setActiveSideTab] = useState<SidePanelTabId>('ai');
     const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
+    const [templatesVisible, setTemplatesVisible] = useState(false);
     const validationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const activeFile = files.find((f) => f.id === activeFileId) ?? files[0];
@@ -203,6 +206,31 @@ const ProgrammingLabEditorScreen: React.FC = () => {
         setFiles((prev) => [...prev, newFile]);
         setActiveFileId(newFile.id);
     }, [activeFile?.language]);
+
+    const handleApplyTemplate = useCallback((template: ProgrammingTemplate) => {
+        const newId = `file-${Date.now()}`;
+        setFiles((prev) => {
+            const fileFromTemplate: CodeFile = {
+                id: newId,
+                name:
+                    template.language === 'python'
+                        ? 'template.py'
+                        : template.language === 'vbnet'
+                        ? 'Template.vb'
+                        : 'Template.java',
+                language: template.language,
+                content: template.code,
+                lastModified: new Date(),
+                metadata: {
+                    templateId: template.id,
+                    templateTitle: template.title,
+                },
+            };
+            return [...prev, fileFromTemplate];
+        });
+        setActiveFileId(newId);
+        setTemplatesVisible(false);
+    }, []);
 
     const handleTabSelect = useCallback((fileId: string) => {
         setActiveFileId(fileId);
@@ -327,10 +355,26 @@ const ProgrammingLabEditorScreen: React.FC = () => {
                 <FloatingActionMenu
                     actions={[
                         { id: 'run', label: 'Run', icon: 'play', onPress: handleRunCode },
-                        { id: 'format', label: 'Format', icon: 'code', onPress: () => {} },
+                        { id: 'templates', label: 'Templates', icon: 'list', onPress: () => setTemplatesVisible(true) },
                         { id: 'ai-help', label: 'AI Help', icon: 'sparkles', onPress: () => setActiveSideTab('ai') },
                     ]}
                 />
+
+                <Modal
+                    visible={templatesVisible}
+                    onClose={() => setTemplatesVisible(false)}
+                    title="Starter Templates"
+                >
+                    {PROGRAMMING_TEMPLATES.filter(t => t.language === (activeFile?.language ?? language)).map((template) => (
+                        <ModalOptionCard
+                            key={template.id}
+                            icon="🧪"
+                            title={template.title}
+                            description={template.description}
+                            onPress={() => handleApplyTemplate(template)}
+                        />
+                    ))}
+                </Modal>
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
