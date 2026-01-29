@@ -320,7 +320,8 @@ const QuizScreen: React.FC = () => {
         question.hint,
         question.question_text,
         question.options,  // Pass options for proper MCQ validation
-        isStructured ? question.structured_question : undefined  // Pass structured question for marking
+        isStructured ? question.structured_question : undefined,  // Pass structured question for marking
+        question.question_type  // Pass question_type so backend returns analysis/detailed essay for Geography etc.
       );
       if (answerResult) {
         setResult(answerResult);
@@ -1842,6 +1843,24 @@ const QuizScreen: React.FC = () => {
                     </View>
                   </View>
                   <Text style={styles.feedbackText}>{result.feedback}</Text>
+
+                  {/* Essay/Geography analysis: encouragement and improvement tips */}
+                  {(result.encouragement || result.improvement_tips) && (
+                    <View style={styles.essayFeedbackSection}>
+                      {result.encouragement ? (
+                        <View style={styles.essayStrengthsList}>
+                          <Text style={styles.essayFeedbackTitle}>💡 Feedback</Text>
+                          <Text style={styles.essayStrengthItem}>{result.encouragement}</Text>
+                        </View>
+                      ) : null}
+                      {result.improvement_tips ? (
+                        <View style={styles.essayImprovementSection}>
+                          <Text style={styles.essayMistakesTitle}>📌 Improvement tips</Text>
+                          <Text style={styles.essayMistakeItem}>{result.improvement_tips}</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                  )}
 
                   {/* Answer Images (for DB questions) */}
                   {question?.answer_image_urls && question.answer_image_urls.length > 0 && (

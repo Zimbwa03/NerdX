@@ -2254,7 +2254,25 @@ def generate_question():
                 question['question_type'] = 'essay'
                 question['allows_text_input'] = True
                 question['allows_image_upload'] = True  # Geography essays need maps/diagrams
-        
+                # Build detailed solution (model answer outline, key points, marking criteria) for after submit
+                geo_essay_solution_parts = []
+                if question_data.get('key_points'):
+                    geo_essay_solution_parts.append("📋 KEY POINTS TO COVER:")
+                    for kp in (question_data.get('key_points') or [])[:8]:
+                        geo_essay_solution_parts.append(f"• {kp}")
+                if question_data.get('marking_criteria'):
+                    geo_essay_solution_parts.append("\n📊 MARKING CRITERIA:")
+                    for grade, desc in (question_data.get('marking_criteria') or {}).items():
+                        geo_essay_solution_parts.append(f"{grade}: {desc}")
+                if question_data.get('sample_answer_outline'):
+                    geo_essay_solution_parts.append("\n📝 MODEL ANSWER OUTLINE:")
+                    geo_essay_solution_parts.append(question_data['sample_answer_outline'])
+                if question_data.get('case_studies'):
+                    geo_essay_solution_parts.append("\n🌍 CASE STUDIES TO REFERENCE:")
+                    geo_essay_solution_parts.append(", ".join(question_data.get('case_studies', [])[:4]))
+                if geo_essay_solution_parts:
+                    question['solution'] = '\n'.join(geo_essay_solution_parts)
+
         # Convert LaTeX in structured_question (stem/parts) when it was added in blocks above
         if subject in ('mathematics', 'a_level_pure_math', 'combined_science') and question.get('structured_question'):
             try:
@@ -2675,6 +2693,36 @@ Step 3: Identify where your approach differed and learn from it.
                 feedback = 'Essay submitted successfully. Review the solution below.'
                 is_correct = True
                 detailed_solution = solution or 'No detailed feedback available.'
+                analysis_result = {}
+        elif subject == 'a_level_geography' or (subject == 'geography' and question_type == 'essay'):
+            # A-Level Geography (and O-Level Geography essay): show analysis and detailed model answer
+            try:
+                feedback = (
+                    '📝 Essay submitted! Your answer has been recorded. '
+                    'Review the marking criteria and model answer outline below to see how your answer compares.'
+                )
+                is_correct = True  # Essays are not strictly right/wrong; we mark as submitted for progress
+                detailed_solution = (
+                    (solution or '').strip()
+                    or 'Review the key points, marking criteria, and model answer outline provided with the question.'
+                )
+                analysis_result = {
+                    'feedback': feedback,
+                    'encouragement': (
+                        'Well done on completing your Geography essay! '
+                        'Compare your answer with the model outline and marking criteria to identify strengths and areas to improve.'
+                    ),
+                    'improvement_tips': (
+                        'Check that you addressed all key points, used case studies where relevant, '
+                        'and followed the marking criteria (content, analysis, communication).'
+                    ),
+                    'step_by_step_explanation': detailed_solution,
+                }
+            except Exception as e:
+                logger.error(f"Geography essay answer evaluation error: {e}", exc_info=True)
+                feedback = 'Essay submitted successfully. Review the solution below.'
+                is_correct = True
+                detailed_solution = solution or 'Review the marking criteria and model answer outline provided with the question.'
                 analysis_result = {}
         else:
             # For other subjects (Combined Science, English, etc.)
@@ -4623,24 +4671,39 @@ Guidelines:
 - Ask follow-up questions to check understanding
 - Keep responses concise but comprehensive"""
 
-        # Build conversation messages
-        messages = [{'role': 'system', 'content': system_prompt}]
-        for hist in conversation_history[-10:]:  # Keep last 10 messages for context
-            messages.append({'role': hist['role'], 'content': hist['content']})
-        messages.append({'role': 'user', 'content': message})
-        
-        # Generate AI response using DeepSeek
+        # Build conversation context (last 10 turns) for prompt
+        conv_lines = []
+        for hist in conversation_history[-10:]:
+            role_label = "User" if hist['role'] == 'user' else "Assistant"
+            conv_lines.append(f"{role_label}: {hist['content']}")
+        conv_block = "\n".join(conv_lines) if conv_lines else ""
+        user_turn = f"User: {message}"
+        full_user_prompt = f"{conv_block}\n{user_turn}\n\nRespond as the tutor:".strip() if conv_block else f"{user_turn}\n\nRespond as the tutor:"
+
+        # Generate AI response: Vertex AI (Gemini) primary, DeepSeek fallback
+        ai_response = None
         try:
-            from utils.deepseek import call_deepseek_chat
-            ai_response = call_deepseek_chat(
-                messages=messages,
-                temperature=0.7,
-                max_tokens=1500,
-                timeout=60
-            )
+            from services.vertex_service import vertex_service
+            if vertex_service.is_available():
+                full_prompt = f"{system_prompt}\n\nConversation:\n{full_user_prompt}"
+                result = vertex_service.generate_text(full_prompt, model="gemini-2.5-flash")
+                if result.get("success") and result.get("text"):
+                    ai_response = result["text"].strip()
         except Exception as e:
-            logger.error(f"Teacher mode AI error: {e}")
-            ai_response = f"I apologize, but I'm having trouble processing your question right now. Please try again in a moment. Error: {str(e)}"
+            logger.warning("Teacher mode Vertex AI error (will try DeepSeek fallback): %s", e)
+        if not ai_response:
+            try:
+                from utils.deepseek import call_deepseek_chat
+                ai_response = call_deepseek_chat(
+                    system_prompt=system_prompt,
+                    user_prompt=full_user_prompt,
+                    temperature=0.7,
+                    max_tokens=1500,
+                    timeout=60
+                )
+            except Exception as e:
+                logger.error("Teacher mode AI error: %s", e)
+                ai_response = f"I apologize, but I'm having trouble processing your question right now. Please try again in a moment. Error: {str(e)}"
         
         # Update conversation history
         conversation_history.append({'role': 'user', 'content': message})
@@ -4786,16 +4849,36 @@ def teacher_multimodal():
                 topic = session_data.get('topic', '')
                 conversation_history = session_data.get('conversation_history', [])
                 system_prompt = f"You are an expert {subject} tutor for {grade_level}. {f'Topic: {topic}' if topic else ''} Explain clearly and support with examples."
-                messages = [{'role': 'system', 'content': system_prompt}]
+                conv_lines = []
                 for h in conversation_history[-10:]:
-                    messages.append({'role': h['role'], 'content': h['content']})
-                messages.append({'role': 'user', 'content': message})
+                    role_label = "User" if h['role'] == 'user' else "Assistant"
+                    conv_lines.append(f"{role_label}: {h['content']}")
+                conv_block = "\n".join(conv_lines) if conv_lines else ""
+                user_turn = f"User: {message}"
+                full_user_prompt = f"{conv_block}\n{user_turn}\n\nRespond as the tutor:".strip() if conv_block else f"{user_turn}\n\nRespond as the tutor:"
+                ai_response = None
                 try:
-                    from utils.deepseek import call_deepseek_chat
-                    ai_response = call_deepseek_chat(messages=messages, temperature=0.7, max_tokens=1500, timeout=60)
+                    from services.vertex_service import vertex_service
+                    if vertex_service.is_available():
+                        full_prompt = f"{system_prompt}\n\nConversation:\n{full_user_prompt}"
+                        result = vertex_service.generate_text(full_prompt, model="gemini-2.5-flash")
+                        if result.get("success") and result.get("text"):
+                            ai_response = result["text"].strip()
                 except Exception as e:
-                    logger.error("Teacher multimodal AI error: %s", e)
-                    ai_response = "I'm having trouble processing that right now. Please try again."
+                    logger.warning("Teacher multimodal Vertex AI error (will try DeepSeek): %s", e)
+                if not ai_response:
+                    try:
+                        from utils.deepseek import call_deepseek_chat
+                        ai_response = call_deepseek_chat(
+                            system_prompt=system_prompt,
+                            user_prompt=full_user_prompt,
+                            temperature=0.7,
+                            max_tokens=1500,
+                            timeout=60
+                        )
+                    except Exception as e:
+                        logger.error("Teacher multimodal AI error: %s", e)
+                        ai_response = "I'm having trouble processing that right now. Please try again."
                 conversation_history.append({'role': 'user', 'content': message})
                 conversation_history.append({'role': 'assistant', 'content': ai_response})
                 session_data['conversation_history'] = conversation_history

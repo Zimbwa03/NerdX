@@ -349,7 +349,8 @@ export const quizApi = {
     hint?: string,
     questionText?: string,
     options?: string[],  // Added: options array for proper MCQ validation
-    structuredQuestion?: StructuredQuestion  // For Paper 2 structured question marking
+    structuredQuestion?: StructuredQuestion,  // For Paper 2 structured question marking
+    questionType?: string  // 'mcq' | 'structured' | 'essay' – so backend can return analysis/detailed essay answer
   ): Promise<AnswerResult | null> => {
     try {
       const payload: any = {
@@ -374,6 +375,8 @@ export const quizApi = {
       if (structuredQuestion) {
         payload.structured_question = structuredQuestion;
         payload.question_type = 'structured';
+      } else if (questionType) {
+        payload.question_type = questionType;
       }
       const response = await api.post('/api/mobile/quiz/submit-answer', payload);
       return response.data.data || null;
