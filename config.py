@@ -7,12 +7,12 @@ class Config:
     CREDIT_UNITS_PER_CREDIT = 10
 
     # Environment variables
-    # DeepSeek AI is the primary AI provider for all text generation
+    # AI priority: Vertex AI (Gemini) is PRIMARY; DeepSeek is SECONDARY fallback across all features.
+    # Set GOOGLE_APPLICATION_CREDENTIALS or GOOGLE_SERVICE_ACCOUNT_JSON for Vertex.
     DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
-    # DeepSeek model aliases (use official "latest" aliases by default)
+    # DeepSeek model aliases (fallback when Vertex unavailable)
     DEEPSEEK_CHAT_MODEL = os.getenv('DEEPSEEK_CHAT_MODEL', 'deepseek-chat')
     DEEPSEEK_REASONER_MODEL = os.getenv('DEEPSEEK_REASONER_MODEL', 'deepseek-reasoner')
-    # Gemini is only used for image generation
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
     DESMOS_API_KEY = os.getenv('DESMOS_API_KEY')
 

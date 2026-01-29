@@ -24,8 +24,6 @@ import { useThemedColors } from '../theme/useThemedStyles';
 import { aLevelPureMathTopics, ALevelPureMathTopic, topicCounts } from '../data/aLevelPureMath';
 import { quizApi } from '../services/api/quizApi';
 import LoadingProgress from '../components/LoadingProgress';
-import ExamSetupModal from '../components/ExamSetupModal';
-import { ExamConfig, TimeInfo } from '../services/api/examApi';
 import {
     ALevelTopicCard,
     ALevelFeatureCard,
@@ -68,8 +66,6 @@ const ALevelPureMathScreen: React.FC = () => {
 
     const [selectedLevel, setSelectedLevel] = useState<'Lower Sixth' | 'Upper Sixth'>('Lower Sixth');
     const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
-    const [examSetupModalVisible, setExamSetupModalVisible] = useState(false);
-    
     // Question Type Modal State
     const [questionTypeModalVisible, setQuestionTypeModalVisible] = useState(false);
     const [selectedTopic, setSelectedTopic] = useState<ALevelPureMathTopic | null>(null);
@@ -155,17 +151,10 @@ const ALevelPureMathScreen: React.FC = () => {
     };
 
     const handleStartExam = () => {
-        // Open the exam setup modal
-        setExamSetupModalVisible(true);
-    };
-
-    // Handle exam modal start
-    const handleExamStart = async (config: ExamConfig, timeInfo: TimeInfo) => {
-        setExamSetupModalVisible(false);
-        // `ExamSessionScreen` creates the session; just pass config/time.
-        navigation.navigate('ExamSession' as never, {
-            examConfig: config,
-            timeInfo,
+        navigation.navigate('ExamSetup' as never, {
+            initialSubject: 'pure_math',
+            userCredits: user?.credits ?? 0,
+            availableTopics: filteredTopics.map(t => t.name),
         } as never);
     };
 
@@ -413,16 +402,6 @@ const ALevelPureMathScreen: React.FC = () => {
                 <View style={{ height: 32 }} />
             </ScrollView>
 
-            {/* Exam Setup Modal */}
-            <ExamSetupModal
-                visible={examSetupModalVisible}
-                onClose={() => setExamSetupModalVisible(false)}
-                onStartExam={handleExamStart}
-                initialSubject="pure_math"
-                userCredits={user?.credits || 0}
-                availableTopics={filteredTopics.map(t => t.name)}
-            />
-            
             {/* Question Type Modal - MCQ vs Structured */}
             <RNModal
                 visible={questionTypeModalVisible}

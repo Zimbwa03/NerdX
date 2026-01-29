@@ -20,6 +20,7 @@ import { Colors } from '../theme/colors';
 import { Button } from './Button';
 import {
     examApi,
+    getDefaultTimeInfo,
     ExamConfig,
     TimeInfo,
     QuestionMode,
@@ -42,6 +43,8 @@ interface ExamSetupModalProps {
     userCredits: number;
     availableTopics?: string[];  // Topics to select from
     csBoard?: 'zimsec' | 'cambridge';  // For Computer Science: exam board
+    /** When true, render as full-screen page (no modal); use with navigation. */
+    asPage?: boolean;
 }
 
 const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
@@ -52,6 +55,7 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
     userCredits,
     availableTopics = [],
     csBoard,
+    asPage = false,
 }) => {
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
@@ -89,7 +93,7 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
         setLevel(getInitialLevel(initialSubject));
     }, [initialSubject]);
 
-    // Calculate time when parameters change
+    // Calculate time when parameters change (API or client fallback so timer always loads)
     const calculateTime = useCallback(async () => {
         setLoadingTime(true);
         try {
@@ -99,19 +103,20 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
                 questionMode,
                 difficulty
             );
-            setTimeInfo(info);
+            setTimeInfo(info ?? getDefaultTimeInfo(questionCount, questionMode, difficulty));
         } catch (error) {
             console.error('Error calculating time:', error);
+            setTimeInfo(getDefaultTimeInfo(questionCount, questionMode, difficulty));
         } finally {
             setLoadingTime(false);
         }
     }, [subject, questionCount, questionMode, difficulty]);
 
     useEffect(() => {
-        if (visible) {
+        if (visible || asPage) {
             calculateTime();
         }
-    }, [visible, calculateTime]);
+    }, [visible, asPage, calculateTime]);
 
     // Handle slider change
     const handleSliderChange = (value: number) => {
@@ -120,9 +125,9 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
         setQuestionCount(QUESTION_COUNTS[index]);
     };
 
-    // Handle start exam
+    // Handle start exam (timeInfo is always set after calculateTime, including fallback)
     const handleStartExam = async () => {
-        if (!timeInfo) return;
+        const effectiveTimeInfo = timeInfo ?? getDefaultTimeInfo(questionCount, questionMode, difficulty);
         if (!allTopics && selectedTopics.length === 0) {
             // Avoid sending an empty topics list (many backends treat this as invalid)
             Alert.alert('Select Topics', 'Please select at least 1 topic, or switch back to "All Topics".');
@@ -143,7 +148,7 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
                 topics: allTopics ? undefined : selectedTopics,
             };
 
-            onStartExam(config, timeInfo);
+            onStartExam(config, effectiveTimeInfo);
         } catch (error) {
             console.error('Error starting exam:', error);
         } finally {
@@ -221,6 +226,9 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
     // Get subject info
     const subjectInfo = SUBJECTS.find(s => s.id === subject) || SUBJECTS[0];
 
+    // Effective time for display (always set via API or fallback)
+    const displayTimeInfo = timeInfo ?? getDefaultTimeInfo(questionCount, questionMode, difficulty);
+
     // Format time
     const formatTime = (minutes: number) => {
         if (minutes < 60) {
@@ -231,32 +239,28 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
         return `${hours}h ${mins}min`;
     };
 
-    return (
-        <Modal
-            visible={visible}
-            animationType="slide"
-            transparent
-            onRequestClose={onClose}
+    const header = (
+        <LinearGradient
+            colors={[subjectInfo.color, themedColors.primary.dark]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.header}
         >
-            <View style={styles.overlay}>
-                <View style={[styles.modalContainer, { backgroundColor: themedColors.background.default }]}>
-                    {/* Header */}
-                    <LinearGradient
-                        colors={[subjectInfo.color, themedColors.primary.dark]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.header}
-                    >
-                        <View style={styles.headerContent}>
-                            <View>
-                                <Text style={styles.headerTitle}>Exam Setup</Text>
-                                <Text style={styles.headerSubtitle}>{subjectInfo.name}</Text>
-                            </View>
-                            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                                <Ionicons name="close" size={24} color="#FFF" />
-                            </TouchableOpacity>
-                        </View>
-                    </LinearGradient>
+            <View style={styles.headerContent}>
+                <View>
+                    <Text style={styles.headerTitle}>Exam Setup</Text>
+                    <Text style={styles.headerSubtitle}>{subjectInfo.name}</Text>
+                </View>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                    <Ionicons name={asPage ? 'arrow-back' : 'close'} size={24} color="#FFF" />
+                </TouchableOpacity>
+            </View>
+        </LinearGradient>
+    );
+
+    const content = (
+        <>
+            {header}
 
                     <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                         {/* Level Selection */}
@@ -453,7 +457,7 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
                                         <ActivityIndicator size="small" color={themedColors.primary.main} />
                                     ) : (
                                         <Text style={[styles.timeValue, { color: themedColors.text.primary }]}>
-                                            {timeInfo ? formatTime(timeInfo.total_minutes) : '--'}
+                                            {formatTime(displayTimeInfo.total_minutes)}
                                         </Text>
                                     )}
                                 </View>
@@ -461,7 +465,7 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
 
                             <View style={styles.timeDetails}>
                                 <Text style={[styles.timeDetail, { color: themedColors.text.disabled }]}>
-                                    Includes {timeInfo?.buffer_seconds ? `${Math.round(timeInfo.buffer_seconds / 60)} min` : '10%'} review buffer
+                                    Includes {displayTimeInfo.buffer_seconds ? `${Math.round(displayTimeInfo.buffer_seconds / 60)} min` : '10%'} review buffer
                                 </Text>
                             </View>
                         </View>
@@ -513,7 +517,7 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
                                 size="large"
                                 fullWidth
                                 onPress={handleStartExam}
-                                disabled={!hasEnoughCredits || starting || !timeInfo}
+                                disabled={!hasEnoughCredits || starting}
                                 loading={starting}
                                 icon="play-circle"
                                 iconPosition="left"
@@ -525,6 +529,27 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
                             Questions are generated one at a time. Timer starts when exam begins.
                         </Text>
                     </ScrollView>
+        </>
+    );
+
+    if (asPage) {
+        return (
+            <View style={[styles.pageContainer, { backgroundColor: themedColors.background.default }]}>
+                {content}
+            </View>
+        );
+    }
+
+    return (
+        <Modal
+            visible={visible}
+            animationType="slide"
+            transparent
+            onRequestClose={onClose}
+        >
+            <View style={styles.overlay}>
+                <View style={[styles.modalContainer, { backgroundColor: themedColors.background.default }]}>
+                    {content}
                 </View>
             </View>
         </Modal>
@@ -536,6 +561,10 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'flex-end',
+    },
+    pageContainer: {
+        flex: 1,
+        overflow: 'hidden',
     },
     modalContainer: {
         height: height * 0.85,

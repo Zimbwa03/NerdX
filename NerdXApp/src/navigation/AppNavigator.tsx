@@ -64,6 +64,7 @@ import NerdXLiveAudioScreen from '../screens/NerdXLiveAudioScreen';
 import NerdXLiveVideoScreen from '../screens/NerdXLiveVideoScreen';
 
 // CBT Exam Screens
+import ExamSetupScreen from '../screens/ExamSetupScreen';
 import ExamSessionScreen from '../screens/ExamSessionScreen';
 import ExamResultsScreen from '../screens/ExamResultsScreen';
 import ExamReviewScreen from '../screens/ExamReviewScreen';
@@ -888,6 +889,13 @@ const AppNavigator: React.FC = () => {
               }}
             />
             {/* CBT Exam Screens */}
+            <Stack.Screen
+              name="ExamSetup"
+              component={ExamSetupScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
             <Stack.Screen
               name="ExamSession"
               component={ExamSessionScreen}

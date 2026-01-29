@@ -47,6 +47,7 @@ from services.vertex_service import vertex_service, get_image_question_credit_co
 from services.exam_session_service import exam_session_service
 from services.database_lab_execution_service import database_lab_execution_service
 from services.programming_lab_ai_service import programming_lab_ai_service
+from services.flashcard_service import flashcard_service
 from utils.url_utils import convert_local_path_to_public_url
 from utils.credit_units import format_credits, units_to_credits, credits_to_units
 from utils.question_cache import QuestionCacheService
@@ -3215,6 +3216,26 @@ def get_credit_balance():
         logger.error(f"Get credit balance error: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
+@mobile_bp.route('/credits/info', methods=['GET'])
+@require_auth
+def get_credit_info():
+    """Get user credit breakdown (total, free_credits, purchased_credits) for display."""
+    try:
+        credit_info = get_credit_breakdown(g.current_user_id)
+        credit_info_display = {
+            **credit_info,
+            "total": _credits_display(credit_info.get("total", 0)),
+            "free_credits": _credits_display(credit_info.get("free_credits", 0)),
+            "purchased_credits": _credits_display(credit_info.get("purchased_credits", 0)),
+        }
+        return jsonify({
+            'success': True,
+            'data': credit_info_display
+        }), 200
+    except Exception as e:
+        logger.error(f"Get credit info error: {e}")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
 @mobile_bp.route('/credits/transactions', methods=['GET'])
 @require_auth
 def get_credit_transactions():
@@ -3270,6 +3291,85 @@ def get_credit_transactions():
         }), 200
     except Exception as e:
         logger.error(f"Get credit transactions error: {e}")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+# ============================================================================
+# FLASHCARDS
+# ============================================================================
+
+@mobile_bp.route('/flashcards/generate', methods=['POST'])
+@require_auth
+def generate_flashcards():
+    """Generate a batch of flashcards for a topic (Vertex primary, DeepSeek fallback)."""
+    try:
+        data = request.get_json() or {}
+        subject = (data.get('subject') or '').strip() or 'Biology'
+        topic = (data.get('topic') or '').strip() or 'General'
+        count = min(int(data.get('count', 20)), 100)
+        notes_content = (data.get('notes_content') or '').strip()
+        user_id = g.current_user_id
+        # Batch cost: count * 3 units (same as flashcard_single per card), capped at 300
+        required_units = min(count * 3, 300)
+        balance = get_user_credits(user_id) or 0
+        if balance < required_units:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Need {format_credits(required_units)} for {count} flashcards.',
+                'required_credits': required_units,
+                'current_credits': balance,
+            }), 402
+        flashcards = flashcard_service.generate_flashcards(
+            subject=subject,
+            topic=topic,
+            notes_content=notes_content,
+            count=count,
+        )
+        if not flashcards:
+            return jsonify({'success': False, 'message': 'Failed to generate flashcards.'}), 500
+        deduct_credits(user_id, required_units, 'flashcards_batch', f'Generated {len(flashcards)} flashcards for {topic}')
+        return jsonify({
+            'success': True,
+            'data': {'flashcards': flashcards},
+            'credits_remaining': (balance - required_units),
+        }), 200
+    except Exception as e:
+        logger.error(f"Generate flashcards error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/flashcards/generate-single', methods=['POST'])
+@require_auth
+def generate_single_flashcard():
+    """Generate a single flashcard (for streaming mode)."""
+    try:
+        data = request.get_json() or {}
+        subject = (data.get('subject') or '').strip() or 'Biology'
+        topic = (data.get('topic') or '').strip() or 'General'
+        index = int(data.get('index', 0))
+        notes_content = (data.get('notes_content') or '').strip()
+        previous_questions = data.get('previous_questions') or []
+        user_id = g.current_user_id
+        credit_result = advanced_credit_service.check_and_deduct_credits(user_id, 'flashcard_single', platform='mobile')
+        if not credit_result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': credit_result.get('message', 'Insufficient credits'),
+            }), 402
+        flashcard = flashcard_service.generate_single_flashcard(
+            subject=subject,
+            topic=topic,
+            notes_content=notes_content,
+            index=index,
+            previous_questions=previous_questions,
+        )
+        if not flashcard:
+            return jsonify({'success': False, 'message': 'Failed to generate flashcard.'}), 500
+        return jsonify({
+            'success': True,
+            'data': {'flashcard': flashcard},
+            'credits_remaining': credit_result.get('new_balance', get_user_credits(user_id) or 0),
+        }), 200
+    except Exception as e:
+        logger.error(f"Generate single flashcard error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 @mobile_bp.route('/credits/packages', methods=['GET'])
@@ -3755,6 +3855,292 @@ def generate_math_graph():
         logger.error(f"Generate math graph error: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
+def _generate_graph_and_return(function_text: str):
+    """Shared logic: generate graph from function text, deduct credits, return graph_url and credits_remaining."""
+    credit_cost = advanced_credit_service.get_credit_cost('math_graph_practice')
+    user_credits = get_user_credits(g.current_user_id) or 0
+    if user_credits < credit_cost:
+        return None, None, 402, f'Insufficient credits. Required: {_credits_text(credit_cost)}'
+    graph_service = GraphService()
+    graph_path = graph_service.generate_function_graph(function_text)
+    if not graph_path:
+        return None, None, 500, 'Failed to generate graph image'
+    graph_url = convert_local_path_to_public_url(graph_path)
+    if not graph_url:
+        import os
+        filename = os.path.basename(graph_path)
+        base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
+        graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
+    credits_remaining = _deduct_credits_or_fail(
+        g.current_user_id, int(credit_cost), 'math_graph_practice', 'Math graph generation'
+    )
+    if credits_remaining is None:
+        return None, None, 500, 'Transaction failed. Please try again.'
+    return graph_url, credits_remaining, 200, None
+
+@mobile_bp.route('/math/graph/custom', methods=['POST'])
+@require_auth
+def generate_math_graph_custom():
+    """Generate math graph from custom equation (same as /math/graph, accepts 'equation' key)."""
+    try:
+        data = request.get_json() or {}
+        equation = data.get('equation', '').strip()
+        if not equation:
+            return jsonify({'success': False, 'message': 'Equation is required'}), 400
+        graph_url, credits_remaining, status, err_msg = _generate_graph_and_return(equation)
+        if err_msg:
+            return jsonify({'success': False, 'message': err_msg}), status
+        return jsonify({
+            'success': True,
+            'data': {
+                'graph_url': graph_url,
+                'image_url': graph_url,
+                'equation': equation,
+                'credits_remaining': credits_remaining
+            },
+            'credits_remaining': credits_remaining
+        }), 200
+    except Exception as e:
+        logger.error(f"Generate custom graph error: {e}")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/math/graph/generate', methods=['POST'])
+@require_auth
+def generate_math_graph_generate():
+    """Generate math graph by type (graph_type) and optional equation. Returns graph_spec so frontend can request Manim animations."""
+    try:
+        data = request.get_json() or {}
+        equation = (data.get('equation') or '').strip()
+        graph_type = (data.get('graph_type') or '').strip()
+        function_text = equation or graph_type
+        if not function_text:
+            return jsonify({'success': False, 'message': 'Equation or graph_type is required'}), 400
+        credit_cost = advanced_credit_service.get_credit_cost('math_graph_practice')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
+            }), 402
+        graph_service = GraphService()
+        # Use create_graph so we get graph_spec for Manim animations
+        result = graph_service.create_graph(
+            user_id=g.current_user_id or 'mobile',
+            expression=function_text,
+            title='NerdX Graph Practice',
+            user_name='Student',
+            x_range=None
+        )
+        if not result or 'image_path' not in result:
+            return jsonify({'success': False, 'message': 'Failed to generate graph image'}), 500
+        graph_path = result.get('image_path')
+        graph_url = convert_local_path_to_public_url(graph_path)
+        if not graph_url:
+            import os
+            filename = os.path.basename(graph_path)
+            base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
+            graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id, int(credit_cost), 'math_graph_practice', 'Math graph generation'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+        payload = {
+            'graph_url': graph_url,
+            'image_url': graph_url,
+            'equation': function_text,
+            'graph_type': graph_type or None,
+            'credits_remaining': credits_remaining
+        }
+        if result.get('graph_spec'):
+            payload['graph_spec'] = result['graph_spec']
+        return jsonify({'success': True, 'data': payload, 'credits_remaining': credits_remaining}), 200
+    except Exception as e:
+        logger.error(f"Generate graph error: {e}")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/math/graph/upload', methods=['POST'])
+@require_auth
+def upload_math_graph_image():
+    """Upload graph/math image for OCR and solution (costs image_solve credits)."""
+    try:
+        if 'image' not in request.files:
+            return jsonify({'success': False, 'message': 'No image file provided'}), 400
+        image_file = request.files['image']
+        if not image_file or not image_file.filename:
+            return jsonify({'success': False, 'message': 'Empty image uploaded'}), 400
+        credit_cost = advanced_credit_service.get_credit_cost('image_solve')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
+            }), 402
+        image_service = ImageService()
+        result = image_service.process_image(image_file)
+        if not result:
+            return jsonify({'success': False, 'message': 'Failed to process image'}), 500
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id, int(credit_cost), 'image_solve', 'Graph image solve'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+        return jsonify({
+            'success': True,
+            'data': {
+                'processed_text': result.get('text', ''),
+                'solution': result.get('solution', ''),
+                'analysis': result.get('analysis', ''),
+                'credits_remaining': credits_remaining
+            },
+            'credits_remaining': credits_remaining
+        }), 200
+    except Exception as e:
+        logger.error(f"Graph upload/solve error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/math/graph/linear-programming', methods=['POST'])
+@require_auth
+def generate_linear_programming_graph():
+    """Generate linear programming feasible-region graph from constraints and objective."""
+    try:
+        data = request.get_json() or {}
+        constraints = data.get('constraints') or []
+        objective = (data.get('objective') or '').strip() or None
+        if not constraints or not isinstance(constraints, list):
+            return jsonify({'success': False, 'message': 'Constraints array is required'}), 400
+        credit_cost = advanced_credit_service.get_credit_cost('math_graph_practice')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
+            }), 402
+        graph_service = GraphService()
+        graph_result = graph_service.generate_linear_programming_graph(
+            [str(c).strip() for c in constraints if c],
+            objective_function=objective
+        )
+        if not graph_result or 'image_path' not in graph_result:
+            return jsonify({'success': False, 'message': 'Failed to generate linear programming graph'}), 500
+        graph_path = graph_result.get('image_path')
+        graph_url = convert_local_path_to_public_url(graph_path)
+        if not graph_url:
+            import os
+            filename = os.path.basename(graph_path)
+            base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
+            graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id, int(credit_cost), 'math_graph_practice', 'Linear programming graph'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+        return jsonify({
+            'success': True,
+            'data': {
+                'graph_url': graph_url,
+                'image_url': graph_url,
+                'constraints': graph_result.get('constraints', constraints),
+                'corner_points': graph_result.get('corner_points', []),
+                'objective': objective,
+                'credits_remaining': credits_remaining
+            },
+            'credits_remaining': credits_remaining
+        }), 200
+    except Exception as e:
+        logger.error(f"Linear programming graph error: {e}")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+# ============================================================================
+# MATH ANIMATION (MANIM) ENDPOINTS - for graph practice videos in student frontend
+# ============================================================================
+
+def _manim_video_path_to_url(relative_path: str) -> str:
+    """Turn Manim relative path (e.g. static/media/videos/...) into a URL path with leading slash."""
+    if not relative_path:
+        return ''
+    path = relative_path.replace('\\', '/')
+    if not path.startswith('/'):
+        path = '/' + path
+    return path
+
+@mobile_bp.route('/math/animate/quadratic', methods=['POST'])
+@require_auth
+def animate_quadratic():
+    """Generate Manim quadratic animation; returns video_path for frontend (e.g. /static/media/videos/.../file.mp4)."""
+    try:
+        data = request.get_json() or {}
+        a = float(data.get('a', 1))
+        b = float(data.get('b', 0))
+        c = float(data.get('c', 0))
+        x_range = data.get('x_range')
+        y_range = data.get('y_range')
+        from services.manim_service import get_manim_service
+        manim = get_manim_service()
+        result = manim.render_quadratic(a, b, c, quality='l', x_range=x_range, y_range=y_range)
+        if not result.get('success') or not result.get('video_path'):
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Animation failed'),
+                'data': None
+            }), 500
+        video_path = _manim_video_path_to_url(result['video_path'])
+        return jsonify({'success': True, 'data': {'video_path': video_path}}), 200
+    except Exception as e:
+        logger.error(f"Animate quadratic error: {e}")
+        return jsonify({'success': False, 'message': 'Server error', 'data': None}), 500
+
+@mobile_bp.route('/math/animate/linear', methods=['POST'])
+@require_auth
+def animate_linear():
+    """Generate Manim linear animation; returns video_path for frontend."""
+    try:
+        data = request.get_json() or {}
+        m = float(data.get('m', 1))
+        c = float(data.get('c', 0))
+        x_range = data.get('x_range')
+        y_range = data.get('y_range')
+        from services.manim_service import get_manim_service
+        manim = get_manim_service()
+        result = manim.render_linear(m, c, quality='l', x_range=x_range, y_range=y_range)
+        if not result.get('success') or not result.get('video_path'):
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Animation failed'),
+                'data': None
+            }), 500
+        video_path = _manim_video_path_to_url(result['video_path'])
+        return jsonify({'success': True, 'data': {'video_path': video_path}}), 200
+    except Exception as e:
+        logger.error(f"Animate linear error: {e}")
+        return jsonify({'success': False, 'message': 'Server error', 'data': None}), 500
+
+@mobile_bp.route('/math/animate/expression', methods=['POST'])
+@require_auth
+def animate_expression():
+    """Generate Manim expression animation (trig, exponential, etc.); returns video_path for frontend."""
+    try:
+        data = request.get_json() or {}
+        expression = (data.get('expression') or '').strip()
+        if not expression:
+            return jsonify({'success': False, 'message': 'Expression is required', 'data': None}), 400
+        x_range = data.get('x_range')
+        y_range = data.get('y_range')
+        from services.manim_service import get_manim_service
+        manim = get_manim_service()
+        result = manim.render_expression(expression, quality='l', x_range=x_range, y_range=y_range)
+        if not result.get('success') or not result.get('video_path'):
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Animation failed'),
+                'data': None
+            }), 500
+        video_path = _manim_video_path_to_url(result['video_path'])
+        return jsonify({'success': True, 'data': {'video_path': video_path}}), 200
+    except Exception as e:
+        logger.error(f"Animate expression error: {e}")
+        return jsonify({'success': False, 'message': 'Server error', 'data': None}), 500
+
 # ============================================================================
 # ENGLISH ENDPOINTS
 # ============================================================================
@@ -4171,6 +4557,85 @@ def grade_summary():
         
     except Exception as e:
         logger.error(f"Grade summary error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# ============================================================================
+# VOICE ENDPOINTS (transcription for Quiz/Teacher/Voice input)
+# ============================================================================
+
+@mobile_bp.route('/voice/transcribe', methods=['POST'])
+@require_auth
+def voice_transcribe():
+    """Transcribe audio file to text. Accepts multipart form key 'audio'. Returns { text, language }."""
+    try:
+        if 'audio' not in request.files:
+            return jsonify({'success': False, 'message': 'No audio file provided'}), 400
+        audio_file = request.files['audio']
+        if not audio_file or not audio_file.filename:
+            return jsonify({'success': False, 'message': 'Empty audio upload'}), 400
+        audio_bytes = audio_file.read()
+        if not audio_bytes:
+            return jsonify({'success': False, 'message': 'Audio file is empty'}), 400
+        mime_type = audio_file.content_type or 'audio/mp4'
+        audio_b64 = base64.b64encode(audio_bytes).decode('utf-8')
+        if vertex_service.is_available():
+            result = vertex_service.transcribe_audio(audio_b64, mime_type)
+        else:
+            voice_svc = get_voice_service()
+            import tempfile
+            suffix = '.m4a' if 'm4a' in mime_type else '.mp3'
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                tmp.write(audio_bytes)
+                tmp_path = tmp.name
+            try:
+                result = voice_svc.transcribe_audio(tmp_path)
+                if result.get('error'):
+                    result = {'success': False, 'text': '', 'language': 'en', 'error': result['error']}
+                else:
+                    result = {'success': True, 'text': result.get('text', ''), 'language': result.get('language', 'en')}
+            finally:
+                if os.path.exists(tmp_path):
+                    try:
+                        os.unlink(tmp_path)
+                    except Exception:
+                        pass
+        if not result.get('success'):
+            err = result.get('error', 'Transcription failed')
+            logger.warning(f"Voice transcribe failed: {err}")
+            return jsonify({'success': False, 'message': err}), 500
+        return jsonify({
+            'success': True,
+            'text': result.get('text', ''),
+            'language': result.get('language', 'en')
+        }), 200
+    except Exception as e:
+        logger.error(f"Voice transcribe error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@mobile_bp.route('/voice/speak', methods=['POST'])
+@require_auth
+def voice_speak():
+    """Text-to-speech: accept { text }, return { audio_url } (path to static media)."""
+    try:
+        data = request.get_json() or {}
+        text = (data.get('text') or '').strip()
+        if not text:
+            return jsonify({'success': False, 'message': 'Text is required'}), 400
+        voice_svc = get_voice_service()
+        import asyncio
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            result = loop.run_until_complete(voice_svc.text_to_speech(text))
+        finally:
+            loop.close()
+        if result.get('error') or not result.get('audio_path'):
+            return jsonify({'success': False, 'message': result.get('error', 'TTS failed')}), 500
+        rel_path = result.get('audio_path', '').replace('\\', '/')
+        audio_url = ('/static/' + rel_path) if rel_path else ''
+        return jsonify({'success': True, 'audio_url': audio_url}), 200
+    except Exception as e:
+        logger.error(f"Voice speak error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e)}), 500
 
 # ============================================================================

@@ -32,8 +32,6 @@ import {
 } from '../data/aLevelBiology';
 import { quizApi } from '../services/api/quizApi';
 import LoadingProgress from '../components/LoadingProgress';
-import ExamSetupModal from '../components/ExamSetupModal';
-import { ExamConfig, TimeInfo } from '../services/api/examApi';
 import {
     ALevelTopicCard,
     ALevelFeatureCard,
@@ -73,9 +71,6 @@ const ALevelBiologyScreen: React.FC = () => {
     const [questionTypeModalVisible, setQuestionTypeModalVisible] = useState(false);
     const [selectedTopic, setSelectedTopic] = useState<ALevelBiologyTopic | null>(null);
     const [selectedQuestionType, setSelectedQuestionType] = useState<BiologyQuestionTypeInfo | null>(null);
-
-    // Exam setup modal state
-    const [examSetupModalVisible, setExamSetupModalVisible] = useState(false);
 
     // Filter topics by selected level
     const filteredTopics = aLevelBiologyTopics.filter(
@@ -211,17 +206,11 @@ const ALevelBiologyScreen: React.FC = () => {
     };
 
     const handleStartExam = () => {
-        // Open the exam setup modal
-        setExamSetupModalVisible(true);
-    };
-
-    // Handle exam modal start
-    const handleExamStart = async (config: ExamConfig, timeInfo: TimeInfo) => {
-        setExamSetupModalVisible(false);
-        // `ExamSessionScreen` creates the session; just pass config/time.
-        navigation.navigate('ExamSession' as never, {
-            examConfig: config,
-            timeInfo,
+        // Navigate to Exam Setup as a full page (not a pop-up)
+        navigation.navigate('ExamSetup' as never, {
+            initialSubject: 'a_level_biology',
+            userCredits: user?.credits ?? 0,
+            availableTopics: filteredTopics.map(t => t.name),
         } as never);
     };
 
@@ -642,15 +631,6 @@ const ALevelBiologyScreen: React.FC = () => {
             {/* Question Type Selection Modal */}
             {renderQuestionTypeModal()}
 
-            {/* Exam Setup Modal */}
-            <ExamSetupModal
-                visible={examSetupModalVisible}
-                onClose={() => setExamSetupModalVisible(false)}
-                onStartExam={handleExamStart}
-                initialSubject="a_level_biology"
-                userCredits={user?.credits || 0}
-                availableTopics={filteredTopics.map(t => t.name)}
-            />
         </View>
     );
 };

@@ -1164,14 +1164,14 @@ You MUST return exactly 10 items in the "questions" array. The passage MUST be 9
             
         try:
             prompt = self._build_comprehension_prompt(theme, form_level)
-            model = self.client.GenerativeModel('gemini-2.0-flash-exp')
-            response = model.generate_content(
-                prompt, 
-                generation_config=self.client.types.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.7,
-                    max_output_tokens=8192
-                )
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash-exp",
+                contents=prompt,
+                config={
+                    "response_mime_type": "application/json",
+                    "temperature": 0.7,
+                    "max_output_tokens": 8192
+                }
             )
             
             if response and hasattr(response, 'text') and response.text:

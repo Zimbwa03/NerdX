@@ -1207,10 +1207,13 @@ def get_user_registration(chat_id):
         if result and len(result) > 0:
             return result[0]
         
-        # If not found, try by whatsapp_number (for linked accounts)
-        result = make_supabase_request("GET", "users_registration", filters={"whatsapp_number": f"eq.{chat_id}"}, use_service_role=True)
-        if result and len(result) > 0:
-            return result[0]
+        # If not found, try by whatsapp_number (for linked accounts) - column may not exist in all deployments
+        try:
+            result = make_supabase_request("GET", "users_registration", filters={"whatsapp_number": f"eq.{chat_id}"}, use_service_role=True)
+            if result and len(result) > 0:
+                return result[0]
+        except Exception:
+            pass  # whatsapp_number column may not exist in Supabase
         
         # If not found, try by email (for mobile app users)
         if '@' in str(chat_id):
@@ -2257,6 +2260,9 @@ def get_db_connection():
             
         conn = psycopg2.connect(database_url)
         conn.autocommit = True
+        # Ensure unqualified names resolve to public schema (avoids "schema np does not exist" etc.)
+        with conn.cursor() as cur:
+            cur.execute("SET search_path TO public")
         return conn
     except ImportError:
         logger.error("psycopg2 not installed - cannot establish direct connection")

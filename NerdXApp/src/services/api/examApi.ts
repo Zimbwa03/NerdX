@@ -158,17 +158,48 @@ export interface ExamReview {
 // API SERVICE
 // =============================================================================
 
+/** Client-side fallback when backend calculate-time is unavailable. */
+export function getDefaultTimeInfo(
+    questionCount: number,
+    questionMode: QuestionMode,
+    difficulty: Difficulty
+): TimeInfo {
+    const DIFFICULTY_MULTIPLIER = { easy: 0.9, standard: 1.0, hard: 1.2 };
+    const baseMcqSeconds = 90;
+    const baseStructuredSeconds = 180;
+    const mult = DIFFICULTY_MULTIPLIER[difficulty] ?? 1;
+    let perQuestion: number;
+    if (questionMode === 'MCQ_ONLY') perQuestion = baseMcqSeconds * mult;
+    else if (questionMode === 'STRUCTURED_ONLY') perQuestion = baseStructuredSeconds * mult;
+    else perQuestion = ((baseMcqSeconds + baseStructuredSeconds) / 2) * mult;
+    const totalSeconds = Math.round(questionCount * perQuestion);
+    const bufferSeconds = Math.round(totalSeconds * 0.1);
+    return {
+        total_seconds: totalSeconds + bufferSeconds,
+        total_minutes: (totalSeconds + bufferSeconds) / 60,
+        per_question_seconds: perQuestion,
+        buffer_seconds: bufferSeconds,
+        breakdown: {
+            base_mcq_seconds: baseMcqSeconds,
+            base_structured_seconds: baseStructuredSeconds,
+            difficulty_multiplier: mult,
+            question_count: questionCount,
+            question_mode: questionMode,
+        },
+    };
+}
+
 export const examApi = {
     /**
      * Calculate exam time without creating a session.
-     * Used for live time updates in the setup UI.
+     * Uses backend when available, otherwise client-side fallback so timer and Begin Exam always work.
      */
     calculateTime: async (
         subject: string,
         questionCount: number,
         questionMode: QuestionMode = 'MCQ_ONLY',
         difficulty: Difficulty = 'standard'
-    ): Promise<TimeInfo | null> => {
+    ): Promise<TimeInfo> => {
         try {
             const response = await api.post('/api/mobile/exam/calculate-time', {
                 subject,
@@ -176,11 +207,12 @@ export const examApi = {
                 question_mode: questionMode,
                 difficulty,
             });
-            return response.data.data || null;
+            const data = response.data?.data ?? null;
+            if (data) return data;
         } catch (error: any) {
-            console.error('Calculate time error:', error);
-            return null;
+            console.warn('Calculate time API unavailable, using local estimate:', error?.message);
         }
+        return getDefaultTimeInfo(questionCount, questionMode, difficulty);
     },
 
     /**

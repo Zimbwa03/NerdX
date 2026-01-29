@@ -24,8 +24,6 @@ import { useThemedColors } from '../theme/useThemedStyles';
 import { aLevelChemistryTopics, ALevelChemistryTopic } from '../data/aLevelChemistry';
 import { quizApi } from '../services/api/quizApi';
 import LoadingProgress from '../components/LoadingProgress';
-import ExamSetupModal from '../components/ExamSetupModal';
-import { ExamConfig, TimeInfo } from '../services/api/examApi';
 import {
     ALevelTopicCard,
     ALevelFeatureCard,
@@ -65,7 +63,6 @@ const ALevelChemistryScreen: React.FC = () => {
 
     const [selectedLevel, setSelectedLevel] = useState<'AS Level' | 'A2 Level'>('AS Level');
     const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
-    const [examSetupModalVisible, setExamSetupModalVisible] = useState(false);
     
     // Question Type Modal State
     const [questionTypeModalVisible, setQuestionTypeModalVisible] = useState(false);
@@ -172,15 +169,10 @@ const ALevelChemistryScreen: React.FC = () => {
     };
 
     const handleStartExam = () => {
-        setExamSetupModalVisible(true);
-    };
-
-    const handleExamStart = async (config: ExamConfig, timeInfo: TimeInfo) => {
-        setExamSetupModalVisible(false);
-        // `ExamSessionScreen` creates the session; just pass config/time.
-        navigation.navigate('ExamSession' as never, {
-            examConfig: config,
-            timeInfo,
+        navigation.navigate('ExamSetup' as never, {
+            initialSubject: 'a_level_chemistry',
+            userCredits: user?.credits ?? 0,
+            availableTopics: filteredTopics.map(t => t.name),
         } as never);
     };
 
@@ -417,15 +409,6 @@ const ALevelChemistryScreen: React.FC = () => {
                 <View style={{ height: 32 }} />
             </ScrollView>
 
-            <ExamSetupModal
-                visible={examSetupModalVisible}
-                onClose={() => setExamSetupModalVisible(false)}
-                onStartExam={handleExamStart}
-                initialSubject="a_level_chemistry"
-                userCredits={user?.credits || 0}
-                availableTopics={filteredTopics.map(t => t.name)}
-            />
-            
             {/* Question Type Modal - MCQ vs Structured */}
             <RNModal
                 visible={questionTypeModalVisible}

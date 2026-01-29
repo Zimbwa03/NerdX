@@ -150,6 +150,30 @@ def test_flashcards() -> bool:
         return False
 
 
+def test_geotutor() -> bool:
+    """GeoTutor: Vertex first, then DeepSeek; expect non-empty feedback when AI available."""
+    logger.info("Feature: GeoTutor (get_geotutor_feedback)")
+    try:
+        from services.geotutor_service import get_geotutor_feedback
+        out = get_geotutor_feedback(
+            level="O",
+            topic="Map Work",
+            task_type="Mapwork",
+            map_actions={"markers": [{"lat": -17.8, "lng": 31.0}], "measurements": []},
+            student_answer_text=None,
+        )
+        if not out or not out.strip():
+            logger.error("  -> No or empty feedback")
+            return False
+        if "unavailable" in out.lower() and _vertex_available():
+            logger.warning("  -> Vertex available but response says unavailable")
+        logger.info("  -> OK (feedback length=%d)", len(out))
+        return True
+    except Exception as e:
+        logger.error("  -> Error: %s", e, exc_info=True)
+        return False
+
+
 def test_english_grammar() -> bool:
     """English grammar: success + question_data (no vertex flag in response)."""
     logger.info("Feature: English grammar (generate_grammar_question)")
@@ -281,6 +305,23 @@ def test_a_level_chemistry() -> bool:
         return False
 
 
+def test_a_level_geography() -> bool:
+    """A-Level Geography essay: Vertex first via try_vertex_json, then DeepSeek."""
+    logger.info("Feature: A-Level Geography (generate_essay_question)")
+    try:
+        from services.a_level_geography_generator import ALevelGeographyGenerator
+        gen = ALevelGeographyGenerator()
+        out = gen.generate_essay_question(topic="Rivers", difficulty="medium")
+        if not out or not out.get("question_type") == "essay":
+            logger.error("  -> No or invalid essay result")
+            return False
+        logger.info("  -> OK (essay question generated)")
+        return True
+    except Exception as e:
+        logger.error("  -> Error: %s", e, exc_info=True)
+        return False
+
+
 def main():
     logger.info("=" * 60)
     logger.info("Vertex generation in each feature")
@@ -296,12 +337,14 @@ def main():
         ("Math graph", test_math_graph),
         ("Combined science topical", test_combined_science_topical),
         ("Flashcards", test_flashcards),
+        ("GeoTutor", test_geotutor),
         ("English grammar", test_english_grammar),
         ("AI service science", test_ai_service_science),
         ("A-Level Pure Math", test_a_level_math),
         ("A-Level Biology", test_a_level_biology),
         ("A-Level Physics", test_a_level_physics),
         ("A-Level Chemistry", test_a_level_chemistry),
+        ("A-Level Geography", test_a_level_geography),
     ]
     for name, fn in tests:
         try:

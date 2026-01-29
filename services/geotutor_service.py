@@ -1,12 +1,13 @@
 """
 NerdX GeoTutor – Maps-based Geography Learning Lab (ZIMSEC O-Level + A-Level).
-Uses DeepSeek AI to provide teaching feedback from map_actions (markers, distance, bearing, etc.).
+Uses Vertex AI (primary) then DeepSeek (fallback) for teaching feedback from map_actions.
 """
 
 import json
 import logging
 from typing import Any, Dict, List, Optional
 
+from utils.vertex_ai_helper import try_vertex_text
 from utils.deepseek import call_deepseek_chat
 
 logger = logging.getLogger(__name__)
@@ -88,7 +89,17 @@ def get_geotutor_feedback(
         map_actions=map_actions,
         student_answer_text=student_answer_text,
     )
+    full_prompt = f"{SYSTEM_PROMPT}\n\n{user_prompt}"
 
+    # Primary: Vertex AI
+    try:
+        response = try_vertex_text(full_prompt, logger=logger, context="geotutor")
+        if response:
+            return response.strip()
+    except Exception as e:
+        logger.warning("GeoTutor Vertex AI error (will try DeepSeek): %s", e)
+
+    # Fallback: DeepSeek
     try:
         response = call_deepseek_chat(
             system_prompt=SYSTEM_PROMPT,

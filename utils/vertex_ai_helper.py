@@ -102,3 +102,43 @@ def try_vertex_json(
 
     return extract_json_object(text, logger=logger, context=context)
 
+
+def try_vertex_text(
+    prompt: str,
+    *,
+    model: str = "gemini-2.5-flash",
+    logger: Optional[logging.Logger] = None,
+    context: str = "",
+) -> Optional[str]:
+    """
+    Attempt Vertex AI text generation (primary). Returns plain text or None.
+    Callers should use DeepSeek as fallback when this returns None.
+
+    Vertex AI is primary; DeepSeek is secondary across NerdX.
+    """
+    if not vertex_service.is_available():
+        if logger:
+            logger.info("Vertex AI unavailable%s; skipping primary attempt", f" ({context})" if context else "")
+        return None
+
+    try:
+        result = vertex_service.generate_text(prompt=prompt, model=model)
+    except Exception as exc:
+        if logger:
+            logger.error(
+                "Vertex AI call failed%s: %s",
+                f" ({context})" if context else "",
+                exc,
+                exc_info=True,
+            )
+        return None
+
+    if not result or not result.get("success"):
+        if logger:
+            err = result.get("error") if isinstance(result, dict) else "unknown error"
+            logger.warning("Vertex AI returned no result%s: %s", f" ({context})" if context else "", err)
+        return None
+
+    text = (result.get("text") or "").strip()
+    return text if text else None
+

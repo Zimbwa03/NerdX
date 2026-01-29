@@ -32,6 +32,12 @@ def serve_graph_image(filename):
     """Serve graph images for WhatsApp access"""
     return send_from_directory('static/graphs', filename)
 
+# Serve Manim animation videos (static/media/videos/manim_templates/...)
+@app.route('/static/media/<path:filename>')
+def serve_media(filename):
+    """Serve Manim and other static media (videos, etc.) for student frontend"""
+    return send_from_directory('static/media', filename)
+
 # Add route to serve PDF files for essay reports
 @app.route('/download/pdf/<filename>')
 def serve_pdf_file(filename):
