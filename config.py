@@ -144,18 +144,22 @@ class Config:
         'a_level_computer_science_exam_mcq': 3,
         'a_level_computer_science_exam_structured': 5,
         'a_level_computer_science_exam_essay': 10,
-        # A-Level Geography – topical 0.5, exam essay 1
-        'a_level_geography_topical_essay': 5,
+        # A-Level Geography – MCQ 0.3, Structured 0.5, Essay 1 (same as other A-Level)
+        'a_level_geography_topical_mcq': 3,
+        'a_level_geography_topical_structured': 5,
+        'a_level_geography_topical_essay': 10,
+        'a_level_geography_exam_mcq': 3,
+        'a_level_geography_exam_structured': 5,
         'a_level_geography_exam_essay': 10,
 
         # Audio / Live (Complex processing)
         'audio_feature': 20,               # 2 credits - Audio processing + AI
         'voice_chat': 20,                 # 2 credits - Real-time voice processing
 
-        # Vision/Tools – 1 credit each
+        # Vision/Tools – image generation 2 credits; others 1 credit
         'ocr_solve': 10,
         'image_solve': 10,
-        'image_generation': 10,
+        'image_generation': 20,          # 2 credits
 
         # Project Assistant (Advanced) – transcribe 1 credit, rest 2 credits
         'project_web_search': 20,

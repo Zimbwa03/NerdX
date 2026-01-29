@@ -42,10 +42,10 @@ const EnglishComprehensionScreen: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async () => {
-    if ((user?.credits || 0) < 3) {
+    if ((user?.credits || 0) < 2) {
       Alert.alert(
         'Insufficient Credits',
-        'Comprehension requires 3 credits. Please buy credits first.',
+        'Comprehension requires 2 credits. Please buy credits first.',
         [{ text: 'OK' }]
       );
       return;
@@ -186,7 +186,7 @@ const EnglishComprehensionScreen: React.FC = () => {
                     ) : (
                       <>
                         <Text style={styles.generateButtonText}>Start Practice</Text>
-                        <Text style={styles.costText}>(3 Credits)</Text>
+                        <Text style={styles.costText}>(2 Credits)</Text>
                       </>
                     )}
                   </LinearGradient>

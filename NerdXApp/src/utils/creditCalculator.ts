@@ -78,9 +78,12 @@ export function calculateQuizCreditCost(params: CreditCostParams): number {
     return 0.3; // MCQ
   }
 
-  // A-Level Geography – Essay questions only: 1 credit per essay
+  // A-Level Geography – MCQ 0.3, Structured 0.5, Essay 1 (same as other A-Level)
   if (subjectKey === 'a_level_geography') {
-    return 1; // Essay questions: 1 credit
+    const fmt = (questionFormat || bioQuestionType || 'mcq').toLowerCase();
+    if (fmt === 'structured') return 0.5;
+    if (fmt === 'essay') return 1;
+    return 0.3; // MCQ
   }
 
   // Default fallback

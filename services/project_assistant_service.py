@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Dict, Optional, List
 from utils.session_manager import session_manager
 from services.whatsapp_service import WhatsAppService
-from database.external_db import make_supabase_request, get_user_credits, deduct_credits
+from database.external_db import make_supabase_request, get_user_credits, deduct_credits, save_project_chat_message
 from utils.credit_units import format_credits, units_to_credits
 from services.advanced_credit_service import advanced_credit_service
 from utils.deepseek import get_deepseek_chat_model
@@ -1911,11 +1911,8 @@ Credits are deducted per AI response.
             projects = make_supabase_request(
                 "GET", 
                 "user_projects", 
-                filters={
-                    "user_id": f"eq.{user_id}",
-                    "completed": "eq.false"
-                },
-                use_service_role=False  # Use regular auth - RLS should allow user to see their own projects
+                filters={"user_id": f"eq.{user_id}"},
+                use_service_role=True  # Backend acts on behalf of user (mobile JWT already verified)
             )
             
             logger.debug(f"Retrieved {len(projects) if projects else 0} projects for user {user_id}")
@@ -1952,10 +1949,11 @@ Credits are deducted per AI response.
     def get_project_details(self, user_id: str, project_id: int) -> Optional[Dict]:
         """Get detailed project info"""
         try:
-            projects = make_supabase_request("GET", "user_projects", filters={
-                "id": f"eq.{project_id}",
-                "user_id": f"eq.{user_id}"
-            })
+            projects = make_supabase_request(
+                "GET", "user_projects",
+                filters={"id": f"eq.{project_id}", "user_id": f"eq.{user_id}"},
+                use_service_role=True
+            )
             
             if projects and len(projects) > 0:
                 project = projects[0]
@@ -1971,9 +1969,63 @@ Credits are deducted per AI response.
                     project['title'] = project['project_title']
                 
                 return project
-            return None
+                return None
         except Exception as e:
             logger.error(f"Error getting project details {project_id}: {e}")
+            return None
+
+    def process_mobile_chat(self, user_id: str, project_id: int, message_text: str) -> Optional[Dict]:
+        """
+        Process a chat message for a project (mobile API).
+        Loads project from DB, gets AI response, saves to chat history and project_data, deducts credits.
+        Returns dict with keys: response, credits_remaining; or None on error.
+        """
+        try:
+            project = self.get_project_details(user_id, project_id)
+            if not project:
+                return None
+            project_data = project.get('project_data') or {}
+            if isinstance(project_data, str):
+                try:
+                    project_data = json.loads(project_data)
+                except Exception:
+                    project_data = {}
+            conversation_history = project_data.get('conversation_history', [])
+            is_first_message = len(conversation_history) == 0
+            action_key = 'project_assistant_start' if is_first_message else 'project_assistant_followup'
+            credit_cost = advanced_credit_service.get_credit_cost(action_key)
+            credit_status = advanced_credit_service.get_user_credit_status(user_id)
+            if credit_status['credits'] < credit_cost:
+                return {
+                    'response': 'Insufficient credits. Please purchase more credits to continue.',
+                    'credits_remaining': credit_status['credits'],
+                }
+            conversation_history.append({
+                'role': 'user',
+                'content': message_text,
+                'timestamp': datetime.now().isoformat(),
+            })
+            ai_response = self._get_ai_response(user_id, message_text, project_data)
+            conversation_history.append({
+                'role': 'assistant',
+                'content': ai_response,
+                'timestamp': datetime.now().isoformat(),
+            })
+            save_project_chat_message(project_id, 'user', message_text)
+            save_project_chat_message(project_id, 'assistant', ai_response)
+            if len(conversation_history) > 50:
+                conversation_history = conversation_history[-50:]
+            project_data['conversation_history'] = conversation_history
+            project_data['last_updated'] = datetime.now().isoformat()
+            self._save_project_to_database(user_id, project_data, project_id)
+            deduct_credits(user_id, credit_cost, action_key, 'Project Assistant response')
+            credits_remaining = get_user_credits(user_id)
+            return {
+                'response': ai_response,
+                'credits_remaining': units_to_credits(credits_remaining) if credits_remaining is not None else 0,
+            }
+        except Exception as e:
+            logger.error(f"Error in process_mobile_chat for project {project_id}: {e}", exc_info=True)
             return None
 
     # -------------------- Image generation helpers (Vertex Imagen) --------------------

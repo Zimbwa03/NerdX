@@ -570,7 +570,7 @@ class CreditCostService:
             'flashcard_audio': 20,
             'image_solve': 10,  # 1 credit
             'ocr_solve': 10,  # 1 credit
-            'image_generation': 10,  # 1 credit
+            'image_generation': 20,  # 2 credits
 
             # AI Teacher PDF
             'teacher_mode_pdf': 20,  # 2 credits

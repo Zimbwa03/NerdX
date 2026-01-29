@@ -14,7 +14,9 @@ import {
   Dimensions,
   Platform,
   Share,
+  Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,7 +37,7 @@ import LoadingProgress from '../components/LoadingProgress';
 
 const { width } = Dimensions.get('window');
 
-type EssayType = 'free_response' | 'guided' | null;
+type EssayType = 'free_response' | 'guided' | 'mark_essay' | null;
 
 const EnglishEssayScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -68,6 +70,10 @@ const EnglishEssayScreen: React.FC = () => {
   const [viewingHistory, setViewingHistory] = useState(false);
   const [history, setHistory] = useState<EssaySubmission[]>([]);
   const [refreshingHistory, setRefreshingHistory] = useState(false);
+
+  // Mark Essay: multiple images (upload/capture), Vertex AI extracts text
+  const [essayImages, setEssayImages] = useState<Array<{ uri: string; base64?: string; mimeType?: string }>>([]);
+  const [extractingText, setExtractingText] = useState(false);
 
   // Fetch history
   const fetchHistory = async () => {
@@ -123,8 +129,26 @@ const EnglishEssayScreen: React.FC = () => {
     setSubmitted(true);
   };
 
+  // Static topic list for Mark Essay (no API call – student uploads their composition to mark)
+  const MARK_ESSAY_TOPICS: FreeResponseTopic[] = [
+    { title: 'Narrative', description: 'Write a story or account of events.', type: 'narrative', suggested_length: '350-450 words' },
+    { title: 'Descriptive', description: 'Describe a person, place, or experience.', type: 'descriptive', suggested_length: '350-450 words' },
+    { title: 'Expository', description: 'Explain or inform on a topic.', type: 'expository', suggested_length: '350-450 words' },
+    { title: 'Argumentative', description: 'Argue a point of view with evidence.', type: 'argumentative', suggested_length: '350-450 words' },
+    { title: 'Letter (formal)', description: 'Formal letter – e.g. to a headmaster, organisation.', type: 'argumentative', suggested_length: '350-450 words' },
+    { title: 'Letter (informal)', description: 'Informal letter – e.g. to a friend or relative.', type: 'narrative', suggested_length: '350-450 words' },
+    { title: 'Speech or Report', description: 'Speech or report on a given topic.', type: 'expository', suggested_length: '350-450 words' },
+  ];
+
   // Handle essay type selection
-  const handleSelectEssayType = async (type: 'free_response' | 'guided') => {
+  const handleSelectEssayType = async (type: 'free_response' | 'guided' | 'mark_essay') => {
+    if (type === 'mark_essay') {
+      // Mark Essay: no loading, no "generating prompts" – student uploads composition to mark
+      setEssayType('mark_essay');
+      setFreeTopics(MARK_ESSAY_TOPICS);
+      setEssayImages([]);
+      return;
+    }
     setLoading(true);
     setIsGenerating(true);
     try {
@@ -144,6 +168,94 @@ const EnglishEssayScreen: React.FC = () => {
     } finally {
       setLoading(false);
       setIsGenerating(false);
+    }
+  };
+
+  // Mark Essay: add image from gallery
+  const handleAddEssayImageFromGallery = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please allow access to your photos to attach essay images.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        quality: 0.85,
+      });
+      if (!result.canceled && result.assets.length > 0) {
+        const newImages: Array<{ uri: string; base64?: string; mimeType?: string }> = [];
+        for (const asset of result.assets) {
+          const uri = asset.uri;
+          let base64: string | undefined;
+          try {
+            base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+          } catch (_) {}
+          newImages.push({ uri, base64, mimeType: 'image/jpeg' });
+        }
+        setEssayImages(prev => [...prev, ...newImages].slice(0, 10));
+      }
+    } catch (e) {
+      Alert.alert('Error', 'Failed to pick images');
+    }
+  };
+
+  // Mark Essay: capture with camera
+  const handleAddEssayImageFromCamera = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please allow camera access to capture essay pages.');
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.85,
+      });
+      if (!result.canceled && result.assets[0]) {
+        const uri = result.assets[0].uri;
+        let base64: string | undefined;
+        try {
+          base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+        } catch (_) {}
+        setEssayImages(prev => [...prev, { uri, base64, mimeType: 'image/jpeg' }].slice(0, 10));
+      }
+    } catch (e) {
+      Alert.alert('Error', 'Failed to capture image');
+    }
+  };
+
+  const removeEssayImage = (index: number) => {
+    setEssayImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Extract text from attached images via Vertex AI and append to essay
+  const handleExtractTextFromImages = async () => {
+    if (essayImages.length === 0) {
+      Alert.alert('No Images', 'Please add at least one image (upload or capture) before extracting text.');
+      return;
+    }
+    const withBase64 = essayImages.filter(i => i.base64);
+    if (withBase64.length === 0) {
+      Alert.alert('Error', 'Could not read image data. Try adding the images again.');
+      return;
+    }
+    setExtractingText(true);
+    try {
+      const extracted = await englishApi.extractEssayTextFromImages(
+        withBase64.map(i => ({ base64: i.base64!, mime_type: i.mimeType || 'image/jpeg' }))
+      );
+      if (extracted) {
+        setEssayText(prev => (prev.trim() ? prev.trimEnd() + '\n\n' + extracted : extracted));
+        Alert.alert('Text Extracted', 'The text from your images has been added to the essay. You can edit it before submitting.');
+      } else {
+        Alert.alert('No Text Found', 'We could not extract text from the images. Try clearer photos or type your essay manually.');
+      }
+    } catch (e: any) {
+      Alert.alert('Error', e.response?.data?.message || 'Failed to extract text from images. Please try again.');
+    } finally {
+      setExtractingText(false);
     }
   };
 
@@ -178,11 +290,11 @@ const EnglishEssayScreen: React.FC = () => {
     setLoading(true);
     try {
       const result = await englishApi.submitEssayForMarking(
-        essayType as 'free_response' | 'guided',
+        (essayType === 'mark_essay' ? 'free_response' : essayType) as 'free_response' | 'guided',
         studentName.trim(),
         studentSurname.trim(),
         essayText.trim(),
-        essayType === 'free_response' ? selectedTopic! : undefined,
+        (essayType === 'free_response' || essayType === 'mark_essay') ? selectedTopic! : undefined,
         essayType === 'guided' ? guidedPrompt! : undefined
       );
 
@@ -247,6 +359,7 @@ const EnglishEssayScreen: React.FC = () => {
     setStudentName('');
     setStudentSurname('');
     setEssayText('');
+    setEssayImages([]);
     setSubmitted(false);
     setMarkingResult(null);
   };
@@ -366,6 +479,32 @@ const EnglishEssayScreen: React.FC = () => {
                 </LinearGradient>
               </TouchableOpacity>
 
+              <TouchableOpacity
+                style={[styles.typeButton, loading && styles.typeButtonDisabled]}
+                onPress={() => handleSelectEssayType('mark_essay')}
+                disabled={loading}
+              >
+                <LinearGradient
+                  colors={loading ? ['#BDBDBD', '#9E9E9E'] : ['#7B1FA2', '#512DA8']}
+                  style={styles.gradientButton}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <>
+                      <Ionicons name="camera-outline" size={24} color="#FFF" style={{ marginRight: 10 }} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.typeButtonTitle}>Mark Essay</Text>
+                        <Text style={styles.typeButtonSubtitle}>Upload your composition (photos or type) • Extract text from images • Get it marked</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={24} color="#FFF" />
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+
               <View style={[styles.infoBox, { backgroundColor: themedColors.background.subtle }]}>
                 <Ionicons name="information-circle-outline" size={20} color={themedColors.primary.main} />
                 <Text style={[styles.infoText, { color: themedColors.text.secondary }]}>Essay marking costs 3 credits</Text>
@@ -439,9 +578,9 @@ const EnglishEssayScreen: React.FC = () => {
           )
         }
 
-        {/* Free Response Topic Selection */}
+        {/* Free Response or Mark Essay Topic Selection */}
         {
-          essayType === 'free_response' && !selectedTopic && (
+          (essayType === 'free_response' || essayType === 'mark_essay') && !selectedTopic && (
             <View style={styles.contentContainer}>
               <TouchableOpacity onPress={handleReset} style={styles.backToSelectionButton}>
                 <Ionicons name="arrow-back" size={20} color={themedColors.primary.main} />
@@ -449,7 +588,9 @@ const EnglishEssayScreen: React.FC = () => {
               </TouchableOpacity>
 
               <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Select Your Topic</Text>
-              <Text style={[styles.sectionSubtitle, { color: themedColors.text.secondary }]}>Choose 1 of 7 topics (350-450 words)</Text>
+              <Text style={[styles.sectionSubtitle, { color: themedColors.text.secondary }]}>
+                {essayType === 'mark_essay' ? 'Which topic does your essay answer? (You can upload/capture images next)' : 'Choose 1 of 7 topics (350-450 words)'}
+              </Text>
 
               {freeTopics.map((topic, index) => (
                 <TouchableOpacity
@@ -581,22 +722,83 @@ const EnglishEssayScreen: React.FC = () => {
               <View style={[styles.selectedTopicCard, { backgroundColor: themedColors.background.paper }]}>
                 <View style={styles.glassCard}>
                   <Text style={[styles.selectedTopicLabel, { color: themedColors.primary.main }]}>
-                    {essayType === 'free_response' ? 'Your Topic' : 'Your Task'}
+                    {essayType === 'guided' ? 'Your Task' : 'Your Topic'}
                   </Text>
                   <Text style={[styles.selectedTopicTitle, { color: themedColors.text.primary }]}>
-                    {essayType === 'free_response' ? selectedTopic?.title : guidedPrompt?.title}
+                    {(essayType === 'free_response' || essayType === 'mark_essay') ? selectedTopic?.title : guidedPrompt?.title}
                   </Text>
                   <Text style={[styles.selectedTopicDescription, { color: themedColors.text.secondary }]}>
-                    {essayType === 'free_response' ? selectedTopic?.description : guidedPrompt?.context}
+                    {(essayType === 'free_response' || essayType === 'mark_essay') ? selectedTopic?.description : guidedPrompt?.context}
                   </Text>
                 </View>
               </View>
+
+              {/* Mark Essay: attach images (upload/capture), then extract text */}
+              {essayType === 'mark_essay' && (
+                <View style={[styles.essayCard, { backgroundColor: themedColors.background.paper }]}>
+                  <View style={styles.glassCard}>
+                    <Text style={[styles.essayTitle, { color: themedColors.text.primary, marginBottom: 8 }]}>Attach essay images</Text>
+                    <Text style={[styles.essayHint, { color: themedColors.text.secondary, marginBottom: 12 }]}>
+                      Upload or capture photos of your handwritten or typed essay. You can add multiple images (up to 10). Then tap "Extract text" to convert them to text.
+                    </Text>
+                    <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
+                      <TouchableOpacity
+                        style={[styles.markEssayImageButton, { backgroundColor: themedColors.primary.light + '30', borderColor: themedColors.primary.main }]}
+                        onPress={handleAddEssayImageFromGallery}
+                      >
+                        <Ionicons name="images-outline" size={22} color={themedColors.primary.main} />
+                        <Text style={[styles.markEssayImageButtonText, { color: themedColors.primary.main }]}>Upload</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.markEssayImageButton, { backgroundColor: themedColors.primary.light + '30', borderColor: themedColors.primary.main }]}
+                        onPress={handleAddEssayImageFromCamera}
+                      >
+                        <Ionicons name="camera-outline" size={22} color={themedColors.primary.main} />
+                        <Text style={[styles.markEssayImageButtonText, { color: themedColors.primary.main }]}>Capture</Text>
+                      </TouchableOpacity>
+                    </View>
+                    {essayImages.length > 0 && (
+                      <>
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+                          {essayImages.map((img, index) => (
+                            <View key={index} style={{ position: 'relative' }}>
+                              <Image source={{ uri: img.uri }} style={styles.markEssayThumb} />
+                              <TouchableOpacity
+                                style={styles.markEssayRemoveThumb}
+                                onPress={() => removeEssayImage(index)}
+                              >
+                                <Ionicons name="close-circle" size={24} color={Colors.error.main} />
+                              </TouchableOpacity>
+                            </View>
+                          ))}
+                        </View>
+                        <TouchableOpacity
+                          style={[styles.markEssayExtractButton, { backgroundColor: themedColors.primary.main }]}
+                          onPress={handleExtractTextFromImages}
+                          disabled={extractingText}
+                        >
+                          {extractingText ? (
+                            <ActivityIndicator color="#FFF" />
+                          ) : (
+                            <>
+                              <Ionicons name="document-text-outline" size={20} color="#FFF" />
+                              <Text style={styles.markEssayExtractButtonText}>Extract text from images</Text>
+                            </>
+                          )}
+                        </TouchableOpacity>
+                      </>
+                    )}
+                  </View>
+                </View>
+              )}
 
               {/* Essay Input */}
               <View style={[styles.essayCard, { backgroundColor: themedColors.background.paper }]}>
                 <View style={styles.glassCard}>
                   <View style={styles.essayHeader}>
-                    <Text style={[styles.essayTitle, { color: themedColors.text.primary }]}>Write Your Essay</Text>
+                    <Text style={[styles.essayTitle, { color: themedColors.text.primary }]}>
+                      {essayType === 'mark_essay' ? 'Your essay (type or paste extracted text)' : 'Write Your Essay'}
+                    </Text>
                     <View style={[styles.wordCountBadge, { backgroundColor: themedColors.background.subtle }]}>
                       <Ionicons name="text-outline" size={14} color={themedColors.primary.main} />
                       <Text style={[styles.wordCountText, { color: themedColors.text.secondary }]}>{wordCount} words</Text>
@@ -606,13 +808,13 @@ const EnglishEssayScreen: React.FC = () => {
                     style={[styles.essayInput, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F7FA', color: themedColors.text.primary, borderColor: themedColors.border.light }]}
                     value={essayText}
                     onChangeText={setEssayText}
-                    placeholder="Start writing your essay here..."
+                    placeholder={essayType === 'mark_essay' ? 'Type here or extract text from images above, then edit before submitting.' : 'Start writing your essay here...'}
                     placeholderTextColor={themedColors.text.hint}
                     multiline
                     textAlignVertical="top"
                   />
                   <Text style={[styles.essayHint, { color: themedColors.text.secondary }]}>
-                    Recommended: {essayType === 'free_response' ? selectedTopic?.suggested_length : guidedPrompt?.suggested_length}
+                    Recommended: {essayType === 'free_response' || essayType === 'mark_essay' ? selectedTopic?.suggested_length : guidedPrompt?.suggested_length}
                   </Text>
                 </View>
               </View>
@@ -1217,6 +1419,48 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     marginTop: 8,
     fontStyle: 'italic',
+  },
+  markEssayImageButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1.5,
+  },
+  markEssayImageButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  markEssayThumb: {
+    width: 72,
+    height: 72,
+    borderRadius: 8,
+    backgroundColor: '#eee',
+  },
+  markEssayRemoveThumb: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    zIndex: 1,
+  },
+  markEssayExtractButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  markEssayExtractButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   submitButton: {
     borderRadius: 12,

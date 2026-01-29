@@ -75,6 +75,11 @@ const TopicsScreen: React.FC = () => {
   const [selectedCsTopic, setSelectedCsTopic] = useState<Topic | null>(null);
   const [selectedCsQuestionType, setSelectedCsQuestionType] = useState<'mcq' | 'structured' | 'essay'>('mcq');
 
+  // A-Level Geography Question Type Modal (MCQ, Structured, Essay)
+  const [geoQuestionTypeModalVisible, setGeoQuestionTypeModalVisible] = useState(false);
+  const [selectedGeoTopic, setSelectedGeoTopic] = useState<Topic | null>(null);
+  const [selectedGeoQuestionType, setSelectedGeoQuestionType] = useState<'mcq' | 'structured' | 'essay'>('mcq');
+
   // Computer Science board (ZimSec vs Cambridge) — O-Level
   const [csBoard, setCsBoard] = useState<'zimsec' | 'cambridge'>('zimsec');
   // A-Level Computer Science board (ZIMSEC vs Cambridge 9618)
@@ -216,8 +221,11 @@ const TopicsScreen: React.FC = () => {
       setMixImagesEnabled(false);
       setCsQuestionTypeModalVisible(true);
     } else if (subject.id === 'a_level_geography') {
-      // A-Level Geography: only Essay questions, directly start quiz
-      handleStartQuiz(topic, 'essay', undefined, false);
+      // A-Level Geography: show MCQ / Structured / Essay choice (same as other A-Level subjects)
+      setSelectedGeoTopic(topic);
+      setSelectedGeoQuestionType('mcq');
+      setMixImagesEnabled(false);
+      setGeoQuestionTypeModalVisible(true);
     } else {
       // Start quiz modal with visual learning toggle
       openStartQuizModal(topic);
@@ -1575,6 +1583,79 @@ const TopicsScreen: React.FC = () => {
               if (selectedCsTopic) {
                 // Pass the selected type as questionType argument
                 handleStartQuiz(selectedCsTopic, selectedCsQuestionType, undefined, false);
+              }
+            }}
+          >
+            <Text style={styles.startButtonText}>Start Quiz</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      {/* A-Level Geography Question Type Modal */}
+      <Modal
+        visible={geoQuestionTypeModalVisible}
+        onClose={() => {
+          setGeoQuestionTypeModalVisible(false);
+          setMixImagesEnabled(false);
+        }}
+        title={`A-Level Geography – ${selectedGeoTopic?.name || 'Topic'}`}
+      >
+        <Text style={styles.modalDescription}>Choose your question format:</Text>
+
+        <TouchableOpacity
+          style={[
+            styles.choiceCard,
+            selectedGeoQuestionType === 'mcq' && styles.choiceCardSelected,
+          ]}
+          onPress={() => setSelectedGeoQuestionType('mcq')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.choiceTitle}>Multiple Choice</Text>
+          <Text style={styles.choiceDescription}>Quick revision questions with clear explanations</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.choiceCard,
+            selectedGeoQuestionType === 'structured' && styles.choiceCardSelected,
+          ]}
+          onPress={() => setSelectedGeoQuestionType('structured')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.choiceTitle}>Structured Questions</Text>
+          <Text style={styles.choiceDescription}>Multi-part written questions for deep understanding</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.choiceCard,
+            selectedGeoQuestionType === 'essay' && styles.choiceCardSelected,
+          ]}
+          onPress={() => setSelectedGeoQuestionType('essay')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.choiceTitle}>Essay / Discussion</Text>
+          <Text style={styles.choiceDescription}>Extended response questions to practice analysis</Text>
+        </TouchableOpacity>
+
+        <Text style={[styles.visualModeCost, { marginTop: 12 }]}>
+          Estimated cost: {formatCreditCost(getEstimatedCost(selectedGeoTopic, selectedGeoQuestionType, undefined, false))} per question
+        </Text>
+
+        <View style={[styles.modalButtonRow, { marginBottom: Math.max(insets.bottom, 8), paddingBottom: Math.max(insets.bottom, 0) }]}>
+          <TouchableOpacity
+            style={[styles.modalButton, styles.cancelButton]}
+            onPress={() => setGeoQuestionTypeModalVisible(false)}
+          >
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
+          <View style={styles.modalButtonSpacer} />
+          <TouchableOpacity
+            style={[styles.modalButton, styles.startButton]}
+            onPress={() => {
+              setGeoQuestionTypeModalVisible(false);
+              if (selectedGeoTopic) {
+                handleStartQuiz(selectedGeoTopic, selectedGeoQuestionType, undefined, false);
               }
             }}
           >

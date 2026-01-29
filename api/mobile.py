@@ -24,7 +24,10 @@ from database.external_db import (
     make_supabase_request,
     authenticate_supabase_user,
     get_user_by_email_admin,
-    get_user_registration_by_email
+    get_user_registration_by_email,
+    get_user_projects,
+    get_project_by_id,
+    get_project_chat_history,
 )
 # Additional Services
 from services.advanced_credit_service import advanced_credit_service
@@ -48,6 +51,7 @@ from services.exam_session_service import exam_session_service
 from services.database_lab_execution_service import database_lab_execution_service
 from services.programming_lab_ai_service import programming_lab_ai_service
 from services.flashcard_service import flashcard_service
+from services.project_assistant_service import ProjectAssistantService
 from utils.url_utils import convert_local_path_to_public_url
 from utils.credit_units import format_credits, units_to_credits, credits_to_units
 from utils.question_cache import QuestionCacheService
@@ -58,6 +62,7 @@ logger = logging.getLogger(__name__)
 
 mobile_bp = Blueprint('mobile', __name__)
 question_cache = QuestionCacheService()
+project_assistant_service = ProjectAssistantService()
 
 
 def _credits_display(units: int) -> int:
@@ -109,13 +114,15 @@ def _get_quiz_credit_action(
     question_type: str,
     question_format: str,
     bio_question_type: str,
-    cs_question_type: str = None
+    cs_question_type: str = None,
+    geo_question_type: str = None,
 ) -> str:
     subject_key = (subject or '').lower()
     qt = (question_type or 'topical').lower()
     qf = (question_format or 'mcq').lower()
     bio_qt = (bio_question_type or 'mcq').lower()
     cs_fmt = (cs_question_type or qf or 'mcq').lower()
+    geo_fmt = (geo_question_type or qf or 'mcq').lower()
 
     if subject_key == 'mathematics':
         return 'math_topical' if qt == 'topical' else 'math_exam'
@@ -171,10 +178,18 @@ def _get_quiz_credit_action(
             return 'a_level_computer_science_topical_essay'
         return 'a_level_computer_science_topical_mcq'
     if subject_key == 'a_level_geography':
-        # A-Level Geography: only essay questions (1 credit)
+        # A-Level Geography: MCQ, structured, essay (same as other A-Level subjects)
         if qt == 'exam':
-            return 'a_level_geography_exam_essay'
-        return 'a_level_geography_topical_essay'
+            if geo_fmt == 'structured':
+                return 'a_level_geography_exam_structured'
+            if geo_fmt == 'essay':
+                return 'a_level_geography_exam_essay'
+            return 'a_level_geography_exam_mcq'
+        if geo_fmt == 'structured':
+            return 'a_level_geography_topical_structured'
+        if geo_fmt == 'essay':
+            return 'a_level_geography_topical_essay'
+        return 'a_level_geography_topical_mcq'
 
     return f"{subject}_topical" if qt == 'topical' else f"{subject}_exam"
 
@@ -1511,7 +1526,9 @@ def generate_question():
         bio_question_type = data.get('question_type', 'mcq') if subject == 'a_level_biology' else 'mcq'
         # For Computer Science (O-Level and A-Level), use question_type from data (mcq, structured, essay)
         cs_question_type = (data.get('question_type') or question_format or 'mcq').lower() if subject in ('computer_science', 'a_level_computer_science') else None
-        credit_action = _get_quiz_credit_action(subject, question_type, question_format, bio_question_type, cs_question_type)
+        # For A-Level Geography, use question_type from data (mcq, structured, essay)
+        geo_question_type = (data.get('question_type') or question_format or 'mcq').lower() if subject == 'a_level_geography' else None
+        credit_action = _get_quiz_credit_action(subject, question_type, question_format, bio_question_type, cs_question_type, geo_question_type)
         if is_image_question:
             credit_cost = get_image_question_credit_cost()
         else:
@@ -1876,11 +1893,12 @@ def generate_question():
                     question_data = geo_generator.generate_topical_question(selected_topic, difficulty, g.current_user_id)
             
             elif subject == 'a_level_geography':
-                # ZIMSEC A-Level Geography – Essay questions only
+                # ZIMSEC A-Level Geography – MCQ, structured, essay (same as other A-Level subjects)
                 from services.a_level_geography_generator import ALevelGeographyGenerator
-                geo_generator = ALevelGeographyGenerator()
                 from constants import A_LEVEL_GEOGRAPHY_TOPICS
                 import random
+                a_level_geo_generator = ALevelGeographyGenerator()
+                geo_generator = GeographyGenerator()  # O-Level generator for MCQ/structured (topic-based)
                 
                 # In exam mode, randomly select topic from full A-Level Geography list
                 if question_type == 'exam':
@@ -1889,8 +1907,13 @@ def generate_question():
                         topic = random.choice(geo_topics)
                 selected_topic = topic or 'Climatology'
                 
-                # A-Level Geography: always generate essay (ignore question_type/question_format)
-                question_data = geo_generator.generate_essay_question(selected_topic, difficulty, g.current_user_id)
+                geo_question_type = (data.get('question_type') or question_format or 'mcq').lower()
+                if geo_question_type == 'essay':
+                    question_data = a_level_geo_generator.generate_essay_question(selected_topic, difficulty, g.current_user_id)
+                elif geo_question_type == 'structured':
+                    question_data = geo_generator.generate_structured_question(selected_topic, difficulty, g.current_user_id)
+                else:
+                    question_data = geo_generator.generate_topical_question(selected_topic, difficulty, g.current_user_id)
             
             elif subject == 'a_level_computer_science':
                 # A Level Computer Science - ZIMSEC 6023 or Cambridge 9618 (board from client)
@@ -1947,7 +1970,13 @@ def generate_question():
                 else:
                     error_msg = f'Failed to generate A-Level Biology {bio_type} question. Please try again.'
             elif subject == 'a_level_geography':
-                error_msg = 'Failed to generate A-Level Geography essay question. The AI service may be experiencing high load. Please try again in a moment.'
+                geo_type = data.get('question_type', 'mcq')
+                if geo_type == 'essay':
+                    error_msg = 'Failed to generate A-Level Geography essay question. The AI service may be experiencing high load. Please try again in a moment.'
+                elif geo_type == 'structured':
+                    error_msg = 'Failed to generate A-Level Geography structured question. Please try again or switch to MCQ questions.'
+                else:
+                    error_msg = 'Failed to generate A-Level Geography question. Please try again.'
             elif subject in ['a_level_physics', 'a_level_chemistry', 'a_level_pure_math', 'a_level_computer_science']:
                 if question_format_used == 'structured':
                     error_msg = f'Failed to generate {subject.replace("a_level_", "").replace("_", " ").title()} structured question. Please try again or switch to MCQ questions.'
@@ -2059,8 +2088,8 @@ def generate_question():
                     parts = question_data.get('parts', []) if isinstance(question_data.get('parts'), list) else []
                 model_lines = []
                 for p in parts:
-                    label = p.get('label', '')
-                    model = (p.get('model_answer') or '').strip()
+                    label = p.get('label', '') or p.get('part', '')
+                    model = (p.get('model_answer') or p.get('expected_answer') or '').strip()
                     marks = p.get('marks', '')
                     if model:
                         model_lines.append(f"{label} [{marks}]: {model}")
@@ -2155,6 +2184,15 @@ def generate_question():
         if subject in ['a_level_physics', 'a_level_chemistry', 'a_level_pure_math', 'computer_science', 'a_level_computer_science'] and question_type_mobile == 'structured':
             structured_q = question_data.get('structured_question', {})
             parts = structured_q.get('parts', []) if structured_q else question_data.get('parts', [])
+            # Normalize parts: ensure model_answer for frontend (use expected_answer if model_answer missing)
+            for p in parts:
+                if 'label' not in p:
+                    p['label'] = p.get('part', 'a')
+                if not (p.get('model_answer') or '').strip() and (p.get('expected_answer') or '').strip():
+                    p['model_answer'] = (p.get('expected_answer') or '').strip()
+            # Ensure question.solution is set from parts for submit-answer
+            if not (solution or '').strip():
+                solution = _build_structured_solution_from_parts(parts)
             question['structured_question'] = {
                 'question_type': 'structured',
                 'subject': question_data.get('subject', subject.replace('_', ' ').title()),
@@ -2235,10 +2273,15 @@ def generate_question():
             if question_type_mobile == 'structured' or question_data.get('question_type') == 'structured':
                 structured_q = question_data.get('structured_question', {})
                 parts = structured_q.get('parts', []) if structured_q else question_data.get('parts', [])
-                # Ensure each part has a label
+                # Ensure each part has a label and model_answer (for frontend and submit-answer)
                 for part in parts:
                     if 'label' not in part:
                         part['label'] = part.get('part', 'a')
+                    if not (part.get('model_answer') or '').strip() and (part.get('expected_answer') or '').strip():
+                        part['model_answer'] = (part.get('expected_answer') or '').strip()
+                # Ensure question.solution is set from parts for submit-answer
+                if not (solution or '').strip():
+                    solution = _build_structured_solution_from_parts(parts)
                 question['structured_question'] = {
                     'question_type': 'structured',
                     'subject': 'Geography' if subject == 'geography' else 'A Level Geography',
@@ -2517,6 +2560,23 @@ def get_next_exam_question():
         error_message = str(e) if str(e) else 'Server error'
         return jsonify({'success': False, 'message': f'Failed to get exam question: {error_message}'}), 500
 
+
+def _build_structured_solution_from_parts(parts):
+    """Build detailed solution string from structured question parts (model_answer or expected_answer)."""
+    if not parts or not isinstance(parts, list):
+        return ''
+    lines = []
+    for p in parts:
+        label = p.get('label', p.get('part', ''))
+        model = (p.get('model_answer') or p.get('expected_answer') or '').strip()
+        marks = p.get('marks', '')
+        if model:
+            lines.append(f"Part ({label}) [{marks} marks]: {model}")
+    if not lines:
+        return ''
+    return "📋 MODEL ANSWERS / DETAILED SOLUTION:\n\n" + "\n\n".join(lines)
+
+
 @mobile_bp.route('/quiz/submit-answer', methods=['POST'])
 @require_auth
 def submit_answer():
@@ -2725,6 +2785,86 @@ Step 3: Identify where your approach differed and learn from it.
                 is_correct = True
                 detailed_solution = solution or 'Review the marking criteria and model answer outline provided with the question.'
                 analysis_result = {}
+        elif subject in ('computer_science', 'a_level_computer_science') and question_type == 'structured' and (structured_question or data.get('structured_question')):
+            # O-Level and A-Level Computer Science structured: AI evaluation + model answers + teacher feedback
+            try:
+                sq = structured_question or data.get('structured_question', {})
+                parts = sq.get('parts', []) or []
+                detailed_solution = _build_structured_solution_from_parts(parts) or (solution or 'No solution provided.')
+                question_payload = {
+                    'question_type': 'structured',
+                    'stem': question_text or sq.get('stem', ''),
+                    'total_marks': sq.get('total_marks', 10),
+                    'parts': parts,
+                }
+                gen = ComputerScienceGenerator()
+                eval_result = gen.evaluate_answer(question_payload, answer if answer else 'Image Answer')
+                total_score = int(eval_result.get('total_score', 0))
+                max_score = int(eval_result.get('max_score', 1) or 1)
+                is_correct = (total_score >= (max_score * 0.5)) if max_score else False
+                feedback = (eval_result.get('feedback') or '').strip()
+                if not feedback:
+                    feedback = '✅ Good work! Review the model answers below.' if is_correct else '❌ Review the model answers below and compare with your response.'
+                analysis_result = {
+                    'encouragement': feedback,
+                    'improvement_tips': 'Compare each part of your answer with the model answers. Focus on key terms and structure.',
+                    'step_by_step_explanation': detailed_solution,
+                }
+            except Exception as cs_err:
+                logger.error(f"Computer Science structured evaluation error: {cs_err}", exc_info=True)
+                sq = structured_question or data.get('structured_question', {})
+                parts = sq.get('parts', []) or []
+                detailed_solution = _build_structured_solution_from_parts(parts) or (solution or 'No solution provided.')
+                is_correct = False
+                feedback = '❌ Could not evaluate automatically. Review the model answers below and compare with your response.'
+                analysis_result = {}
+        elif subject in ('geography', 'a_level_geography') and question_type == 'structured' and (structured_question or data.get('structured_question')):
+            # O-Level and A-Level Geography structured: show model answers + constructive feedback
+            try:
+                sq = structured_question or data.get('structured_question', {})
+                parts = sq.get('parts', []) or []
+                detailed_solution = _build_structured_solution_from_parts(parts) or (solution or 'No solution provided.')
+                feedback = (
+                    '📝 Your answer has been recorded. Review the model answers below and compare with your response '
+                    'to see what was expected. Focus on key terms, case studies, and structure.'
+                )
+                is_correct = True  # Structured geography: we show feedback rather than strict right/wrong
+                analysis_result = {
+                    'encouragement': 'Well done on completing the question. Use the model answers to improve your next attempt.',
+                    'improvement_tips': 'Check that you addressed each part, used appropriate terminology, and referred to examples where relevant.',
+                    'step_by_step_explanation': detailed_solution,
+                }
+            except Exception as geo_err:
+                logger.error(f"Geography structured answer error: {geo_err}", exc_info=True)
+                sq = structured_question or data.get('structured_question', {})
+                parts = sq.get('parts', []) or []
+                detailed_solution = _build_structured_solution_from_parts(parts) or (solution or 'No solution provided.')
+                feedback = 'Review the model answers below and compare with your response.'
+                is_correct = True
+                analysis_result = {}
+        elif question_type == 'structured' and (structured_question or data.get('structured_question')):
+            # Other structured subjects (A-Level Physics, Chemistry, Pure Math, Biology): show model answers + feedback
+            try:
+                sq = structured_question or data.get('structured_question', {})
+                parts = sq.get('parts', []) or []
+                detailed_solution = _build_structured_solution_from_parts(parts) or (solution or 'No solution provided.')
+                feedback = (
+                    '📝 Your answer has been recorded. Review the model answers below and compare with your response.'
+                )
+                is_correct = True  # Structured: we show feedback rather than strict right/wrong
+                analysis_result = {
+                    'encouragement': 'Use the model answers to see what was expected for each part.',
+                    'improvement_tips': 'Compare each part of your answer with the model answer. Focus on key terms and structure.',
+                    'step_by_step_explanation': detailed_solution,
+                }
+            except Exception as struct_err:
+                logger.error(f"Structured answer (other subject) error: {struct_err}", exc_info=True)
+                sq = structured_question or data.get('structured_question', {})
+                parts = sq.get('parts', []) or []
+                detailed_solution = _build_structured_solution_from_parts(parts) or (solution or 'No solution provided.')
+                feedback = 'Review the model answers below.'
+                is_correct = True
+                analysis_result = {}
         else:
             # For other subjects (Combined Science, English, etc.)
             # Handle MCQ answer validation: could be option letter (A/B/C/D) or full option text
@@ -2845,14 +2985,15 @@ Step 3: Identify where your approach differed and learn from it.
                 lc = LaTeXConverter()
                 detailed_solution = lc.latex_to_readable_text(detailed_solution or '')
                 detailed_solution = LaTeXConverter.normalize_explanation_spacing(detailed_solution)
-                detailed_solution = LaTeXConverter.format_explanation_professionally(detailed_solution, max_length=2000)
+                # Use large max_length for solution so full Detailed Solution is returned (no truncation)
+                detailed_solution = LaTeXConverter.format_explanation_professionally(detailed_solution, max_length=16000)
                 feedback = LaTeXConverter.format_explanation_professionally(feedback or '', max_length=600)
                 for k in ('what_went_right', 'what_went_wrong', 'improvement_tips', 'encouragement', 'related_topic', 'step_by_step_explanation'):
                     v = analysis_result.get(k)
                     if v and isinstance(v, str):
                         v = lc.latex_to_readable_text(v)
                         v = LaTeXConverter.normalize_explanation_spacing(v)
-                        analysis_result[k] = LaTeXConverter.format_explanation_professionally(v, max_length=800)
+                        analysis_result[k] = LaTeXConverter.format_explanation_professionally(v, max_length=4000)
             except Exception as e:
                 logger.warning(f"LaTeX conversion in submit-answer failed (non-blocking): {e}")
         
@@ -3799,6 +3940,49 @@ def get_referral_stats_simple():
 # MATH ENDPOINTS
 # ============================================================================
 
+@mobile_bp.route('/math/scan-gemini', methods=['POST'])
+@require_auth
+def math_scan_gemini():
+    """
+    Scan/extract math or text from an image using Vertex AI (Gemini Vision).
+    Used by Math Solver and any flow that needs NerdX Cloud OCR.
+    Vertex AI is the primary image analysis provider throughout the app.
+    """
+    try:
+        data = request.get_json() or {}
+        image_base64 = data.get('image_base64', '').strip()
+        mime_type = data.get('mime_type', 'image/png')
+        if not image_base64:
+            return jsonify({'success': False, 'message': 'image_base64 is required'}), 400
+        if not vertex_service.is_available():
+            return jsonify({
+                'success': False,
+                'message': 'Vertex AI image analysis is not available. Please try again later.'
+            }), 503
+        result = vertex_service.analyze_image(
+            image_base64=image_base64,
+            mime_type=mime_type,
+        )
+        if not result or not result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Image analysis failed'),
+            }), 500
+        return jsonify({
+            'success': True,
+            'data': {
+                'detected_text': result.get('text', ''),
+                'latex': result.get('latex', result.get('text', '')),
+                'confidence': result.get('confidence', 0.9),
+                'content_type': result.get('content_type', 'text'),
+                'method': 'vertex-vision',
+            }
+        }), 200
+    except Exception as e:
+        logger.error(f"Math scan-gemini (Vertex AI) error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
 @mobile_bp.route('/math/graph', methods=['POST'])
 @require_auth
 def generate_math_graph():
@@ -4160,7 +4344,8 @@ def generate_comprehension():
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 402
         
-        data = request.get_json() or {}
+        # Accept JSON even when Content-Type is missing (e.g. some proxies strip it) to avoid 415
+        data = request.get_json(force=True, silent=True) or {}
         theme = (data.get('theme') or '').strip() or None
         form_level = int(data.get('form_level', 4))
         
@@ -4349,6 +4534,54 @@ def submit_essay_marking():
     except Exception as e:
         logger.error(f"Submit essay marking error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e)}), 500
+
+
+ESSAY_IMAGE_EXTRACT_PROMPT = """Extract all handwritten or printed text from this image exactly as written.
+Preserve paragraphs, line breaks, and punctuation. Do not correct or rewrite—only transcribe.
+If the image contains an essay or composition, output the full text in order (top to bottom, left to right).
+Respond in this exact JSON format only:
+{"detected_text": "the full extracted text here"}
+Only respond with the JSON, no other text."""
+
+
+@mobile_bp.route('/english/essay/extract-from-images', methods=['POST'])
+@require_auth
+def extract_essay_text_from_images():
+    """Extract essay text from one or more images using Vertex AI (OCR). No credit deduction—user pays on submit for marking."""
+    try:
+        data = request.get_json(force=True, silent=True) or {}
+        images = data.get('images') or []
+        if not images or not isinstance(images, list):
+            return jsonify({'success': False, 'message': 'images array required'}), 400
+        if len(images) > 10:
+            return jsonify({'success': False, 'message': 'Maximum 10 images allowed'}), 400
+        if not vertex_service.is_available():
+            return jsonify({
+                'success': False,
+                'message': 'Image analysis is not available. Please try again later.'
+            }), 503
+        combined = []
+        for i, img in enumerate(images):
+            b64 = img.get('base64') or img.get('image_base64') or ''
+            mime = (img.get('mime_type') or img.get('mimeType') or 'image/png').strip()
+            if not b64:
+                continue
+            result = vertex_service.analyze_image(
+                image_base64=b64,
+                mime_type=mime,
+                prompt=ESSAY_IMAGE_EXTRACT_PROMPT,
+            )
+            if result and result.get('success') and result.get('text'):
+                combined.append(result.get('text', '').strip())
+        extracted_text = '\n\n'.join(combined) if combined else ''
+        return jsonify({
+            'success': True,
+            'data': {'extracted_text': extracted_text},
+        }), 200
+    except Exception as e:
+        logger.error(f"Extract essay from images error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e) or 'Server error'}), 500
+
 
 @mobile_bp.route('/english/essay/history', methods=['GET'])
 @require_auth
@@ -4926,79 +5159,382 @@ def get_dkt_interaction_history():
         return jsonify({'success': False, 'data': {'interactions': []}}), 500
 
 
+def _build_ai_insights_response(user_id, knowledge_map, history, student_name):
+    """Build frontend-shaped AI insights payload. Uses Vertex AI for personalized message."""
+    from datetime import datetime, timezone, timedelta
+    from utils.vertex_ai_helper import try_vertex_text
+
+    now = datetime.now(timezone.utc)
+    skills = knowledge_map.get('skills') or []
+    total_skills = knowledge_map.get('total_skills', 0)
+    mastered_count = knowledge_map.get('mastered_skills', 0)
+    learning_count = knowledge_map.get('learning_skills', 0)
+    struggling_count = knowledge_map.get('struggling_skills', 0)
+
+    # Recent 7 days from history (today = index 6, 6 days ago = index 0 for M T W T F S S)
+    recent_correct = 0
+    recent_total = 0
+    active_dates = set()
+    daily_breakdown = []
+    for i in range(6, -1, -1):
+        d = (now - timedelta(days=i)).date()
+        daily_breakdown.append({'date': d.isoformat(), 'count': 0})
+
+    for interaction in (history or []):
+        try:
+            ts = interaction.get('timestamp')
+            if not ts:
+                continue
+            if isinstance(ts, str):
+                ts = datetime.fromisoformat(ts.replace('Z', '+00:00'))
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=timezone.utc)
+            days_ago = (now - ts).days
+            if days_ago <= 6:
+                recent_total += 1
+                if interaction.get('correct'):
+                    recent_correct += 1
+                d = ts.date()
+                active_dates.add(d)
+                for entry in daily_breakdown:
+                    if entry['date'] == d.isoformat():
+                        entry['count'] += 1
+                        break
+        except Exception:
+            pass
+
+    recent_accuracy = (recent_correct / recent_total * 100) if recent_total > 0 else 0
+
+    # Health score: blend recent accuracy and skill mastery (0-100)
+    avg_mastery = (mastered_count * 100 + learning_count * 50 + struggling_count * 20) / total_skills if total_skills else 50
+    health_score = round(0.5 * recent_accuracy + 0.5 * min(avg_mastery, 100)) if (recent_total > 0 or total_skills > 0) else 50
+    health_score = max(0, min(100, health_score))
+
+    # Strengths: skills with mastery >= 0.8 (DKT returns mastery 0-1)
+    strengths = []
+    for s in skills:
+        m = s.get('mastery') if 'mastery' in s else (s.get('mastery_probability') or 0)
+        if m >= 0.8:
+            strengths.append({
+                'skill_name': s.get('skill_name', 'Skill'),
+                'subject': s.get('subject', ''),
+                'topic': s.get('topic', ''),
+                'mastery': round((m if m <= 1 else m / 100)),
+                'status': s.get('status', 'mastered'),
+                'recommendation': None,
+            })
+    strengths = strengths[:5]
+
+    # Focus areas: skills with mastery < 0.5
+    focus_areas = []
+    for s in skills:
+        m = s.get('mastery') if 'mastery' in s else (s.get('mastery_probability') or 0)
+        if m < 0.5:
+            focus_areas.append({
+                'skill_name': s.get('skill_name', 'Skill'),
+                'subject': s.get('subject', ''),
+                'topic': s.get('topic', ''),
+                'mastery': round((m if m <= 1 else m / 100)),
+                'status': s.get('status', 'struggling'),
+                'recommendation': f"Practice more {s.get('skill_name', 'this topic')} to improve.",
+            })
+    focus_areas = focus_areas[:5]
+
+    # Study plan from struggling skills
+    study_plan = []
+    struggling = [s for s in skills if (s.get('mastery') if 'mastery' in s else (s.get('mastery_probability') or 0)) < 0.5]
+    for i, skill in enumerate(struggling[:3]):
+        study_plan.append({
+            'priority': 'high' if i == 0 else 'medium',
+            'action': f"Practice {skill.get('skill_name', 'weak area')}",
+            'description': f"Focus on {skill.get('subject', '')} - {skill.get('topic', '')} to raise your mastery.",
+            'estimated_time': '15-20 min',
+        })
+
+    # Vertex AI personalized message (student name + activity summary)
+    summary_parts = []
+    if recent_total > 0:
+        summary_parts.append(f"answered {recent_total} questions in the last 7 days at {round(recent_accuracy)}% accuracy")
+    if total_skills > 0:
+        summary_parts.append(f"mastered {mastered_count} skills, learning {learning_count}, {struggling_count} need work")
+    summary_parts.append(f"learning health score {health_score}/100")
+    summary = "; ".join(summary_parts) if summary_parts else "just getting started (no activity yet)"
+    name_part = f"Student name: {student_name}." if student_name else "Student name not provided."
+    prompt = f"""You are a supportive learning coach for NerdX. Write 1-2 short, encouraging sentences as a "thought assistant" for this student. Be specific to their data. Do not use bullet points or labels. Write only the message.
+
+{name_part}
+Summary: {summary}.
+
+Message:"""
+    personalized_message = try_vertex_text(prompt, context="ai_insights", logger=logger)
+    if not personalized_message:
+        personalized_message = f"Your learning health is {health_score}/100. " + (
+            f"This week you answered {recent_total} questions at {round(recent_accuracy)}% accuracy. " if recent_total > 0 else "Start practicing to unlock personalized insights. "
+        ) + ("Keep focusing on your focus areas to improve." if focus_areas else "Keep it up!")
+
+    return {
+        'health_score': health_score,
+        'total_skills': total_skills,
+        'mastered_count': mastered_count,
+        'learning_count': learning_count,
+        'struggling_count': struggling_count,
+        'strengths': strengths,
+        'focus_areas': focus_areas,
+        'weekly_trend': {
+            'total_questions': recent_total,
+            'correct_answers': recent_correct,
+            'accuracy': round(recent_accuracy, 1),
+            'active_days': len(active_dates),
+            'daily_breakdown': daily_breakdown,
+        },
+        'study_plan': study_plan,
+        'personalized_message': personalized_message,
+        'last_updated': now.isoformat(),
+    }
+
+
 @mobile_bp.route('/dkt/ai-insights', methods=['GET'])
 @require_auth
 def get_dkt_ai_insights():
-    """Get AI-powered personalized learning insights"""
+    """Get AI-powered personalized learning insights. Response shape matches frontend AIInsights interface. Uses Vertex AI for personalized message."""
     try:
         from services.deep_knowledge_tracing import dkt_service
         from datetime import datetime, timezone
-        
+
         user_id = g.current_user_id
-        
-        # Get knowledge map for overview
-        knowledge_map = dkt_service.get_knowledge_map(user_id) or {}
-        
-        # Get recent interactions for trend analysis
-        history = dkt_service.get_interaction_history(user_id, limit=50) or []
-        
-        # Calculate recent performance (last 7 days)
-        now = datetime.now(timezone.utc)
-        recent_correct = 0
-        recent_total = 0
-        
-        for interaction in history:
-            try:
-                # Handle both timezone-aware and naive datetimes
-                ts = interaction.get('timestamp')
-                if ts:
-                    if isinstance(ts, str):
-                        # Parse ISO format string
-                        ts = datetime.fromisoformat(ts.replace('Z', '+00:00'))
-                    if ts.tzinfo is None:
-                        # Make naive datetime UTC-aware
-                        ts = ts.replace(tzinfo=timezone.utc)
-                    
-                    days_ago = (now - ts).days
-                    if days_ago <= 7:
-                        recent_total += 1
-                        if interaction.get('correct'):
-                            recent_correct += 1
-            except Exception:
-                pass  # Skip interactions with parsing errors
-        
-        recent_accuracy = (recent_correct / recent_total * 100) if recent_total > 0 else 0
-        
-        # Generate insights
-        insights = {
-            'total_skills': knowledge_map.get('total_skills', 0),
-            'mastered_skills': knowledge_map.get('mastered_skills', 0),
-            'learning_skills': knowledge_map.get('learning_skills', 0),
-            'struggling_skills': knowledge_map.get('struggling_skills', 0),
-            'recent_accuracy': round(recent_accuracy, 1),
-            'recent_questions': recent_total,
-            'streak_days': 0,  # TODO: Implement streak tracking
-            'recommendations': []
-        }
-        
-        # Add recommendations for struggling skills
-        struggling = [s for s in knowledge_map.get('skills', []) if s.get('mastery_probability', 0) < 0.4]
-        for skill in struggling[:3]:
-            insights['recommendations'].append({
-                'type': 'practice',
-                'skill_id': skill.get('skill_id'),
-                'skill_name': skill.get('skill_name'),
-                'message': f"Practice more {skill.get('skill_name', 'this topic')} to improve your mastery"
-            })
-        
-        return jsonify({
-            'success': True,
-            'data': insights
-        }), 200
-        
+        student_name = None
+        try:
+            reg = get_user_registration(user_id)
+            if reg:
+                student_name = (reg.get('name') or '').strip() or (reg.get('chat_id') or '')
+        except Exception:
+            pass
+
+        knowledge_map = {}
+        history = []
+        try:
+            knowledge_map = dkt_service.get_knowledge_map(user_id) or {}
+        except Exception as e:
+            logger.warning(f"DKT get_knowledge_map failed for ai-insights: {e}")
+        try:
+            history = dkt_service.get_interaction_history(user_id, limit=50) or []
+        except Exception as e:
+            logger.warning(f"DKT get_interaction_history failed for ai-insights: {e}")
+
+        data = _build_ai_insights_response(user_id, knowledge_map, history, student_name)
+        return jsonify({'success': True, 'data': data}), 200
+
     except Exception as e:
         logger.error(f"Get AI insights error for user {g.current_user_id}: {e}", exc_info=True)
-        return jsonify({'success': False, 'message': 'Failed to get AI insights'}), 500
+        try:
+            data = _build_ai_insights_response(g.current_user_id, {}, [], None)
+            return jsonify({'success': True, 'data': data}), 200
+        except Exception:
+            return jsonify({'success': False, 'message': 'Failed to get AI insights'}), 500
+
+
+# ============================================================================
+# CBT EXAM ENDPOINTS (calculate-time, create, next, submit, complete, state, review)
+# ============================================================================
+
+@mobile_bp.route('/exam/calculate-time', methods=['POST'])
+@require_auth
+def exam_calculate_time():
+    """Calculate estimated exam time for setup UI (no session created)."""
+    try:
+        data = request.get_json() or {}
+        subject = data.get('subject', 'mathematics')
+        question_count = int(data.get('question_count', 10))
+        question_mode = data.get('question_mode', 'MCQ_ONLY')
+        difficulty = data.get('difficulty', 'standard')
+        info = exam_session_service.calculate_exam_time(
+            subject=subject,
+            question_count=question_count,
+            question_mode=question_mode,
+            difficulty=difficulty,
+        )
+        return jsonify({'success': True, 'data': info}), 200
+    except Exception as e:
+        logger.error(f"Exam calculate-time error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/exam/create', methods=['POST'])
+@require_auth
+def exam_create():
+    """Create a new CBT exam session."""
+    try:
+        data = request.get_json() or {}
+        user_id = g.current_user_id
+        reg = get_user_registration(user_id)
+        username = (reg.get('name') or reg.get('nerdx_id') or 'Student') if reg else 'Student'
+        subject = data.get('subject', 'mathematics')
+        level = data.get('level', 'O_LEVEL')
+        question_mode = data.get('question_mode', 'MCQ_ONLY')
+        difficulty = data.get('difficulty', 'standard')
+        total_questions = int(data.get('total_questions', 10))
+        paper_style = data.get('paper_style', 'ZIMSEC')
+        topics = data.get('topics')
+        result = exam_session_service.create_session(
+            user_id=user_id,
+            username=username,
+            subject=subject,
+            level=level,
+            question_mode=question_mode,
+            difficulty=difficulty,
+            total_questions=total_questions,
+            paper_style=paper_style,
+            topics=topics,
+        )
+        return jsonify({'success': True, 'data': result}), 200
+    except Exception as e:
+        logger.error(f"Exam create error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/exam/next', methods=['POST'])
+@require_auth
+def exam_next():
+    """Get next question for an exam session (generates one at a time)."""
+    try:
+        data = request.get_json() or {}
+        session_id = data.get('session_id')
+        question_index = data.get('question_index')
+        if not session_id:
+            return jsonify({'success': False, 'message': 'session_id required'}), 400
+        session = exam_session_service.get_session(session_id)
+        if not session:
+            return jsonify({'success': False, 'message': 'Session not found'}), 404
+        if session.get('user_id') != g.current_user_id:
+            return jsonify({'success': False, 'message': 'Forbidden'}), 403
+        idx = int(question_index) if question_index is not None else session.get('current_index', 0)
+        question = exam_session_service.generate_next_question(
+            session_id=session_id,
+            question_index=idx,
+            platform='mobile',
+        )
+        if not question:
+            return jsonify({'success': False, 'message': 'No more questions or generation failed'}), 500
+        # Build QuestionResponse: question (ExamQuestion shape), question_index, total_questions, remaining_seconds, prompt
+        start_time = datetime.fromisoformat(session['start_time'])
+        elapsed = (datetime.utcnow() - start_time).total_seconds()
+        remaining = max(0, session['total_time_seconds'] - int(elapsed))
+        stem = question.get('stem') or question.get('question_text', '')
+        prompt = question.get('prompt_to_student') or f"Question {idx + 1} of {session['total_questions']}"
+        exam_question = {
+            'id': question.get('id', str(uuid.uuid4())),
+            'question_type': question.get('question_type', 'MCQ'),
+            'topic': question.get('topic', ''),
+            'stem': stem,
+            'options': question.get('options', []),
+            'correct_option': question.get('correct_option', ''),
+            'parts': question.get('parts', []),
+            'total_marks': question.get('total_marks'),
+            'explanation': question.get('explanation', ''),
+            'difficulty': question.get('difficulty', 'standard'),
+            'prompt_to_student': prompt,
+        }
+        response_data = {
+            'question': exam_question,
+            'question_index': idx,
+            'total_questions': session['total_questions'],
+            'remaining_seconds': remaining,
+            'prompt': prompt,
+        }
+        return jsonify({'success': True, 'data': response_data}), 200
+    except Exception as e:
+        logger.error(f"Exam next error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/exam/submit', methods=['POST'])
+@require_auth
+def exam_submit():
+    """Submit answer for a single question and get immediate feedback."""
+    try:
+        data = request.get_json() or {}
+        session_id = data.get('session_id')
+        question_id = data.get('question_id')
+        answer = data.get('answer', '')
+        time_spent_seconds = int(data.get('time_spent_seconds', 0))
+        is_flagged = bool(data.get('is_flagged', False))
+        image_url = data.get('image_url')
+        if not session_id or not question_id:
+            return jsonify({'success': False, 'message': 'session_id and question_id required'}), 400
+        session = exam_session_service.get_session(session_id)
+        if not session or session.get('user_id') != g.current_user_id:
+            return jsonify({'success': False, 'message': 'Session not found or forbidden'}), 404
+        result = exam_session_service.submit_answer(
+            session_id=session_id,
+            question_id=question_id,
+            answer=answer,
+            time_spent_seconds=time_spent_seconds,
+            is_flagged=is_flagged,
+            image_url=image_url,
+        )
+        if result.get('error'):
+            return jsonify({'success': False, 'message': result['error']}), 400
+        return jsonify({'success': True, 'data': result}), 200
+    except Exception as e:
+        logger.error(f"Exam submit error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/exam/complete', methods=['POST'])
+@require_auth
+def exam_complete():
+    """Complete exam and get final results."""
+    try:
+        data = request.get_json() or {}
+        session_id = data.get('session_id')
+        if not session_id:
+            return jsonify({'success': False, 'message': 'session_id required'}), 400
+        session = exam_session_service.get_session(session_id)
+        if not session or session.get('user_id') != g.current_user_id:
+            return jsonify({'success': False, 'message': 'Session not found or forbidden'}), 404
+        results = exam_session_service.complete_exam(session_id)
+        if results.get('error'):
+            return jsonify({'success': False, 'message': results['error']}), 400
+        return jsonify({'success': True, 'data': results}), 200
+    except Exception as e:
+        logger.error(f"Exam complete error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/exam/state/<session_id>', methods=['GET'])
+@require_auth
+def exam_state(session_id):
+    """Get current exam session state (for resume)."""
+    try:
+        state = exam_session_service.get_session_state(session_id)
+        if not state:
+            return jsonify({'success': False, 'message': 'Session not found'}), 404
+        session = exam_session_service.get_session(session_id)
+        if session and session.get('user_id') != g.current_user_id:
+            return jsonify({'success': False, 'message': 'Forbidden'}), 403
+        return jsonify({'success': True, 'data': state}), 200
+    except Exception as e:
+        logger.error(f"Exam state error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/exam/review/<session_id>', methods=['GET'])
+@require_auth
+def exam_review(session_id):
+    """Get detailed question-by-question review after exam completion."""
+    try:
+        session = exam_session_service.get_session(session_id)
+        if not session:
+            return jsonify({'success': False, 'message': 'Session not found'}), 404
+        if session.get('user_id') != g.current_user_id:
+            return jsonify({'success': False, 'message': 'Forbidden'}), 403
+        review = exam_session_service.get_exam_review(session_id)
+        if not review:
+            return jsonify({'success': False, 'message': 'Review not available (exam not submitted)'}), 404
+        return jsonify({'success': True, 'data': review}), 200
+    except Exception as e:
+        logger.error(f"Exam review error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 # ============================================================================
@@ -5481,4 +6017,142 @@ def teacher_deep_research():
         }), 200
     except Exception as e:
         logging.exception("teacher_deep_research failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+# ==================== Project Assistant (ZIMSEC) ====================
+
+@mobile_bp.route('/project/list', methods=['GET'])
+@require_auth
+def project_list():
+    """List all projects for the authenticated user."""
+    try:
+        user_id = g.current_user_id
+        projects = project_assistant_service.get_user_projects(user_id)
+        if projects is None:
+            projects = []
+        return jsonify({'success': True, 'data': {'projects': projects}}), 200
+    except Exception as e:
+        logger.exception("project_list failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/create', methods=['POST'])
+@require_auth
+def project_create():
+    """Create a new ZIMSEC project."""
+    try:
+        user_id = g.current_user_id
+        data = request.get_json() or {}
+        if not data.get('subject') or not data.get('level'):
+            return jsonify({'success': False, 'message': 'subject and level are required'}), 400
+        project = project_assistant_service.create_project_mobile(user_id, data)
+        if not project:
+            return jsonify({'success': False, 'message': 'Failed to create project'}), 500
+        out = {
+            'id': project.get('id'),
+            'title': project.get('project_title') or project.get('title'),
+            'subject': project.get('subject'),
+            'current_stage': project.get('current_stage'),
+            'completed': project.get('completed'),
+            'updated_at': project.get('updated_at'),
+            'project_data': project.get('project_data'),
+            'created_at': project.get('created_at'),
+        }
+        return jsonify({'success': True, 'data': out}), 200
+    except ValueError as e:
+        return jsonify({'success': False, 'message': str(e)}), 400
+    except Exception as e:
+        logger.exception("project_create failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>', methods=['GET'])
+@require_auth
+def project_get(project_id):
+    """Get a single project by ID (must belong to current user)."""
+    try:
+        user_id = g.current_user_id
+        project = project_assistant_service.get_project_details(user_id, project_id)
+        if not project:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        out = {
+            'id': project.get('id'),
+            'title': project.get('project_title') or project.get('title'),
+            'subject': project.get('subject'),
+            'current_stage': project.get('current_stage'),
+            'completed': project.get('completed'),
+            'updated_at': project.get('updated_at'),
+            'created_at': project.get('created_at'),
+            'project_data': project.get('project_data'),
+        }
+        return jsonify({'success': True, 'data': out}), 200
+    except Exception as e:
+        logger.exception("project_get failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/chat', methods=['POST'])
+@require_auth
+def project_chat(project_id):
+    """Send a chat message and get AI response."""
+    try:
+        user_id = g.current_user_id
+        data = request.get_json() or {}
+        message = (data.get('message') or '').strip()
+        if not message:
+            return jsonify({'success': False, 'message': 'message is required'}), 400
+        result = project_assistant_service.process_mobile_chat(user_id, project_id, message)
+        if not result:
+            return jsonify({'success': False, 'message': 'Project not found or error processing message'}), 404
+        return jsonify({
+            'success': True,
+            'data': {
+                'response': result.get('response', ''),
+                'project_id': project_id,
+                'credits_remaining': result.get('credits_remaining'),
+            }
+        }), 200
+    except Exception as e:
+        logger.exception("project_chat failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/history', methods=['GET'])
+@require_auth
+def project_history(project_id):
+    """Get chat history for a project."""
+    try:
+        user_id = g.current_user_id
+        proj = get_project_by_id(project_id)
+        if not proj or str(proj.get('user_id')) != str(user_id):
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        history = get_project_chat_history(project_id)
+        out = [
+            {'id': i + 1, 'project_id': project_id, 'role': h.get('role'), 'content': h.get('content'), 'timestamp': h.get('timestamp')}
+            for i, h in enumerate(history)
+        ]
+        return jsonify({'success': True, 'data': {'history': out}}), 200
+    except Exception as e:
+        logger.exception("project_history failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>', methods=['DELETE'])
+@require_auth
+def project_delete(project_id):
+    """Delete a project (must belong to current user)."""
+    try:
+        user_id = g.current_user_id
+        proj = get_project_by_id(project_id)
+        if not proj or str(proj.get('user_id')) != str(user_id):
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        make_supabase_request(
+            "DELETE", "user_projects",
+            filters={"id": f"eq.{project_id}", "user_id": f"eq.{user_id}"},
+            use_service_role=True
+        )
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        logger.exception("project_delete failed")
         return jsonify({'success': False, 'message': str(e)}), 500

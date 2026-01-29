@@ -117,7 +117,9 @@ export interface EssaySubmission {
 export const englishApi = {
   generateComprehension: async (): Promise<ComprehensionData | null> => {
     try {
-      const response = await api.post('/api/mobile/english/comprehension');
+      const response = await api.post('/api/mobile/english/comprehension', {}, {
+        headers: { 'Content-Type': 'application/json' },
+      });
       const data = response.data.data || null;
       // Include credits_remaining from server response for UI updates
       if (data && response.data.credits_remaining !== undefined) {
@@ -234,6 +236,22 @@ export const englishApi = {
     } catch (error: any) {
       console.error('Get essay report error:', error);
       return null;
+    }
+  },
+
+  /** Extract essay text from one or more images (Vertex AI OCR). Used by Mark Essay flow. */
+  extractEssayTextFromImages: async (images: Array<{ base64: string; mime_type?: string }>): Promise<string> => {
+    try {
+      const response = await api.post<{ success: boolean; data?: { extracted_text: string } }>(
+        '/api/mobile/english/essay/extract-from-images',
+        { images },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      const data = response.data?.data;
+      return (data?.extracted_text ?? '').trim();
+    } catch (error: any) {
+      console.error('Extract essay from images error:', error);
+      throw error;
     }
   },
 

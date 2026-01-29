@@ -255,34 +255,34 @@ const AIInsightsScreen: React.FC = () => {
                             style={styles.healthGradient}
                         >
                             <View style={styles.healthScoreCircle}>
-                                <Text style={[styles.healthScoreValue, { color: getHealthScoreColor(insights.health_score) }]}>
-                                    {insights.health_score}
+                                <Text style={[styles.healthScoreValue, { color: getHealthScoreColor(insights.health_score ?? 0) }]}>
+                                    {insights.health_score ?? 0}
                                 </Text>
                                 <Text style={styles.healthScoreLabel}>Learning Health</Text>
                             </View>
                             <View style={styles.healthStats}>
                                 <View style={styles.healthStatItem}>
-                                    <Text style={styles.healthStatValue}>{insights.total_skills}</Text>
+                                    <Text style={styles.healthStatValue}>{insights.total_skills ?? 0}</Text>
                                     <Text style={styles.healthStatLabel}>Skills</Text>
                                 </View>
                                 <View style={styles.healthStatDivider} />
                                 <View style={styles.healthStatItem}>
                                     <Text style={[styles.healthStatValue, { color: Colors.success.main }]}>
-                                        {insights.mastered_count}
+                                        {insights.mastered_count ?? 0}
                                     </Text>
                                     <Text style={styles.healthStatLabel}>Mastered</Text>
                                 </View>
                                 <View style={styles.healthStatDivider} />
                                 <View style={styles.healthStatItem}>
                                     <Text style={[styles.healthStatValue, { color: Colors.warning.main }]}>
-                                        {insights.learning_count}
+                                        {insights.learning_count ?? 0}
                                     </Text>
                                     <Text style={styles.healthStatLabel}>Learning</Text>
                                 </View>
                                 <View style={styles.healthStatDivider} />
                                 <View style={styles.healthStatItem}>
                                     <Text style={[styles.healthStatValue, { color: Colors.error.main }]}>
-                                        {insights.struggling_count}
+                                        {insights.struggling_count ?? 0}
                                     </Text>
                                     <Text style={styles.healthStatLabel}>Need Work</Text>
                                 </View>
@@ -303,36 +303,38 @@ const AIInsightsScreen: React.FC = () => {
                             </View>
                         ))}
                         {insightThoughts.length === 0 && (
-                            <Text style={styles.messageText}>{insights.personalized_message}</Text>
+                            <Text style={styles.messageText}>{insights.personalized_message ?? 'Keep practicing to unlock personalized insights.'}</Text>
                         )}
                     </View>
 
                     {/* Weekly Trend */}
+                    {(insights.weekly_trend != null) && (
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>📊 This Week</Text>
                         <View style={styles.weeklyCard}>
                             <View style={styles.weeklyStats}>
                                 <View style={styles.weeklyStat}>
-                                    <Text style={styles.weeklyStatValue}>{insights.weekly_trend.total_questions}</Text>
+                                    <Text style={styles.weeklyStatValue}>{insights.weekly_trend?.total_questions ?? 0}</Text>
                                     <Text style={styles.weeklyStatLabel}>Questions</Text>
                                 </View>
                                 <View style={styles.weeklyStat}>
                                     <Text style={[styles.weeklyStatValue, { color: Colors.success.main }]}>
-                                        {insights.weekly_trend.accuracy}%
+                                        {insights.weekly_trend?.accuracy ?? 0}%
                                     </Text>
                                     <Text style={styles.weeklyStatLabel}>Accuracy</Text>
                                 </View>
                                 <View style={styles.weeklyStat}>
-                                    <Text style={styles.weeklyStatValue}>{insights.weekly_trend.active_days}/7</Text>
+                                    <Text style={styles.weeklyStatValue}>{insights.weekly_trend?.active_days ?? 0}/7</Text>
                                     <Text style={styles.weeklyStatLabel}>Active Days</Text>
                                 </View>
                             </View>
                             {/* Daily Activity Mini Chart */}
                             <View style={styles.dailyChart}>
                                 {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => {
-                                    const dayData = insights.weekly_trend.daily_breakdown[i];
-                                    const count = dayData?.count || 0;
-                                    const maxCount = Math.max(...insights.weekly_trend.daily_breakdown.map(d => d.count), 1);
+                                    const dailyBreakdown = insights.weekly_trend?.daily_breakdown ?? [];
+                                    const dayData = dailyBreakdown[i];
+                                    const count = dayData?.count ?? 0;
+                                    const maxCount = Math.max(...dailyBreakdown.map((d: { count?: number }) => d?.count ?? 0), 1);
                                     const height = count > 0 ? Math.max((count / maxCount) * 40, 4) : 4;
                                     return (
                                         <View key={i} style={styles.dailyChartBar}>
@@ -347,9 +349,10 @@ const AIInsightsScreen: React.FC = () => {
                             </View>
                         </View>
                     </View>
+                    )}
 
                     {/* Strengths */}
-                    {insights.strengths.length > 0 && (
+                    {(insights.strengths?.length ?? 0) > 0 && (
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>💪 Your Strengths</Text>
                             <Text style={styles.sectionSubtitle}>Skills you've mastered - keep it up!</Text>
@@ -358,7 +361,7 @@ const AIInsightsScreen: React.FC = () => {
                     )}
 
                     {/* Focus Areas */}
-                    {insights.focus_areas.length > 0 && (
+                    {(insights.focus_areas?.length ?? 0) > 0 && (
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>🎯 Focus Areas</Text>
                             <Text style={styles.sectionSubtitle}>Skills that need more practice</Text>
@@ -367,7 +370,7 @@ const AIInsightsScreen: React.FC = () => {
                     )}
 
                     {/* AI Study Plan */}
-                    {insights.study_plan.length > 0 && (
+                    {(insights.study_plan?.length ?? 0) > 0 && (
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>📝 Your AI Study Plan</Text>
                             <Text style={styles.sectionSubtitle}>Personalized recommendations for today</Text>
@@ -379,7 +382,7 @@ const AIInsightsScreen: React.FC = () => {
 
                     {/* Last Updated */}
                     <Text style={styles.lastUpdated}>
-                        Last analyzed: {new Date(insights.last_updated).toLocaleString()}
+                        Last analyzed: {insights.last_updated ? new Date(insights.last_updated).toLocaleString() : 'Just now'}
                     </Text>
 
                     <View style={{ height: 40 }} />

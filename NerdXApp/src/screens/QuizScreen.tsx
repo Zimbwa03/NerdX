@@ -758,6 +758,10 @@ const QuizScreen: React.FC = () => {
     scrollView: {
       flex: 1,
     },
+    scrollContent: {
+      flexGrow: 1,
+      paddingBottom: 32,
+    },
     header: {
       paddingTop: 35,
       paddingBottom: 16,
@@ -937,6 +941,15 @@ const QuizScreen: React.FC = () => {
       color: themedColors.text.primary,
       lineHeight: 24,
       marginBottom: 12,
+    },
+    teacherFeedbackSection: {
+      marginBottom: 12,
+    },
+    teacherFeedbackTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: themedColors.text.secondary,
+      marginBottom: 4,
     },
     pointsBadge: {
       flexDirection: 'row',
@@ -1453,7 +1466,11 @@ const QuizScreen: React.FC = () => {
         barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={themedColors.background.default}
       />
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
         {/* Professional Header */}
         <LinearGradient
           colors={getHeaderGradient()}
@@ -1842,7 +1859,14 @@ const QuizScreen: React.FC = () => {
                       <Text style={styles.pointsText}>+{result.points_earned} Points</Text>
                     </View>
                   </View>
-                  <Text style={styles.feedbackText}>{result.feedback}</Text>
+                  {question?.question_type === 'structured' && result.feedback ? (
+                    <View style={styles.teacherFeedbackSection}>
+                      <Text style={styles.teacherFeedbackTitle}>Teacher's feedback</Text>
+                      <Text style={styles.feedbackText}>{result.feedback}</Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.feedbackText}>{result.feedback}</Text>
+                  )}
 
                   {/* Essay/Geography analysis: encouragement and improvement tips */}
                   {(result.encouragement || result.improvement_tips) && (
@@ -1882,19 +1906,19 @@ const QuizScreen: React.FC = () => {
                   {result.solution && (
                     <View style={styles.solutionContainer}>
                       <Text style={styles.solutionTitle}>ðŸ"š Detailed Solution:</Text>
-                      <MathText>{formatSolutionText(result.solution)}</MathText>
+                      <MathText style={styles.solutionText}>{formatSolutionText(result.solution)}</MathText>
                     </View>
                   )}
                   {result.hint && !result.correct && (
                     <View style={styles.hintContainer}>
                       <Text style={styles.hintTitle}>ðŸ’¡ Additional Hint:</Text>
-                      <MathText>{normalizeRichText(result.hint)}</MathText>
+                      <MathText style={styles.hintText}>{normalizeRichText(result.hint)}</MathText>
                     </View>
                   )}
                   {question.explanation && (
                     <View style={styles.explanationContainer}>
                       <Text style={styles.explanationTitle}>ðŸ“– Teaching Explanation:</Text>
-                      <MathText>{normalizeRichText(question.explanation)}</MathText>
+                      <MathText style={styles.explanationText}>{normalizeRichText(question.explanation)}</MathText>
                     </View>
                   )}
                 </Card>
