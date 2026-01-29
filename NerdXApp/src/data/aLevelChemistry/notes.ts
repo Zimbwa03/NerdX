@@ -6,7 +6,7 @@ export const aLevelChemistryNotes: Record<string, TopicNotes> = {
     "Atomic Structure": {
         topic: "Atomic Structure",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Atomic_Structure_Exam_Readiness_Fortress.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvQXRvbWljX1N0cnVjdHVyZV9FeGFtX1JlYWRpbmVzc19Gb3J0cmVzcy5tNGEiLCJpYXQiOjE3NjgwNDIxNzUsImV4cCI6NTI2ODUzODE3NX0.861Q22lP2pJyr-BEhQ6xKdQRr_GeDpVcNhfz8WH12tE",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Atomic_Structure.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Atomic_Structure.mp4",
         subject: "A Level Chemistry",
         summary: "Atomic structure is fundamental to understanding chemistry. This comprehensive topic covers the evolving model of the atom, subatomic particles, isotopes, electron shells and orbitals, ionization energy trends, electron configuration rules, and how the periodic table reflects electron arrangements. Mastery of atomic structure is essential for understanding chemical bonding, periodicity, and all subsequent chemistry topics.",
         sections: [
@@ -840,7 +840,7 @@ Simple, rapid chemical tests can be performed in the laboratory to identify the 
     },
     "Carboxylic Acids and Derivatives": {
         topic: "Carboxylic Acids and Derivatives",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Carboxylic_Acids_and_Derivatives.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Carboxylic_Acids_and_Derivatives.mp4",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Carboxylic_Acids_and_Derivatives_Mastery_Blueprint.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvQ2FyYm94eWxpY19BY2lkc19hbmRfRGVyaXZhdGl2ZXNfTWFzdGVyeV9CbHVlcHJpbnQubTRhIiwiaWF0IjoxNzY4MDQyMTk1LCJleHAiOjUyNjg1MzgxOTV9.8wltCTwoXpdcJ24fUU0GsqwGt1V86aCxx6pPXUAukSk",
         subject: "A Level Chemistry",
         summary: "Carboxylic acids and their derivatives represent a major class of organic molecules with diverse properties and applications. This topic covers their structure, physical and chemical properties, methods of preparation, and key reactions. A strong emphasis is placed on understanding reaction mechanisms and the interconversion pathways between these compounds, which are essential skills for success in A Level examinations.",
@@ -1390,7 +1390,7 @@ This table provides a high-level comparison of the key features of the acyl deri
     },
     "Carbonyl Compounds": {
         topic: "Carbonyl Compounds",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Carbonyl_Compounds.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Carbonyl_Compounds.mp4",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Aldehyde_Versus_Ketone_Structure_and_Reactivity.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvQWxkZWh5ZGVfVmVyc3VzX0tldG9uZV9TdHJ1Y3R1cmVfYW5kX1JlYWN0aXZpdHkubTRhIiwiaWF0IjoxNzY4MDQyMTM0LCJleHAiOjUyNjg1MzgxMzR9.o2Kykt4FUceceamJLRpnYRD9QuPbk2SkXyxL0NwxEtc",
         subject: "A Level Chemistry",
         summary: "Carbonyl compounds represent a crucial homologous series in organic chemistry, characterised by the presence of the carbonyl functional group, C=O. Aldehydes and ketones are distinguished by the position of this carbonyl group within the carbon skeleton. Their inherent polarity and reactivity make them pivotal intermediates in a vast number of synthetic pathways, with nucleophilic addition being their characteristic reaction mechanism.",
@@ -1801,7 +1801,7 @@ This final section consolidates the key comparative points between aldehydes and
     },
     "Hydroxy Compounds": {
         topic: "Hydroxy Compounds",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Hydroxy_Compounds.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Hydroxy_Compounds.mp4",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Organic_Chemistry_Hydroxyl_Compounds_Explained.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvT3JnYW5pY19DaGVtaXN0cnlfSHlkcm94eWxfQ29tcG91bmRzX0V4cGxhaW5lZC5tNGEiLCJpYXQiOjE3NjgwNDI1NzAsImV4cCI6NTI2ODUzODU3MH0.brd3nzXIevwM0Wid573jZ_uA3cDXUba0jbe_ACnZUos",
         subject: "A Level Chemistry",
         summary: "Hydroxyl compounds are a fundamental class of organic molecules characterized by the presence of the -OH functional group. This topic covers alcohols (R-OH) and phenols (Ar-OH), their classification, physical properties, preparation methods, and key reactions. The structural distinction between aliphatic alcohols and aromatic phenols leads to significant differences in their reactivity, particularly in terms of acidity and electrophilic substitution.",
@@ -2168,7 +2168,7 @@ A thorough understanding of the structure, properties, and reactions of hydroxyl
     "Atoms, Molecules and Stoichiometry": {
         topic: "Atoms, Molecules and Stoichiometry",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Atomic_Mass_Moles_and_Stoichiometry_Calculations.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvQXRvbWljX01hc3NfTW9sZXNfYW5kX1N0b2ljaGlvbWV0cnlfQ2FsY3VsYXRpb25zLm00YSIsImlhdCI6MTc2ODA0MjE1MCwiZXhwIjo1MjY4NTM4MTUwfQ.thO6_jCiGSuYiy2q_FpcqfPbah28Bt5SV9fbY0edkF0",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Atoms_Molecules_and_Stoichiometry.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Atoms_Molecules_and_Stoichiometry.mp4",
         subject: "A Level Chemistry",
         summary: "The mole concept serves as the fundamental cornerstone of quantitative chemistry, providing the essential bridge between the microscopic world of individual atoms, ions, and molecules and the macroscopic world of laboratory measurements. This topic covers the mole concept, relative masses, empirical and molecular formulae, chemical equations, stoichiometric calculations, reacting volumes of gases, solution concentrations, and titration calculations. Mastery of these concepts is essential for all quantitative chemistry.",
         sections: [
@@ -2622,7 +2622,7 @@ Mastery of the mole concept and stoichiometric calculations is not just a requir
     "Chemical Bonding": {
         topic: "Chemical Bonding",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Chemical_Bonding_Structure_Properties_A-Level_Review.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvQ2hlbWljYWxfQm9uZGluZ19TdHJ1Y3R1cmVfUHJvcGVydGllc19BLUxldmVsX1Jldmlldy5tNGEiLCJpYXQiOjE3NjgwNDIyNjUsImV4cCI6NTI2ODUzODI2NX0.Prgt6HifVbeYdDjm_i7KOTIc5F9bOLQzu0WXAavPmrU",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Chemical_Bonding.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Chemical_Bonding.mp4",
         subject: "A Level Chemistry",
         summary: "Chemical bonding is the electrostatic attraction that holds particles—atoms, ions, or molecules—together. This process is fundamentally driven by the principle of achieving a lower, more stable potential energy state. This topic covers ionic bonding, covalent bonding (including dative bonds), metallic bonding, VSEPR theory for molecular shapes, intermolecular forces, and how bonding determines physical properties. Understanding bonding is essential for explaining structure, properties, and reactivity.",
         sections: [
@@ -3041,7 +3041,7 @@ Calculations using average bond energy data provide useful estimates but often d
     "States of Matter": {
         topic: "States of Matter",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Ideal_Gas_Failure_and_Solid_Structure.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvSWRlYWxfR2FzX0ZhaWx1cmVfYW5kX1NvbGlkX1N0cnVjdHVyZS5tNGEiLCJpYXQiOjE3NjgwNDI0NDEsImV4cCI6NTI2ODUzODQ0MX0.0rv8BVZ4I83HKXL3pXsz0bufupIo87p7rDZmyeIEQxI",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/States_of_Matter.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/States_of_Matter.mp4",
         subject: "A Level Chemistry",
         summary: "An understanding of the three states of matter—solid, liquid, and gas—is fundamental to the study of chemistry. The arrangement, movement, and energy of particles within a substance dictate its physical properties and behaviour. This topic covers the particle model for each state, changes of state and energy dynamics, the kinetic theory of matter, gas laws and behaviour, deviations from ideal gas behaviour, and the structures of different types of solids. Explaining macroscopic properties based on microscopic particle models is a cornerstone of physical chemistry.",
         sections: [
@@ -3388,7 +3388,7 @@ These solids, such as iodine or ice, consist of discrete, small molecules held i
     "Electrochemistry": {
         topic: "Electrochemistry",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Redox_Agents_to_Hydrogen_Fuel_Carriers.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvUmVkb3hfQWdlbnRzX3RvX0h5ZHJvZ2VuX0Z1ZWxfQ2FycmllcnMubTRhIiwiaWF0IjoxNzY4MDQyNjI3LCJleHAiOjUyNjg1Mzg2Mjd9.oX1u2lEMfg9Ev2IWa8oqJB91rAWrTWS8XVd9CZrUl2U",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Electrochemistry.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Electrochemistry.mp4",
         subject: "A Level Chemistry",
         summary: "Electrochemistry is the branch of chemistry that explores the relationship between chemical reactions and electricity. It encompasses processes where chemical energy is converted into electrical energy (batteries and fuel cells) and where electrical energy is used to drive non-spontaneous chemical changes (electrolysis). This topic covers redox reactions, standard electrode potentials, electrochemical cells, electrolysis, Faraday's laws, and practical applications. A firm understanding of these concepts is crucial for advanced chemistry.",
         sections: [
@@ -3906,7 +3906,7 @@ Our exploration has journeyed from the fundamental definition of redox as electr
     "Equilibria": {
         topic: "Equilibria",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Equilibrium_Constants_and_Le_Chatelier_s_Control.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvRXF1aWxpYnJpdW1fQ29uc3RhbnRzX2FuZF9MZV9DaGF0ZWxpZXJfc19Db250cm9sLm00YSIsImlhdCI6MTc2ODA0MjI5MywiZXhwIjo1MjY4NTM4MjkzfQ.kWzzGxMkkD51mksRkVKoaWBu3adyoGGeUCatmUP4pQg",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Equilibria.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Equilibria.mp4",
         subject: "A Level Chemistry",
         summary: "An understanding of dynamic equilibrium is fundamental to predicting the extent of chemical reactions. Many reactions are reversible and do not fully convert reactants into products. Instead, they reach a state of balance. This topic covers dynamic equilibrium, the equilibrium law and constant (Kc), Le Châtelier's Principle, industrial applications, acid-base equilibria, and pH calculations. The principles of chemical equilibrium play a central and unifying role throughout chemistry.",
         sections: [
@@ -4465,7 +4465,7 @@ Calculate the pH of a 0.10 mol dm⁻³ solution of chloroethanoic acid (ClCH₂C
     },
     "Halogen Derivatives": {
         topic: "Halogen Derivatives",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Halogen_Derivatives.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Halogen_Derivatives.mp4",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Haloalkane_and_Haloarene_Reaction_Mechanisms.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvSGFsb2Fsa2FuZV9hbmRfSGFsb2FyZW5lX1JlYWN0aW9uX01lY2hhbmlzbXMubTRhIiwiaWF0IjoxNzY4MDQyMzA5LCJleHAiOjUyNjg1MzgzMDl9.NSrs97D3XQb4Y3lMLxWAbyPD_pkAEfyPCuGV7g6BHBU",
         subject: "A Level Chemistry",
         summary: "Halogen compounds are a class of organic molecules, with the most important categories being haloalkanes and haloarenes. They serve a pivotal role in synthetic organic chemistry. The carbon-halogen bond can be readily transformed, making them excellent intermediates for the synthesis of other functional groups. This topic covers classification of haloalkanes, nucleophilic substitution reactions, SN1 and SN2 mechanisms, elimination reactions, hydrolysis, haloarenes, preparation methods, uses, environmental impact, and identification tests.",
@@ -4898,7 +4898,7 @@ This systematic approach, from understanding structure and bonding to predicting
     },
     "Reaction Kinetics": {
         topic: "Reaction Kinetics",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Reaction_Kinetics.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Reaction_Kinetics.mp4",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/remaining%20/The_Invisible_Speed_Limits_of_Chemistry.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvcmVtYWluaW5nIC9UaGVfSW52aXNpYmxlX1NwZWVkX0xpbWl0c19vZl9DaGVtaXN0cnkubTRhIiwiaWF0IjoxNzY4NjgyNDM5LCJleHAiOjUyNjkxNzg0Mzl9.2IZEOZQh8qnCZvXMMZq4NmoyiXs73QRkqXm6W-0OaT8",
         subject: "A Level Chemistry",
         summary: "Reaction kinetics is the branch of physical chemistry dedicated to studying the rates of chemical reactions and the factors that influence them. Understanding kinetics enables chemists to control industrial processes for optimal efficiency and to unravel reaction mechanisms. It is crucial to distinguish kinetics from chemical energetics: while energetics predicts whether a reaction is thermodynamically feasible, kinetics reveals how fast that reaction will proceed. This topic covers measuring reaction rates, collision theory, activation energy, factors affecting reaction rates, and catalysis.",
@@ -5223,7 +5223,7 @@ This final section consolidates the core principles of reaction kinetics into a 
     "Chemical Energetics": {
         topic: "Chemical Energetics",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/A-Level_Chemical_Energetics_and_Activation_Energy.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvQS1MZXZlbF9DaGVtaWNhbF9FbmVyZ2V0aWNzX2FuZF9BY3RpdmF0aW9uX0VuZXJneS5tNGEiLCJpYXQiOjE3NjgwNDIxMDcsImV4cCI6NTI2ODUzODEwN30.e0jbUasU73MYoSAQFMvgttRpWoywUdn5IF3QPbiQ8oQ",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Chemical_Energetics.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Chemical_Energetics.mp4",
         subject: "A Level Chemistry",
         summary: "Chemical Energetics (Thermochemistry) is the study of energy changes in chemical reactions. This fundamental topic covers the concept of enthalpy, standard enthalpy changes (combustion, formation, neutralisation, atomisation), Hess's Law and its applications, bond energy calculations, and calorimetry experiments. Understanding energy changes is essential for predicting reaction feasibility and is closely linked to kinetics and equilibria.",
         sections: [
@@ -5708,7 +5708,7 @@ Electronegativity values are not usually assigned to noble gases because they ra
     "Group 2 Elements": {
         topic: "Group 2 Elements",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Mastering_Group_2_Chemistry_Trends_and_Size.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvTWFzdGVyaW5nX0dyb3VwXzJfQ2hlbWlzdHJ5X1RyZW5kc19hbmRfU2l6ZS5tNGEiLCJpYXQiOjE3NjgwNDI0NjEsImV4cCI6NTI2ODUzODQ2MX0.CJwziz3XSbEB_6KDLJRd-btjXxKK72xwEpZ61VNNlqE",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Group_2_Elements.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Group_2_Elements.mp4",
         subject: "A Level Chemistry",
         summary: "The Group 2 elements (alkaline earth metals: Be, Mg, Ca, Sr, Ba, Ra) exhibit characteristic trends in physical and chemical properties. This comprehensive topic covers their electronic configurations, physical properties, reactions with oxygen, water, and acids, thermal decomposition of their compounds, solubility trends, and practical applications. Understanding these metals is essential for predicting chemical behaviour across the group.",
         sections: [
@@ -6199,7 +6199,7 @@ Group 2 metals and their compounds produce characteristic flame colours used in 
     "Group 17 Elements": {
         topic: "Group 17 Elements",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Halogen_Group_17_Physical_and_Chemical_Trends.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvSGFsb2dlbl9Hcm91cF8xN19QaHlzaWNhbF9hbmRfQ2hlbWljYWxfVHJlbmRzLm00YSIsImlhdCI6MTc2ODA0MjMyNywiZXhwIjo1MjY4NTM4MzI3fQ.mNjtfDUPeAntlYP0g-jipNkfZcCJWezvyWrVYTVUXJ8",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Group_17_Elements.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Group_17_Elements.mp4",
         subject: "A Level Chemistry",
         summary: "The Group 17 elements (halogens: F, Cl, Br, I, At) are highly reactive non-metals with characteristic properties. This comprehensive topic covers their electronic configurations, physical properties, trends in reactivity, displacement reactions, reactions of halide ions including tests for halides, disproportionation reactions of chlorine, and uses of halogens and their compounds.",
         sections: [
@@ -6602,7 +6602,7 @@ Or ionically:
     "Nitrogen and Sulfur": {
         topic: "Nitrogen and Sulfur",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Nitrogen_and_Sulfur_A-Level_Chemistry_Review.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvTml0cm9nZW5fYW5kX1N1bGZ1cl9BLUxldmVsX0NoZW1pc3RyeV9SZXZpZXcubTRhIiwiaWF0IjoxNzY4MDQyNTA5LCJleHAiOjUyNjg1Mzg1MDl9.aq4ZbpzLbz9plGR8PJtoaWuZ6yeomkvXukhiXZRjFUw",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Nitrogen_and_Sulfur.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Nitrogen_and_Sulfur.mp4",
         subject: "A Level Chemistry",
         summary: "This topic covers the chemistry of nitrogen and sulfur, two essential non-metals with significant environmental and industrial importance. Topics include the nitrogen cycle, properties of nitrogen oxides, ammonia production (Haber process), nitric acid manufacture, sulfur allotropes, sulfur dioxide, sulfuric acid production (Contact process), and environmental impacts of these compounds.",
         sections: [
@@ -7018,7 +7018,7 @@ Direct reaction of SO₃ with water is not used because it is too violent and pr
     "Introduction to Organic Chemistry": {
         topic: "Introduction to Organic Chemistry",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Organic_Chemistry_Foundations_and_Reaction_Mechanisms.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvT3JnYW5pY19DaGVtaXN0cnlfRm91bmRhdGlvbnNfYW5kX1JlYWN0aW9uX01lY2hhbmlzbXMubTRhIiwiaWF0IjoxNzY4MDQyNTI1LCJleHAiOjUyNjg1Mzg1MjV9.l2Y1V2M-Pp4pEF7GrioclMSpOSD7yBq0oBnUMr3adBk",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/An_Introduction_to_Organic_Chemistry.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/An_Introduction_to_Organic_Chemistry.mp4",
         subject: "A Level Chemistry",
         summary: "This foundational topic introduces the principles of organic chemistry, the study of carbon compounds. It covers IUPAC nomenclature, functional groups, types of structural and stereoisomerism, sigma and pi bonding, hybridisation concepts, and the classification of organic reaction types. These fundamentals are essential for understanding all subsequent organic chemistry topics.",
         sections: [
@@ -7428,7 +7428,7 @@ Organic reactions can be classified by the type of bond-breaking and bond-making
     "Hydrocarbons": {
         topic: "Hydrocarbons",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/Hydrocarbon_Structure_Reactivity_and_Mechanisms.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvSHlkcm9jYXJib25fU3RydWN0dXJlX1JlYWN0aXZpdHlfYW5kX01lY2hhbmlzbXMubTRhIiwiaWF0IjoxNzY4MDQyNDE4LCJleHAiOjUyNjg1Mzg0MTh9.1qiVsdx1Ist7ublDnvrzDiBukHB0JPXy9ceZlfhMqmc",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Hydrocarbons.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Hydrocarbons.mp4",
         subject: "A Level Chemistry",
         summary: "Hydrocarbons are compounds containing only carbon and hydrogen. This topic covers alkanes (saturated hydrocarbons) and alkenes (unsaturated hydrocarbons), their structures, physical properties, and characteristic reactions including free radical substitution of alkanes, electrophilic addition reactions of alkenes, and industrial processes such as cracking and polymerisation.",
         sections: [
@@ -7848,7 +7848,7 @@ Repeating unit: -CH₂-CH(CH₃)-`,
 
     "Polymerisation": {
         topic: "Polymerisation",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Polymerisation.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Polymerisation.mp4",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/remaining%20/From_Sandwich_Bags_to_Bulletproof_Vests.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvcmVtYWluaW5nIC9Gcm9tX1NhbmR3aWNoX0JhZ3NfdG9fQnVsbGV0cHJvb2ZfVmVzdHMubTRhIiwiaWF0IjoxNzY4NjgyNDgyLCJleHAiOjUyNjkxNzg0ODJ9.BrrLvqPDVeTYdV86H2Z_wXiuye8U6kTy6HcJY9jjxPI",
         subject: "A Level Chemistry",
         summary: "Polymerisation is the process of joining many small monomer molecules to form large polymer chains. This comprehensive topic covers both addition polymerisation (using alkenes) and condensation polymerisation (forming polyesters and polyamides), the relationship between polymer structure and properties, biodegradability, recycling, and environmental considerations.",
@@ -8242,7 +8242,7 @@ Conditions: Acid or base catalyst, heat, or enzyme catalysis.
     },
     "Organic Synthesis": {
         topic: "Organic Synthesis",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Organic_Synthesis.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Organic_Synthesis.mp4",
         subject: "A Level Chemistry",
         summary: "Organic Synthesis involves converting one organic compound into another through a series of chemical reactions. This comprehensive topic covers functional group interconversions, multi-step synthesis planning, reaction conditions and reagents, retrosynthetic analysis, and practical considerations including yield calculations and purification techniques.",
         sections: [
@@ -8614,7 +8614,7 @@ Higher atom economy is more sustainable:
     },
     "Analytical Techniques": {
         topic: "Analytical Techniques",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Analytical_Techniques.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Analytical_Techniques.mp4",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/Chemical_Detective_Work_Mass_Spec_NMR.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvQ2hlbWljYWxfRGV0ZWN0aXZlX1dvcmtfTWFzc19TcGVjX05NUi5tNGEiLCJpYXQiOjE3NjgwNjA4NTQsImV4cCI6NTI2ODU1Njg1NH0.N7kcSYxs5MQoDFBnZeHRSDBRfKHut7c8MUVAG5Nb49c",
         subject: "A Level Chemistry",
         summary: "Analytical techniques are essential tools for determining the structure and identity of organic compounds. This comprehensive topic covers mass spectrometry (molecular mass and fragmentation), infrared spectroscopy (functional group identification), and proton NMR spectroscopy (carbon environment determination). Understanding how to interpret spectra is crucial for structure determination problems.",
@@ -9008,7 +9008,7 @@ Where C, N, H, X are numbers of those atoms.
     },
     "Chemical Energetics (Advanced)": {
         topic: "Chemical Energetics (Advanced)",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Lattice_Energy.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Lattice_Energy.mp4",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/Enthalpy_Entropy_and_Activation_Energy%20(1).m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvRW50aGFscHlfRW50cm9weV9hbmRfQWN0aXZhdGlvbl9FbmVyZ3kgKDEpLm00YSIsImlhdCI6MTc2ODA2MDg5NywiZXhwIjo1MjY4NTU2ODk3fQ.I0QF2NQrh1eFJNOrBnU-HYltuNHoRSw6Z3HmcXvzsCg",
         subject: "A Level Chemistry",
         summary: "Advanced Chemical Energetics extends AS-level thermochemistry to include lattice enthalpy, Born-Haber cycles, enthalpy of solution and hydration, entropy and its changes, and Gibbs free energy. This topic provides a deeper understanding of why reactions occur spontaneously and the energy changes in ionic compound formation.",
@@ -9366,7 +9366,7 @@ T(K) = T(°C) + 273
     },
     "Chemistry of Transition Elements": {
         topic: "Chemistry of Transition Elements",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Transition_Elements.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Transition_Elements.mp4",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/Transition_Metals_and_the_D-Block_Paradox.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvVHJhbnNpdGlvbl9NZXRhbHNfYW5kX3RoZV9ELUJsb2NrX1BhcmFkb3gubTRhIiwiaWF0IjoxNzY4MDYwOTk1LCJleHAiOjUyNjg1NTY5OTV9.zs5uWflKQlsOm7WkwtYPmTJZPVUNaFYOwr3JZuflTjs",
         subject: "A Level Chemistry",
         summary: "Transition elements are d-block metals with distinctive properties including variable oxidation states, coloured compounds, catalytic activity, and the ability to form complex ions. This comprehensive topic covers electronic configurations, complex ion formation, ligand exchange, colour theory, and the catalytic behaviour of transition metals.",
@@ -9743,7 +9743,7 @@ The Mn²⁺ produced catalyses the reaction - starts slowly, speeds up.`,
     },
     "Benzene and Aromatic Compounds": {
         topic: "Benzene and Aromatic Compounds",
-        videoUrl: "https://vclloydwkfyrqkcwhkbj.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Benzene_and_Aromatic_Compounds.mp4",
+        videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/nerdx_courses/a_level_chemistry/Benzene_and_Aromatic_Compounds.mp4",
         audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Chemistry%20/A%20level/remaining%20/Audios/The_Mystery_of_Benzene_s_Stability.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9DaGVtaXN0cnkgL0EgbGV2ZWwvcmVtYWluaW5nIC9BdWRpb3MvVGhlX015c3Rlcnlfb2ZfQmVuemVuZV9zX1N0YWJpbGl0eS5tNGEiLCJpYXQiOjE3NjgwNjA5NjksImV4cCI6NTI2ODU1Njk2OX0.mhsL4nlc-UhcaUZd7qwISv1wRkktwTuHGXQrqVLLywg",
         subject: "A Level Chemistry",
         summary: "Benzene is the simplest aromatic compound, with a unique delocalised ring structure that gives it exceptional stability. This topic covers the Kekulé and delocalised models of benzene structure, electrophilic substitution reactions (nitration, halogenation, Friedel-Crafts), and the directing effects of substituents on the benzene ring.",
@@ -10665,3 +10665,11 @@ Adding a common ion decreases solubility.
         ]
     }
 };
+
+export function getTopicNotes(topicName: string): TopicNotes | null {
+    return aLevelChemistryNotes[topicName] ?? null;
+}
+
+export function getAllTopicNames(): string[] {
+    return Object.keys(aLevelChemistryNotes);
+}

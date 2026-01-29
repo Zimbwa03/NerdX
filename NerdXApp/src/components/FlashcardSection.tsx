@@ -10,6 +10,7 @@ import {
     ActivityIndicator,
     Alert,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Slider from '@react-native-community/slider';
@@ -17,7 +18,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import { useNotification } from '../context/NotificationContext';
 import { FlashcardPlayer, Flashcard } from './FlashcardPlayer';
-import { flashcardApi } from '../services/api/flashcardApi';
+import { flashcardApi, FlashcardAuthError } from '../services/api/flashcardApi';
 import { TopicNotes } from '../services/api/scienceNotesApi';
 
 interface FlashcardSectionProps {
@@ -36,6 +37,7 @@ const FlashcardSection: React.FC<FlashcardSectionProps> = ({
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
     const { showSuccess, showError } = useNotification();
+    const navigation = useNavigation();
 
     const [cardCount, setCardCount] = useState(20);
     const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
@@ -123,12 +125,24 @@ const FlashcardSection: React.FC<FlashcardSectionProps> = ({
             }
         } catch (error) {
             console.error('Flashcard generation error:', error);
-            showError('❌ Failed to connect to the server. Please check your connection.', 5000);
-            Alert.alert(
-                'Error',
-                'Failed to connect to the server. Please check your connection.',
-                [{ text: 'OK' }]
-            );
+            if (error instanceof FlashcardAuthError) {
+                showError('Please sign in to generate flashcards.', 5000);
+                Alert.alert(
+                    'Sign in required',
+                    'Please sign in to generate flashcards. Your session may have expired.',
+                    [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Sign in', onPress: () => navigation.navigate('Login' as never) },
+                    ]
+                );
+            } else {
+                showError('Something went wrong. Please try again.', 5000);
+                Alert.alert(
+                    'Error',
+                    'Could not generate flashcards. Please check your connection and try again.',
+                    [{ text: 'OK' }]
+                );
+            }
         } finally {
             setIsGenerating(false);
         }
@@ -152,6 +166,10 @@ const FlashcardSection: React.FC<FlashcardSectionProps> = ({
             return nextCard;
         } catch (error) {
             console.error('Generate next error:', error);
+            if (error instanceof FlashcardAuthError) {
+                showError('Please sign in again.', 4000);
+                navigation.navigate('Login' as never);
+            }
             return null;
         }
     };
@@ -298,7 +316,7 @@ const FlashcardSection: React.FC<FlashcardSectionProps> = ({
                         💎 <Text style={{ fontWeight: 'bold' }}>0.25 credit</Text> per flashcard ({cardCount} flashcards = {cardCount * 0.25} credits)
                     </Text>
                 </View>
-                
+
                 {/* Info */}
                 <Text style={[styles.infoText, { color: themedColors.text.secondary }]}>
                     💡 Flashcards are generated based on the topic notes above

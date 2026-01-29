@@ -646,9 +646,13 @@ const GraphPracticeScreen: React.FC = () => {
             </TouchableOpacity>
           )}
 
-          {(videoUrl || videoError || videoLoading) && (
+          {(videoUrl || videoError || videoLoading || graphData?.graph_spec) && (
             <View style={styles.videoContainer}>
               <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Visualization:</Text>
+
+              {!videoUrl && !videoError && !videoLoading && graphData?.graph_spec && (
+                <Text style={[styles.videoLoadingText, { color: themedColors.text.secondary, marginVertical: 12 }]}>Animation not available for this graph.</Text>
+              )}
 
               {videoLoading && !videoError && (
                 <View style={styles.videoLoadingContainer}>
@@ -695,10 +699,35 @@ const GraphPracticeScreen: React.FC = () => {
                       try {
                         setSavingVideo(true);
 
-                        // Request permissions
-                        const { status } = await MediaLibrary.requestPermissionsAsync();
+                        // Check permission first, then request if needed (recommended flow for expo-media-library)
+                        let { status } = await MediaLibrary.getPermissionsAsync();
                         if (status !== 'granted') {
-                          Alert.alert('Permission Required', 'Please grant permission to save videos.');
+                          const { status: requested } = await MediaLibrary.requestPermissionsAsync();
+                          status = requested;
+                        }
+                        if (status !== 'granted') {
+                          const canShare = await Sharing.isAvailableAsync();
+                          Alert.alert(
+                            'Permission denied',
+                            'Permission to save to gallery was denied. You can still share the video.',
+                            canShare
+                              ? [
+                                  { text: 'OK' },
+                                  { text: 'Share', onPress: async () => {
+                                    try {
+                                      const filename = `graph_animation_${Date.now()}.mp4`;
+                                      const localUri = (FileSystem.documentDirectory || '') + filename;
+                                      const dl = await FileSystem.downloadAsync(videoUrl!, localUri);
+                                      if (dl.status === 200 && (await Sharing.isAvailableAsync())) {
+                                        await Sharing.shareAsync(dl.uri);
+                                      }
+                                    } catch (e) {
+                                      console.warn('Share fallback failed:', e);
+                                    }
+                                  } },
+                                ]
+                              : [{ text: 'OK' }]
+                          );
                           return;
                         }
 
@@ -714,27 +743,46 @@ const GraphPracticeScreen: React.FC = () => {
 
                         // Download video to local storage
                         const filename = `graph_animation_${Date.now()}.mp4`;
-                        const localUri = FileSystem.documentDirectory + filename;
+                        const localUri = (FileSystem.documentDirectory || '') + filename;
 
-                        const downloadResult = await FileSystem.downloadAsync(videoUrl, localUri);
+                        const downloadResult = await FileSystem.downloadAsync(videoUrl!, localUri);
 
                         if (downloadResult.status === 200) {
-                          // Save to media library
                           const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
                           await MediaLibrary.createAlbumAsync('NerdX', asset, false);
-
                           Alert.alert('Success', 'Video saved to your gallery in the NerdX album!');
                         } else {
-                          // Fallback to sharing
                           if (await Sharing.isAvailableAsync()) {
                             await Sharing.shareAsync(downloadResult.uri);
                           } else {
                             Alert.alert('Error', 'Could not save video. Sharing not available.');
                           }
                         }
-                      } catch (error) {
+                      } catch (error: any) {
                         console.error('Save video error:', error);
-                        Alert.alert('Error', 'Failed to save video. Please try again.');
+                        const msg = (error?.message || '').toLowerCase();
+                        const permissionDenied = msg.includes('permission') || msg.includes('denied') || msg.includes('rejected');
+                        if (permissionDenied && (await Sharing.isAvailableAsync())) {
+                          Alert.alert(
+                            'Could not save to gallery',
+                            'Permission was denied or unavailable. You can share the video instead.',
+                            [
+                              { text: 'OK' },
+                              { text: 'Share', onPress: async () => {
+                                try {
+                                  const filename = `graph_animation_${Date.now()}.mp4`;
+                                  const localUri = (FileSystem.documentDirectory || '') + filename;
+                                  const dl = await FileSystem.downloadAsync(videoUrl!, localUri);
+                                  if (dl.status === 200) await Sharing.shareAsync(dl.uri);
+                                } catch (e) {
+                                  console.warn('Share fallback failed:', e);
+                                }
+                              } },
+                            ]
+                          );
+                        } else {
+                          Alert.alert('Error', 'Failed to save video. You can try sharing it instead.');
+                        }
                       } finally {
                         setSavingVideo(false);
                       }
@@ -754,7 +802,9 @@ const GraphPracticeScreen: React.FC = () => {
 
           <View style={[styles.questionContainer, { backgroundColor: themedColors.background.paper }]}>
             <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Equation:</Text>
-            <Text style={[styles.equation, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#F5F5F5', color: themedColors.secondary.main }]}>{graphData.equation}</Text>
+            <Text style={[styles.equation, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#F5F5F5', color: themedColors.secondary.main }]}>
+              {(!graphData.equation || ['linear', 'quadratic', 'exponential', 'trigonometric'].includes(String(graphData.equation).trim().toLowerCase())) ? '—' : graphData.equation}
+            </Text>
 
             {graphData.constraints && graphData.constraints.length > 0 && (
               <>
@@ -775,7 +825,7 @@ const GraphPracticeScreen: React.FC = () => {
             )}
 
             <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Question:</Text>
-            <Text style={[styles.question, { color: themedColors.text.primary }]}>{graphData.question}</Text>
+            <Text style={[styles.question, { color: themedColors.text.primary }]}>{graphData.question || 'Describe what you observe from the graph.'}</Text>
 
             {!showSolution && (
               <View style={styles.answerContainer}>
@@ -822,7 +872,7 @@ const GraphPracticeScreen: React.FC = () => {
             {showSolution && (
               <View style={[styles.solutionContainer, { backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.15)' : '#E8F5E9' }]}>
                 <Text style={[styles.solutionLabel, { color: themedColors.success.main }]}>Solution:</Text>
-                <Text style={[styles.solution, { color: themedColors.text.primary }]}>{graphData.solution}</Text>
+                <Text style={[styles.solution, { color: themedColors.text.primary }]}>{graphData.solution || 'See explanation above.'}</Text>
                 <TouchableOpacity
                   style={[styles.newGraphButton, { backgroundColor: themedColors.primary.main }]}
                   onPress={resetView}

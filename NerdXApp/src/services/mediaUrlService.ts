@@ -1,5 +1,18 @@
 import { supabase } from './supabase';
 
+// Video URLs were pointing to a Supabase project that does not resolve (UnknownHostException).
+// Rewrite to the working project used for audio so videos can load.
+const BROKEN_VIDEO_HOST = 'vclloydwkfyrqkcwhkbj.supabase.co';
+const WORKING_SUPABASE_HOST = 'lzteiewcvxoazqfxfjgg.supabase.co';
+
+/** Rewrite broken video storage host to the working Supabase project URL. */
+export function rewriteBrokenVideoHost(url: string): string {
+  if (url.includes(BROKEN_VIDEO_HOST)) {
+    return url.replace(BROKEN_VIDEO_HOST, WORKING_SUPABASE_HOST);
+  }
+  return url;
+}
+
 type MediaUrlInfo = {
   bucket: string;
   path: string;
@@ -107,6 +120,7 @@ export const refreshMediaUrl = async (
   url: string,
   expiresIn: number = DEFAULT_EXPIRES_IN
 ): Promise<string> => {
+  url = rewriteBrokenVideoHost(url);
   const info = parseMediaUrl(url);
   if (!info) return url;
 
@@ -128,6 +142,7 @@ export const ensureFreshMediaUrl = async (
   url: string,
   options?: { expiresIn?: number; minTtlSeconds?: number }
 ): Promise<string> => {
+  url = rewriteBrokenVideoHost(url);
   const expiresIn = options?.expiresIn ?? DEFAULT_EXPIRES_IN;
   const minTtlSeconds = options?.minTtlSeconds ?? MIN_TTL_SECONDS;
 

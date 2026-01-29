@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Slider from '@react-native-community/slider';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { checkUrlAccessible, ensureFreshMediaUrl, refreshMediaUrl } from '../services/mediaUrlService';
+import { checkUrlAccessible, ensureFreshMediaUrl, refreshMediaUrl, rewriteBrokenVideoHost } from '../services/mediaUrlService';
 
 interface VideoStreamPlayerProps {
     videoUrl: string;
@@ -104,9 +104,10 @@ const VideoStreamPlayer: React.FC<VideoStreamPlayerProps> = ({
             return refreshedUrl;
         } catch (err) {
             console.error('🎥 Video: Error resolving URL:', err);
-            // As a last resort, try using the original URL
-            console.log('🎥 Video: Falling back to original URL');
-            return videoUrl;
+            // As a last resort, use original URL with broken host rewritten so it can resolve
+            const fallback = rewriteBrokenVideoHost(videoUrl);
+            console.log('🎥 Video: Falling back to original URL (rewritten if needed)');
+            return fallback;
         }
     }, [videoUrl]);
 

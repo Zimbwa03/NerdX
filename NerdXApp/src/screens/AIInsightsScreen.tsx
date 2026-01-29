@@ -307,6 +307,40 @@ const AIInsightsScreen: React.FC = () => {
                         )}
                     </View>
 
+                    {/* Net-decks towards [Name]: recommendations, failed questions, study techniques */}
+                    {(insights.net_decks_message != null && insights.net_decks_message.length > 0) && (
+                        <View style={styles.messageCard}>
+                            <Text style={styles.messageTitle}>
+                                Net-decks towards {firstName || 'you'}
+                            </Text>
+                            <Text style={styles.messageSubtitle}>
+                                What to work on, failed questions & how to pass
+                            </Text>
+                            {(insights.failed_areas?.length ?? 0) > 0 && (
+                                <View style={styles.failedAreasList}>
+                                    <Text style={styles.failedAreasLabel}>Topics you missed recently:</Text>
+                                    {(insights.failed_areas ?? []).slice(0, 5).map((area, idx) => (
+                                        <View key={`${area.skill_id}-${idx}`} style={styles.failedAreaRow}>
+                                            <Text style={styles.failedAreaName}>{area.skill_name}</Text>
+                                            {area.subject ? <Text style={styles.failedAreaMeta}> • {area.subject}</Text> : null}
+                                            <Text style={styles.failedAreaCount}> ({area.fail_count} missed)</Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+                            <View style={styles.netDecksBody}>
+                                {(insights.net_decks_message ?? '')
+                                    .split(/\n+/)
+                                    .filter((line: string) => line.trim().length > 0)
+                                    .map((line: string, idx: number) => (
+                                        <Text key={`nd-${idx}`} style={styles.netDecksParagraph}>
+                                            {line.trim()}
+                                        </Text>
+                                    ))}
+                            </View>
+                        </View>
+                    )}
+
                     {/* Weekly Trend */}
                     {(insights.weekly_trend != null) && (
                     <View style={styles.section}>
@@ -507,6 +541,47 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#FFFFFF',
         lineHeight: 20,
+    },
+    failedAreasList: {
+        marginBottom: 14,
+        paddingBottom: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255, 255, 255, 0.15)',
+    },
+    failedAreasLabel: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: 'rgba(255, 255, 255, 0.9)',
+        marginBottom: 8,
+    },
+    failedAreaRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    failedAreaName: {
+        fontSize: 14,
+        color: '#FFFFFF',
+        fontWeight: '500',
+    },
+    failedAreaMeta: {
+        fontSize: 13,
+        color: 'rgba(255, 255, 255, 0.7)',
+    },
+    failedAreaCount: {
+        fontSize: 12,
+        color: 'rgba(255, 200, 100, 0.95)',
+    },
+    netDecksBody: {
+        marginTop: 4,
+    },
+    netDecksParagraph: {
+        fontSize: 14,
+        color: '#FFFFFF',
+        lineHeight: 22,
+        marginBottom: 10,
+        textAlign: 'left',
     },
     section: {
         marginHorizontal: 20,

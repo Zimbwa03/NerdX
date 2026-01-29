@@ -2856,18 +2856,18 @@ Please provide:
 5. Any limitations or considerations"""
             
             # PRIMARY: Use Vertex AI Gemini Vision API (via vertex_service)
+            result = None
             try:
                 from services.vertex_service import vertex_service
                 
                 if vertex_service.is_available():
                     result = vertex_service.analyze_document(
                         document_base64=document_data,
-                mime_type=mime_type,
-                prompt=prompt
-            )
-            
+                        mime_type=mime_type,
+                        prompt=prompt
+                    )
                     if result and result.get('success'):
-                        analysis_text = result.get('analysis', '')
+                        analysis_text = result.get('analysis', '') or result.get('text', '')
             except Exception as e:
                 logger.warning(f"Vertex AI document analysis failed, trying fallback: {e}")
                 result = None
@@ -2938,13 +2938,46 @@ Please provide:
             dict with response
         """
         try:
-            if not self._is_interactions_configured:
-                # Fallback to text-only processing
-                return self.process_mobile_message(user_id, project_id, message)
-            
             project = self.get_project_details(user_id, project_id)
             if not project:
                 return {'success': False, 'error': 'Project not found'}
+
+            if not self._is_interactions_configured and attachments:
+                # Fallback: use Vertex AI to analyze each image/document, then send enriched message to chat
+                from services.vertex_service import vertex_service
+                enriched_parts = [message]
+                for att in attachments:
+                    att_type = att.get('type', 'image')
+                    att_data = att.get('data')
+                    att_mime = att.get('mime_type', 'image/png')
+                    if not att_data:
+                        continue
+                    if att_type == 'image' and vertex_service.is_available():
+                        try:
+                            r = vertex_service.analyze_image(att_data, att_mime, "Describe this image in detail for a school project context.")
+                            if r and r.get('success') and r.get('analysis'):
+                                enriched_parts.append(f"[Attached image description: {r.get('analysis', '')[:800]}]")
+                        except Exception as e:
+                            logger.warning(f"Vertex image analysis failed: {e}")
+                    elif att_type == 'document' and vertex_service.is_available():
+                        try:
+                            r = vertex_service.analyze_document(document_base64=att_data, mime_type=att_mime, prompt="Summarize this document and list key points.")
+                            if r and r.get('success'):
+                                txt = r.get('analysis') or r.get('text', '')
+                                enriched_parts.append(f"[Attached document summary: {txt[:1000]}]")
+                        except Exception as e:
+                            logger.warning(f"Vertex document analysis failed: {e}")
+                if len(enriched_parts) > 1:
+                    message = "\n\n".join(enriched_parts)
+                try:
+                    return self.process_mobile_message(user_id, project_id, message)
+                except ValueError as e:
+                    return {'success': False, 'error': str(e), 'credits_remaining': units_to_credits(get_user_credits(user_id))}
+            elif not self._is_interactions_configured:
+                try:
+                    return self.process_mobile_message(user_id, project_id, message)
+                except ValueError as e:
+                    return {'success': False, 'error': str(e), 'credits_remaining': units_to_credits(get_user_credits(user_id))}
             
             project_data = project.get('project_data', {})
             project_title = project.get('project_title', 'Untitled Project')

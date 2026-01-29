@@ -4065,25 +4065,54 @@ def _generate_graph_and_return(function_text: str):
 @mobile_bp.route('/math/graph/custom', methods=['POST'])
 @require_auth
 def generate_math_graph_custom():
-    """Generate math graph from custom equation (same as /math/graph, accepts 'equation' key)."""
+    """Generate math graph from custom equation. Uses create_graph so response includes graph_spec and question/solution."""
     try:
         data = request.get_json() or {}
         equation = data.get('equation', '').strip()
         if not equation:
             return jsonify({'success': False, 'message': 'Equation is required'}), 400
-        graph_url, credits_remaining, status, err_msg = _generate_graph_and_return(equation)
-        if err_msg:
-            return jsonify({'success': False, 'message': err_msg}), status
-        return jsonify({
-            'success': True,
-            'data': {
-                'graph_url': graph_url,
-                'image_url': graph_url,
-                'equation': equation,
-                'credits_remaining': credits_remaining
-            },
+        credit_cost = advanced_credit_service.get_credit_cost('math_graph_practice')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
+            }), 402
+        graph_service = GraphService()
+        result = graph_service.create_graph(
+            user_id=g.current_user_id or 'mobile',
+            expression=equation,
+            title='NerdX Graph Practice',
+            user_name='Student',
+            x_range=None
+        )
+        if not result or 'image_path' not in result:
+            return jsonify({'success': False, 'message': 'Failed to generate graph image'}), 500
+        graph_path = result.get('image_path')
+        graph_url = convert_local_path_to_public_url(graph_path)
+        if not graph_url:
+            import os
+            filename = os.path.basename(graph_path)
+            base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
+            graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id, int(credit_cost), 'math_graph_practice', 'Math graph (custom equation)'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+        question = "Describe what the graph shows. What are the key features (intercepts, gradient, shape)?"
+        solution = "Check your answer using the equation above. Compare intercepts and behaviour with the graph."
+        payload = {
+            'graph_url': graph_url,
+            'image_url': graph_url,
+            'equation': equation,
+            'question': question,
+            'solution': solution,
             'credits_remaining': credits_remaining
-        }), 200
+        }
+        if result.get('graph_spec'):
+            payload['graph_spec'] = result['graph_spec']
+        return jsonify({'success': True, 'data': payload, 'credits_remaining': credits_remaining}), 200
     except Exception as e:
         logger.error(f"Generate custom graph error: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
@@ -4096,7 +4125,16 @@ def generate_math_graph_generate():
         data = request.get_json() or {}
         equation = (data.get('equation') or '').strip()
         graph_type = (data.get('graph_type') or '').strip()
-        function_text = equation or graph_type
+        graph_service = GraphService()
+        # When only graph_type is sent (e.g. "linear"), generate a real plottable equation instead of passing "linear"
+        if not equation and graph_type:
+            gen_eq = graph_service.generate_equation_by_type(graph_type)
+            if gen_eq:
+                function_text = gen_eq
+            else:
+                function_text = graph_type
+        else:
+            function_text = equation or graph_type
         if not function_text:
             return jsonify({'success': False, 'message': 'Equation or graph_type is required'}), 400
         credit_cost = advanced_credit_service.get_credit_cost('math_graph_practice')
@@ -4106,7 +4144,6 @@ def generate_math_graph_generate():
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 402
-        graph_service = GraphService()
         # Use create_graph so we get graph_spec for Manim animations
         result = graph_service.create_graph(
             user_id=g.current_user_id or 'mobile',
@@ -4129,11 +4166,30 @@ def generate_math_graph_generate():
         )
         if credits_remaining is None:
             return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+        # Template question/solution by graph type so UI is never blank
+        gt = (graph_type or '').strip().lower()
+        if gt == 'linear':
+            question = "Using the graph, find the gradient and y-intercept of the line."
+            solution = f"From the equation y = {function_text}: identify the coefficient of x (gradient) and the constant term (y-intercept)."
+        elif gt == 'quadratic':
+            question = "Using the graph, identify the roots (x-intercepts) and the turning point."
+            solution = f"For the quadratic {function_text}, the roots are where y = 0; the turning point is at the vertex of the parabola."
+        elif gt == 'exponential':
+            question = "Describe the behaviour of the graph as x increases. What is the value of y when x = 0?"
+            solution = f"For {function_text}: when x = 0 the value gives the y-intercept; exponential graphs grow or decay depending on the base."
+        elif gt == 'trigonometric':
+            question = "What is the amplitude and period of this graph? Identify the maximum and minimum values."
+            solution = f"For {function_text}: the amplitude is the coefficient of the trig function; the period is 2π for sin/cos."
+        else:
+            question = "Describe what you observe from the graph. What are the key features?"
+            solution = f"Use the equation {function_text} to verify intercepts, gradient, and shape."
         payload = {
             'graph_url': graph_url,
             'image_url': graph_url,
             'equation': function_text,
             'graph_type': graph_type or None,
+            'question': question,
+            'solution': solution,
             'credits_remaining': credits_remaining
         }
         if result.get('graph_spec'):
@@ -4219,14 +4275,26 @@ def generate_linear_programming_graph():
         )
         if credits_remaining is None:
             return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+        constraint_list = graph_result.get('constraints', constraints)
+        corner_points = graph_result.get('corner_points', [])
+        equation_str = "Constraints: " + "; ".join(constraint_list)
+        if objective:
+            equation_str += " | Objective: " + objective
+        question = "Identify the corner points of the feasible region R and state their coordinates."
+        solution = "Corner points: " + ", ".join(f"({p[0]:.1f}, {p[1]:.1f})" for p in corner_points) if corner_points else "No corner points found."
+        if objective:
+            solution += " Evaluate the objective function at each corner point to find the optimum."
         return jsonify({
             'success': True,
             'data': {
                 'graph_url': graph_url,
                 'image_url': graph_url,
-                'constraints': graph_result.get('constraints', constraints),
-                'corner_points': graph_result.get('corner_points', []),
+                'equation': equation_str,
+                'constraints': constraint_list,
+                'corner_points': corner_points,
                 'objective': objective,
+                'question': question,
+                'solution': solution,
                 'credits_remaining': credits_remaining
             },
             'credits_remaining': credits_remaining
@@ -5159,6 +5227,20 @@ def get_dkt_interaction_history():
         return jsonify({'success': False, 'data': {'interactions': []}}), 500
 
 
+def _fallback_net_decks_message(first_name, health_score, recent_total, recent_accuracy, failed_areas, focus_areas):
+    """Fallback net-decks content when Vertex AI is unavailable."""
+    parts = [f"• {first_name}, your learning health is {health_score}/100. To raise it, focus on consistent practice and reviewing what you got wrong."]
+    if recent_total > 0:
+        parts.append(f"• This week you answered {recent_total} questions at {round(recent_accuracy)}% accuracy. Aim to improve accuracy by redoing topics where you made mistakes.")
+    if failed_areas:
+        top = failed_areas[0]
+        parts.append(f"• You missed questions most in: {top.get('skill_name', top.get('skill_id'))}. Practice this topic for 15–20 minutes and try similar questions again.")
+    if focus_areas:
+        parts.append(f"• Focus areas to strengthen: {', '.join(a.get('skill_name', '') for a in focus_areas[:3])}. Do one topic per day, then retest.")
+    parts.append(f"• Study tip: After each wrong answer, read the solution once, then try 2 more questions on the same skill before moving on.")
+    return "\n\n".join(parts)
+
+
 def _build_ai_insights_response(user_id, knowledge_map, history, student_name):
     """Build frontend-shaped AI insights payload. Uses Vertex AI for personalized message."""
     from datetime import datetime, timezone, timedelta
@@ -5251,6 +5333,35 @@ def _build_ai_insights_response(user_id, knowledge_map, history, student_name):
             'estimated_time': '15-20 min',
         })
 
+    # Failed questions: from recent history (last 14 days), aggregate by skill_id
+    skill_id_to_info = {s.get('skill_id'): s for s in skills if s.get('skill_id')}
+    failed_by_skill = {}
+    for interaction in (history or []):
+        try:
+            if not interaction.get('correct'):
+                ts = interaction.get('timestamp')
+                if ts:
+                    if isinstance(ts, str):
+                        ts = datetime.fromisoformat(ts.replace('Z', '+00:00'))
+                    if ts.tzinfo is None:
+                        ts = ts.replace(tzinfo=timezone.utc)
+                    if (now - ts).days <= 14:
+                        sid = interaction.get('skill_id')
+                        if sid:
+                            failed_by_skill[sid] = failed_by_skill.get(sid, 0) + 1
+        except Exception:
+            pass
+    failed_areas = []
+    for sid, count in sorted(failed_by_skill.items(), key=lambda x: -x[1])[:10]:
+        info = skill_id_to_info.get(sid, {})
+        failed_areas.append({
+            'skill_id': sid,
+            'skill_name': info.get('skill_name', sid),
+            'subject': info.get('subject', ''),
+            'topic': info.get('topic', ''),
+            'fail_count': count,
+        })
+
     # Vertex AI personalized message (student name + activity summary)
     summary_parts = []
     if recent_total > 0:
@@ -5272,6 +5383,39 @@ Message:"""
             f"This week you answered {recent_total} questions at {round(recent_accuracy)}% accuracy. " if recent_total > 0 else "Start practicing to unlock personalized insights. "
         ) + ("Keep focusing on your focus areas to improve." if focus_areas else "Keep it up!")
 
+    # Vertex AI "Net-decks towards [Name]": recommendations, failed areas, how to pass, study techniques
+    first_name = (student_name or "Student").split()[0] if student_name else "Student"
+    failed_summary = ""
+    if failed_areas:
+        failed_summary = "Questions/topics failed recently (with times failed): " + ", ".join(
+            f"{a.get('skill_name', a.get('skill_id'))} ({a.get('fail_count', 0)} failed)" for a in failed_areas[:8]
+        )
+    focus_summary = ""
+    if focus_areas:
+        focus_summary = "Focus areas (low mastery): " + ", ".join(
+            f"{a.get('skill_name')} ({a.get('subject')})" for a in focus_areas[:5]
+        )
+    net_decks_prompt = f"""You are an expert NerdX learning coach. Write a personalized "Net-decks towards {first_name}" section for this student. Use their first name ({first_name}) in the text. Be very specific and actionable.
+
+Student data:
+- Learning health: {health_score}/100. This week: {recent_total} questions, {round(recent_accuracy)}% accuracy, {len(active_dates)}/7 active days.
+- Mastered: {mastered_count}, Learning: {learning_count}, Need work: {struggling_count}.
+{f"- {failed_summary}" if failed_summary else ""}
+{f"- {focus_summary}" if focus_summary else ""}
+
+Write 4-6 short paragraphs or bullet points that cover:
+1. What {first_name} needs to work on most (based on failed questions and focus areas).
+2. The specific topics/questions they failed and why focusing there will help.
+3. How to pass those questions next time (concrete steps or techniques).
+4. Study techniques tailored to {first_name} (e.g. spaced practice, review wrong answers, one topic at a time).
+5. Clear recommendations to increase learning health and pass more questions.
+
+Be encouraging but specific. Use bullet points (•) or short numbered steps. Write only the net-decks content, no extra headers."""
+
+    net_decks_message = try_vertex_text(net_decks_prompt, context="ai_insights_net_decks", logger=logger)
+    if not net_decks_message:
+        net_decks_message = _fallback_net_decks_message(first_name, health_score, recent_total, recent_accuracy, failed_areas, focus_areas)
+
     return {
         'health_score': health_score,
         'total_skills': total_skills,
@@ -5289,6 +5433,8 @@ Message:"""
         },
         'study_plan': study_plan,
         'personalized_message': personalized_message,
+        'failed_areas': failed_areas,
+        'net_decks_message': net_decks_message,
         'last_updated': now.isoformat(),
     }
 
@@ -6155,4 +6301,123 @@ def project_delete(project_id):
         return jsonify({'success': True}), 200
     except Exception as e:
         logger.exception("project_delete failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/generate-image', methods=['POST'])
+@require_auth
+def project_generate_image(project_id):
+    """Generate an educational image for the project using Vertex AI Imagen."""
+    try:
+        user_id = g.current_user_id
+        proj = project_assistant_service.get_project_details(user_id, project_id)
+        if not proj:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        data = request.get_json() or {}
+        prompt = (data.get('prompt') or '').strip()
+        if not prompt:
+            return jsonify({'success': False, 'message': 'prompt is required'}), 400
+        aspect_ratio = (data.get('aspect_ratio') or '1:1').strip()
+        result = project_assistant_service.generate_educational_image(
+            user_id=user_id,
+            project_id=project_id,
+            user_prompt=prompt,
+            explicit_mode=False,
+            aspect_ratio=aspect_ratio,
+        )
+        if not result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Image generation failed'),
+                'data': {'credits_remaining': result.get('credits_remaining')},
+            }), 400
+        return jsonify({
+            'success': True,
+            'data': {
+                'response': result.get('response', ''),
+                'image_url': result.get('image_url'),
+                'aspect_ratio': result.get('aspect_ratio'),
+                'credits_remaining': result.get('credits_remaining'),
+            },
+        }), 200
+    except Exception as e:
+        logger.exception("project_generate_image failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/analyze-document', methods=['POST'])
+@require_auth
+def project_analyze_document(project_id):
+    """Analyze a document (PDF, etc.) for the project using Vertex AI."""
+    try:
+        user_id = g.current_user_id
+        proj = project_assistant_service.get_project_details(user_id, project_id)
+        if not proj:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        data = request.get_json() or {}
+        document_b64 = data.get('document') or ''
+        mime_type = (data.get('mime_type') or 'application/pdf').strip()
+        prompt = (data.get('prompt') or '').strip() or None
+        if not document_b64:
+            return jsonify({'success': False, 'message': 'document (base64) is required'}), 400
+        result = project_assistant_service.analyze_document_for_project(
+            user_id=user_id,
+            project_id=project_id,
+            document_data=document_b64,
+            mime_type=mime_type,
+            prompt=prompt,
+        )
+        if not result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Document analysis failed'),
+            }), 400
+        analysis = result.get('analysis') or result.get('text', '')
+        return jsonify({
+            'success': True,
+            'data': {'analysis': analysis, 'interaction_id': result.get('interaction_id')},
+        }), 200
+    except Exception as e:
+        logger.exception("project_analyze_document failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/multimodal-chat', methods=['POST'])
+@require_auth
+def project_multimodal_chat(project_id):
+    """Send a message with attachments (images, documents, etc.) for the project."""
+    try:
+        user_id = g.current_user_id
+        proj = project_assistant_service.get_project_details(user_id, project_id)
+        if not proj:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        data = request.get_json() or {}
+        message = (data.get('message') or '').strip()
+        attachments = data.get('attachments') or []
+        if not isinstance(attachments, list):
+            attachments = []
+        result = project_assistant_service.process_multimodal_message(
+            user_id=user_id,
+            project_id=project_id,
+            message=message or 'Please see my attachments.',
+            attachments=attachments,
+        )
+        if not result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Failed to process message'),
+                'data': {'credits_remaining': result.get('credits_remaining')},
+            }), 400
+        return jsonify({
+            'success': True,
+            'data': {
+                'response': result.get('response', ''),
+                'project_id': project_id,
+                'image_url': result.get('image_url'),
+                'credits_remaining': result.get('credits_remaining'),
+                'context_pack_id': result.get('context_pack_id'),
+            },
+        }), 200
+    except Exception as e:
+        logger.exception("project_multimodal_chat failed")
         return jsonify({'success': False, 'message': str(e)}), 500

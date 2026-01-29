@@ -160,6 +160,14 @@ export interface StudyPlanItem {
     estimated_time: string;
 }
 
+export interface FailedArea {
+    skill_id: string;
+    skill_name: string;
+    subject: string;
+    topic: string;
+    fail_count: number;
+}
+
 export interface AIInsights {
     health_score: number;
     total_skills: number;
@@ -171,6 +179,8 @@ export interface AIInsights {
     weekly_trend: WeeklyTrend;
     study_plan: StudyPlanItem[];
     personalized_message: string;
+    failed_areas?: FailedArea[];
+    net_decks_message?: string;
     last_updated: string;
 }
 

@@ -14,6 +14,7 @@ import sympy as sp
 from sympy import symbols, lambdify, sympify
 from math import pi, e, sin, cos, tan, log, sqrt, exp
 import time
+import random
 from typing import Dict, List, Optional, Tuple
 from config import Config
 import re
@@ -617,6 +618,38 @@ class GraphService:
 
         logger.info(f"Final cleaned expression: '{clean}'")
         return clean
+
+    def generate_equation_by_type(self, graph_type: str) -> Optional[str]:
+        """Return a concrete plottable equation for the given graph type (linear, quadratic, exponential, trigonometric).
+        Uses sympy-friendly form (x**2, * for multiplication) so create_graph can plot it."""
+        if not graph_type:
+            return None
+        gt = graph_type.strip().lower()
+        if gt == 'linear':
+            # y = mx + c with small integers
+            m = random.choice([1, 2, 3, -1, -2, 0.5])
+            c = random.choice([-3, -2, -1, 0, 1, 2, 3])
+            if m == int(m):
+                m = int(m)
+            return f"{m}*x + {c}" if c >= 0 else f"{m}*x - {-c}"
+        if gt == 'quadratic':
+            # y = ax^2 + bx + c
+            a = random.choice([1, -1, 2, -2])
+            b = random.choice([-4, -2, 0, 2, 4])
+            c = random.choice([-3, -2, -1, 0, 1, 2, 3])
+            parts = []
+            if a != 0:
+                parts.append(f"{a}*x**2" if a != 1 else "x**2")
+            if b != 0:
+                parts.append(f"{b}*x" if b > 0 else f"-{-b}*x")
+            if c != 0:
+                parts.append(str(c) if c > 0 else str(c))
+            return " + ".join(parts) if parts else "x**2"
+        if gt == 'exponential':
+            return random.choice(["2**x", "exp(0.3*x)", "exp(-0.2*x)", "3**x"])
+        if gt == 'trigonometric':
+            return random.choice(["sin(x)", "cos(x)", "2*sin(x) + 1", "2*cos(x) - 1", "sin(x) + cos(x)"])
+        return None
 
     def create_linear_programming_graph(self, constraints: List[str], objective: str, 
                                        viewport: Dict = None, title: str = "Linear Programming") -> Optional[str]:
