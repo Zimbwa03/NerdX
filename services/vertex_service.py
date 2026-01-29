@@ -11,9 +11,9 @@ from typing import Dict, Optional, Any, List, Tuple
 
 logger = logging.getLogger(__name__)
 
-# Credit costs for image questions (units, 1 credit = 10 units)
-IMAGE_QUESTION_CREDIT_COST = 20  # 2 credits
-TEXT_QUESTION_CREDIT_COST = 5   # 0.5 credit
+# Credit costs for quiz image vs text questions (units, 1 credit = 10 units)
+IMAGE_QUESTION_CREDIT_COST = 10  # 1 credit per image question
+TEXT_QUESTION_CREDIT_COST = 5   # 0.5 credit per text question
 
 
 class VertexService:

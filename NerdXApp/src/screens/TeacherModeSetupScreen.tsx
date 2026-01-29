@@ -118,6 +118,20 @@ const SUBJECT_TOPICS: Record<string, string[]> = {
     'Web Design and Internet Uses',
     'Automated and Emerging Technologies',
   ],
+  Geography: [
+    'Weather and Climate',
+    'Landforms and Landscape Processes',
+    'Ecosystems',
+    'Natural Resources',
+    'Energy and Power Development',
+    'Map Work and Geographical Information Systems (GIS)',
+    'Minerals and Mining',
+    'Environmental Management',
+    'Agriculture and Land Reform',
+    'Industry',
+    'Settlement and Population',
+    'Transport and Trade',
+  ],
 };
 
 // A-Level Topics by Subject
@@ -248,6 +262,19 @@ const A_LEVEL_TOPICS: Record<string, string[]> = {
     'Nuclear Physics',
     'Astronomy and Cosmology',
   ],
+  'A-Level Geography': [
+    // Paper 1: Physical Geography
+    'Climatology',
+    'Hydrology & Fluvial Geomorphology',
+    'Geomorphology',
+    'Biogeography',
+    // Paper 2: Human Geography
+    'Population Geography',
+    'Settlement Geography',
+    'Agriculture & Food Production',
+    'Industry, Mining & Energy',
+    'Environmental Management',
+  ],
   'A-Level Computer Science': [
     // Form 5 Topics
     'Data Representation - Number Systems',
@@ -331,6 +358,9 @@ const SUBJECT_COLORS: Record<string, string> = {
   Chemistry: '#FF9800',
   Physics: '#2196F3',
   'Computer Science': '#009688',
+  'A-Level Computer Science': '#0D47A1',
+  Geography: '#2E7D32',
+  'A-Level Geography': '#2E7D32',
 };
 
 const SUBJECT_ICONS: Record<string, string> = {
@@ -341,6 +371,9 @@ const SUBJECT_ICONS: Record<string, string> = {
   Chemistry: '⚗️',
   Physics: '⚛️',
   'Computer Science': '💻',
+  'A-Level Computer Science': '💻',
+  Geography: '🌍',
+  'A-Level Geography': '🌍',
 };
 
 const TeacherModeSetupScreen: React.FC = () => {
@@ -360,12 +393,13 @@ const TeacherModeSetupScreen: React.FC = () => {
   const [selectedGradeLevel, setSelectedGradeLevel] = useState<string>('Form 3-4 (O-Level)');
   const [selectedTopic, setSelectedTopic] = useState<string>(preselectedTopic || '');
 
-  const subjects = ['O Level Mathematics', 'Pure Mathematics', 'English', 'Biology', 'Chemistry', 'Physics', 'Computer Science'];
+  const subjects = ['O Level Mathematics', 'Pure Mathematics', 'English', 'Biology', 'Chemistry', 'Physics', 'Computer Science', 'A-Level Computer Science', 'Geography', 'A-Level Geography'];
   const gradeLevels = ['Form 1-2', 'Form 3-4 (O-Level)', 'A-Level'];
 
-  // Get topics for selected subject (Computer Science is O-Level only – always use SUBJECT_TOPICS)
+  // Get topics for selected subject
+  // A-Level subjects: Use A_LEVEL_TOPICS when A-Level is selected OR when subject name includes "A-Level"
   const availableTopics = selectedSubject
-    ? (selectedGradeLevel === 'A-Level' && selectedSubject !== 'Computer Science'
+    ? (selectedGradeLevel === 'A-Level' || selectedSubject.includes('A-Level')
       ? A_LEVEL_TOPICS[selectedSubject] || []
       : SUBJECT_TOPICS[selectedSubject] || [])
     : [];

@@ -44,6 +44,8 @@ export const getSubjectDisplayName = (subjectId?: string, fallback?: string): st
     if (id === 'mathematics') return 'All-Level Mathematics';
     if (id === 'pure_math' || id === 'a_level_pure_math') return 'A-Level Pure Mathematics';
     if (id === 'computer_science') return 'Computer Science';
+    if (id === 'a_level_geography') return 'A-Level Geography';
+    if (id === 'geography') return 'Geography';
     if (fallback) return fallback;
     return subjectId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 };

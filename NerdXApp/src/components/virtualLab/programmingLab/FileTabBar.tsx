@@ -4,10 +4,9 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemedColors } from '../../../theme/useThemedStyles';
-import type { CodeFile } from '../../../types/programmingLabTypes';
 
 export interface FileTabBarProps {
-    files: CodeFile[];
+    files: { id: string; name: string }[];
     activeFileId: string;
     onTabSelect: (fileId: string) => void;
     onTabClose: (fileId: string) => void;

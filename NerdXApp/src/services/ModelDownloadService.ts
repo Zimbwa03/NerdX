@@ -90,12 +90,18 @@ class ModelDownloadService {
     private progressPollInterval: NodeJS.Timeout | null = null;
     private currentDownloadInfo: { filePath: string; progressStart: number; progressEnd: number; totalSize: number; mainFileSize: number } | null = null;
 
-    // Get model storage path
+    // Normalize directory so we always have exactly one trailing slash (RNFS vs Expo can differ)
+    private static ensureTrailingSlash(dir: string): string {
+        return dir.replace(/\/?$/, '/');
+    }
+
+    // Get model storage path (primary: used for download when this FS is active)
     private getModelPath(): string {
         if (RNFS_AVAILABLE && RNFS) {
             return `${RNFS.DocumentDirectoryPath}/models/phi3-mini-4k-instruct.onnx`;
         }
-        return `${ExpoFileSystem.documentDirectory}models/phi3-mini-4k-instruct.onnx`;
+        const base = ModelDownloadService.ensureTrailingSlash(ExpoFileSystem.documentDirectory ?? '');
+        return `${base}models/phi3-mini-4k-instruct.onnx`;
     }
 
     // Get model data path
@@ -103,41 +109,107 @@ class ModelDownloadService {
         if (RNFS_AVAILABLE && RNFS) {
             return `${RNFS.DocumentDirectoryPath}/models/phi3-mini-4k-instruct.onnx.data`;
         }
-        return `${ExpoFileSystem.documentDirectory}models/phi3-mini-4k-instruct.onnx.data`;
+        const base = ModelDownloadService.ensureTrailingSlash(ExpoFileSystem.documentDirectory ?? '');
+        return `${base}models/phi3-mini-4k-instruct.onnx.data`;
     }
 
-    // Check if model is already downloaded (both files must exist)
+    // Path set for RNFS (so we can check both locations regardless of which FS is "primary")
+    private getModelPathRNFS(): { main: string; data: string } {
+        if (!RNFS || !RNFS.DocumentDirectoryPath) {
+            return { main: '', data: '' };
+        }
+        const base = ModelDownloadService.ensureTrailingSlash(RNFS.DocumentDirectoryPath);
+        return {
+            main: `${base}models/phi3-mini-4k-instruct.onnx`,
+            data: `${base}models/phi3-mini-4k-instruct.onnx.data`,
+        };
+    }
+
+    // Path set for Expo (so we can check both locations)
+    private getModelPathExpo(): { main: string; data: string } {
+        const base = ModelDownloadService.ensureTrailingSlash(ExpoFileSystem.documentDirectory ?? '');
+        return {
+            main: `${base}models/phi3-mini-4k-instruct.onnx`,
+            data: `${base}models/phi3-mini-4k-instruct.onnx.data`,
+        };
+    }
+
+    // Returns the path where the main .onnx file actually exists (checks both RNFS and Expo locations).
+    // Use this when loading the model so it works whether the model was downloaded with RNFS or Expo.
+    public async getResolvedModelPath(): Promise<string | null> {
+        try {
+            if (RNFS_AVAILABLE && RNFS) {
+                const { main, data } = this.getModelPathRNFS();
+                if (main && data) {
+                    const mainExists = await RNFS.exists(main);
+                    const dataExists = await RNFS.exists(data);
+                    if (mainExists && dataExists) {
+                        console.log('Resolved model path (RNFS):', main);
+                        return main;
+                    }
+                }
+            }
+            const { main, data } = this.getModelPathExpo();
+            const mainInfo = await ExpoFileSystem.getInfoAsync(main);
+            const dataInfo = await ExpoFileSystem.getInfoAsync(data);
+            if (mainInfo.exists && dataInfo.exists) {
+                console.log('Resolved model path (Expo):', main);
+                return main;
+            }
+            return null;
+        } catch (error) {
+            console.error('Error resolving model path:', error);
+            return null;
+        }
+    }
+
+    // Check if model is already downloaded (both files must exist in EITHER location)
     public async isModelDownloaded(): Promise<boolean> {
         try {
-            const modelPath = this.getModelPath();
-            const modelDataPath = this.getModelDataPath();
-
             let mainExists = false;
             let dataExists = false;
+            let mainPath = '';
+            let dataPath = '';
 
+            // Check RNFS location first if available
             if (RNFS_AVAILABLE && RNFS) {
-                mainExists = await RNFS.exists(modelPath);
-                dataExists = await RNFS.exists(modelDataPath);
-            } else {
-                const mainInfo = await ExpoFileSystem.getInfoAsync(modelPath);
-                const dataInfo = await ExpoFileSystem.getInfoAsync(modelDataPath);
+                const rnfs = this.getModelPathRNFS();
+                if (rnfs.main && rnfs.data) {
+                    mainExists = await RNFS.exists(rnfs.main);
+                    dataExists = await RNFS.exists(rnfs.data);
+                    if (mainExists && dataExists) {
+                        mainPath = rnfs.main;
+                        dataPath = rnfs.data;
+                    }
+                }
+            }
+
+            // If not found in RNFS, check Expo location (same or different dir depending on build)
+            if (!mainExists || !dataExists) {
+                const expo = this.getModelPathExpo();
+                const mainInfo = await ExpoFileSystem.getInfoAsync(expo.main);
+                const dataInfo = await ExpoFileSystem.getInfoAsync(expo.data);
                 mainExists = mainInfo.exists;
                 dataExists = dataInfo.exists;
+                if (mainExists && dataExists) {
+                    mainPath = expo.main;
+                    dataPath = expo.data;
+                }
             }
 
             if (!mainExists || !dataExists) {
-                console.log(`Model check: main=${mainExists}, data=${dataExists}`);
+                console.log(`Model check: main=${mainExists}, data=${dataExists} (checked both RNFS and Expo paths)`);
                 return false;
             }
 
-            // Verify model info
+            // Verify model info (version) so we don't treat old/invalid installs as ready
             const modelInfo = await this.getModelInfo();
             if (modelInfo === null || modelInfo.version !== PHI3_MODEL_VERSION) {
                 return false;
             }
 
-            // Basic size sanity check to avoid false positives on partial downloads
-            const { totalSize } = await this.getLocalModelSizes();
+            // Basic size sanity check using the location we found
+            const totalSize = await this.getSizeAtPaths(mainPath, dataPath);
             if (totalSize < PHI3_MODEL_MIN_SIZE) {
                 console.warn(`Model files are too small: ${totalSize} bytes (expected >= ${PHI3_MODEL_MIN_SIZE})`);
                 return false;
@@ -145,9 +217,30 @@ class ModelDownloadService {
 
             return true;
         } catch (error) {
-
             console.error('Error checking model download status:', error);
             return false;
+        }
+    }
+
+    // Get combined file size at given main + data paths (RNFS or Expo)
+    private async getSizeAtPaths(mainPath: string, dataPath: string): Promise<number> {
+        try {
+            if (RNFS_AVAILABLE && RNFS && (mainPath.startsWith('/') || !mainPath.startsWith('file:'))) {
+                const mainExists = await RNFS.exists(mainPath);
+                const dataExists = await RNFS.exists(dataPath);
+                if (mainExists && dataExists) {
+                    const mainStat = await RNFS.stat(mainPath);
+                    const dataStat = await RNFS.stat(dataPath);
+                    return Number(mainStat.size || 0) + Number(dataStat.size || 0);
+                }
+            }
+            const mainInfo = await ExpoFileSystem.getInfoAsync(mainPath);
+            const dataInfo = await ExpoFileSystem.getInfoAsync(dataPath);
+            const mainSize = mainInfo.exists ? (mainInfo.size ?? 0) : 0;
+            const dataSize = dataInfo.exists ? (dataInfo.size ?? 0) : 0;
+            return mainSize + dataSize;
+        } catch {
+            return 0;
         }
     }
 
@@ -371,7 +464,8 @@ class ModelDownloadService {
     private async downloadWithExpoFS(): Promise<void> {
         console.log('📥 Using expo-file-system for download...');
 
-        const modelDir = `${ExpoFileSystem.documentDirectory}models/`;
+        const base = ModelDownloadService.ensureTrailingSlash(ExpoFileSystem.documentDirectory ?? '');
+        const modelDir = `${base}models/`;
         const modelPath = `${modelDir}phi3-mini-4k-instruct.onnx`;
         const modelDataPath = `${modelDir}phi3-mini-4k-instruct.onnx.data`;
 

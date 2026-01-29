@@ -1,6 +1,6 @@
 import api from './config';
 
-export type ProgrammingLanguage = 'python' | 'vbnet' | 'java';
+export type ProgrammingLanguage = 'python' | 'vbnet' | 'java' | 'html' | 'sql';
 
 export type AIRequestType =
   | 'code-help'
@@ -16,11 +16,13 @@ export interface AIRequestPayload {
   language?: ProgrammingLanguage;
   error?: string;
   userQuestion?: string;
-  context?: {
+    context?: {
     exerciseId?: string;
     courseId?: string;
     userLevel?: 'o-level' | 'a-level';
     selectedCode?: string;
+    board?: 'zimsec' | 'cambridge';
+    lab?: 'programming' | 'web-design' | 'database';
   };
   conversationHistory?: {
     sender: 'user' | 'ai';
@@ -36,6 +38,10 @@ export interface AIResponsePayload {
   suggestions?: string[];
   followUpQuestions?: string[];
   confidence?: number;
+  /** Credits remaining after this request (from server when credits are deducted). */
+  credits_remaining?: number;
+  /** Credit cost of this request (display). */
+  credit_cost?: number;
 }
 
 export const programmingLabAiApi = {

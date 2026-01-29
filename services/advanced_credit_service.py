@@ -301,6 +301,7 @@ class AdvancedCreditService:
 
             # Virtual lab
             'virtual_lab_knowledge_check': 'virtual_lab_knowledge_check',
+            'programming_lab_ai': 'programming_lab_ai',
         }
     
     def award_registration_credits(self, user_id: str) -> bool:

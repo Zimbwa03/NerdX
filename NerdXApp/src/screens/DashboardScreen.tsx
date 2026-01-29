@@ -69,6 +69,7 @@ const DashboardScreen: React.FC = () => {
     physics: '#3B82F6', // Blue
     biology: '#14B8A6', // Teal
     computer_science: '#0D47A1', // Deep blue (Master Code, Algorithms & Systems)
+    geography: '#2E7D32', // Green (same as O-Level Geography)
   };
 
   // Load unread notification count and subscribe to realtime updates
@@ -199,6 +200,16 @@ const DashboardScreen: React.FC = () => {
     navigation.navigate('Topics' as never, { subject } as never);
   };
 
+  const handleGeographyPress = () => {
+    const subject: Partial<Subject> = {
+      id: 'geography',
+      name: 'Geography',
+      icon: 'public',
+      color: '#2E7D32',
+    };
+    navigation.navigate('Topics' as never, { subject } as never);
+  };
+
   const handleTeacherMode = () => {
     navigation.navigate('TeacherModeSetup' as never);
   };
@@ -295,6 +306,18 @@ const DashboardScreen: React.FC = () => {
         name: 'A-Level Computer Science',
         icon: 'code-working',
         color: aLevelColors.computer_science,
+      };
+      navigation.navigate('Topics' as never, { subject } as never);
+      return;
+    }
+
+    // Navigate to A Level Geography (Topics screen)
+    if (subjectId === 'geography') {
+      const subject: Partial<Subject> = {
+        id: 'a_level_geography',
+        name: 'A-Level Geography',
+        icon: 'map',
+        color: aLevelColors.geography,
       };
       navigation.navigate('Topics' as never, { subject } as never);
       return;
@@ -641,12 +664,22 @@ const DashboardScreen: React.FC = () => {
                   />
 
                   <AnimatedCard
+                    title="Geography"
+                    subtitle="All Level ZIMSEC Geography"
+                    imageSource={require('../../assets/images/olevel_geography_card.png')}
+                    onPress={handleGeographyPress}
+                    glowColor="#2E7D32"
+                    index={4}
+                    hideText={true}
+                  />
+
+                  <AnimatedCard
                     title="Project Assistant"
                     subtitle="Plan, Research & Succeed"
                     imageSource={require('../../assets/images/project_assistant_card_new.png')}
                     onPress={navigateToProjectList}
                     glowColor={Colors.primary.main}
-                    index={4}
+                    index={5}
                     hideText={true}
                   />
                 </>
@@ -702,6 +735,16 @@ const DashboardScreen: React.FC = () => {
                     index={4}
                     hideText={true}
                   />
+
+                  <AnimatedCard
+                    title="A Level Geography"
+                    subtitle="Explore Advanced Concepts & Systems"
+                    imageSource={require('../../assets/images/alevel_geography_card.png')}
+                    onPress={() => navigateToALevelSubject('geography', 'Geography')}
+                    glowColor={aLevelColors.geography}
+                    index={5}
+                    hideText={true}
+                  />
                 </>
               )}
 
@@ -721,7 +764,7 @@ const DashboardScreen: React.FC = () => {
                 subtitle="Interactive Science Simulations"
                 imageSource={require('../../assets/images/virtual_labs_card.png')}
                 onPress={navigateToVirtualLab}
-                glowColor={Colors.subjects.physics}
+                glowColor={Colors.subjects.science}
                 index={6}
                 hideText={true}
               />

@@ -66,6 +66,7 @@ const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
                 style={[styles.outputArea, { backgroundColor: themedColors.background.subtle ?? '#1E1E1E' }]}
                 contentContainerStyle={styles.outputContent}
                 nestedScrollEnabled
+                showsVerticalScrollIndicator
             >
                 {isExecuting && (
                     <Text style={[styles.outputText, { color: themedColors.text.secondary }]}>
@@ -104,7 +105,7 @@ const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
 const styles = StyleSheet.create({
     container: {
         borderTopWidth: 1,
-        maxHeight: 180,
+        maxHeight: 240,
     },
     toolbar: {
         flexDirection: 'row',
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
         marginLeft: 'auto',
     },
     outputArea: {
-        maxHeight: 140,
+        maxHeight: 200,
         padding: 8,
     },
     outputContent: {

@@ -85,10 +85,19 @@ class ProgrammingLabAIService:
 
     def _call_deepseek(self, req: AIRequest) -> AIResponse:
         prompt = self._build_prompt(req)
+        ctx = req.context or {}
+        lab = ctx.get("lab") or "programming"
+        if lab == "web-design":
+            system_prompt = "You are an expert HTML & CSS web design tutor for ZIMSEC and Cambridge Computer Science students."
+        elif lab == "database":
+            system_prompt = "You are an expert database and SQL tutor for ZIMSEC and Cambridge Computer Science students (O-Level and A-Level). Focus on database concepts, tables, keys, and SQL (SELECT, INSERT, UPDATE, DELETE, CREATE TABLE)."
+        else:
+            system_prompt = "You are an expert programming tutor for ZIMSEC and Cambridge students."
+
         # Use helper that wraps DeepSeek HTTP call similar to ComputerScienceGenerator
         text = call_deepseek_chat(
             model=self.deepseek_model,
-            system_prompt="You are an expert programming tutor for ZIMSEC and Cambridge students.",
+            system_prompt=system_prompt,
             user_prompt=prompt,
         )
         return self._parse_ai_response(text, req)
@@ -97,17 +106,52 @@ class ProgrammingLabAIService:
     # Prompt and parsing
     # ------------------------------
     def _build_prompt(self, req: AIRequest) -> str:
-        level = (req.context or {}).get("userLevel") or "intermediate"
+        ctx = req.context or {}
+        level = ctx.get("userLevel") or "intermediate"
         language = req.language or "Python"
-        base = f"""
+        lab = ctx.get("lab") or "programming"
+        board = ctx.get("board") or "mixed ZIMSEC and Cambridge"
+
+        if lab == "web-design":
+            base = f"""
+You are an expert HTML & CSS web design tutor helping {level} Computer Science students ({board} syllabuses such as ZIMSEC 6023 and Cambridge 9618).
+Focus on HTML, CSS and basic web design concepts such as layout, forms, tables and semantic tags.
+
+Your role:
+- Explain how the student's HTML/CSS works and how browsers render it.
+- Suggest clear improvements to structure, readability and accessibility.
+- Keep examples simple and exam-focused (no heavy JavaScript).
+- Use short sections with clear headings (Concept, Steps, Example, Common mistakes).
+- Keep answers medium length (roughly 8–15 short bullet/paragraph lines) – detailed but not a full lesson.
+- Ask 1–2 short follow-up questions to guide learning.
+- Do NOT simply give full assignment answers without explanation.
+""".strip()
+        elif lab == "database":
+            base = f"""
+You are an expert database and SQL tutor helping {level} Computer Science students ({board} syllabuses such as ZIMSEC 6023 and Cambridge 9618).
+Focus on: what a database is, tables, records, fields, primary keys, foreign keys, and SQL (CREATE TABLE, SELECT, INSERT, UPDATE, DELETE, WHERE, ORDER BY, JOINs, aggregate functions).
+
+Your role:
+- Explain database concepts and SQL clearly with short examples.
+- Help the student write correct SQL and fix errors.
+- Use short sections with clear headings (Concept, Steps, Example, Common mistakes).
+- Keep answers medium length (roughly 8–15 short bullet/paragraph lines).
+- Ask 1–2 short follow-up questions to guide learning.
+- Do NOT simply give full assignment answers without explanation.
+- Do NOT ask the student to draw diagrams; focus on knowledge and SQL.
+""".strip()
+        else:
+            base = f"""
 You are an expert programming tutor helping {level} Computer Science students (ZIMSEC 6023 and Cambridge 9618).
 Language: {language}
 
 Your role:
-- Explain concepts clearly with short examples
-- Help debug code and identify errors
-- Suggest improvements and best practices
-- Ask 1–2 short follow-up questions to guide learning
+- Explain concepts clearly with short examples.
+- Help debug code and identify errors.
+- Suggest improvements and best practices.
+- Use short sections with clear headings (Concept, Steps, Example, Common mistakes).
+- Keep answers medium length (roughly 8–15 short bullet/paragraph lines) – focused and not a full lesson.
+- Ask 1–2 short follow-up questions to guide learning.
 - Do NOT simply give full homework answers without explanation.
 """.strip()
 

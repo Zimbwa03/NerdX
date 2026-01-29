@@ -494,11 +494,11 @@ class CreditCostService:
             # ============================================
             # AI-GENERATED CONTENT: Mobile App Pricing
             # ============================================
-            # Combined Science (O-Level)
-            'combined_science_topical': 3,  # 0.25 credit (MCQ default)
-            'combined_science_topical_mcq': 3,  # 0.25 credit
-            'combined_science_topical_structured': 5,  # 0.5 credit
-            'combined_science_exam': 5,  # 0.5 credit
+            # Combined Science (O-Level) – 0.5 credit each
+            'combined_science_topical': 5,
+            'combined_science_topical_mcq': 5,
+            'combined_science_topical_structured': 5,
+            'combined_science_exam': 5,
 
             # Computer Science (O-Level) – MCQ 0.3, Structured 0.5, Essay 1 (10 units = 1 credit)
             'computer_science_topical_mcq': 3,   # 0.3 credit (3 units) – 1 credit = 3 MCQs
@@ -508,12 +508,12 @@ class CreditCostService:
             'computer_science_exam_structured': 5,  # 0.5 credit per exam structured (5 units)
             'computer_science_exam_essay': 10,  # 1 credit per exam essay (10 units)
 
-            # Mathematics (O-Level)
-            'math_topical': 5,  # 0.5 credit
-            'math_exam': 5,  # 0.5 credit
-            'math_quiz': 5,  # 0.5 credit
-            'math_graph_practice': 10,  # 1 credit
-            'graph_generation': 10,  # 1 credit
+            # Mathematics (O-Level) – 0.5 credit each
+            'math_topical': 5,
+            'math_exam': 5,
+            'math_quiz': 5,
+            'math_graph_practice': 5,
+            'graph_generation': 5,
 
             # English (Topical)
             'english_topical': 5,  # 0.5 credit
@@ -522,23 +522,25 @@ class CreditCostService:
             'teacher_mode_start': 1,  # 0.1 credit
             'teacher_mode_followup': 1,  # 0.1 credit
 
-            # Project Assistant (Basic)
-            'project_assistant_start': 1,  # 0.1 credit
-            'project_assistant_followup': 1,  # 0.1 credit
+            # Project Assistant (Basic) – 0.2 credit each
+            'project_assistant_start': 2,
+            'project_assistant_followup': 2,
 
-            # Study Tools
-            'flashcard_single': 3,  # 0.25 credit
-            'virtual_lab_knowledge_check': 3,  # 0.25 credit
+            # Study Tools & Virtual Lab – 0.3 / 0.1 credit
+            'flashcard_single': 3,  # 0.3 credit
+            'virtual_lab_knowledge_check': 3,  # 0.3 credit
+            'geo_maps_feedback': 1,  # 0.1 credit
+            'programming_lab_ai': 1,  # 0.1 credit
 
             # ============================================
             # COMPLEX FEATURES: Mobile App Pricing
             # ============================================
-            # English (Complex)
-            'english_comprehension': 20,  # 2 credits
-            'english_essay_writing': 20,  # 2 credits
-            'english_essay_marking': 20,  # 2 credits
-            'english_comprehension_grading': 10,  # 1 credit
-            'english_summary_grading': 10,  # 1 credit
+            # English (Complex) – 2 credits each
+            'english_comprehension': 20,
+            'english_essay_writing': 20,
+            'english_essay_marking': 20,
+            'english_comprehension_grading': 20,
+            'english_summary_grading': 20,
 
             # A-Level Subjects (All)
             'a_level_pure_math_topical': 5,  # 0.5 credit
@@ -553,30 +555,32 @@ class CreditCostService:
             'a_level_physics_topical_mcq': 5,  # 0.5 credit
             'a_level_physics_topical_structured': 5,  # 0.5 credit
             'a_level_physics_exam': 5,  # 0.5 credit
-            'a_level_biology_topical_mcq': 3,  # 0.25 credit
-            'a_level_biology_topical_structured': 5,  # 0.5 credit
-            'a_level_biology_topical_essay': 5,  # 0.5 credit
-            'a_level_biology_exam_mcq': 3,  # 0.25 credit
-            'a_level_biology_exam_structured': 5,  # 0.5 credit
-            'a_level_biology_exam_essay': 5,  # 0.5 credit
+            'a_level_biology_topical_mcq': 5,  # 0.5 credit
+            'a_level_biology_topical_structured': 5,
+            'a_level_biology_topical_essay': 10,  # 1 credit
+            'a_level_biology_exam_mcq': 5,
+            'a_level_biology_exam_structured': 5,
+            'a_level_biology_exam_essay': 10,
+            'a_level_geography_topical_essay': 5,  # 0.5 credit
+            'a_level_geography_exam_essay': 10,  # 1 credit
 
-            # Audio & Vision
-            'audio_feature': 20,  # 2 credits
-            'voice_chat': 20,  # 2 credits
-            'flashcard_audio': 20,  # 2 credits
-            'image_solve': 20,  # 2 credits
-            'ocr_solve': 20,  # 2 credits
-            'image_generation': 20,  # 2 credits
+            # Audio & Vision – 2 credits / 1 credit
+            'audio_feature': 20,
+            'voice_chat': 20,
+            'flashcard_audio': 20,
+            'image_solve': 10,  # 1 credit
+            'ocr_solve': 10,  # 1 credit
+            'image_generation': 10,  # 1 credit
 
             # AI Teacher PDF
             'teacher_mode_pdf': 20,  # 2 credits
 
-            # Project Assistant (Advanced)
-            'project_assistant_batch': 20,  # 2 credits
-            'project_web_search': 20,  # 2 credits
-            'project_deep_research': 20,  # 2 credits
-            'project_transcribe': 1,  # 0.1 credit
-            'project_image_generation': 30  # 3 credits
+            # Project Assistant (Advanced) – transcribe 1 credit, rest 2 credits
+            'project_assistant_batch': 20,
+            'project_web_search': 20,
+            'project_deep_research': 20,
+            'project_transcribe': 10,  # 1 credit
+            'project_image_generation': 20  # 2 credits
         }
     
     def get_credit_cost(self, action_key: str) -> int:

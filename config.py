@@ -67,11 +67,11 @@ class Config:
         # Reduced from 2 credits to 1 credit - makes learning more affordable
         # Cost: Twilio ($0.005) + AI ($0.002) = $0.007 per credit
         
-        # Combined Science (O-Level)
-        'combined_science_exam': 10,                # 1 credit per question
-        'combined_science_topical': 10,             # 1 credit per question
-        'combined_science_topical_mcq': 10,         # 1 credit per MCQ
-        'combined_science_topical_structured': 10,  # 1 credit per structured question
+        # Combined Science (O-Level) – 0.5 credit per question
+        'combined_science_exam': 5,
+        'combined_science_topical': 5,
+        'combined_science_topical_mcq': 5,
+        'combined_science_topical_structured': 5,
 
         # Computer Science (O-Level) – MCQ 0.3, Structured 0.5, Essay 1 (1 credit = 3 MCQs)
         'computer_science_topical_mcq': 3,         # 0.3 credit per MCQ (3 units)
@@ -81,26 +81,28 @@ class Config:
         'computer_science_exam_structured': 5,     # 0.5 credit per exam structured (5 units)
         'computer_science_exam_essay': 10,         # 1 credit per exam essay (10 units)
 
-        # Mathematics (O-Level)
-        'math_topical': 10,                # 1 credit per question
-        'math_exam': 10,                   # 1 credit per question
-        'math_quiz': 10,                   # 1 credit per question (streaming)
-        'math_graph_practice': 10,         # 1 credit per graph/question/video
+        # Mathematics (O-Level) – 0.5 credit per question
+        'math_topical': 5,
+        'math_exam': 5,
+        'math_quiz': 5,
+        'math_graph_practice': 5,
 
-        # English (Topical)
-        'english_topical': 10,             # 1 credit per question
+        # English (Topical) – 0.5 credit
+        'english_topical': 5,
 
-        # AI Teacher Mode
-        'teacher_mode_start': 10,          # 1 credit per AI response (start)
-        'teacher_mode_followup': 10,       # 1 credit per AI response (follow-up)
+        # AI Teacher Mode – 0.1 credit per message
+        'teacher_mode_start': 1,
+        'teacher_mode_followup': 1,
 
-        # Project Assistant (Basic)
-        'project_assistant_start': 10,     # 1 credit per AI response (start)
-        'project_assistant_followup': 10,  # 1 credit per AI response (follow-up)
+        # Project Assistant (Basic) – 0.2 credit per message
+        'project_assistant_start': 2,
+        'project_assistant_followup': 2,
 
-        # Study Tools
-        'flashcard_single': 10,            # 1 credit per flashcard
-        'virtual_lab_knowledge_check': 10, # 1 credit per question
+        # Study Tools & Virtual Lab
+        'flashcard_single': 3,             # 0.3 credit
+        'virtual_lab_knowledge_check': 3,   # 0.3 credit
+        'geo_maps_feedback': 1,            # 0.1 credit
+        'programming_lab_ai': 1,           # 0.1 credit
 
         # ============================================
         # COMPLEX FEATURES: 2 Credits Per Use (20 units)
@@ -115,48 +117,52 @@ class Config:
         'english_comprehension_grading': 20, # 2 credits - AI grading
         'english_summary_grading': 20,     # 2 credits - AI grading
 
-        # A-Level (All Subjects - Complex content)
-        'a_level_pure_math_topical': 20,             # 2 credits
-        'a_level_pure_math_topical_mcq': 20,         # 2 credits
-        'a_level_pure_math_topical_structured': 20, # 2 credits
-        'a_level_pure_math_exam': 20,                # 2 credits
-        'a_level_chemistry_topical': 20,             # 2 credits
-        'a_level_chemistry_topical_mcq': 20,         # 2 credits
-        'a_level_chemistry_topical_structured': 20,  # 2 credits
-        'a_level_chemistry_exam': 20,                # 2 credits
-        'a_level_physics_topical': 20,               # 2 credits
-        'a_level_physics_topical_mcq': 20,           # 2 credits
-        'a_level_physics_topical_structured': 20,    # 2 credits
-        'a_level_physics_exam': 20,                  # 2 credits
-        'a_level_biology_topical_mcq': 20,           # 2 credits
-        'a_level_biology_topical_structured': 20,    # 2 credits
-        'a_level_biology_topical_essay': 20,         # 2 credits
-        'a_level_biology_exam_mcq': 20,              # 2 credits
-        'a_level_biology_exam_structured': 20,        # 2 credits
-        'a_level_biology_exam_essay': 20,            # 2 credits
-        # A-Level Computer Science (Same pricing as O-Level CS: MCQ 0.3, Structured 0.5, Essay 1)
-        'a_level_computer_science_topical_mcq': 3,         # 0.3 credit per MCQ (3 units)
-        'a_level_computer_science_topical_structured': 5,  # 0.5 credit per structured (5 units)
-        'a_level_computer_science_topical_essay': 10,      # 1 credit per essay (10 units)
-        'a_level_computer_science_exam_mcq': 3,           # 0.3 credit per exam MCQ (3 units)
-        'a_level_computer_science_exam_structured': 5,      # 0.5 credit per exam structured (5 units)
-        'a_level_computer_science_exam_essay': 10,        # 1 credit per exam essay (10 units)
+        # A-Level Pure Math, Chemistry, Physics – 0.5 credit per question
+        'a_level_pure_math_topical': 5,
+        'a_level_pure_math_topical_mcq': 5,
+        'a_level_pure_math_topical_structured': 5,
+        'a_level_pure_math_exam': 5,
+        'a_level_chemistry_topical': 5,
+        'a_level_chemistry_topical_mcq': 5,
+        'a_level_chemistry_topical_structured': 5,
+        'a_level_chemistry_exam': 5,
+        'a_level_physics_topical': 5,
+        'a_level_physics_topical_mcq': 5,
+        'a_level_physics_topical_structured': 5,
+        'a_level_physics_exam': 5,
+        # A-Level Biology – MCQ/structured 0.5, essay 1
+        'a_level_biology_topical_mcq': 5,
+        'a_level_biology_topical_structured': 5,
+        'a_level_biology_topical_essay': 10,
+        'a_level_biology_exam_mcq': 5,
+        'a_level_biology_exam_structured': 5,
+        'a_level_biology_exam_essay': 10,
+        # A-Level Computer Science – MCQ 0.3, Structured 0.5, Essay 1
+        'a_level_computer_science_topical_mcq': 3,
+        'a_level_computer_science_topical_structured': 5,
+        'a_level_computer_science_topical_essay': 10,
+        'a_level_computer_science_exam_mcq': 3,
+        'a_level_computer_science_exam_structured': 5,
+        'a_level_computer_science_exam_essay': 10,
+        # A-Level Geography – topical 0.5, exam essay 1
+        'a_level_geography_topical_essay': 5,
+        'a_level_geography_exam_essay': 10,
 
         # Audio / Live (Complex processing)
         'audio_feature': 20,               # 2 credits - Audio processing + AI
         'voice_chat': 20,                 # 2 credits - Real-time voice processing
 
-        # Vision/Tools (Complex processing)
-        'ocr_solve': 20,                   # 2 credits - OCR + solving
-        'image_solve': 20,                 # 2 credits - Image processing + solving
-        'image_generation': 20,           # 2 credits - AI image generation
+        # Vision/Tools – 1 credit each
+        'ocr_solve': 10,
+        'image_solve': 10,
+        'image_generation': 10,
 
-        # Project Assistant (Advanced Features)
-        'project_web_search': 20,         # 2 credits - Web search + synthesis
-        'project_deep_research': 20,       # 2 credits - Extensive research
-        'project_transcribe': 20,          # 2 credits - Audio transcription
-        'project_image_generation': 20,    # 2 credits - Image generation
-        'project_assistant_batch': 20,     # 2 credits - Batch processing
+        # Project Assistant (Advanced) – transcribe 1 credit, rest 2 credits
+        'project_web_search': 20,
+        'project_deep_research': 20,
+        'project_transcribe': 10,
+        'project_image_generation': 20,
+        'project_assistant_batch': 20,
 
         # AI Teacher PDF Generation
         'teacher_mode_pdf': 20,           # 2 credits - PDF generation
@@ -165,12 +171,12 @@ class Config:
         'flashcard_audio': 20,            # 2 credits - Audio flashcards
 
         # Legacy compatibility (Mapped values)
-        'math': 10,                        # Maps to math_topical (1 credit)
-        'science': 10,                     # Maps to combined_science_topical (1 credit)
-        'english': 10,                     # Maps to english_topical (1 credit)
-        'graph_generation': 10,            # Maps to math_graph_practice (1 credit)
-        'web_search': 20,                 # Maps to project_web_search (2 credits)
-        'deep_research': 20               # Maps to project_deep_research (2 credits)
+        'math': 5,                         # Maps to math_topical (0.5 credit)
+        'science': 5,                      # Maps to combined_science_topical (0.5 credit)
+        'english': 5,                     # Maps to english_topical (0.5 credit)
+        'graph_generation': 5,            # Maps to math_graph_practice (0.5 credit)
+        'web_search': 20,
+        'deep_research': 20
     }
     
     # Registration and Referral Credits (units)

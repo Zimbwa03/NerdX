@@ -1,6 +1,6 @@
 import api from './config';
 
-export type ProgrammingLanguage = 'python' | 'vbnet' | 'java';
+export type ProgrammingLanguage = 'python' | 'vbnet' | 'java' | 'html';
 
 export interface ProgrammingLabTestCase {
   id: string;

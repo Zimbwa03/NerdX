@@ -59,12 +59,22 @@ const QuizScreen: React.FC = () => {
   const normalizeQuestion = useCallback((q: Question | undefined): Question | undefined => {
     if (!q) return undefined;
     const hasOptions = Array.isArray(q.options) && q.options.length > 0;
-    // Enable image upload for mathematics and pure mathematics subjects
-    const isMathSubjectWithImageSupport = subject?.id === 'mathematics' || subject?.id === 'a_level_pure_math';
+    // Enable image upload for mathematics, A-Level Pure Math, and Computer Science (O-Level + A-Level)
+    const isImageSupportedSubject =
+      subject?.id === 'mathematics' ||
+      subject?.id === 'a_level_pure_math' ||
+      subject?.id === 'computer_science' ||
+      subject?.id === 'a_level_computer_science';
+
+    const defaultAllowsTextInput =
+      q.question_type === 'structured'
+        ? true // Always allow text input for structured questions
+        : !hasOptions;
+
     return {
       ...q,
-      allows_text_input: q.allows_text_input ?? !hasOptions,
-      allows_image_upload: q.allows_image_upload ?? isMathSubjectWithImageSupport,
+      allows_text_input: q.allows_text_input ?? defaultAllowsTextInput,
+      allows_image_upload: q.allows_image_upload ?? isImageSupportedSubject,
     };
   }, [subject?.id]);
 
@@ -109,9 +119,20 @@ const QuizScreen: React.FC = () => {
   const [mixImagesEnabled, setMixImagesEnabled] = useState<boolean>(!!initialMixImagesEnabled);
 
 
-  // Voice/STT support (Wispr Flow) â€” enable for A Level sciences and math
+  // Voice/STT support (Wispr Flow) — enable for A Level sciences, math, Computer Science, and Geography
   const isMathSubject = subject?.id === 'mathematics' || subject?.id === 'a_level_pure_math';
-  const supportsVoiceToText = isMathSubject || ['combined_science', 'a_level_physics', 'a_level_chemistry', 'a_level_biology', 'computer_science'].includes(subject?.id);
+  const supportsVoiceToText =
+    isMathSubject ||
+    [
+      'combined_science',
+      'a_level_physics',
+      'a_level_chemistry',
+      'a_level_biology',
+      'computer_science',
+      'a_level_computer_science',
+      'geography',
+      'a_level_geography',
+    ].includes(subject?.id);
   const voiceInputMode: 'math' | 'general' = isMathSubject ? 'math' : 'general';
 
   const loadingSteps = React.useMemo(() => getSubjectLoadingSteps(subject?.id), [subject?.id]);
@@ -695,12 +716,27 @@ const QuizScreen: React.FC = () => {
     navigation.goBack();
   };
 
+  const normalizeRichText = (text?: string) => {
+    if (!text) return '';
+    let cleaned = text;
+    // Normalise line breaks
+    cleaned = cleaned.replace(/\r\n/g, '\n');
+    // Remove markdown bold markers while keeping the content
+    cleaned = cleaned.replace(/\*\*(.*?)\*\*/g, '$1');
+    // Convert simple bullet markers to a cleaner bullet
+    cleaned = cleaned.replace(/^[\-\*]\s+/gm, '• ');
+    // Collapse excessive blank lines
+    cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+    return cleaned.trim();
+  };
+
   const formatSolutionText = (text?: string) => {
     if (!text) return '';
     let formatted = text.replace(/;\s*/g, ';\n');
     formatted = formatted.replace(/\. (?=[A-Z0-9])/g, '.\n');
     formatted = formatted.replace(/Step\s*/gi, '\nStep ');
-    return formatted.trim();
+    formatted = normalizeRichText(formatted);
+    return formatted;
   };
 
   // Dynamic styles based on theme
@@ -1654,8 +1690,8 @@ const QuizScreen: React.FC = () => {
                 </View>
               )}
 
-              {/* Text Input - for math and short answer questions (not structured, not essay) */}
-              {question.allows_text_input && question.question_type !== 'structured' && question.question_type !== 'essay' && !result && (
+              {/* Text Input - for math and short answer questions (not essay, and not multi-part structured) */}
+              {question.allows_text_input && question.question_type !== 'essay' && !isStructuredQuestion && !result && (
                 <View style={styles.answerInputContainer}>
                   <Text style={styles.answerInputLabel}>
                     {supportsVoiceToText ? 'Your Answer (type or speak, scan optional):' : 'Your Answer (type or scan):'}
@@ -1766,7 +1802,7 @@ const QuizScreen: React.FC = () => {
                     />
                     <Text style={styles.hintTitle}>Hint</Text>
                   </View>
-                  <Text style={styles.hintText}>{question.hint}</Text>
+                  <MathText>{normalizeRichText(question.hint)}</MathText>
                 </Card>
               )}
 
@@ -1824,13 +1860,13 @@ const QuizScreen: React.FC = () => {
                   {result.hint && !result.correct && (
                     <View style={styles.hintContainer}>
                       <Text style={styles.hintTitle}>ðŸ’¡ Additional Hint:</Text>
-                      <MathText>{result.hint}</MathText>
+                      <MathText>{normalizeRichText(result.hint)}</MathText>
                     </View>
                   )}
                   {question.explanation && (
                     <View style={styles.explanationContainer}>
                       <Text style={styles.explanationTitle}>ðŸ“– Teaching Explanation:</Text>
-                      <MathText>{question.explanation}</MathText>
+                      <MathText>{normalizeRichText(question.explanation)}</MathText>
                     </View>
                   )}
                 </Card>

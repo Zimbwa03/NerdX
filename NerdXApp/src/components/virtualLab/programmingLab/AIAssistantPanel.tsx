@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemedColors } from '../../../theme/useThemedStyles';
-import type { ProgrammingLanguage } from '../../../types/programmingLabTypes';
 import { programmingLabAiApi, type AIRequestPayload } from '../../../services/api/programmingLabAiApi';
+import { useAuth } from '../../../context/AuthContext';
 
 export interface Message {
     id: string;
@@ -26,10 +26,14 @@ export interface Message {
 }
 
 interface AIAssistantPanelProps {
-    language: ProgrammingLanguage;
+    /** Language label to send to the AI model (e.g. 'python', 'vbnet', 'java', 'html'). */
+    language: string;
     code: string;
-    userLevel: 'o-level' | 'a-level';
+    userLevel?: 'o-level' | 'a-level';
     exerciseId?: string;
+    /** Optional lab and board context to guide responses (e.g. web-design, database, zimsec/cambridge). */
+    lab?: 'programming' | 'web-design' | 'database';
+    board?: 'zimsec' | 'cambridge';
 }
 
 const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
@@ -37,8 +41,11 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
     code,
     userLevel,
     exerciseId,
+    lab,
+    board,
 }) => {
     const themedColors = useThemedColors();
+    const { updateUser } = useAuth();
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -70,11 +77,13 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
             const payload: AIRequestPayload = {
                 type: reqType,
                 code,
-                language,
+                language: language as any,
                 userQuestion: trimmed,
                 context: {
                     exerciseId,
                     userLevel,
+                    board,
+                    lab,
                 },
                 conversationHistory: messages.map(m => ({
                     sender: m.sender,
@@ -83,6 +92,9 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
             };
 
             const resp = await programmingLabAiApi.ask(payload);
+            if (resp?.credits_remaining !== undefined) {
+                updateUser({ credits: resp.credits_remaining });
+            }
 
             const aiMessage: Message = {
                 id: Math.random().toString(),

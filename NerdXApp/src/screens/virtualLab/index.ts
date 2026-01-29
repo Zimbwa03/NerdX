@@ -50,3 +50,13 @@ export { default as StatisticsExplorerScreen } from './StatisticsExplorerScreen'
 export { default as LogarithmsLabScreen } from './LogarithmsLabScreen';
 export { default as SequencesSeriesLabScreen } from './SequencesSeriesLabScreen';
 export { default as SimultaneousEquationsLabScreen } from './SimultaneousEquationsLabScreen';
+
+// Geography Virtual Labs
+export { default as MapWorkLabScreen } from './MapWorkLabScreen';
+export { default as SixFigureGridLabScreen } from './SixFigureGridLabScreen';
+export { default as CompassBearingLabScreen } from './CompassBearingLabScreen';
+export { default as ContourLinesLabScreen } from './ContourLinesLabScreen';
+export { default as ScaleDistanceLabScreen } from './ScaleDistanceLabScreen';
+export { default as CrossSectionLabScreen } from './CrossSectionLabScreen';
+export { default as MapLayersLabScreen } from './MapLayersLabScreen';
+export { default as GeoMapsLabScreen } from './GeoMapsLabScreen';

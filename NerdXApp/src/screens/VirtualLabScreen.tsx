@@ -125,8 +125,20 @@ const VirtualLabScreen: React.FC = () => {
             'sequences-series-lab': 'SequencesSeriesLabScreen',
             'simultaneous-equations-lab': 'SimultaneousEquationsLabScreen',
 
-            // Computer Science - Programming Lab
+            // Computer Science - Labs
             'programming-lab': 'ProgrammingLabEditor',
+            'web-design-lab': 'WebDesignLabEditor',
+            'database-lab': 'DatabaseLabEditor',
+
+            // Geography - Map work & fieldwork
+            'map-work-grid-scale': 'MapWorkLab',
+            'six-figure-grid-refs': 'SixFigureGridLab',
+            'compass-bearing': 'CompassBearingLab',
+            'contour-lines': 'ContourLinesLab',
+            'scale-distance': 'ScaleDistanceLab',
+            'cross-section-lab': 'CrossSectionLab',
+            'map-layers': 'MapLayersLab',
+            'geo-maps-lab': 'GeoMapsLab',
         };
 
         const screenName = screenMap[simulationId];
@@ -146,6 +158,7 @@ const VirtualLabScreen: React.FC = () => {
         { key: 'mathematics', label: 'Math', color: SUBJECT_COLORS.mathematics.primary },
         { key: 'english', label: 'English', color: SUBJECT_COLORS.english.primary },
         { key: 'computer_science', label: 'Computer Science', color: SUBJECT_COLORS.computer_science.primary },
+        { key: 'geography', label: 'Geography', color: SUBJECT_COLORS.geography.primary },
     ];
 
     return (
@@ -181,7 +194,7 @@ const VirtualLabScreen: React.FC = () => {
                     </View>
                     <View style={[styles.statDivider, { backgroundColor: '#FFFFFF30' }]} />
                     <View style={styles.statItem}>
-                        <Text style={styles.statNumber}>6</Text>
+                        <Text style={styles.statNumber}>7</Text>
                         <Text style={styles.statLabel}>Subjects</Text>
                     </View>
                     <View style={[styles.statDivider, { backgroundColor: '#FFFFFF30' }]} />

@@ -83,13 +83,19 @@ class OfflineAIService {
                 throw new Error('Model not downloaded. Please download the model first.');
             }
 
-            // Get model info and path
+            // Get model info for metadata
             const modelInfo = await ModelDownloadService.getModelInfo();
             if (!modelInfo) {
                 throw new Error('Model info not found');
             }
 
-            console.log('Loading ONNX model from:', modelInfo.modelPath);
+            // Get resolved model path (checks both RNFS and Expo locations to find where files actually exist)
+            const resolvedModelPath = await ModelDownloadService.getResolvedModelPath();
+            if (!resolvedModelPath) {
+                throw new Error('Model files not found. Please re-download the model.');
+            }
+
+            console.log('Loading ONNX model from:', resolvedModelPath);
 
             // Initialize tokenizer first
             const tokenizerReady = await phi3Tokenizer.initialize();
@@ -98,9 +104,9 @@ class OfflineAIService {
             }
             console.log('Tokenizer initialized successfully');
 
-            // Create ONNX InferenceSession
+            // Create ONNX InferenceSession using resolved path (works whether model was downloaded with RNFS or Expo)
             // Note: onnxruntime-react-native requires native build (EAS)
-            this.session = await InferenceSession.create(modelInfo.modelPath, {
+            this.session = await InferenceSession.create(resolvedModelPath, {
                 executionProviders: ['cpu'], // React Native mobile uses CPU
                 graphOptimizationLevel: 'all',
             });

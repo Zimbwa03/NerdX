@@ -22,12 +22,8 @@ import {
     ErrorHighlighter,
     ExecutionPanel,
     FloatingActionMenu,
-    SidePanelTabs,
     AIAssistantPanel,
-    HintPanel,
-    DocumentationPanel,
 } from '../../components/virtualLab/programmingLab';
-import type { SidePanelTabId } from '../../components/virtualLab/programmingLab';
 import { syntaxValidator } from '../../utils/programmingLab/syntaxValidator';
 import { programmingLabApi } from '../../services/api/programmingLabApi';
 import { gamificationService } from '../../services/GamificationService';
@@ -93,9 +89,9 @@ const ProgrammingLabEditorScreen: React.FC = () => {
     const [syntaxErrors, setSyntaxErrors] = useState<SyntaxErrorType[]>([]);
     const [isExecuting, setIsExecuting] = useState(false);
     const [executionResult, setExecutionResult] = useState<ExecutionResult | null>(null);
-    const [activeSideTab, setActiveSideTab] = useState<SidePanelTabId>('ai');
     const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
     const [templatesVisible, setTemplatesVisible] = useState(false);
+    const [aiVisible, setAiVisible] = useState(false);
     const validationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const activeFile = files.find((f) => f.id === activeFileId) ?? files[0];
@@ -269,6 +265,7 @@ const ProgrammingLabEditorScreen: React.FC = () => {
                     onFileNew={handleNewFile}
                     onUndo={() => {}}
                     onRedo={() => {}}
+                    onAiPress={() => setAiVisible(true)}
                 />
 
                 <View style={styles.mainRow}>
@@ -328,19 +325,6 @@ const ProgrammingLabEditorScreen: React.FC = () => {
                             <ErrorHighlighter errors={syntaxErrors} onErrorClick={handleErrorClick} />
                         </View>
                     </View>
-
-                    <SidePanelTabs activeTab={activeSideTab} onTabChange={setActiveSideTab}>
-                        {activeSideTab === 'ai' && (
-                            <AIAssistantPanel
-                                language={activeFile?.language ?? 'python'}
-                                code={code}
-                                userLevel={params.userLevel ?? 'a-level'}
-                                exerciseId={params.exerciseId}
-                            />
-                        )}
-                        {activeSideTab === 'hints' && <HintPanel />}
-                        {activeSideTab === 'docs' && <DocumentationPanel />}
-                    </SidePanelTabs>
                 </View>
 
                 <ExecutionPanel
@@ -356,7 +340,7 @@ const ProgrammingLabEditorScreen: React.FC = () => {
                     actions={[
                         { id: 'run', label: 'Run', icon: 'play', onPress: handleRunCode },
                         { id: 'templates', label: 'Templates', icon: 'list', onPress: () => setTemplatesVisible(true) },
-                        { id: 'ai-help', label: 'AI Help', icon: 'sparkles', onPress: () => setActiveSideTab('ai') },
+                        { id: 'ai-help', label: 'AI Help', icon: 'sparkles', onPress: () => setAiVisible(true) },
                     ]}
                 />
 
@@ -374,6 +358,23 @@ const ProgrammingLabEditorScreen: React.FC = () => {
                             onPress={() => handleApplyTemplate(template)}
                         />
                     ))}
+                </Modal>
+
+                <Modal
+                    visible={aiVisible}
+                    onClose={() => setAiVisible(false)}
+                    title="AI Programming Assistant"
+                >
+                    <View style={{ height: 420 }}>
+                        <AIAssistantPanel
+                            language={activeFile?.language ?? 'python'}
+                            code={code}
+                            userLevel={params.userLevel ?? 'a-level'}
+                            exerciseId={params.exerciseId}
+                            lab="programming"
+                            board={params.courseId as 'zimsec' | 'cambridge' | undefined}
+                        />
+                    </View>
                 </Modal>
             </KeyboardAvoidingView>
         </SafeAreaView>

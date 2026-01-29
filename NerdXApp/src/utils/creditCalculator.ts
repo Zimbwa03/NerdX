@@ -70,6 +70,19 @@ export function calculateQuizCreditCost(params: CreditCostParams): number {
     return 0.3; // MCQ
   }
 
+  // A-Level Computer Science – same pricing: MCQ 0.3, Structured 0.5, Essay 1
+  if (subjectKey === 'a_level_computer_science') {
+    const fmt = (questionFormat || bioQuestionType || 'mcq').toLowerCase();
+    if (fmt === 'structured') return 0.5;
+    if (fmt === 'essay') return 1;
+    return 0.3; // MCQ
+  }
+
+  // A-Level Geography – Essay questions only: 1 credit per essay
+  if (subjectKey === 'a_level_geography') {
+    return 1; // Essay questions: 1 credit
+  }
+
   // Default fallback
   return 1;
 }

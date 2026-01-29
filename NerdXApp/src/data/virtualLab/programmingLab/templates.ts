@@ -12,13 +12,16 @@ export const PROGRAMMING_TEMPLATES: ProgrammingTemplate[] = [
     {
         id: 'add-two-numbers-python',
         title: 'Add Two Numbers',
-        description: 'Reads two numbers from the user and prints their sum.',
+        description: 'Adds two numbers and shows the result. Change the values to test.',
         language: 'python',
-        code: `# Add two numbers entered by the user
+        code: `# Add two numbers (no input required)
+# Change the values of first and second, then press Run.
 
-first = float(input("Enter first number: "))
-second = float(input("Enter second number: "))
+first = 5.0
+second = 7.5
 
+print("First number:", first)
+print("Second number:", second)
 total = first + second
 print("The sum is:", total)
 `,
@@ -26,13 +29,14 @@ print("The sum is:", total)
     {
         id: 'max-of-three-python',
         title: 'Largest of Three Numbers',
-        description: 'Finds the largest of three numbers using if/elif.',
+        description: 'Finds the largest of three numbers. Change a, b, c to test.',
         language: 'python',
-        code: `# Find the largest of three numbers
+        code: `# Find the largest of three numbers (no input required)
+# Change the values of a, b and c, then press Run.
 
-a = float(input("Enter first number: "))
-b = float(input("Enter second number: "))
-c = float(input("Enter third number: "))
+a = 4
+b = 12
+c = 9
 
 largest = a
 if b > largest:
@@ -46,11 +50,12 @@ print("The largest number is:", largest)
     {
         id: 'even-odd-python',
         title: 'Even or Odd',
-        description: 'Checks if a number is even or odd.',
+        description: 'Checks if a number is even or odd. Change n to test.',
         language: 'python',
-        code: `# Check if a number is even or odd
+        code: `# Check if a number is even or odd (no input required)
+# Change the value of n, then press Run.
 
-n = int(input("Enter an integer: "))
+n = 10
 
 if n % 2 == 0:
     print(n, "is even")
@@ -61,16 +66,16 @@ else:
     {
         id: 'simple-calculator-python',
         title: 'Simple Calculator',
-        description: 'Performs +, -, * or / on two numbers.',
+        description: 'Performs +, -, * or / on two numbers. Change a, b, op to test.',
         language: 'python',
-        code: `# Very simple calculator
+        code: `# Very simple calculator (no input required)
+# Change the values of a, b and op, then press Run.
 
 print("Simple calculator")
-print("Choose operation: +  -  *  /")
-op = input("Enter operation: ")
 
-a = float(input("Enter first number: "))
-b = float(input("Enter second number: "))
+op = "+"  # Try "+", "-", "*", or "/"
+a = 8
+b = 3
 
 if op == "+":
     print("Result:", a + b)

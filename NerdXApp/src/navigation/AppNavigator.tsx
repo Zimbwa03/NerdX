@@ -92,6 +92,14 @@ import ThermalExpansionScreen from '../screens/virtualLab/ThermalExpansionScreen
 import WavePropertiesScreen from '../screens/virtualLab/WavePropertiesScreen';
 import VirtualLabTemplateScreen from '../screens/virtualLab/VirtualLabTemplateScreen';
 import VirtualLabInteractiveScreen from '../screens/virtualLab/VirtualLabInteractiveScreen';
+import MapWorkLabScreen from '../screens/virtualLab/MapWorkLabScreen';
+import SixFigureGridLabScreen from '../screens/virtualLab/SixFigureGridLabScreen';
+import CompassBearingLabScreen from '../screens/virtualLab/CompassBearingLabScreen';
+import ContourLinesLabScreen from '../screens/virtualLab/ContourLinesLabScreen';
+import ScaleDistanceLabScreen from '../screens/virtualLab/ScaleDistanceLabScreen';
+import CrossSectionLabScreen from '../screens/virtualLab/CrossSectionLabScreen';
+import MapLayersLabScreen from '../screens/virtualLab/MapLayersLabScreen';
+import GeoMapsLabScreen from '../screens/virtualLab/GeoMapsLabScreen';
 
 // Mathematics Virtual Lab Screens
 import DifferentiationLabScreen from '../screens/virtualLab/DifferentiationLabScreen';
@@ -119,6 +127,8 @@ import LogarithmsLabScreen from '../screens/virtualLab/LogarithmsLabScreen';
 import SequencesSeriesLabScreen from '../screens/virtualLab/SequencesSeriesLabScreen';
 import SimultaneousEquationsLabScreen from '../screens/virtualLab/SimultaneousEquationsLabScreen';
 import ProgrammingLabEditorScreen from '../screens/virtualLab/ProgrammingLabEditorScreen';
+import WebDesignLabEditorScreen from '../screens/virtualLab/WebDesignLabEditorScreen';
+import DatabaseLabEditorScreen from '../screens/virtualLab/DatabaseLabEditorScreen';
 
 const Stack = createStackNavigator();
 
@@ -570,6 +580,56 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="ProgrammingLabEditor"
               component={ProgrammingLabEditorScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="WebDesignLabEditor"
+              component={WebDesignLabEditorScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="DatabaseLabEditor"
+              component={DatabaseLabEditorScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="MapWorkLab"
+              component={MapWorkLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="SixFigureGridLab"
+              component={SixFigureGridLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CompassBearingLab"
+              component={CompassBearingLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ContourLinesLab"
+              component={ContourLinesLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ScaleDistanceLab"
+              component={ScaleDistanceLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CrossSectionLab"
+              component={CrossSectionLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="MapLayersLab"
+              component={MapLayersLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="GeoMapsLab"
+              component={GeoMapsLabScreen}
               options={{ headerShown: false }}
             />
             {/* Mathematics Virtual Lab Screens */}

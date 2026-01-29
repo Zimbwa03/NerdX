@@ -21,6 +21,8 @@ export interface EditorTopBarProps {
     onUndo?: () => void;
     onRedo?: () => void;
     onBack?: () => void;
+    /** Optional: show an AI assistant button in the header. */
+    onAiPress?: () => void;
 }
 
 const EditorTopBar: React.FC<EditorTopBarProps> = ({
@@ -32,6 +34,7 @@ const EditorTopBar: React.FC<EditorTopBarProps> = ({
     onUndo,
     onRedo,
     onBack,
+    onAiPress,
 }) => {
     const themedColors = useThemedColors();
 
@@ -52,6 +55,11 @@ const EditorTopBar: React.FC<EditorTopBarProps> = ({
                     </Text>
                 </View>
                 <View style={styles.actions}>
+                    {onAiPress && (
+                        <TouchableOpacity onPress={onAiPress} style={styles.iconButton}>
+                            <Ionicons name="sparkles-outline" size={20} color={themedColors.primary.main} />
+                        </TouchableOpacity>
+                    )}
                     {onUndo && (
                         <TouchableOpacity onPress={onUndo} style={styles.iconButton}>
                             <Ionicons name="arrow-undo-outline" size={20} color={themedColors.text.primary} />

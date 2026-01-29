@@ -32,6 +32,8 @@ TIME_CONFIG = {
         "a_level_physics": 100,  # A-Level Physics
         "english": 70,
         "computer_science": 85,  # O-Level CS (ZimSec/Cambridge)
+        "geography": 85,  # O-Level Geography (ZIMSEC)
+        "a_level_geography": 1500,  # A-Level Geography: essay-only (25-mark, ~25 min per essay)
         "biology": 80,
         "chemistry": 80,
         "physics": 80,
@@ -353,6 +355,13 @@ class ExamSessionService:
         if subject_key == "computer_science":
             question_type = self._get_question_type_for_index(session, question_index)
             return self._generate_cs_exam_question(session, question_index, question_type)
+        
+        if subject_key == "geography":
+            question_type = self._get_question_type_for_index(session, question_index)
+            return self._generate_geography_exam_question(session, question_index, question_type)
+
+        if subject_key == "a_level_geography":
+            return self._generate_a_level_geography_exam_question(session, question_index)
 
         # Determine question type for this index
         question_type = self._get_question_type_for_index(session, question_index)
@@ -458,6 +467,154 @@ class ExamSessionService:
             "question_index": question_index,
             "generated_at": datetime.utcnow().isoformat(),
             "ai_model": "computer_science_generator",
+        }
+
+    def _generate_geography_exam_question(
+        self, session: Dict, question_index: int, question_type: str
+    ) -> Optional[Dict]:
+        """Generate a Geography exam question using the Geography generator (ZIMSEC)."""
+        try:
+            from services.geography_generator import GeographyGenerator
+            geo_gen = GeographyGenerator()
+        except Exception as e:
+            logger.error(f"Failed to load GeographyGenerator: {e}")
+            return self._get_fallback_question(session)
+
+        topic = self._get_topic_for_index(session, question_index)
+        if not topic:
+            allowed = session.get("allowed_topics") or session.get("topic_plan") or []
+            topic = random.choice(allowed) if allowed else "Weather and Climate"
+        paper_style = (session.get("paper_style") or "ZIMSEC").upper()
+        board = "zimsec"  # Geography currently only supports ZIMSEC
+        difficulty = (session.get("difficulty") or "standard").lower()
+        if difficulty == "standard":
+            difficulty = "medium"
+        user_id = session.get("user_id")
+
+        raw = None
+        if question_type == "MCQ":
+            raw = geo_gen.generate_topical_question(topic, difficulty, user_id, board=board)
+        else:
+            raw = geo_gen.generate_structured_question(topic, difficulty, user_id, board=board)
+
+        if not raw:
+            return self._get_fallback_question(session)
+
+        # Map Geography generator output to exam question format
+        username = session.get("username", "Student")
+        prompt_to_student = (
+            f"Let's go, {username}! Here's your first question."
+            if question_index == 0
+            else f"Great work, {username}! Here's question {question_index + 1}."
+        )
+
+        if question_type == "MCQ":
+            opts = raw.get("options") or {}
+            if isinstance(opts, dict):
+                options = [{"label": k, "text": v} for k, v in opts.items()]
+            else:
+                options = [{"label": str(i + 1), "text": o} for i, o in enumerate(opts)]
+            return {
+                "id": str(uuid.uuid4()),
+                "question_type": "MCQ",
+                "topic": raw.get("topic") or topic,
+                "subtopic": raw.get("subtopic", ""),
+                "stem": raw.get("question") or raw.get("question_text", ""),
+                "options": options,
+                "correct_option": raw.get("correct_answer", "A"),
+                "explanation": raw.get("explanation", ""),
+                "difficulty": difficulty,
+                "prompt_to_student": prompt_to_student,
+                "question_index": question_index,
+                "generated_at": datetime.utcnow().isoformat(),
+                "ai_model": "geography_generator",
+            }
+
+        # STRUCTURED
+        sq = raw.get("structured_question") or raw
+        parts_in = sq.get("parts") or []
+        parts_out = []
+        for p in parts_in:
+            if isinstance(p, dict):
+                parts_out.append({
+                    "part": p.get("label", "a"),
+                    "prompt": p.get("question", ""),
+                    "marks": p.get("marks", 2),
+                    "key_points": p.get("marking_points") or [],
+                })
+        stem = sq.get("stem") or sq.get("context") or (parts_out[0]["prompt"] if parts_out else "")
+        return {
+            "id": str(uuid.uuid4()),
+            "question_type": "STRUCTURED",
+            "topic": raw.get("topic") or sq.get("topic") or topic,
+            "subtopic": sq.get("subtopic", ""),
+            "stem": stem,
+            "parts": parts_out,
+            "total_marks": sq.get("total_marks", sum(pp.get("marks", 2) for pp in parts_out)),
+            "marking_scheme": {p.get("part", str(i)): p.get("key_points", []) for i, p in enumerate(parts_out)},
+            "explanation": raw.get("explanation") or sq.get("explanation", ""),
+            "difficulty": difficulty,
+            "prompt_to_student": prompt_to_student,
+            "question_index": question_index,
+            "generated_at": datetime.utcnow().isoformat(),
+            "ai_model": "geography_generator",
+        }
+
+    def _generate_a_level_geography_exam_question(
+        self, session: Dict, question_index: int
+    ) -> Optional[Dict]:
+        """Generate an A-Level Geography exam question (essay only, 20-25 marks)."""
+        try:
+            from services.a_level_geography_generator import ALevelGeographyGenerator
+            from constants import A_LEVEL_GEOGRAPHY_TOPICS
+            geo_gen = ALevelGeographyGenerator()
+        except Exception as e:
+            logger.error("Failed to load ALevelGeographyGenerator: %s", e)
+            return self._get_fallback_question(session)
+
+        topic = self._get_topic_for_index(session, question_index)
+        if not topic:
+            allowed = session.get("allowed_topics") or session.get("topic_plan") or []
+            paper1 = A_LEVEL_GEOGRAPHY_TOPICS.get("Paper 1", [])
+            paper2 = A_LEVEL_GEOGRAPHY_TOPICS.get("Paper 2", [])
+            full = paper1 + paper2
+            topic = random.choice(full) if full else "Climatology"
+        difficulty = (session.get("difficulty") or "standard").lower()
+        if difficulty == "standard":
+            difficulty = "medium"
+        user_id = session.get("user_id")
+
+        raw = geo_gen.generate_essay_question(topic, difficulty, user_id)
+        if not raw:
+            return self._get_fallback_question(session)
+
+        username = session.get("username", "Student")
+        prompt_to_student = (
+            f"Let's go, {username}! Here's your first essay."
+            if question_index == 0
+            else f"Great work, {username}! Here's essay question {question_index + 1}."
+        )
+
+        return {
+            "id": str(uuid.uuid4()),
+            "question_type": "essay",
+            "topic": raw.get("topic") or topic,
+            "stem": raw.get("question", ""),
+            "question": raw.get("question", ""),
+            "word_limit": raw.get("word_limit", "400-600 words"),
+            "marks": raw.get("marks", 25),
+            "key_points": raw.get("key_points", []),
+            "marking_criteria": raw.get("marking_criteria", {}),
+            "case_studies": raw.get("case_studies", []),
+            "sample_answer_outline": raw.get("sample_answer_outline", ""),
+            "paper": raw.get("paper", ""),
+            "explanation": raw.get("sample_answer_outline", ""),
+            "difficulty": difficulty,
+            "prompt_to_student": prompt_to_student,
+            "question_index": question_index,
+            "generated_at": datetime.utcnow().isoformat(),
+            "ai_model": "a_level_geography_generator",
+            "allows_text_input": True,
         }
 
     def _call_deepseek_only(
@@ -841,7 +998,22 @@ Requirements:
             return fallback_questions["biology"]
         elif subject_key == "computer_science":
             return fallback_questions["computer_science"]
-        
+        elif subject_key == "a_level_geography":
+            return {
+                "id": f"fallback-{uuid.uuid4()}",
+                "question_type": "essay",
+                "topic": "Climatology",
+                "stem": "Discuss the key processes and patterns in climatology. Analyse the factors influencing global climate and evaluate their impacts on Zimbabwean agriculture and water resources.",
+                "question": "Discuss the key processes and patterns in climatology. Analyse the factors influencing global climate and evaluate their impacts on Zimbabwean agriculture and water resources.",
+                "word_limit": "400-600 words",
+                "marks": 25,
+                "key_points": ["Define key concepts", "Describe processes and patterns", "Analyse factors", "Evaluate impacts"],
+                "marking_criteria": {"content": "10-12 marks", "analysis": "6-8 marks", "communication": "3-4 marks"},
+                "explanation": "Address command word; use Zimbabwean/African examples where relevant.",
+                "prompt_to_student": "Here's an essay question while we prepare the next one.",
+                "allows_text_input": True,
+            }
+
         return fallback_questions.get(subject, fallback_questions["mathematics"])
 
     def _get_subject_topics(
@@ -881,9 +1053,14 @@ Requirements:
                 A_LEVEL_CHEMISTRY_TOPICS,
                 A_LEVEL_BIOLOGY_ALL_TOPICS,
                 A_LEVEL_BIOLOGY_TOPICS,
+                A_LEVEL_GEOGRAPHY_ALL_TOPICS,
             )
         except Exception:
             return []
+
+        # A-Level Geography (essay-only, Paper 1 + Paper 2 topics)
+        if subject_key == "a_level_geography":
+            return list(A_LEVEL_GEOGRAPHY_ALL_TOPICS)
 
         # O-Level Mathematics
         if subject_key in ("mathematics", "math") or subject_key.startswith("mathematics_"):
@@ -964,6 +1141,19 @@ Requirements:
             topic = plan[index]
             return topic.strip() if isinstance(topic, str) else None
         return None
+
+    def _get_question_type_for_index(self, session: Dict, question_index: int) -> str:
+        """Return question type (MCQ, STRUCTURED, or essay) for this index based on session question_mode."""
+        subject_key = (session.get("subject") or "").lower().replace(" ", "_").replace("-", "_")
+        if subject_key == "a_level_geography":
+            return "essay"
+        mode = (session.get("question_mode") or "MCQ_ONLY").upper()
+        if mode == "MCQ_ONLY":
+            return "MCQ"
+        if mode == "STRUCTURED_ONLY":
+            return "STRUCTURED"
+        # MIXED: alternate MCQ and STRUCTURED by index
+        return "MCQ" if question_index % 2 == 0 else "STRUCTURED"
 
     def _build_question_signature(self, question: Dict) -> str:
         """Build a normalized signature for duplicate detection within a session."""
@@ -1110,9 +1300,46 @@ Requirements:
                 "explanation": question.get("explanation", ""),
                 "feedback": self._generate_mcq_feedback(is_correct, username),
             }
-        else:  # STRUCTURED
-            return self._mark_structured_answer(question, answer, username, image_url)
-    
+        if question_type == "essay":
+            return self._mark_essay_answer(question, answer, username)
+        # STRUCTURED
+        return self._mark_structured_answer(question, answer, username, image_url)
+
+    def _mark_essay_answer(self, question: Dict, answer: Any, username: str) -> Dict:
+        """Mark an essay answer using key_points presence (heuristic). Full marking would require AI."""
+        total_marks = question.get("marks", 25)
+        key_points = question.get("key_points") or []
+        answer_text = (answer or "").strip()
+        word_count = len(answer_text.split()) if answer_text else 0
+
+        # Heuristic: award marks for key points addressed (keyword presence) and length
+        marks_awarded = 0
+        if key_points and answer_text:
+            answer_lower = answer_text.lower()
+            for point in key_points:
+                # Check if any significant word from the key point appears
+                words = [w for w in point.split() if len(w) > 3]
+                if words and any(w.lower() in answer_lower for w in words):
+                    marks_awarded += max(1, total_marks // max(len(key_points), 1))
+        # Cap by total and give some credit for length (400-600 words expected)
+        if word_count >= 300:
+            marks_awarded = max(marks_awarded, total_marks // 3)
+        marks_awarded = min(marks_awarded, total_marks)
+
+        outline = question.get("sample_answer_outline") or question.get("explanation") or ""
+        feedback = f"Essay submitted ({word_count} words). Key points to include: " + "; ".join(key_points[:4]) if key_points else "Review the marking criteria."
+        if outline:
+            feedback += f" Suggested structure: {outline[:200]}..."
+
+        return {
+            "is_correct": marks_awarded >= total_marks // 2,
+            "marks_awarded": marks_awarded,
+            "marks_total": total_marks,
+            "percentage": (marks_awarded / total_marks * 100) if total_marks else 0,
+            "explanation": outline,
+            "feedback": feedback,
+        }
+
     def _mark_structured_answer(self, question: Dict, answer: str, username: str, image_url: str = None) -> Dict:
         """Mark a structured answer using keyword matching and Vertex AI for image-based answers."""
         total_marks = question.get("total_marks", 5)

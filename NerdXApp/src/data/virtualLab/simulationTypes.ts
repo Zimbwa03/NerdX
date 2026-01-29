@@ -1,7 +1,7 @@
 // Virtual Lab Simulation Types
 // Type definitions for interactive science simulations
 
-export type Subject = 'biology' | 'chemistry' | 'physics' | 'mathematics' | 'english' | 'computer_science';
+export type Subject = 'biology' | 'chemistry' | 'physics' | 'mathematics' | 'english' | 'computer_science' | 'geography';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
 // ============================
@@ -340,6 +340,11 @@ export const SUBJECT_COLORS = {
         primary: '#0066CC',
         secondary: '#4D94E6',
         gradient: ['#0066CC', '#004C99'] as [string, string],
+    },
+    geography: {
+        primary: '#2E7D32',
+        secondary: '#66BB6A',
+        gradient: ['#2E7D32', '#1B5E20'] as [string, string],
     },
 } as const;
 

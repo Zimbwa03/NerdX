@@ -24,6 +24,7 @@ import { useThemedColors } from '../../theme/useThemedStyles';
 import { virtualLabApi } from '../../services/api/virtualLabApi';
 import { gamificationService } from '../../services/GamificationService';
 import { mathApi } from '../../services/api/mathApi';
+import { useAuth } from '../../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
@@ -51,6 +52,7 @@ export const KnowledgeCheck: React.FC<KnowledgeCheckProps> = ({
 }) => {
     const themedColors = useThemedColors();
     const navigation = useNavigation<any>();
+    const { updateUser } = useAuth();
 
     const [step, setStep] = useState<Step>('setup');
     const [questionCount, setQuestionCount] = useState(5);
@@ -135,14 +137,18 @@ export const KnowledgeCheck: React.FC<KnowledgeCheckProps> = ({
         setUsedFallback(false);
 
         try {
-            const data = await virtualLabApi.generateKnowledgeCheck({
+            const result = await virtualLabApi.generateKnowledgeCheck({
                 simulation_id: simulation.id,
                 subject: simulation.subject,
                 topic: simulation.topic,
                 difficulty: simulation.difficulty,
                 count,
             });
+            if (result?.credits_remaining !== undefined) {
+                updateUser({ credits: result.credits_remaining });
+            }
 
+            const data = result?.questions ?? [];
             const mapped: QuizQuestion[] = (data || [])
                 .filter(q => q && q.question_text && Array.isArray(q.options) && q.options.length >= 2)
                 .map(q => ({

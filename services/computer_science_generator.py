@@ -530,6 +530,7 @@ Generate a unique, high-quality question now:"""
 3. Include a short context/scenario where appropriate
 4. Provide detailed marking scheme (marking_points) per part
 5. {req5}
+6. Do NOT ask the student to draw or produce diagrams; focus on knowledge-based written answers only (no diagram questions).
 
 **Response Format (JSON)**:
 {{
@@ -599,6 +600,7 @@ Generate a structured question now:"""
 2. Test analysis, evaluation, or discussion skills; allow valid perspectives (AO2/AO3 where relevant)
 3. {req3}
 4. Provide comprehensive marking guide (content, analysis, communication)
+5. Do NOT ask the student to draw or produce diagrams; focus on knowledge-based written answers only (no diagram questions).
 
 **Response Format (JSON)**:
 {{

@@ -80,6 +80,23 @@ TOPICS = {
         "Language and Grammar in Context",
         "Grammar Usage and Vocabulary"
     ],
+    # ZIMSEC O-Level Geography — All Level (Forms 1–4), flat topic list (no Form groupings in UI)
+    "Geography": [
+        # Physical environment and skills
+        "Weather and Climate",
+        "Landforms and Landscape Processes",
+        "Ecosystems",
+        "Natural Resources",
+        "Energy and Power Development",
+        "Map Work and Geographical Information Systems (GIS)",
+        # Economic and human geography
+        "Minerals and Mining",
+        "Environmental Management",
+        "Agriculture and Land Reform",
+        "Industry",
+        "Settlement and Population",
+        "Transport and Trade"
+    ],
     # ZIMSEC O-Level Computer Science 7014 — 11 topics (theory; practical in Virtual Labs)
     "Computer Science": [
         "Hardware and Software",
@@ -130,6 +147,26 @@ A_LEVEL_PHYSICS_TOPICS = {
 
 # All A Level Physics topics flat list
 A_LEVEL_PHYSICS_ALL_TOPICS = A_LEVEL_PHYSICS_TOPICS["AS Level"] + A_LEVEL_PHYSICS_TOPICS["A2 Level"]
+
+# A Level Geography Topics (ZIMSEC A Level Syllabus 9156)
+A_LEVEL_GEOGRAPHY_TOPICS = {
+    "Paper 1": [
+        "Climatology",
+        "Hydrology & Fluvial Geomorphology",
+        "Geomorphology",
+        "Biogeography",
+    ],
+    "Paper 2": [
+        "Population Geography",
+        "Settlement Geography",
+        "Agriculture & Food Production",
+        "Industry, Mining & Energy",
+        "Environmental Management",
+    ],
+}
+
+# All A Level Geography topics flat list
+A_LEVEL_GEOGRAPHY_ALL_TOPICS = A_LEVEL_GEOGRAPHY_TOPICS["Paper 1"] + A_LEVEL_GEOGRAPHY_TOPICS["Paper 2"]
 
 # A Level Chemistry Topics (Cambridge/ZIMSEC A Level Syllabus)
 A_LEVEL_CHEMISTRY_TOPICS = {

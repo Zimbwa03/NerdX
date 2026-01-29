@@ -36,6 +36,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const { width } = Dimensions.get('window');
 
 const CS_BOARD_STORAGE_KEY = '@nerdx_cs_board';
+const A_LEVEL_CS_BOARD_STORAGE_KEY = '@nerdx_alevel_cs_board';
 
 const TopicsScreen: React.FC = () => {
   const route = useRoute();
@@ -208,12 +209,15 @@ const TopicsScreen: React.FC = () => {
       setSelectedScienceQuestionFormat('mcq');
       setMixImagesEnabled(false);
       setScienceQuestionTypeModalVisible(true);
-    } else if (subject.id === 'computer_science') {
-      // Show Computer Science Question Type Modal
+    } else if (subject.id === 'computer_science' || subject.id === 'a_level_computer_science') {
+      // Show Computer Science Question Type Modal (O-Level or A-Level: MCQ, Structured, Essay)
       setSelectedCsTopic(topic);
       setSelectedCsQuestionType('mcq');
       setMixImagesEnabled(false);
       setCsQuestionTypeModalVisible(true);
+    } else if (subject.id === 'a_level_geography') {
+      // A-Level Geography: only Essay questions, directly start quiz
+      handleStartQuiz(topic, 'essay', undefined, false);
     } else {
       // Start quiz modal with visual learning toggle
       openStartQuizModal(topic);
@@ -250,7 +254,7 @@ const TopicsScreen: React.FC = () => {
 
   const handleTeacherMode = () => {
     navigation.navigate('TeacherModeSetup' as never, {
-      preselectedSubject: activeTab,
+      preselectedSubject: subject.id === 'combined_science' ? activeTab : subjectDisplayName,
     } as never);
   };
 
@@ -266,6 +270,20 @@ const TopicsScreen: React.FC = () => {
   const handleCsTeacherMode = () => {
     navigation.navigate('TeacherModeSetup' as never, {
       preselectedSubject: 'Computer Science',
+    } as never);
+  };
+
+  const handleGeographyNotes = () => {
+    navigation.navigate('GeographyNotes' as never);
+  };
+
+  const handleGeographyVirtualLab = () => {
+    navigation.navigate('VirtualLab' as never);
+  };
+
+  const handleGeographyTeacherMode = () => {
+    navigation.navigate('TeacherModeSetup' as never, {
+      preselectedSubject: 'Geography',
     } as never);
   };
 
@@ -414,6 +432,7 @@ const TopicsScreen: React.FC = () => {
           subject,
           topic,
           mixImagesEnabled: !!mixImages,
+          ...(questionType ? { questionType } : {}),
           ...(subject.id === 'computer_science' ? { board: csBoard } : subject.id === 'a_level_computer_science' ? { board: aLevelCsBoard } : {}),
         } as never);
       } else {
@@ -441,6 +460,7 @@ const TopicsScreen: React.FC = () => {
     if (subject.id === 'english') return [Colors.subjects.english, Colors.warning.dark];
     if (subject.id === 'english') return [Colors.subjects.english, Colors.warning.dark];
     if (subject.id === 'computer_science') return [Colors.subjects.combinedScience, Colors.info.dark];
+    if (subject.id === 'geography' || subject.id === 'a_level_geography') return ['#2E7D32', Colors.secondary.dark];
     return Colors.gradients.primary;
   };
 
@@ -1089,6 +1109,56 @@ const TopicsScreen: React.FC = () => {
             </>
           )}
 
+          {/* Geography Features - Notes, Virtual Labs, Teacher Mode */}
+          {(subject.id === 'geography' || subject.id === 'a_level_geography') && !currentParentSubject && (
+            <>
+              <Card variant="elevated" onPress={handleGeographyNotes} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="book-outline" size={28} color="#2E7D32" />}
+                    size={56}
+                    backgroundColor="rgba(46, 125, 50, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Geography Notes</Text>
+                    <Text style={styles.featureSubtitle}>{subject.id === 'a_level_geography' ? 'A-Level ZIMSEC Geography notes' : 'All Level ZIMSEC Geography notes'}</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              <Card variant="elevated" onPress={handleGeographyVirtualLab} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="map-outline" size={28} color="#2E7D32" />}
+                    size={56}
+                    backgroundColor="rgba(46, 125, 50, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Virtual Labs</Text>
+                    <Text style={styles.featureSubtitle}>Interactive Geography fieldwork simulations</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              <Card variant="elevated" onPress={handleGeographyTeacherMode} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="school-outline" size={28} color="#2E7D32" />}
+                    size={56}
+                    backgroundColor="rgba(46, 125, 50, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Teacher Mode</Text>
+                    <Text style={styles.featureSubtitle}>AI tutor for {subject.id === 'a_level_geography' ? 'A-Level' : 'ZIMSEC'} Geography topics</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+            </>
+          )}
+
           {/* Computer Science Features - Notes, Virtual Labs, Teacher Mode */}
           {subject.id === 'computer_science' && !currentParentSubject && (
             <>
@@ -1155,6 +1225,8 @@ const TopicsScreen: React.FC = () => {
                   setExamSetupModalVisible(true);
                 } else if (subject.id === 'a_level_computer_science') {
                   setExamSetupModalVisible(true);
+                } else if (subject.id === 'geography' || subject.id === 'a_level_geography') {
+                  setExamSetupModalVisible(true);
                 } else {
                   openStartQuizModal();
                 }
@@ -1168,8 +1240,8 @@ const TopicsScreen: React.FC = () => {
                   backgroundColor="rgba(255, 255, 255, 0.2)"
                 />
                 <View style={styles.examInfo}>
-                  <Text style={styles.examTitle}>Start {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : ''} Exam</Text>
-                  <Text style={styles.examSubtitle}>Mixed questions from all {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : ''} topics</Text>
+                  <Text style={styles.examTitle}>Start {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : ''} Exam</Text>
+                  <Text style={styles.examSubtitle}>Mixed questions from all {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : ''} topics</Text>
                 </View>
               </View>
             </Card>
@@ -1375,7 +1447,7 @@ const TopicsScreen: React.FC = () => {
           setCsQuestionTypeModalVisible(false);
           setMixImagesEnabled(false);
         }}
-        title={`${selectedCsTopic?.name || 'Computer Science'}`}
+        title={`${selectedCsTopic?.name || (subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : 'Computer Science')}`}
       >
         <Text style={styles.modalDescription}>Choose your question format:</Text>
 
@@ -1414,6 +1486,10 @@ const TopicsScreen: React.FC = () => {
           <Text style={styles.choiceTitle}>Essay / Discussion</Text>
           <Text style={styles.choiceDescription}>Extended response questions to practice analysis</Text>
         </TouchableOpacity>
+
+        <Text style={[styles.visualModeCost, { marginTop: 12 }]}>
+          Estimated cost: {formatCreditCost(getEstimatedCost(selectedCsTopic, selectedCsQuestionType, undefined, false))} per question
+        </Text>
 
         <View style={[styles.modalButtonRow, { marginBottom: Math.max(insets.bottom, 8), paddingBottom: Math.max(insets.bottom, 0) }]}>
           <TouchableOpacity
