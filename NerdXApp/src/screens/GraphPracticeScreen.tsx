@@ -26,8 +26,10 @@ import { useThemedColors } from '../theme/useThemedStyles';
 import { Colors } from '../theme/colors';
 import VoiceMathInput from '../components/VoiceMathInput';
 import ZoomableImageModal from '../components/ZoomableImageModal';
+import MathRenderer from '../components/MathRenderer';
 
 type Mode = 'generate' | 'custom' | 'upload' | 'linear';
+type GraphLevel = 'o_level' | 'a_level';
 
 const GraphPracticeScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -40,6 +42,11 @@ const GraphPracticeScreen: React.FC = () => {
   const [showSolution, setShowSolution] = useState(false);
   const [graphType, setGraphType] = useState('linear');
   const [mode, setMode] = useState<Mode>('generate');
+  const [level, setLevel] = useState<GraphLevel>('o_level');
+
+  // Answer images (upload/capture) for Vertex AI analysis
+  const [answerImages, setAnswerImages] = useState<string[]>([]);
+  const [analyzingImages, setAnalyzingImages] = useState(false);
 
   // Custom equation input
   const [customEquation, setCustomEquation] = useState('');
@@ -110,6 +117,7 @@ const GraphPracticeScreen: React.FC = () => {
     { id: 'quadratic', name: 'Quadratic', icon: '📊' },
     { id: 'exponential', name: 'Exponential', icon: '📉' },
     { id: 'trigonometric', name: 'Trigonometric', icon: '🌊' },
+    { id: 'statistics', name: 'Statistics', icon: '📋' },
   ];
 
   const graphCreditCost = 1; // Graph generation cost (1 credit per graph)
@@ -157,8 +165,8 @@ const GraphPracticeScreen: React.FC = () => {
       setVideoError(null);
       setVideoLoading(false);
 
-      // Generate static graph
-      const data = await graphApi.generateGraph(graphType);
+      // Generate static graph (pass level for O-Level / A-Level question templates)
+      const data = await graphApi.generateGraph(graphType, undefined, level);
       if (data) {
         setGraphData(data);
         // Update credits from server response
@@ -413,6 +421,7 @@ const GraphPracticeScreen: React.FC = () => {
     setAnswer('');
     setShowSolution(false);
     setImageSolution(null);
+    setAnswerImages([]);
     setCustomEquation('');
     setConstraints(['', '']);
     setObjective('');
@@ -424,6 +433,21 @@ const GraphPracticeScreen: React.FC = () => {
         <Text style={styles.title}>📊 Graph Practice</Text>
         <Text style={styles.subtitle}>Practice reading and analyzing graphs</Text>
         <Text style={styles.credits}>Credits: {user?.credits || 0}</Text>
+        {/* O-Level / A-Level toggle */}
+        <View style={styles.levelRow}>
+          <TouchableOpacity
+            style={[styles.levelButton, level === 'o_level' && styles.levelButtonActive]}
+            onPress={() => setLevel('o_level')}
+          >
+            <Text style={[styles.levelButtonText, level === 'o_level' && styles.levelButtonTextActive]}>O-Level</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.levelButton, level === 'a_level' && styles.levelButtonActive]}
+            onPress={() => setLevel('a_level')}
+          >
+            <Text style={[styles.levelButtonText, level === 'a_level' && styles.levelButtonTextActive]}>A-Level</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Mode Selection */}
@@ -623,11 +647,11 @@ const GraphPracticeScreen: React.FC = () => {
       {/* Graph Display */}
       {graphData && (
         <View style={styles.graphSection}>
-          {graphData.graph_url && (
+          {graphData.graph_url ? (
             <TouchableOpacity
               style={[styles.imageContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F5F5' }]}
               onPress={() => {
-                setZoomImage(graphData.graph_url);
+                setZoomImage(graphData.graph_url!);
                 setZoomVisible(true);
               }}
               activeOpacity={0.9}
@@ -644,7 +668,17 @@ const GraphPracticeScreen: React.FC = () => {
                 <Text style={{ fontSize: 20 }}>🔍</Text>
               </View>
             </TouchableOpacity>
-          )}
+          ) : (graphData.no_plot || graphData.graph_type?.toLowerCase() === 'statistics') ? (
+            <View style={[styles.imageContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F5F5F5', justifyContent: 'center', alignItems: 'center', padding: 24 }]}>
+              <Text style={[styles.sectionTitle, { color: themedColors.text.secondary, textAlign: 'center', marginBottom: 8 }]}>📋 Statistics / Statistical Graphs</Text>
+              <Text style={[styles.questionLabel, { color: themedColors.text.primary, textAlign: 'center', marginBottom: 4 }]}>
+                Draw your graph on paper (bar chart, pie chart, histogram, etc.).
+              </Text>
+              <Text style={[styles.videoLoadingText, { color: themedColors.text.hint, textAlign: 'center' }]}>
+                You can upload a photo of your work below for AI feedback.
+              </Text>
+            </View>
+          ) : null}
 
           {(videoUrl || videoError || videoLoading || graphData?.graph_spec) && (
             <View style={styles.videoContainer}>
@@ -801,10 +835,14 @@ const GraphPracticeScreen: React.FC = () => {
           )}
 
           <View style={[styles.questionContainer, { backgroundColor: themedColors.background.paper }]}>
-            <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Equation:</Text>
-            <Text style={[styles.equation, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#F5F5F5', color: themedColors.secondary.main }]}>
-              {(!graphData.equation || ['linear', 'quadratic', 'exponential', 'trigonometric'].includes(String(graphData.equation).trim().toLowerCase())) ? '—' : graphData.equation}
-            </Text>
+            {!(graphData.no_plot || graphData.graph_type?.toLowerCase() === 'statistics') && (
+              <>
+                <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Equation (same as graph & question):</Text>
+                <Text style={[styles.equation, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#F5F5F5', color: themedColors.secondary.main }]}>
+                  {graphData.equation_display ?? (graphData.equation && !['linear', 'quadratic', 'exponential', 'trigonometric'].includes(String(graphData.equation).trim().toLowerCase()) ? graphData.equation : null) ?? '—'}
+                </Text>
+              </>
+            )}
 
             {graphData.constraints && graphData.constraints.length > 0 && (
               <>
@@ -825,7 +863,16 @@ const GraphPracticeScreen: React.FC = () => {
             )}
 
             <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Question:</Text>
-            <Text style={[styles.question, { color: themedColors.text.primary }]}>{graphData.question || 'Describe what you observe from the graph.'}</Text>
+            {/\\\(|\\\[|\$/.test(graphData.question || '') ? (
+              <MathRenderer
+                content={graphData.question || 'Describe what you observe from the graph.'}
+                fontSize={16}
+                style={{ marginBottom: 20 }}
+                minHeight={24}
+              />
+            ) : (
+              <Text style={[styles.question, { color: themedColors.text.primary }]}>{graphData.question || 'Describe what you observe from the graph.'}</Text>
+            )}
 
             {!showSolution && (
               <View style={styles.answerContainer}>
@@ -847,6 +894,99 @@ const GraphPracticeScreen: React.FC = () => {
                 <Text style={[styles.voiceHintText, { color: themedColors.text.secondary }]}>
                   🎤 Tap mic to speak your answer
                 </Text>
+
+                {/* Upload / Capture images for Vertex AI analysis */}
+                <Text style={[styles.answerLabel, { marginTop: 12, color: themedColors.text.primary }]}>Or submit images of your work (analyzed by AI):</Text>
+                <View style={styles.answerImageButtonsRow}>
+                  <TouchableOpacity
+                    style={[styles.answerImageButton, { backgroundColor: themedColors.primary.main }]}
+                    onPress={async () => {
+                      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                      if (status !== 'granted') {
+                        Alert.alert('Permission', 'Grant camera roll access to upload images.');
+                        return;
+                      }
+                      const result = await ImagePicker.launchImageLibraryAsync({
+                        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                        allowsMultipleSelection: true,
+                        quality: 0.8,
+                      });
+                      if (!result.canceled && result.assets?.length) {
+                        setAnswerImages(prev => [...prev, ...result.assets.map(a => a.uri)]);
+                      }
+                    }}
+                  >
+                    <Text style={styles.answerImageButtonText}>📷 Upload image</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.answerImageButton, { backgroundColor: themedColors.secondary.main }]}
+                    onPress={async () => {
+                      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+                      if (status !== 'granted') {
+                        Alert.alert('Permission', 'Grant camera access to capture images.');
+                        return;
+                      }
+                      const result = await ImagePicker.launchCameraAsync({
+                        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                        quality: 0.8,
+                      });
+                      if (!result.canceled && result.assets?.[0]?.uri) {
+                        setAnswerImages(prev => [...prev, result.assets[0].uri]);
+                      }
+                    }}
+                  >
+                    <Text style={styles.answerImageButtonText}>📸 Capture image</Text>
+                  </TouchableOpacity>
+                </View>
+                {answerImages.length > 0 && (
+                  <View style={styles.answerThumbnailsRow}>
+                    {answerImages.map((uri, idx) => (
+                      <View key={idx} style={styles.answerThumbnailWrap}>
+                        <Image source={{ uri }} style={styles.answerThumbnail} resizeMode="cover" />
+                        <TouchableOpacity
+                          style={styles.answerThumbnailRemove}
+                          onPress={() => setAnswerImages(prev => prev.filter((_, i) => i !== idx))}
+                        >
+                          <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 14 }}>×</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+                {answerImages.length > 0 && (
+                  <TouchableOpacity
+                    style={[styles.analyzeImagesButton, { backgroundColor: themedColors.success.main }]}
+                    onPress={async () => {
+                      if (!graphData?.question) return;
+                      setAnalyzingImages(true);
+                      try {
+                        const result = await graphApi.submitAnswerImages(graphData.question, answerImages);
+                        if (result) {
+                          setImageSolution({
+                            processed_text: result.processed_text || 'Images analyzed.',
+                            solution: result.solution || result.feedback || 'See analysis above.',
+                            analysis: result.analysis,
+                          });
+                          setShowSolution(true);
+                          if (user && (result as any).credits_remaining !== undefined) {
+                            updateUser({ credits: (result as any).credits_remaining });
+                          }
+                        }
+                      } catch (e: any) {
+                        Alert.alert('Error', e.response?.data?.message || 'Failed to analyze images.');
+                      } finally {
+                        setAnalyzingImages(false);
+                      }
+                    }}
+                    disabled={analyzingImages}
+                  >
+                    {analyzingImages ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <Text style={styles.analyzeImagesButtonText}>Submit images for AI analysis</Text>
+                    )}
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity
                   style={[styles.submitButton, { backgroundColor: themedColors.success.main }]}
                   onPress={handleSubmitAnswer}
@@ -872,7 +1012,16 @@ const GraphPracticeScreen: React.FC = () => {
             {showSolution && (
               <View style={[styles.solutionContainer, { backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.15)' : '#E8F5E9' }]}>
                 <Text style={[styles.solutionLabel, { color: themedColors.success.main }]}>Solution:</Text>
-                <Text style={[styles.solution, { color: themedColors.text.primary }]}>{graphData.solution || 'See explanation above.'}</Text>
+                {/\\\(|\\\[|\$/.test(graphData.solution || '') ? (
+                  <MathRenderer
+                    content={graphData.solution || 'See explanation above.'}
+                    fontSize={15}
+                    style={{ marginBottom: 15 }}
+                    minHeight={20}
+                  />
+                ) : (
+                  <Text style={[styles.solution, { color: themedColors.text.primary }]}>{graphData.solution || 'See explanation above.'}</Text>
+                )}
                 <TouchableOpacity
                   style={[styles.newGraphButton, { backgroundColor: themedColors.primary.main }]}
                   onPress={resetView}
@@ -947,6 +1096,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#FFFFFF',
     opacity: 0.8,
+  },
+  levelRow: {
+    flexDirection: 'row',
+    marginTop: 12,
+    gap: 10,
+  },
+  levelButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    alignItems: 'center',
+  },
+  levelButtonActive: {
+    backgroundColor: '#FFFFFF',
+  },
+  levelButtonText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '600',
+  },
+  levelButtonTextActive: {
+    color: '#2196F3',
   },
   modeContainer: {
     flexDirection: 'row',
@@ -1145,6 +1318,61 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: 'bold',
+  },
+  answerImageButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  answerImageButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  answerImageButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  answerThumbnailsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  answerThumbnailWrap: {
+    position: 'relative',
+  },
+  answerThumbnail: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    backgroundColor: '#E0E0E0',
+  },
+  answerThumbnailRemove: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#F44336',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  analyzeImagesButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  analyzeImagesButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
     fontWeight: 'bold',
   },
   solutionContainer: {

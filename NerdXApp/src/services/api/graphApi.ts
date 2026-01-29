@@ -2,8 +2,11 @@
 import api from './config';
 
 export interface GraphData {
-  graph_url: string;
-  equation: string;
+  graph_url?: string | null;
+  image_url?: string | null;
+  equation?: string | null;
+  /** Display form of the equation (e.g. "2x^2 - 4x + 3") — same as in question and graph. */
+  equation_display?: string | null;
   question: string;
   solution: string;
   constraints?: string[];
@@ -11,6 +14,8 @@ export interface GraphData {
   corner_points?: Array<[number, number]>;
   graph_spec?: GraphSpec;
   credits_remaining?: number;
+  /** When true, no graph image was generated (e.g. Statistics: draw on paper / upload image). */
+  no_plot?: boolean;
 }
 
 export interface GraphRange {
@@ -38,12 +43,14 @@ export interface GraphSpec {
 export const graphApi = {
   generateGraph: async (
     graphType: string,
-    equation?: string
+    equation?: string,
+    level?: 'o_level' | 'a_level'
   ): Promise<GraphData | null> => {
     try {
       const response = await api.post('/api/mobile/math/graph/generate', {
         graph_type: graphType,
         equation,
+        level: level || 'o_level',
       });
       const data = response.data.data || null;
       // Include credits_remaining from server response
@@ -168,6 +175,31 @@ export const graphApi = {
     } catch (error) {
       console.error('Expression animation error:', error);
       return null;
+    }
+  },
+
+  /** Submit one or more images as the student's answer for Vertex AI analysis (graph practice). */
+  submitAnswerImages: async (
+    questionText: string,
+    imageUris: string[]
+  ): Promise<{ processed_text?: string; solution?: string; feedback?: string; analysis?: string } | null> => {
+    try {
+      const formData = new FormData();
+      formData.append('question', questionText);
+      imageUris.forEach((uri, i) => {
+        formData.append('images', {
+          uri,
+          type: 'image/jpeg',
+          name: `answer_${i}.jpg`,
+        } as any);
+      });
+      const response = await api.post('/api/mobile/math/graph/answer-images', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return response.data.data || null;
+    } catch (error: any) {
+      console.error('Submit answer images error:', error);
+      throw error;
     }
   },
 };

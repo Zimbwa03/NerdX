@@ -14,7 +14,61 @@ from constants import A_LEVEL_PURE_MATH_TOPICS, A_LEVEL_PURE_MATH_ALL_TOPICS
 from utils.deepseek import get_deepseek_chat_model
 from utils.vertex_ai_helper import try_vertex_json
 
+_ALEVEL_EXPANDED = {}
+try:
+    from services.a_level_pure_math_prompts_part1 import A_LEVEL_PURE_MATH_PART1
+    _ALEVEL_EXPANDED.update(A_LEVEL_PURE_MATH_PART1)
+except ImportError:
+    pass
+try:
+    from services.a_level_pure_math_prompts_part2 import A_LEVEL_PURE_MATH_PART2
+    _ALEVEL_EXPANDED.update(A_LEVEL_PURE_MATH_PART2)
+except ImportError:
+    pass
+try:
+    from services.a_level_pure_math_prompts_part3 import A_LEVEL_PURE_MATH_PART3
+    _ALEVEL_EXPANDED.update(A_LEVEL_PURE_MATH_PART3)
+except ImportError:
+    pass
+
 logger = logging.getLogger(__name__)
+
+
+def _fmt_part1_sections(
+    learning_objectives: List[str],
+    subtopics: List[str],
+    exam_question_types: List[str],
+    templates: List[Dict],
+) -> str:
+    """Format Part 1 expanded data (objectives, subtopics, exam types, templates) for prompt injection."""
+    lines = []
+    if learning_objectives:
+        lines.append("LEARNING OBJECTIVES (ZIMSEC / Cambridge):")
+        for o in learning_objectives:
+            lines.append(f"- {o}")
+        lines.append("")
+    if subtopics:
+        lines.append("SUBTOPICS:")
+        for s in subtopics:
+            lines.append(f"- {s}")
+        lines.append("")
+    if exam_question_types:
+        lines.append("EXAM QUESTION TYPES (Type | Paper | Example):")
+        for e in exam_question_types:
+            lines.append(f"- {e}")
+        lines.append("")
+    if templates:
+        lines.append("EXAMPLE QUESTION TEMPLATES (vary numbers and context; use these patterns):")
+        for t in templates:
+            name = t.get("name", "")
+            pattern = t.get("pattern", "")
+            skills = t.get("skills", "")
+            lines.append(f"- {name}")
+            lines.append(f"  Pattern: {pattern}")
+            lines.append(f"  Skills: {skills}")
+        lines.append("Generate questions that follow these template patterns but use ORIGINAL numbers and scenarios.")
+        lines.append("Vary which template pattern you use across generations (e.g. sometimes operations-focused, sometimes factor/remainder theorem, sometimes applications) to maximize diversity.")
+    return "\n" + "\n".join(lines) if lines else ""
 
 # A Level Pure Mathematics topic details for comprehensive prompts
 A_LEVEL_PURE_MATH_TOPIC_DETAILS = {
@@ -200,11 +254,24 @@ class ALevelPureMathGenerator:
             key_concepts = topic_details.get("key_concepts", [])
             key_formulas = topic_details.get("key_formulas", [])
             question_types = topic_details.get("question_types", [])
+            part1 = _ALEVEL_EXPANDED.get(topic_name, {})
+            learning_objectives = part1.get("learning_objectives", [])
+            subtopics = part1.get("subtopics", [])
+            exam_question_types = part1.get("exam_question_types", [])
+            templates = part1.get("templates", [])
 
             if question_type == "structured":
-                prompt = self._create_structured_prompt(topic_name, difficulty, level, key_concepts, key_formulas, question_types)
+                prompt = self._create_structured_prompt(
+                    topic_name, difficulty, level, key_concepts, key_formulas, question_types,
+                    learning_objectives=learning_objectives, subtopics=subtopics,
+                    exam_question_types=exam_question_types, templates=templates,
+                )
             else:
-                prompt = self._create_mcq_prompt(topic_name, difficulty, level, key_concepts, key_formulas, question_types)
+                prompt = self._create_mcq_prompt(
+                    topic_name, difficulty, level, key_concepts, key_formulas, question_types,
+                    learning_objectives=learning_objectives, subtopics=subtopics,
+                    exam_question_types=exam_question_types, templates=templates,
+                )
 
             def _is_valid_candidate(data: Dict) -> bool:
                 if not isinstance(data, dict):
@@ -291,11 +358,20 @@ class ALevelPureMathGenerator:
         
         return topic_map.get(topic_id)
     
-    def _create_mcq_prompt(self, topic: str, difficulty: str, level: str, 
-                           key_concepts: List[str], key_formulas: List[str], 
-                           question_types: List[str]) -> str:
-        """Create a detailed prompt for A Level Pure Math MCQ generation"""
-        
+    def _create_mcq_prompt(self, topic: str, difficulty: str, level: str,
+                           key_concepts: List[str], key_formulas: List[str],
+                           question_types: List[str],
+                           learning_objectives: Optional[List[str]] = None,
+                           subtopics: Optional[List[str]] = None,
+                           exam_question_types: Optional[List[str]] = None,
+                           templates: Optional[List[Dict]] = None) -> str:
+        """Create a detailed prompt for A Level Pure Math MCQ generation."""
+        learning_objectives = learning_objectives or []
+        subtopics = subtopics or []
+        exam_question_types = exam_question_types or []
+        templates = templates or []
+        part1_block = _fmt_part1_sections(learning_objectives, subtopics, exam_question_types, templates)
+
         difficulty_guidance = {
             "easy": """Test basic understanding and recall. Direct application of single formula or concept.
             - Simple algebraic manipulation
@@ -341,6 +417,7 @@ COMPREHENSIVE SUBTOPIC COVERAGE:
 - This question MUST test understanding of a SPECIFIC subtopic within {topic}
 - Reference: ZIMSEC 6042 past papers and Cambridge 9709/9231 past papers
 - Questions should rotate through all subtopics to ensure comprehensive topic coverage
+{part1_block}
 
 KEY CONCEPTS FOR THIS TOPIC:
 {', '.join(key_concepts) if key_concepts else 'General concepts for this topic'}
@@ -438,9 +515,18 @@ Generate ONE A Level Pure Mathematics MCQ now:"""
     
     def _create_structured_prompt(self, topic: str, difficulty: str, level: str,
                                   key_concepts: List[str], key_formulas: List[str],
-                                  question_types: List[str]) -> str:
-        """Create prompt for structured (long-form) questions"""
-        
+                                  question_types: List[str],
+                                  learning_objectives: Optional[List[str]] = None,
+                                  subtopics: Optional[List[str]] = None,
+                                  exam_question_types: Optional[List[str]] = None,
+                                  templates: Optional[List[Dict]] = None) -> str:
+        """Create prompt for structured (long-form) questions."""
+        learning_objectives = learning_objectives or []
+        subtopics = subtopics or []
+        exam_question_types = exam_question_types or []
+        templates = templates or []
+        part1_block = _fmt_part1_sections(learning_objectives, subtopics, exam_question_types, templates)
+
         prompt = f"""You are a SENIOR A-LEVEL PURE MATHEMATICS TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH:
 (A) ZIMSEC A Level Pure Mathematics 6042 (Paper 1 & Paper 2)
 (B) Cambridge International AS & A Level Mathematics 9709 (Pure Mathematics Papers)
@@ -466,6 +552,7 @@ COMPREHENSIVE SUBTOPIC COVERAGE:
 - Each part should test a DIFFERENT aspect/subtopic of {topic}
 - Reference: ZIMSEC 6042 past papers and Cambridge 9709/9231 past papers
 - To ensure comprehensive coverage, different subtopics should be tested across multiple question generations
+{part1_block}
 
 KEY CONCEPTS FOR THIS TOPIC:
 {', '.join(key_concepts) if key_concepts else 'General concepts for this topic'}

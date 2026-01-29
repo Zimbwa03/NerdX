@@ -319,6 +319,64 @@ Only respond with the JSON, no other text."""
             logger.error(f"❌ Image analysis failed: {e}")
             return {'success': False, 'error': str(e)}
 
+    def analyze_answer_images(
+        self,
+        images: List[Tuple[bytes, str]],
+        question: str,
+        model: str = "gemini-2.5-flash",
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Analyze one or more images as a student's answer to a graph practice question.
+        images: list of (image_bytes, mime_type) e.g. (bytes, "image/jpeg")
+        question: the graph practice question text.
+        Returns dict with solution, feedback, processed_text, analysis.
+        """
+        if not self.is_available() or not images:
+            return None
+        try:
+            from google.genai.types import Part, Content
+            prompt = f"""You are a ZIMSEC/Cambridge math teacher. The student was asked this graph practice question:
+
+{question}
+
+The student has submitted {len(images)} image(s) as their answer (e.g. handwritten work, graph, table).
+
+Analyze the images and provide:
+1. What you see in the images (extracted work, values, sketch).
+2. Whether the answer is correct or partially correct, and why.
+3. The correct solution or feedback in clear, professional mathematical language.
+4. Any LaTeX or math notation for key expressions (use \\( \\) for inline and \\[ \\] for display).
+
+Respond in this JSON format only:
+{{"processed_text": "what you see in the images", "solution": "full correct solution", "feedback": "brief feedback to student", "analysis": "short analysis of correctness"}}
+"""
+            parts = [prompt]
+            for img_bytes, mime in images:
+                parts.append(Part.from_bytes(data=img_bytes, mime_type=mime))
+            response = self.client.models.generate_content(
+                model=model,
+                contents=parts,
+            )
+            if not response or not response.text:
+                return None
+            result = self._parse_json_response(response.text)
+            if result:
+                return {
+                    "processed_text": result.get("processed_text", ""),
+                    "solution": result.get("solution", result.get("feedback", "")),
+                    "feedback": result.get("feedback", ""),
+                    "analysis": result.get("analysis", ""),
+                }
+            return {
+                "processed_text": response.text[:500],
+                "solution": response.text,
+                "feedback": "",
+                "analysis": "",
+            }
+        except Exception as e:
+            logger.error(f"analyze_answer_images failed: {e}")
+            return None
+
     def analyze_images_context_pack(
         self,
         *,

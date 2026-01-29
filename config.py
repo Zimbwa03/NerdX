@@ -208,6 +208,9 @@ class Config:
     # Image Hosting
     IMGBB_API_KEY = os.getenv('IMGBB_API_KEY')
 
+    # ZIMSEC Beta Math Prompts (template-based from ZIMSEC MD files)
+    USE_ZIMSEC_BETA_MATH_PROMPTS = os.getenv('USE_ZIMSEC_BETA_MATH_PROMPTS', 'false').lower() in ('true', '1', 'yes')
+
     @classmethod
     def validate_config(cls):
         """Validate required configuration"""

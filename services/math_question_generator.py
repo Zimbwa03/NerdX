@@ -17,13 +17,32 @@ from utils.vertex_ai_helper import try_vertex_json
 
 logger = logging.getLogger(__name__)
 
-# Import structured prompts
-try:
-    from services.math_prompts_master import get_random_prompt, get_prompt, get_all_topics
-    PROMPTS_AVAILABLE = True
-    logger.info("Structured math prompts loaded (2,520 prompts)")
-except ImportError:
-    PROMPTS_AVAILABLE = False
+# Import structured prompts (master or ZIMSEC beta when USE_ZIMSEC_BETA_MATH_PROMPTS)
+def _load_math_prompts():
+    use_beta = os.getenv("USE_ZIMSEC_BETA_MATH_PROMPTS", "false").lower() in ("true", "1", "yes")
+    if use_beta:
+        try:
+            from services.math_prompts_zimsec_beta_master import (
+                get_random_prompt as _grp,
+                get_prompt as _gp,
+                get_all_topics as _ga,
+            )
+            logger.info("ZIMSEC beta math prompts loaded (template-based)")
+            return _grp, _gp, _ga, True
+        except ImportError as e:
+            logger.warning("ZIMSEC beta math prompts not available (%s), falling back to master", e)
+    try:
+        from services.math_prompts_master import get_random_prompt as _grp, get_prompt as _gp, get_all_topics as _ga
+        logger.info("Structured math prompts loaded (2,520 prompts)")
+        return _grp, _gp, _ga, True
+    except ImportError:
+        return None, None, None, False
+
+_grp, _gp, _ga, PROMPTS_AVAILABLE = _load_math_prompts()
+get_random_prompt = _grp
+get_prompt = _gp
+get_all_topics = _ga
+if not PROMPTS_AVAILABLE:
     logger.warning("Structured prompts not available, using default prompts")
 
 # Try to import google-genai SDK (Vertex AI)

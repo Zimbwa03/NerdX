@@ -51,14 +51,24 @@ const MathRenderer: React.FC<MathRendererProps> = ({
         const mathBlocks: string[] = [];
         let processed = content;
 
-        // Extract display math ($$...$$)
+        // Extract display math (\[...\] or $$...$$)
+        processed = processed.replace(/\\\[([\s\S]*?)\\\]/g, (match, math) => {
+            const idx = mathBlocks.length;
+            mathBlocks.push(math.trim());
+            return `${MATH_PLACEHOLDER.display}${idx}${MATH_PLACEHOLDER.display}`;
+        });
         processed = processed.replace(/\$\$([^$]+)\$\$/g, (match, math) => {
             const idx = mathBlocks.length;
             mathBlocks.push(math);
             return `${MATH_PLACEHOLDER.display}${idx}${MATH_PLACEHOLDER.display}`;
         });
 
-        // Extract inline math ($...$)
+        // Extract inline math (\(...\) or $...$)
+        processed = processed.replace(/\\\(([\s\S]*?)\\\)/g, (match, math) => {
+            const idx = mathBlocks.length;
+            mathBlocks.push(math.trim());
+            return `${MATH_PLACEHOLDER.inline}${idx}${MATH_PLACEHOLDER.inline}`;
+        });
         processed = processed.replace(/\$([^$\n]+)\$/g, (match, math) => {
             const idx = mathBlocks.length;
             mathBlocks.push(math);

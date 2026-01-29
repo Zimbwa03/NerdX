@@ -4125,6 +4125,9 @@ def generate_math_graph_generate():
         data = request.get_json() or {}
         equation = (data.get('equation') or '').strip()
         graph_type = (data.get('graph_type') or '').strip()
+        level = (data.get('level') or 'o_level').strip().lower()
+        if level not in ('o_level', 'a_level'):
+            level = 'o_level'
         graph_service = GraphService()
         # When only graph_type is sent (e.g. "linear"), generate a real plottable equation instead of passing "linear"
         if not equation and graph_type:
@@ -4144,6 +4147,28 @@ def generate_math_graph_generate():
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
             }), 402
+        gt = (graph_type or '').strip().lower()
+        is_statistics = gt in ('statistics', 'statistical', 'statistics graphs')
+        # Statistics: no plottable graph; return template question/solution only (draw on paper / upload image)
+        if is_statistics:
+            from services.graph_practice_templates import get_template_for_graph_type
+            templ = get_template_for_graph_type(gt, level, '')
+            credits_remaining = _deduct_credits_or_fail(
+                g.current_user_id, int(credit_cost), 'math_graph_practice', 'Math graph generation'
+            )
+            if credits_remaining is None:
+                return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+            payload = {
+                'graph_url': None,
+                'image_url': None,
+                'equation': None,
+                'graph_type': graph_type or 'statistics',
+                'question': templ['question'],
+                'solution': templ['solution'],
+                'credits_remaining': credits_remaining,
+                'no_plot': True,
+            }
+            return jsonify({'success': True, 'data': payload, 'credits_remaining': credits_remaining}), 200
         # Use create_graph so we get graph_spec for Manim animations
         result = graph_service.create_graph(
             user_id=g.current_user_id or 'mobile',
@@ -4166,27 +4191,18 @@ def generate_math_graph_generate():
         )
         if credits_remaining is None:
             return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
-        # Template question/solution by graph type so UI is never blank
-        gt = (graph_type or '').strip().lower()
-        if gt == 'linear':
-            question = "Using the graph, find the gradient and y-intercept of the line."
-            solution = f"From the equation y = {function_text}: identify the coefficient of x (gradient) and the constant term (y-intercept)."
-        elif gt == 'quadratic':
-            question = "Using the graph, identify the roots (x-intercepts) and the turning point."
-            solution = f"For the quadratic {function_text}, the roots are where y = 0; the turning point is at the vertex of the parabola."
-        elif gt == 'exponential':
-            question = "Describe the behaviour of the graph as x increases. What is the value of y when x = 0?"
-            solution = f"For {function_text}: when x = 0 the value gives the y-intercept; exponential graphs grow or decay depending on the base."
-        elif gt == 'trigonometric':
-            question = "What is the amplitude and period of this graph? Identify the maximum and minimum values."
-            solution = f"For {function_text}: the amplitude is the coefficient of the trig function; the period is 2π for sin/cos."
-        else:
-            question = "Describe what you observe from the graph. What are the key features?"
-            solution = f"Use the equation {function_text} to verify intercepts, gradient, and shape."
+        # Template question/solution by graph type and level (O-Level and A-Level ZIMSEC/Cambridge templates).
+        # Use the same equation for graph image, graph_spec (Manim video), and question for consistency.
+        from services.graph_practice_templates import get_template_for_graph_type, equation_to_display
+        eq_display = equation_to_display(function_text)
+        templ = get_template_for_graph_type(gt, level, eq_display)
+        question = templ['question']
+        solution = templ['solution']
         payload = {
             'graph_url': graph_url,
             'image_url': graph_url,
             'equation': function_text,
+            'equation_display': eq_display,
             'graph_type': graph_type or None,
             'question': question,
             'solution': solution,
@@ -4238,6 +4254,63 @@ def upload_math_graph_image():
     except Exception as e:
         logger.error(f"Graph upload/solve error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/math/graph/answer-images', methods=['POST'])
+@require_auth
+def graph_practice_answer_images():
+    """Submit one or more images as the student's answer for Vertex AI analysis (graph practice)."""
+    try:
+        question = (request.form.get('question') or '').strip()
+        if not question:
+            return jsonify({'success': False, 'message': 'question is required'}), 400
+        files = request.files.getlist('images')
+        if not files:
+            return jsonify({'success': False, 'message': 'At least one image is required'}), 400
+        if len(files) > 10:
+            return jsonify({'success': False, 'message': 'Maximum 10 images'}), 400
+        if not vertex_service.is_available():
+            return jsonify({'success': False, 'message': 'Vertex AI is not available. Please try again later.'}), 503
+        credit_cost = advanced_credit_service.get_credit_cost('image_solve')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}'
+            }), 402
+        images_data = []
+        for f in files:
+            if not f or not f.filename:
+                continue
+            data = f.read()
+            if not data:
+                continue
+            mime = f.content_type or 'image/jpeg'
+            if mime not in ('image/jpeg', 'image/png', 'image/webp'):
+                mime = 'image/jpeg'
+            images_data.append((data, mime))
+        if not images_data:
+            return jsonify({'success': False, 'message': 'No valid image data'}), 400
+        result = vertex_service.analyze_answer_images(images_data, question)
+        if not result:
+            return jsonify({'success': False, 'message': 'Analysis failed'}), 500
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id, int(credit_cost), 'image_solve', 'Graph practice answer (images)'
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed'}), 500
+        return jsonify({
+            'success': True,
+            'data': {
+                **result,
+                'credits_remaining': credits_remaining,
+            },
+            'credits_remaining': credits_remaining,
+        }), 200
+    except Exception as e:
+        logger.error(f"Graph practice answer-images error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
 
 @mobile_bp.route('/math/graph/linear-programming', methods=['POST'])
 @require_auth
