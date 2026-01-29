@@ -59,22 +59,29 @@ const QuizScreen: React.FC = () => {
   const normalizeQuestion = useCallback((q: Question | undefined): Question | undefined => {
     if (!q) return undefined;
     const hasOptions = Array.isArray(q.options) && q.options.length > 0;
-    // Enable image upload for mathematics, A-Level Pure Math, and Computer Science (O-Level + A-Level)
+    // Enable image upload for mathematics, A-Level Pure Math, Computer Science, and Geography (all levels)
+    // Also enable for essay and structured question types
     const isImageSupportedSubject =
       subject?.id === 'mathematics' ||
       subject?.id === 'a_level_pure_math' ||
       subject?.id === 'computer_science' ||
-      subject?.id === 'a_level_computer_science';
+      subject?.id === 'a_level_computer_science' ||
+      subject?.id === 'geography' ||
+      subject?.id === 'a_level_geography';
+    
+    // Essay and structured questions should support image upload for diagrams/screenshots
+    const isImageSupportedQuestionType =
+      q.question_type === 'essay' || q.question_type === 'structured';
 
     const defaultAllowsTextInput =
-      q.question_type === 'structured'
-        ? true // Always allow text input for structured questions
+      q.question_type === 'structured' || q.question_type === 'essay'
+        ? true // Always allow text input for structured and essay questions
         : !hasOptions;
 
     return {
       ...q,
       allows_text_input: q.allows_text_input ?? defaultAllowsTextInput,
-      allows_image_upload: q.allows_image_upload ?? isImageSupportedSubject,
+      allows_image_upload: q.allows_image_upload ?? (isImageSupportedSubject && isImageSupportedQuestionType) ?? isImageSupportedSubject,
     };
   }, [subject?.id]);
 
@@ -194,8 +201,9 @@ const QuizScreen: React.FC = () => {
             subject_id: firstReviewItem.subject,
             topic_id: firstReviewItem.topic,
             difficulty: 'medium',
-            allows_text_input: !qData.options,
-            allows_image_upload: subject?.id === 'mathematics' || subject?.id === 'a_level_pure_math',
+            allows_text_input: !qData.options || qData.question_type === 'essay' || qData.question_type === 'structured',
+            // Let normalizeQuestion handle image upload based on subject and question type
+            allows_image_upload: undefined,
             question_image_url: qData.image_url
           };
           const normalizedQ = normalizeQuestion(mappedQuestion);
@@ -538,8 +546,9 @@ const QuizScreen: React.FC = () => {
               subject_id: nextItem.subject,
               topic_id: nextItem.topic,
               difficulty: 'medium',
-              allows_text_input: !qData.options,
-              allows_image_upload: subject?.id === 'mathematics' || subject?.id === 'a_level_pure_math',
+              allows_text_input: !qData.options || qData.question_type === 'essay' || qData.question_type === 'structured',
+              // Let normalizeQuestion handle image upload based on subject and question type
+              allows_image_upload: undefined,
               question_image_url: qData.image_url
             };
             setQuestionCount(nextIndex + 1);

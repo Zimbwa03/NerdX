@@ -85,6 +85,9 @@ class AdvancedCreditService:
             platform: 'whatsapp' for WhatsApp bot (uses Option B), 'mobile' for mobile app (uses database)
         """
         try:
+            # Initialize tracker_result for all platforms (prevents UnboundLocalError)
+            tracker_result = {'is_command': False, 'bundle_complete': False, 'should_deduct': True}
+            
             # WhatsApp bot uses Option B with command bundling
             if platform == 'whatsapp':
                 # Import command tracker for Option B implementation

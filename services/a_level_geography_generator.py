@@ -3,12 +3,13 @@ A-Level Geography Generator — ZIMSEC A-Level Geography (Forms 5–6, Syllabus 
 Generates essay questions only (20-25 marks, 400-600 words).
 """
 
+import json
 import logging
 import random
 from typing import Dict, Any, Optional
 
-from services.vertex_ai_service import try_vertex_json
-from services.deepseek_service import call_deepseek_api
+from utils.vertex_ai_helper import try_vertex_json, extract_json_object
+from utils.deepseek import call_deepseek_chat
 from services.zimsec_a_level_geography_syllabus import (
     ZIMSEC_A_LEVEL_GEOGRAPHY_CODE,
     get_topic_objectives_a_level,
@@ -156,7 +157,7 @@ Difficulty: {difficulty}
     "analysis": "Description of analysis marks (6-8 marks): Analysis, evaluation, critical thinking, synthesis",
     "communication": "Description of communication marks (3-4 marks): Structure, clarity, use of geographical terminology"
   }},
-  "case_studies": {case_studies[:3] if case_studies else []},
+  "case_studies": {json.dumps(case_studies[:3] if case_studies else [])},
   "sample_answer_outline": "Brief outline of expected answer structure",
   "topic": "{topic}",
   "paper": "{paper}",
@@ -174,13 +175,18 @@ Generate ONE high-quality A-Level Geography essay question now."""
                 f"Focus on analysis, evaluation, and critical thinking. Include Zimbabwean/African case studies. "
                 f"Do NOT ask for diagrams."
             )
-            response = call_deepseek_api(
+            content = call_deepseek_chat(
                 system_prompt=system_prompt,
                 user_prompt=prompt,
                 temperature=0.7,
+                max_tokens=2000,
             )
-            if response and isinstance(response, dict):
-                return response
+            if content:
+                response = extract_json_object(content, logger=logger, context="a_level_geo_essay")
+                if response and isinstance(response, dict):
+                    return response
+        except RuntimeError as exc:
+            logger.warning("DeepSeek not configured for A-Level Geography: %s", exc)
         except Exception as exc:
             logger.error("DeepSeek API error for A-Level Geography essay: %s", exc)
         return None
@@ -194,6 +200,8 @@ Generate ONE high-quality A-Level Geography essay question now."""
         source: str = "unknown",
     ) -> Dict[str, Any]:
         """Validate and enhance essay question response."""
+        if not response or not isinstance(response, dict):
+            return self._get_fallback_essay_question(topic, difficulty, user_id)
         # Ensure required fields
         if "question_type" not in response:
             response["question_type"] = "essay"

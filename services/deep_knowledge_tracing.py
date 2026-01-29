@@ -39,7 +39,7 @@ class DeepKnowledgeTracing:
     """
     
     def __init__(self):
-        self.db = get_db_connection()
+        self._db = None  # Lazy connection - created on demand
         self.model_version = MODEL_VERSION
         
         # Will hold TensorFlow Lite model (lightweight for mobile)
@@ -51,6 +51,30 @@ class DeepKnowledgeTracing:
         self.use_ml_model = False
         
         logger.info(f"DKT Service initialized (version: {self.model_version})")
+    
+    @property
+    def db(self):
+        """Get database connection, creating new one if needed or if stale."""
+        if self._db is None:
+            self._db = get_db_connection()
+        else:
+            # Check if connection is still valid
+            try:
+                with self._db.cursor() as cur:
+                    cur.execute("SELECT 1")
+            except Exception:
+                # Connection is stale, get a new one
+                logger.warning("Database connection stale, reconnecting...")
+                try:
+                    self._db.close()
+                except Exception:
+                    pass
+                self._db = get_db_connection()
+        return self._db
+    
+    def _get_fresh_connection(self):
+        """Get a fresh database connection for operations that need it."""
+        return get_db_connection()
     
     def log_interaction(
         self,
@@ -254,7 +278,8 @@ class DeepKnowledgeTracing:
             # Bound between 0.05 and 0.95 (never 100% certain)
             probability = max(0.05, min(0.95, probability))
             
-            return round(probability, 4)
+            # Return as Python float (not numpy) for database compatibility
+            return float(round(probability, 4))
             
         except Exception as e:
             logger.error(f"Error in heuristic prediction: {str(e)}")
@@ -293,6 +318,10 @@ class DeepKnowledgeTracing:
             history = self.get_interaction_history(user_id, skill_id, limit=10)
             confidence_interval = self._calculate_confidence_interval(history)
             
+            # Convert numpy types to Python native types for PostgreSQL compatibility
+            mastery_prob = float(mastery_prob) if mastery_prob is not None else 0.5
+            confidence_interval = float(confidence_interval) if confidence_interval is not None else 0.3
+            
             # Update database
             query = """
             INSERT INTO student_knowledge_state (
@@ -320,7 +349,10 @@ class DeepKnowledgeTracing:
             
         except Exception as e:
             logger.error(f"Error updating knowledge state: {str(e)}")
-            self.db.rollback()
+            try:
+                self.db.rollback()
+            except Exception:
+                pass  # Connection may be closed
             return False
     
     def _calculate_confidence_interval(self, history: List[Dict]) -> float:

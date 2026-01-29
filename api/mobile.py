@@ -1945,6 +1945,8 @@ def generate_question():
                     error_msg = 'Failed to generate structured question. Please try again or switch to MCQ questions.'
                 else:
                     error_msg = f'Failed to generate A-Level Biology {bio_type} question. Please try again.'
+            elif subject == 'a_level_geography':
+                error_msg = 'Failed to generate A-Level Geography essay question. The AI service may be experiencing high load. Please try again in a moment.'
             elif subject in ['a_level_physics', 'a_level_chemistry', 'a_level_pure_math', 'a_level_computer_science']:
                 if question_format_used == 'structured':
                     error_msg = f'Failed to generate {subject.replace("a_level_", "").replace("_", " ").title()} structured question. Please try again or switch to MCQ questions.'
@@ -2095,9 +2097,17 @@ def generate_question():
                 subject == 'a_level_pure_math' or
                 question_type_mobile == 'short_answer' or
                 question_type_mobile == 'structured' or
+                question_type_mobile == 'essay' or  # Essay questions need text input
                 (subject == 'english' and not options)  # English grammar questions without MCQ options need text input
             ),
-            'allows_image_upload': subject == 'mathematics' or subject == 'a_level_pure_math',  # Math questions support image upload
+            'allows_image_upload': (
+                subject == 'mathematics' or 
+                subject == 'a_level_pure_math' or
+                # Computer Science essay/structured questions support image upload for diagrams, code screenshots
+                (subject in ('computer_science', 'a_level_computer_science') and question_type_mobile in ('essay', 'structured')) or
+                # Geography essay/structured questions support image upload for maps, diagrams
+                (subject in ('geography', 'a_level_geography') and question_type_mobile in ('essay', 'structured'))
+            ),
             
             # New AI Tutor Fields
             'concept_explanation': question_data.get('concept_explanation', ''),
@@ -2140,8 +2150,8 @@ def generate_question():
                 'marking_rubric': question_data.get('marking_rubric', {})
             }
         
-        # Handle A-Level Physics and Chemistry structured questions
-        if subject in ['a_level_physics', 'a_level_chemistry', 'a_level_pure_math'] and question_type_mobile == 'structured':
+        # Handle A-Level Physics, Chemistry, Pure Math, and Computer Science structured questions
+        if subject in ['a_level_physics', 'a_level_chemistry', 'a_level_pure_math', 'computer_science', 'a_level_computer_science'] and question_type_mobile == 'structured':
             structured_q = question_data.get('structured_question', {})
             parts = structured_q.get('parts', []) if structured_q else question_data.get('parts', [])
             question['structured_question'] = {
@@ -2149,14 +2159,14 @@ def generate_question():
                 'subject': question_data.get('subject', subject.replace('_', ' ').title()),
                 'topic': question_data.get('topic', topic),
                 'difficulty': question_data.get('difficulty', difficulty),
-                'stem': question_data.get('question_text', '') or question_data.get('question', ''),
+                'stem': question_data.get('question_text', '') or question_data.get('question', '') or question_data.get('stem', ''),
                 'parts': parts,
                 'total_marks': structured_q.get('total_marks', 0) if structured_q else sum(p.get('marks', 0) for p in parts),
                 'marking_rubric': {}
             }
             question['allows_text_input'] = True
-            # For Pure Math, also allow image upload
-            if subject == 'a_level_pure_math':
+            # For Pure Math and Computer Science, also allow image upload
+            if subject in ('a_level_pure_math', 'computer_science', 'a_level_computer_science'):
                 question['allows_image_upload'] = True
         
         # Handle A-Level Biology structured and essay questions
@@ -2184,6 +2194,9 @@ def generate_question():
             elif question_type_mobile == 'essay' or question_data.get('question_type') == 'essay':
                 question['question_type'] = 'essay'
                 question['allows_text_input'] = True  # Essay questions need text input
+                # Enable image upload for CS/Geography essays (diagrams, screenshots, maps)
+                if subject in ('computer_science', 'a_level_computer_science', 'geography', 'a_level_geography'):
+                    question['allows_image_upload'] = True
                 question['essay_data'] = {
                     'command_word': question_data.get('command_word', 'Discuss'),
                     'total_marks': question_data.get('total_marks', 25),
@@ -2215,6 +2228,32 @@ def generate_question():
                         essay_solution_parts.append(f"{grade}: {desc}")
                 if essay_solution_parts:
                     question['solution'] = '\n'.join(essay_solution_parts)
+        
+        # Handle Geography structured and essay questions
+        if subject in ('geography', 'a_level_geography'):
+            if question_type_mobile == 'structured' or question_data.get('question_type') == 'structured':
+                structured_q = question_data.get('structured_question', {})
+                parts = structured_q.get('parts', []) if structured_q else question_data.get('parts', [])
+                # Ensure each part has a label
+                for part in parts:
+                    if 'label' not in part:
+                        part['label'] = part.get('part', 'a')
+                question['structured_question'] = {
+                    'question_type': 'structured',
+                    'subject': 'Geography' if subject == 'geography' else 'A Level Geography',
+                    'topic': question_data.get('topic', topic),
+                    'difficulty': question_data.get('difficulty', difficulty),
+                    'stem': question_data.get('stem', '') or question_data.get('question', ''),
+                    'parts': parts,
+                    'total_marks': question_data.get('total_marks', sum(p.get('marks', 0) for p in parts)),
+                    'marking_rubric': {}
+                }
+                question['allows_text_input'] = True
+                question['allows_image_upload'] = True  # Geography needs maps/diagrams
+            elif question_type_mobile == 'essay' or question_data.get('question_type') == 'essay':
+                question['question_type'] = 'essay'
+                question['allows_text_input'] = True
+                question['allows_image_upload'] = True  # Geography essays need maps/diagrams
         
         # Convert LaTeX in structured_question (stem/parts) when it was added in blocks above
         if subject in ('mathematics', 'a_level_pure_math', 'combined_science') and question.get('structured_question'):
@@ -4182,6 +4221,274 @@ def upload_image():
         return jsonify({'success': False, 'message': f'Failed to process image: {error_message}'}), 500
 
 # ============================================================================
+# DEEP KNOWLEDGE TRACING (DKT) ENDPOINTS
+# ============================================================================
+
+@mobile_bp.route('/dkt/log-interaction', methods=['POST'])
+@require_auth
+def log_dkt_interaction():
+    """Log a student interaction for DKT tracking"""
+    try:
+        from services.deep_knowledge_tracing import dkt_service
+        data = request.get_json()
+        
+        result = dkt_service.log_interaction(
+            user_id=g.current_user_id,
+            subject=data.get('subject', ''),
+            topic=data.get('topic', ''),
+            skill_id=data.get('skill_id', ''),
+            question_id=data.get('question_id', ''),
+            correct=data.get('correct', False),
+            confidence=data.get('confidence'),
+            time_spent=data.get('time_spent'),
+            hints_used=data.get('hints_used', 0),
+            session_id=data.get('session_id'),
+            device_id=data.get('device_id')
+        )
+        
+        # Get updated mastery for the skill
+        skill_mastery = None
+        if data.get('skill_id'):
+            skill_mastery = dkt_service.predict_mastery(g.current_user_id, data['skill_id'])
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'interaction_id': result,
+                'skill_mastery': skill_mastery
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"DKT log interaction error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Failed to log interaction'}), 500
+
+
+@mobile_bp.route('/dkt/knowledge-map', methods=['GET'])
+@require_auth
+def get_dkt_knowledge_map():
+    """Get visual knowledge map showing mastery across all skills"""
+    try:
+        from services.deep_knowledge_tracing import dkt_service
+        subject = request.args.get('subject')
+        
+        knowledge_map = dkt_service.get_knowledge_map(g.current_user_id, subject)
+        
+        return jsonify({
+            'success': True,
+            'data': knowledge_map
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"DKT get knowledge map error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Failed to get knowledge map'}), 500
+
+
+@mobile_bp.route('/dkt/mastery/<skill_id>', methods=['GET'])
+@require_auth
+def get_dkt_skill_mastery(skill_id):
+    """Get current mastery probability for a specific skill"""
+    try:
+        from services.deep_knowledge_tracing import dkt_service
+        
+        mastery_prob = dkt_service.predict_mastery(g.current_user_id, skill_id)
+        history = dkt_service.get_interaction_history(g.current_user_id, skill_id, limit=10)
+        
+        # Determine status based on mastery
+        if mastery_prob >= 0.8:
+            status = 'mastered'
+        elif mastery_prob >= 0.6:
+            status = 'proficient'
+        elif mastery_prob >= 0.4:
+            status = 'learning'
+        else:
+            status = 'struggling'
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'skill_id': skill_id,
+                'mastery_probability': mastery_prob,
+                'status': status,
+                'total_interactions': len(history) if history else 0,
+                'recent_history': history[:5] if history else []
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"DKT get skill mastery error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Failed to get skill mastery'}), 500
+
+
+@mobile_bp.route('/dkt/recommend-next', methods=['POST'])
+@require_auth
+def get_dkt_recommendation():
+    """Get personalized question recommendation based on DKT predictions"""
+    try:
+        from services.deep_knowledge_tracing import dkt_service
+        data = request.get_json()
+        subject = data.get('subject', '')
+        topic = data.get('topic')
+        
+        recommendation = dkt_service.get_next_question_recommendation(g.current_user_id, subject, topic)
+        
+        return jsonify({
+            'success': True,
+            'data': recommendation
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"DKT get recommendation error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Failed to get recommendation'}), 500
+
+
+@mobile_bp.route('/dkt/daily-review', methods=['GET'])
+@require_auth
+def get_dkt_daily_review():
+    """Get list of skills due for review today (SRS)"""
+    try:
+        from services.deep_knowledge_tracing import dkt_service
+        
+        reviews = dkt_service.generate_daily_review_queue(g.current_user_id)
+        
+        return jsonify({
+            'success': True,
+            'count': len(reviews) if reviews else 0,
+            'reviews': reviews or []
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"DKT get daily review error: {e}", exc_info=True)
+        return jsonify({'success': False, 'count': 0, 'reviews': []}), 500
+
+
+@mobile_bp.route('/dkt/review-complete', methods=['POST'])
+@require_auth
+def complete_dkt_review():
+    """Submit a completed review item"""
+    try:
+        from services.deep_knowledge_tracing import dkt_service
+        data = request.get_json()
+        
+        # Log the review as an interaction
+        result = dkt_service.log_interaction(
+            user_id=g.current_user_id,
+            subject=data.get('subject', ''),
+            topic=data.get('topic', ''),
+            skill_id=data.get('skill_id', ''),
+            question_id=data.get('question_id', ''),
+            correct=data.get('correct', False),
+            confidence=data.get('confidence'),
+            time_spent=data.get('time_spent'),
+            hints_used=data.get('hints_used', 0)
+        )
+        
+        return jsonify({'success': True}), 200
+        
+    except Exception as e:
+        logger.error(f"DKT complete review error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Failed to complete review'}), 500
+
+
+@mobile_bp.route('/dkt/interaction-history', methods=['GET'])
+@require_auth
+def get_dkt_interaction_history():
+    """Get student's interaction history"""
+    try:
+        from services.deep_knowledge_tracing import dkt_service
+        skill_id = request.args.get('skill_id')
+        limit = int(request.args.get('limit', 100))
+        
+        history = dkt_service.get_interaction_history(g.current_user_id, skill_id, limit)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'interactions': history or []
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"DKT get interaction history error: {e}", exc_info=True)
+        return jsonify({'success': False, 'data': {'interactions': []}}), 500
+
+
+@mobile_bp.route('/dkt/ai-insights', methods=['GET'])
+@require_auth
+def get_dkt_ai_insights():
+    """Get AI-powered personalized learning insights"""
+    try:
+        from services.deep_knowledge_tracing import dkt_service
+        from datetime import datetime, timezone
+        
+        user_id = g.current_user_id
+        
+        # Get knowledge map for overview
+        knowledge_map = dkt_service.get_knowledge_map(user_id) or {}
+        
+        # Get recent interactions for trend analysis
+        history = dkt_service.get_interaction_history(user_id, limit=50) or []
+        
+        # Calculate recent performance (last 7 days)
+        now = datetime.now(timezone.utc)
+        recent_correct = 0
+        recent_total = 0
+        
+        for interaction in history:
+            try:
+                # Handle both timezone-aware and naive datetimes
+                ts = interaction.get('timestamp')
+                if ts:
+                    if isinstance(ts, str):
+                        # Parse ISO format string
+                        ts = datetime.fromisoformat(ts.replace('Z', '+00:00'))
+                    if ts.tzinfo is None:
+                        # Make naive datetime UTC-aware
+                        ts = ts.replace(tzinfo=timezone.utc)
+                    
+                    days_ago = (now - ts).days
+                    if days_ago <= 7:
+                        recent_total += 1
+                        if interaction.get('correct'):
+                            recent_correct += 1
+            except Exception:
+                pass  # Skip interactions with parsing errors
+        
+        recent_accuracy = (recent_correct / recent_total * 100) if recent_total > 0 else 0
+        
+        # Generate insights
+        insights = {
+            'total_skills': knowledge_map.get('total_skills', 0),
+            'mastered_skills': knowledge_map.get('mastered_skills', 0),
+            'learning_skills': knowledge_map.get('learning_skills', 0),
+            'struggling_skills': knowledge_map.get('struggling_skills', 0),
+            'recent_accuracy': round(recent_accuracy, 1),
+            'recent_questions': recent_total,
+            'streak_days': 0,  # TODO: Implement streak tracking
+            'recommendations': []
+        }
+        
+        # Add recommendations for struggling skills
+        struggling = [s for s in knowledge_map.get('skills', []) if s.get('mastery_probability', 0) < 0.4]
+        for skill in struggling[:3]:
+            insights['recommendations'].append({
+                'type': 'practice',
+                'skill_id': skill.get('skill_id'),
+                'skill_name': skill.get('skill_name'),
+                'message': f"Practice more {skill.get('skill_name', 'this topic')} to improve your mastery"
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': insights
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Get AI insights error for user {g.current_user_id}: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Failed to get AI insights'}), 500
+
+
+# ============================================================================
 # TEACHER MODE ENDPOINTS (Multi-Subject Chatbot - Math, Science, etc.)
 # ============================================================================
 
@@ -4264,4 +4571,366 @@ def start_teacher_mode():
 
     except Exception as e:
         logging.exception("start_teacher_mode failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/teacher/message', methods=['POST'])
+@require_auth
+def teacher_message():
+    """Send a message in Teacher Mode session and get AI response"""
+    try:
+        from utils.session_manager import session_manager
+        
+        data = request.get_json()
+        session_id = data.get('session_id', '')
+        message = data.get('message', '')
+        context_pack_id = data.get('context_pack_id')
+        
+        if not session_id or not message:
+            return jsonify({'success': False, 'message': 'session_id and message required'}), 400
+        
+        # Retrieve session data
+        session_data = session_manager.get_data(g.current_user_id, 'mobile_teacher')
+        if not session_data or session_data.get('session_id') != session_id:
+            return jsonify({'success': False, 'message': 'Invalid or expired session'}), 400
+        
+        subject = session_data.get('subject', '')
+        grade_level = session_data.get('grade_level', '')
+        topic = session_data.get('topic', '')
+        conversation_history = session_data.get('conversation_history', [])
+        
+        # Check and deduct credits for follow-up message
+        credit_result = advanced_credit_service.check_and_deduct_credits(
+            g.current_user_id, 'teacher_mode_followup'
+        )
+        if not credit_result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. You need credits to continue the conversation.',
+                'credits_remaining': credit_result.get('credits_remaining', 0)
+            }), 402
+        
+        # Build context for AI
+        system_prompt = f"""You are an expert {subject} tutor helping a {grade_level} student.
+{f"Current topic: {topic}" if topic else ""}
+
+Guidelines:
+- Explain concepts clearly and step-by-step
+- Use examples relevant to {grade_level} level
+- For Geography: Include real-world examples, case studies, and diagram descriptions
+- For Physics: Include formulas, units, and worked examples
+- Be encouraging and supportive
+- Ask follow-up questions to check understanding
+- Keep responses concise but comprehensive"""
+
+        # Build conversation messages
+        messages = [{'role': 'system', 'content': system_prompt}]
+        for hist in conversation_history[-10:]:  # Keep last 10 messages for context
+            messages.append({'role': hist['role'], 'content': hist['content']})
+        messages.append({'role': 'user', 'content': message})
+        
+        # Generate AI response using DeepSeek
+        try:
+            from utils.deepseek import call_deepseek_chat
+            ai_response = call_deepseek_chat(
+                messages=messages,
+                temperature=0.7,
+                max_tokens=1500,
+                timeout=60
+            )
+        except Exception as e:
+            logger.error(f"Teacher mode AI error: {e}")
+            ai_response = f"I apologize, but I'm having trouble processing your question right now. Please try again in a moment. Error: {str(e)}"
+        
+        # Update conversation history
+        conversation_history.append({'role': 'user', 'content': message})
+        conversation_history.append({'role': 'assistant', 'content': ai_response})
+        session_data['conversation_history'] = conversation_history
+        session_manager.set_data(g.current_user_id, 'mobile_teacher', session_data)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'response': ai_response,
+                'session_id': session_id,
+                'context_pack_id': context_pack_id
+            },
+            'credits_remaining': credit_result.get('credits_remaining', 0)
+        }), 200
+        
+    except Exception as e:
+        logging.exception("teacher_message failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/teacher/history', methods=['GET'])
+@require_auth
+def teacher_history():
+    """Get Teacher Mode session history for the current user"""
+    try:
+        from utils.session_manager import session_manager
+        
+        # For now, return the current session if it exists
+        session_data = session_manager.get_data(g.current_user_id, 'mobile_teacher')
+        history = []
+        
+        if session_data and session_data.get('session_id'):
+            history.append({
+                'session_id': session_data['session_id'],
+                'subject': session_data.get('subject', ''),
+                'grade_level': session_data.get('grade_level', ''),
+                'topic': session_data.get('topic', ''),
+                'last_message': session_data.get('conversation_history', [{}])[-1].get('content', '') if session_data.get('conversation_history') else '',
+                'updated_at': session_data.get('started_at', datetime.now().isoformat())
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': history
+        }), 200
+        
+    except Exception as e:
+        logging.exception("teacher_history failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/teacher/session/<session_id>', methods=['DELETE'])
+@require_auth
+def delete_teacher_session(session_id):
+    """Delete a Teacher Mode session"""
+    try:
+        from utils.session_manager import session_manager
+        
+        session_data = session_manager.get_data(g.current_user_id, 'mobile_teacher')
+        if session_data and session_data.get('session_id') == session_id:
+            session_manager.clear_data(g.current_user_id, 'mobile_teacher')
+        
+        return jsonify({'success': True}), 200
+        
+    except Exception as e:
+        logging.exception("delete_teacher_session failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/teacher/generate-notes', methods=['POST'])
+@require_auth
+def teacher_generate_notes():
+    """Generate PDF notes from Teacher Mode session (optional feature)."""
+    try:
+        data = request.get_json() or {}
+        session_id = data.get('session_id', '')
+        if not session_id:
+            return jsonify({'success': False, 'message': 'session_id required'}), 400
+        
+        credit_result = advanced_credit_service.check_and_deduct_credits(
+            g.current_user_id, 'teacher_mode_pdf'
+        )
+        if not credit_result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': 'Insufficient credits for PDF generation.',
+                'credits_remaining': credit_result.get('credits_remaining', 0)
+            }), 402
+        
+        # Placeholder: return empty notes; full PDF generation can be wired later
+        return jsonify({
+            'success': True,
+            'data': {'notes': None, 'pdf_url': None},
+            'credits_remaining': credit_result.get('credits_remaining', 0)
+        }), 200
+    except Exception as e:
+        logging.exception("teacher_generate_notes failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/teacher/multimodal', methods=['POST'])
+@require_auth
+def teacher_multimodal():
+    """Send multimodal message (text + attachments). For now, treat as text-only and route to teacher/message if session exists."""
+    try:
+        from utils.session_manager import session_manager
+        
+        data = request.get_json() or {}
+        message = data.get('message', '')
+        attachments = data.get('attachments', [])
+        session_id = data.get('session_id', '')
+        
+        if not message and not attachments:
+            return jsonify({'success': False, 'message': 'message or attachments required'}), 400
+        
+        # Resolve session: use provided session_id or current user's Teacher Mode session
+        if not session_id:
+            session_data = session_manager.get_data(g.current_user_id, 'mobile_teacher')
+            if session_data and session_data.get('session_id'):
+                session_id = session_data['session_id']
+        
+        # If we have a session (from body or current user), use same flow as /teacher/message
+        if session_id:
+            session_data = session_manager.get_data(g.current_user_id, 'mobile_teacher')
+            if session_data and session_data.get('session_id') == session_id:
+                # For now: append note about attachments and call same AI flow
+                if attachments:
+                    message = f"{message}\n[User attached {len(attachments)} file(s)]".strip()
+                # Reuse teacher_message logic inline to avoid redirect
+                credit_result = advanced_credit_service.check_and_deduct_credits(
+                    g.current_user_id, 'teacher_mode_followup'
+                )
+                if not credit_result.get('success'):
+                    return jsonify({
+                        'success': False,
+                        'message': 'Insufficient credits.',
+                        'credits_remaining': credit_result.get('credits_remaining', 0)
+                    }), 402
+                subject = session_data.get('subject', '')
+                grade_level = session_data.get('grade_level', '')
+                topic = session_data.get('topic', '')
+                conversation_history = session_data.get('conversation_history', [])
+                system_prompt = f"You are an expert {subject} tutor for {grade_level}. {f'Topic: {topic}' if topic else ''} Explain clearly and support with examples."
+                messages = [{'role': 'system', 'content': system_prompt}]
+                for h in conversation_history[-10:]:
+                    messages.append({'role': h['role'], 'content': h['content']})
+                messages.append({'role': 'user', 'content': message})
+                try:
+                    from utils.deepseek import call_deepseek_chat
+                    ai_response = call_deepseek_chat(messages=messages, temperature=0.7, max_tokens=1500, timeout=60)
+                except Exception as e:
+                    logger.error("Teacher multimodal AI error: %s", e)
+                    ai_response = "I'm having trouble processing that right now. Please try again."
+                conversation_history.append({'role': 'user', 'content': message})
+                conversation_history.append({'role': 'assistant', 'content': ai_response})
+                session_data['conversation_history'] = conversation_history
+                session_manager.set_data(g.current_user_id, 'mobile_teacher', session_data)
+                return jsonify({
+                    'success': True,
+                    'data': {'response': ai_response, 'session_id': session_id},
+                    'credits_remaining': credit_result.get('credits_remaining', 0)
+                }), 200
+        
+        return jsonify({'success': False, 'message': 'Valid session_id required for multimodal'}), 400
+    except Exception as e:
+        logging.exception("teacher_multimodal failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/teacher/analyze-image', methods=['POST'])
+@require_auth
+def teacher_analyze_image():
+    """Analyze an image (e.g. diagram, lab result) and return explanation."""
+    try:
+        data = request.get_json() or {}
+        image_b64 = data.get('image', '')
+        prompt = data.get('prompt', 'Explain this image in the context of the subject.')
+        if not image_b64:
+            return jsonify({'success': False, 'message': 'image (base64) required'}), 400
+        
+        credit_result = advanced_credit_service.check_and_deduct_credits(
+            g.current_user_id, 'ocr_solve'
+        )
+        if not credit_result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': 'Insufficient credits for image analysis.',
+                'credits_remaining': credit_result.get('credits_remaining', 0)
+            }), 402
+        
+        # Placeholder: return short message; can wire Vertex/DeepSeek vision later
+        return jsonify({
+            'success': True,
+            'data': {'analysis': 'Image analysis is available. Describe what you see and I can help explain it.'},
+            'credits_remaining': credit_result.get('credits_remaining', 0)
+        }), 200
+    except Exception as e:
+        logging.exception("teacher_analyze_image failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/teacher/analyze-document', methods=['POST'])
+@require_auth
+def teacher_analyze_document():
+    """Analyze a document (e.g. textbook page) and return summary."""
+    try:
+        data = request.get_json() or {}
+        document_b64 = data.get('document', '')
+        prompt = data.get('prompt', 'Summarize this document.')
+        if not document_b64:
+            return jsonify({'success': False, 'message': 'document (base64) required'}), 400
+        
+        credit_result = advanced_credit_service.check_and_deduct_credits(
+            g.current_user_id, 'ocr_solve'
+        )
+        if not credit_result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': 'Insufficient credits for document analysis.',
+                'credits_remaining': credit_result.get('credits_remaining', 0)
+            }), 402
+        
+        return jsonify({
+            'success': True,
+            'data': {'analysis': 'Document analysis is available. Paste or describe the content and I can help.'},
+            'credits_remaining': credit_result.get('credits_remaining', 0)
+        }), 200
+    except Exception as e:
+        logging.exception("teacher_analyze_document failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/teacher/search', methods=['POST'])
+@require_auth
+def teacher_search():
+    """Web search with grounding for Teacher Mode."""
+    try:
+        data = request.get_json() or {}
+        query = data.get('query', '')
+        if not query:
+            return jsonify({'success': False, 'message': 'query required'}), 400
+        
+        credit_result = advanced_credit_service.check_and_deduct_credits(
+            g.current_user_id, 'teacher_mode_followup'
+        )
+        if not credit_result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': 'Insufficient credits.',
+                'credits_remaining': credit_result.get('credits_remaining', 0)
+            }), 402
+        
+        # Placeholder: return message; can wire Google Search / grounding later
+        return jsonify({
+            'success': True,
+            'data': {'response': f'Search for "{query[:80]}..." is available. Try asking your question in the chat for a direct answer.'},
+            'credits_remaining': credit_result.get('credits_remaining', 0)
+        }), 200
+    except Exception as e:
+        logging.exception("teacher_search failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/teacher/deep-research', methods=['POST'])
+@require_auth
+def teacher_deep_research():
+    """Deep research (e.g. Gemini agent). Placeholder."""
+    try:
+        data = request.get_json() or {}
+        query = data.get('query', '')
+        if not query:
+            return jsonify({'success': False, 'message': 'query required'}), 400
+        
+        credit_result = advanced_credit_service.check_and_deduct_credits(
+            g.current_user_id, 'teacher_mode_followup'
+        )
+        if not credit_result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': 'Insufficient credits.',
+                'credits_remaining': credit_result.get('credits_remaining', 0)
+            }), 402
+        
+        return jsonify({
+            'success': True,
+            'data': {'response': f'Deep research for your question is available. You can also ask follow-ups in the chat.', 'status': 'ok'},
+            'credits_remaining': credit_result.get('credits_remaining', 0)
+        }), 200
+    except Exception as e:
+        logging.exception("teacher_deep_research failed")
         return jsonify({'success': False, 'message': str(e)}), 500

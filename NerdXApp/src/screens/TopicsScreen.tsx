@@ -273,6 +273,23 @@ const TopicsScreen: React.FC = () => {
     } as never);
   };
 
+  // A-Level Computer Science handlers
+  const handleALevelCsNotes = () => {
+    navigation.navigate('ComputerScienceNotes' as never, {
+      level: 'A-Level',
+    } as never);
+  };
+
+  const handleALevelCsVirtualLab = () => {
+    navigation.navigate('VirtualLab' as never);
+  };
+
+  const handleALevelCsTeacherMode = () => {
+    navigation.navigate('TeacherModeSetup' as never, {
+      preselectedSubject: 'A Level Computer Science',
+    } as never);
+  };
+
   const handleGeographyNotes = () => {
     navigation.navigate('GeographyNotes' as never);
   };
@@ -282,8 +299,10 @@ const TopicsScreen: React.FC = () => {
   };
 
   const handleGeographyTeacherMode = () => {
+    // Pass 'A-Level Geography' for A-Level subject, 'Geography' for O-Level
+    const geoSubject = subject.id === 'a_level_geography' ? 'A-Level Geography' : 'Geography';
     navigation.navigate('TeacherModeSetup' as never, {
-      preselectedSubject: 'Geography',
+      preselectedSubject: geoSubject,
     } as never);
   };
 
@@ -1202,6 +1221,56 @@ const TopicsScreen: React.FC = () => {
                   <View style={styles.featureInfo}>
                     <Text style={styles.featureTitle}>Teacher Mode</Text>
                     <Text style={styles.featureSubtitle}>AI tutor for Computer Science topics</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+            </>
+          )}
+
+          {/* A-Level Computer Science Features - Notes, Virtual Labs, Teacher Mode */}
+          {subject.id === 'a_level_computer_science' && !currentParentSubject && (
+            <>
+              <Card variant="elevated" onPress={handleALevelCsNotes} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="document-text-outline" size={28} color="#7B1FA2" />}
+                    size={56}
+                    backgroundColor="rgba(123, 31, 162, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>A-Level CS Notes</Text>
+                    <Text style={styles.featureSubtitle}>Comprehensive A-Level Computer Science notes</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              <Card variant="elevated" onPress={handleALevelCsVirtualLab} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="code-slash-outline" size={28} color="#7B1FA2" />}
+                    size={56}
+                    backgroundColor="rgba(123, 31, 162, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Virtual Labs</Text>
+                    <Text style={styles.featureSubtitle}>Interactive programming and database labs</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              <Card variant="elevated" onPress={handleALevelCsTeacherMode} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="school-outline" size={28} color="#7B1FA2" />}
+                    size={56}
+                    backgroundColor="rgba(123, 31, 162, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Teacher Mode</Text>
+                    <Text style={styles.featureSubtitle}>AI tutor for A-Level Computer Science topics</Text>
                   </View>
                   {Icons.arrowRight(24, Colors.text.secondary)}
                 </View>
