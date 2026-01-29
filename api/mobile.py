@@ -4224,3 +4224,44 @@ def start_teacher_mode():
         is_mathematics = ('math' in subj_lower) or ('pure mathematics' in subj_lower)
         is_english = 'english' in subj_lower
         is_computer_science = 'computer science' in subj_lower
+        is_science = any(s in subj_lower for s in ('biology', 'chemistry', 'physics', 'combined science'))
+
+        # Deduct credits for starting the session
+        credit_result = advanced_credit_service.check_and_deduct_credits(
+            g.current_user_id, 'teacher_mode_start'
+        )
+        if not credit_result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': credit_result.get('message', 'Insufficient credits. Please purchase credits to use Teacher Mode.')
+            }), 402
+
+        # Store session for this user (so /teacher/message can resolve by session_id)
+        session_data = {
+            'session_id': session_id,
+            'subject': subject,
+            'grade_level': grade_level,
+            'topic': topic or '',
+            'conversation_history': [],
+            'started_at': datetime.now().isoformat(),
+        }
+        session_manager.set_data(g.current_user_id, 'mobile_teacher', session_data)
+
+        # Placeholder initial message (full AI response can be wired via services later)
+        topic_part = f" Topic: {topic}." if topic else " What would you like to learn today?"
+        initial_message = (
+            f"Welcome to Teacher Mode for {subject}! "
+            f"You're studying at {grade_level} level.{topic_part}"
+        )
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'session_id': session_id,
+                'initial_message': initial_message,
+            }
+        }), 200
+
+    except Exception as e:
+        logging.exception("start_teacher_mode failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
