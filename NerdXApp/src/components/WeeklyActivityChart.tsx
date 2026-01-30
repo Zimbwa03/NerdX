@@ -1,7 +1,7 @@
 // Weekly Activity Chart Component
 // Simple bar chart showing activity over the past 7 days
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../theme/colors';
@@ -24,7 +24,11 @@ export const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({
     title = "📈 This Week's Activity",
 }) => {
     const themedColors = useThemedColors();
-    const animatedValues = useRef(data.map(() => new Animated.Value(0))).current;
+    // useMemo so animated values array length stays in sync when data loads (e.g. [] -> 7 items)
+    const animatedValues = useMemo(
+        () => data.map(() => new Animated.Value(0)),
+        [data.length]
+    );
 
     // Find max value for scaling
     const maxQuestions = Math.max(...data.map(d => d.questionsAnswered), 10);
@@ -196,7 +200,11 @@ export const DailyGoalsWidget: React.FC<DailyGoalsWidgetProps> = ({
     title = "🎯 Today's Goals",
 }) => {
     const themedColors = useThemedColors();
-    const progressAnims = useRef(goals.map(() => new Animated.Value(0))).current;
+    // useMemo so progress anims stay in sync when goals load (e.g. [] -> N goals)
+    const progressAnims = useMemo(
+        () => goals.map(() => new Animated.Value(0)),
+        [goals.length]
+    );
 
     useEffect(() => {
         goals.forEach((goal, index) => {
@@ -212,7 +220,7 @@ export const DailyGoalsWidget: React.FC<DailyGoalsWidgetProps> = ({
     }, [goals]);
 
     const completedGoals = goals.filter(g => g.current >= g.target).length;
-    const overallProgress = Math.round((completedGoals / goals.length) * 100);
+    const overallProgress = goals.length === 0 ? 0 : Math.round((completedGoals / goals.length) * 100);
 
     return (
         <View style={[styles.goalsContainer, { backgroundColor: themedColors.background.paper }]}>

@@ -259,18 +259,32 @@ class ALevelPureMathGenerator:
             subtopics = part1.get("subtopics", [])
             exam_question_types = part1.get("exam_question_types", [])
             templates = part1.get("templates", [])
+            import random
+            recent_subtopics = []
+            if user_id and subtopics:
+                try:
+                    from services.question_history_service import question_history_service
+                    recent_subtopics = question_history_service.get_recent_subtopics(user_id, topic_name)
+                except Exception:
+                    pass
+            preferred = [s for s in subtopics if s not in recent_subtopics] if subtopics else []
+            pool = preferred if preferred else subtopics
+            chosen_subtopic = random.choice(pool) if pool else None
+            chosen_template = random.choice(templates) if templates else None
 
             if question_type == "structured":
                 prompt = self._create_structured_prompt(
                     topic_name, difficulty, level, key_concepts, key_formulas, question_types,
                     learning_objectives=learning_objectives, subtopics=subtopics,
                     exam_question_types=exam_question_types, templates=templates,
+                    chosen_subtopic=chosen_subtopic, chosen_template=chosen_template,
                 )
             else:
                 prompt = self._create_mcq_prompt(
                     topic_name, difficulty, level, key_concepts, key_formulas, question_types,
                     learning_objectives=learning_objectives, subtopics=subtopics,
                     exam_question_types=exam_question_types, templates=templates,
+                    chosen_subtopic=chosen_subtopic, chosen_template=chosen_template,
                 )
 
             def _is_valid_candidate(data: Dict) -> bool:
@@ -306,6 +320,7 @@ class ALevelPureMathGenerator:
                 question_data['ai_model'] = provider
                 question_data['allows_text_input'] = True
                 question_data['allows_image_upload'] = True
+                self._record_alevel_subtopic(user_id, topic_name, chosen_subtopic)
                 return question_data
 
             logger.warning(f"AI generation failed for {topic_name}, using fallback")
@@ -357,6 +372,16 @@ class ALevelPureMathGenerator:
             return topic_id
         
         return topic_map.get(topic_id)
+
+    def _record_alevel_subtopic(self, user_id: Optional[str], topic_name: str, chosen_subtopic: Optional[str]) -> None:
+        """Record the subtopic used for (user_id, topic) to prefer others next time (O-Level–style rotation)."""
+        if not user_id or not chosen_subtopic:
+            return
+        try:
+            from services.question_history_service import question_history_service
+            question_history_service.add_recent_subtopic(user_id, topic_name, chosen_subtopic)
+        except Exception as e:
+            logger.debug("Could not record A-Level subtopic: %s", e)
     
     def _create_mcq_prompt(self, topic: str, difficulty: str, level: str,
                            key_concepts: List[str], key_formulas: List[str],
@@ -364,13 +389,26 @@ class ALevelPureMathGenerator:
                            learning_objectives: Optional[List[str]] = None,
                            subtopics: Optional[List[str]] = None,
                            exam_question_types: Optional[List[str]] = None,
-                           templates: Optional[List[Dict]] = None) -> str:
+                           templates: Optional[List[Dict]] = None,
+                           chosen_subtopic: Optional[str] = None,
+                           chosen_template: Optional[Dict] = None) -> str:
         """Create a detailed prompt for A Level Pure Math MCQ generation."""
         learning_objectives = learning_objectives or []
         subtopics = subtopics or []
         exam_question_types = exam_question_types or []
         templates = templates or []
         part1_block = _fmt_part1_sections(learning_objectives, subtopics, exam_question_types, templates)
+        must_use = ""
+        if subtopics:
+            must_use += "\nALL SUBTOPICS FOR THIS TOPIC (rotate through these across generations):\n"
+            must_use += "\n".join(f"- {s}" for s in subtopics) + "\n"
+        if chosen_subtopic:
+            must_use += f"This question MUST use subtopic: **{chosen_subtopic}**.\n"
+        if chosen_template:
+            n = chosen_template.get("name", "")
+            p = chosen_template.get("pattern", "")
+            s = chosen_template.get("skills", "")
+            must_use += f"Use this template pattern: **{n}**. Pattern: {p}. Skills: {s}\n"
 
         difficulty_guidance = {
             "easy": """Test basic understanding and recall. Direct application of single formula or concept.
@@ -417,6 +455,7 @@ COMPREHENSIVE SUBTOPIC COVERAGE:
 - This question MUST test understanding of a SPECIFIC subtopic within {topic}
 - Reference: ZIMSEC 6042 past papers and Cambridge 9709/9231 past papers
 - Questions should rotate through all subtopics to ensure comprehensive topic coverage
+{must_use}
 {part1_block}
 
 KEY CONCEPTS FOR THIS TOPIC:
@@ -440,6 +479,7 @@ CRITICAL MATH FORMATTING RULES - PLAIN TEXT ONLY:
 - Use ∫ for integrals: ∫(x²)dx (NOT $\\int$)
 - Write sin⁻¹(x) for inverse trig (NOT $\\sin^{{-1}}$)
 - Examples: "Find ∑(r=1 to n) of r²", "Solve x² + 3x - 4 = 0", "Evaluate √(16) + 3/4"
+- Multi-part layout: Put each part on its own line. Use a blank line before (a), (b), (c)... and a new line before (i), (ii), (iii)... so the question reads like an exam paper, not one paragraph.
 
 EXPERT EXAMINER GUIDELINES - PROFESSIONAL EXAM STANDARDS:
 - Use appropriate A-Level command words: "show that", "hence", "prove", "sketch", "find exact value", "solve", "determine", "verify"
@@ -458,6 +498,7 @@ FRESHNESS REQUIREMENTS - CREATE UNIQUE QUESTIONS:
 - Vary contexts: mathematical modeling, real-world applications, theoretical problems
 - Vary numbers and approaches to test the same concept
 - Ensure question feels professionally crafted like a real ZIMSEC/Cambridge exam question
+- Rotate through ALL subtopics listed for this topic across generations; vary question type and template pattern. Do NOT repeatedly use the same style (e.g. same structure with only numbers changed).
 
 COMMON EXAM TRAPS TO REFERENCE:
 - Domain restrictions (logs, trig, rational functions)
@@ -519,13 +560,26 @@ Generate ONE A Level Pure Mathematics MCQ now:"""
                                   learning_objectives: Optional[List[str]] = None,
                                   subtopics: Optional[List[str]] = None,
                                   exam_question_types: Optional[List[str]] = None,
-                                  templates: Optional[List[Dict]] = None) -> str:
+                                  templates: Optional[List[Dict]] = None,
+                                  chosen_subtopic: Optional[str] = None,
+                                  chosen_template: Optional[Dict] = None) -> str:
         """Create prompt for structured (long-form) questions."""
         learning_objectives = learning_objectives or []
         subtopics = subtopics or []
         exam_question_types = exam_question_types or []
         templates = templates or []
         part1_block = _fmt_part1_sections(learning_objectives, subtopics, exam_question_types, templates)
+        must_use = ""
+        if subtopics:
+            must_use += "\nALL SUBTOPICS FOR THIS TOPIC (rotate through these across generations):\n"
+            must_use += "\n".join(f"- {s}" for s in subtopics) + "\n"
+        if chosen_subtopic:
+            must_use += f"This question MUST use subtopic: **{chosen_subtopic}**.\n"
+        if chosen_template:
+            n = chosen_template.get("name", "")
+            p = chosen_template.get("pattern", "")
+            s = chosen_template.get("skills", "")
+            must_use += f"Use this template pattern: **{n}**. Pattern: {p}. Skills: {s}\n"
 
         prompt = f"""You are a SENIOR A-LEVEL PURE MATHEMATICS TEACHER (15+ years) AND an examiner-style question designer. You teach and assess for BOTH:
 (A) ZIMSEC A Level Pure Mathematics 6042 (Paper 1 & Paper 2)
@@ -552,6 +606,7 @@ COMPREHENSIVE SUBTOPIC COVERAGE:
 - Each part should test a DIFFERENT aspect/subtopic of {topic}
 - Reference: ZIMSEC 6042 past papers and Cambridge 9709/9231 past papers
 - To ensure comprehensive coverage, different subtopics should be tested across multiple question generations
+{must_use}
 {part1_block}
 
 KEY CONCEPTS FOR THIS TOPIC:
@@ -572,6 +627,7 @@ CRITICAL MATH FORMATTING RULES - PLAIN TEXT ONLY:
 - Use ∑ for summation, π for pi, ∞ for infinity, ± for plus/minus
 - Use ∫ for integrals: ∫(x²)dx
 - Write sin⁻¹(x) for inverse trig
+- Multi-part layout: Put each part on its own line. Use a blank line before (a), (b), (c)... and a new line before (i), (ii), (iii)... so the question reads like an exam paper, not one paragraph.
 
 EXPERT EXAMINER GUIDELINES - PROFESSIONAL EXAM STANDARDS:
 - Use appropriate A-Level command words: "show that", "hence", "prove", "sketch", "find exact value", "solve", "determine", "verify"
@@ -586,6 +642,7 @@ FRESHNESS REQUIREMENTS - CREATE UNIQUE QUESTIONS:
 - Vary contexts: mathematical modeling, real-world applications, theoretical problems
 - Vary numbers and approaches to test the same concept
 - Ensure question feels professionally crafted like a real ZIMSEC/Cambridge exam question
+- Rotate through ALL subtopics listed for this topic across generations; vary question type and template pattern. Do NOT repeatedly use the same style (e.g. same structure with only numbers changed).
 
 COMMON EXAM TRAPS TO REFERENCE:
 - Domain restrictions (logs, trig, rational functions)
@@ -599,6 +656,7 @@ QUESTION STRUCTURE REQUIREMENTS:
 - Must be a *STRUCTURED* question (NOT multiple choice)
 - Must be broken into parts like (a), (b), (c), (d) etc.
 - Each part must test a DIFFERENT subtopic from the learning objectives
+- If a part has sub-parts (i), (ii), (iii), put each on a new line in that part's question text
 - Part progression: Basic recall → Understanding → Application → Analysis/Synthesis
 - Easy: 3-4 parts, Medium: 4-6 parts, Difficult: 5-7 parts
 - Keep the stem/context brief and exam-like (1-3 lines maximum - avoid long stories)

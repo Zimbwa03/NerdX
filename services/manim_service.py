@@ -6,6 +6,8 @@ import shutil
 import logging
 from typing import Dict, Optional
 
+from config import Config
+
 logger = logging.getLogger(__name__)
 
 class ManimService:
@@ -20,6 +22,7 @@ class ManimService:
         self.media_dir = os.path.join(self.base_dir, "static", "media")
         self.templates_file = os.path.join(self.base_dir, "services", "manim_templates.py")
         self.is_windows = sys.platform == 'win32'
+        self.render_timeout = max(5, Config.MANIM_RENDER_TIMEOUT)
         
         # Ensure media directory exists
         os.makedirs(self.media_dir, exist_ok=True)
@@ -209,6 +212,7 @@ class ManimService:
         # Add project root to PATH for any wrapper scripts
         env["PATH"] = self.base_dir + os.pathsep + env.get("PATH", "")
         
+        timeout_seconds = self.render_timeout
         try:
             # Find the output file path before running Manim (enables caching)
             # Manim structure: media_dir/videos/manim_templates/quality/output_filename.mp4
@@ -234,13 +238,14 @@ class ManimService:
                 }
 
             # Run Manim with timeout
+            timeout_seconds = self.render_timeout
             result = subprocess.run(
                 cmd,
                 env=env,
                 capture_output=True,
                 text=True,
                 check=True,
-                timeout=120  # 2 minute timeout
+                timeout=timeout_seconds
             )
             
             # Verify file exists
@@ -263,10 +268,10 @@ class ManimService:
                 }
                 
         except subprocess.TimeoutExpired:
-            logger.error("Manim rendering timed out")
+            logger.error(f"Manim rendering timed out after {timeout_seconds}s")
             return {
                 "success": False,
-                "error": "Animation rendering timed out (>120s)"
+                "error": f"Animation rendering timed out (> {timeout_seconds}s)"
             }
         except subprocess.CalledProcessError as e:
             error_msg = e.stderr or ""

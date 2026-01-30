@@ -196,6 +196,9 @@ const TopicNotesDetailScreen: React.FC = () => {
         }
     };
 
+    const resolveDiagramSource = (diagram: string | number) =>
+        typeof diagram === 'string' ? { uri: diagram } : diagram;
+
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -388,7 +391,7 @@ const TopicNotesDetailScreen: React.FC = () => {
                                                 {section.diagrams.map((diagram, dIndex) => (
                                                     <View key={dIndex} style={[styles.diagramCard, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#FFF' }]}>
                                                         <Image
-                                                            source={{ uri: diagram }}
+                                                            source={resolveDiagramSource(diagram)}
                                                             style={styles.diagramImage}
                                                             resizeMode="contain"
                                                         />

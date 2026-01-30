@@ -622,152 +622,159 @@ const DashboardScreen: React.FC = () => {
             <View style={styles.gridContainer}>
               {selectedLevel === 'O Level' ? (
                 <>
-                  {/* ✨ O Level Subject Cards */}
-                  <AnimatedCard
-                    title="O Level Mathematics"
-                    subtitle="Build Strong Math Foundations"
-                    imageSource={require('../../assets/images/olevel_mathematics_card.png')}
-                    onPress={() => navigateToSubject('mathematics')}
-                    glowColor={Colors.subjects.mathematics}
-                    index={0}
-                    hideText={true}
-                  />
-
-                  <AnimatedCard
-                    title="Sciences"
-                    subtitle="Explore the World Around You"
-                    imageSource={require('../../assets/images/olevel_sciences_card.png')}
-                    onPress={handleSciencePress}
-                    glowColor={Colors.subjects.science}
-                    index={1}
-                    hideText={true}
-                  />
-
-                  <AnimatedCard
-                    title="English"
-                    subtitle="Read, Write & Communicate"
-                    imageSource={require('../../assets/images/olevel_english_card.png')}
-                    onPress={() => navigateToSubject('english')}
-                    glowColor={Colors.subjects.english}
-                    index={2}
-                    hideText={true}
-                  />
-
-                  <AnimatedCard
-                    title="Computer Science"
-                    subtitle="ZimSec & Cambridge O Level"
-                    imageSource={require('../../assets/images/olevel_computer_science_card.png')}
-                    onPress={handleComputerSciencePress}
-                    glowColor="#0288D1"
-                    index={3}
-                    hideText={true}
-                  />
-
-                  <AnimatedCard
-                    title="Geography"
-                    subtitle="All Level ZIMSEC Geography"
-                    imageSource={require('../../assets/images/olevel_geography_card.png')}
-                    onPress={handleGeographyPress}
-                    glowColor="#2E7D32"
-                    index={4}
-                    hideText={true}
-                  />
-
-                  <AnimatedCard
-                    title="Project Assistant"
-                    subtitle="Plan, Research & Succeed"
-                    imageSource={require('../../assets/images/project_assistant_card_new.png')}
-                    onPress={navigateToProjectList}
-                    glowColor={Colors.primary.main}
-                    index={5}
-                    hideText={true}
-                  />
+                  {/* Row 1: O Level Mathematics + Sciences */}
+                  <View style={styles.cardRow}>
+                    <AnimatedCard
+                      title="O Level Mathematics"
+                      subtitle="Build Strong Math Foundations"
+                      imageSource={require('../../assets/images/olevel_mathematics_card.png')}
+                      onPress={() => navigateToSubject('mathematics')}
+                      glowColor={Colors.subjects.mathematics}
+                      index={0}
+                      hideText={true}
+                    />
+                    <AnimatedCard
+                      title="Sciences"
+                      subtitle="Explore the World Around You"
+                      imageSource={require('../../assets/images/olevel_sciences_card.png')}
+                      onPress={handleSciencePress}
+                      glowColor={Colors.subjects.science}
+                      index={1}
+                      hideText={true}
+                    />
+                  </View>
+                  {/* Row 2: English + Computer Science */}
+                  <View style={styles.cardRow}>
+                    <AnimatedCard
+                      title="English"
+                      subtitle="Read, Write & Communicate"
+                      imageSource={require('../../assets/images/olevel_english_card.png')}
+                      onPress={() => navigateToSubject('english')}
+                      glowColor={Colors.subjects.english}
+                      index={2}
+                      hideText={true}
+                    />
+                    <AnimatedCard
+                      title="Computer Science"
+                      subtitle="ZimSec & Cambridge O Level"
+                      imageSource={require('../../assets/images/olevel_computer_science_card.png')}
+                      onPress={handleComputerSciencePress}
+                      glowColor="#0288D1"
+                      index={3}
+                      hideText={true}
+                    />
+                  </View>
+                  {/* Row 3: Geography + Project Assistant */}
+                  <View style={styles.cardRow}>
+                    <AnimatedCard
+                      title="Geography"
+                      subtitle="All Level ZIMSEC Geography"
+                      imageSource={require('../../assets/images/olevel_geography_card.png')}
+                      onPress={handleGeographyPress}
+                      glowColor="#2E7D32"
+                      index={4}
+                      hideText={true}
+                    />
+                    <AnimatedCard
+                      title="Project Assistant"
+                      subtitle="Plan, Research & Succeed"
+                      imageSource={require('../../assets/images/project_assistant_card_new.png')}
+                      onPress={navigateToProjectList}
+                      glowColor={Colors.primary.main}
+                      index={5}
+                      hideText={true}
+                    />
+                  </View>
                 </>
               ) : (
                 <>
-                  {/* ✨ A Level Subject Cards */}
-                  <AnimatedCard
-                    title="A Level Pure Mathematics"
-                    subtitle="Build Logical & Analytical Skills"
-                    imageSource={require('../../assets/images/alevel_pure_math_card.png')}
-                    onPress={() => navigateToALevelSubject('pure_mathematics', 'Pure Mathematics')}
-                    glowColor={aLevelColors.pure_mathematics}
-                    index={0}
-                    hideText={true}
-                  />
-
-                  <AnimatedCard
-                    title="A Level Chemistry"
-                    subtitle="Explore Matter & Reactions"
-                    imageSource={require('../../assets/images/alevel_chemistry_card.png')}
-                    onPress={() => navigateToALevelSubject('chemistry', 'Chemistry')}
-                    glowColor={aLevelColors.chemistry}
-                    index={1}
-                    hideText={true}
-                  />
-
-                  <AnimatedCard
-                    title="A Level Physics"
-                    subtitle="Understand the Laws of Nature"
-                    imageSource={require('../../assets/images/alevel_physics_card.png')}
-                    onPress={() => navigateToALevelSubject('physics', 'Physics')}
-                    glowColor={aLevelColors.physics}
-                    index={2}
-                    hideText={true}
-                  />
-
-                  <AnimatedCard
-                    title="A Level Biology"
-                    subtitle="Cell biology & genetics"
-                    imageSource={require('../../assets/images/alevel_biology_card.png')}
-                    onPress={() => navigateToALevelSubject('biology', 'Biology')}
-                    glowColor={aLevelColors.biology}
-                    index={3}
-                    hideText={true}
-                  />
-
-                  <AnimatedCard
-                    title="A Level Computer Science"
-                    subtitle="Master Code, Algorithms & Systems"
-                    imageSource={require('../../assets/images/alevel_computer_science_card.png')}
-                    onPress={() => navigateToALevelSubject('computer_science', 'Computer Science')}
-                    glowColor={aLevelColors.computer_science}
-                    index={4}
-                    hideText={true}
-                  />
-
-                  <AnimatedCard
-                    title="A Level Geography"
-                    subtitle="Explore Advanced Concepts & Systems"
-                    imageSource={require('../../assets/images/alevel_geography_card.png')}
-                    onPress={() => navigateToALevelSubject('geography', 'Geography')}
-                    glowColor={aLevelColors.geography}
-                    index={5}
-                    hideText={true}
-                  />
+                  {/* Row 1: A Level Pure Math + Chemistry */}
+                  <View style={styles.cardRow}>
+                    <AnimatedCard
+                      title="A Level Pure Mathematics"
+                      subtitle="Build Logical & Analytical Skills"
+                      imageSource={require('../../assets/images/alevel_pure_math_card.png')}
+                      onPress={() => navigateToALevelSubject('pure_mathematics', 'Pure Mathematics')}
+                      glowColor={aLevelColors.pure_mathematics}
+                      index={0}
+                      hideText={true}
+                    />
+                    <AnimatedCard
+                      title="A Level Chemistry"
+                      subtitle="Explore Matter & Reactions"
+                      imageSource={require('../../assets/images/alevel_chemistry_card.png')}
+                      onPress={() => navigateToALevelSubject('chemistry', 'Chemistry')}
+                      glowColor={aLevelColors.chemistry}
+                      index={1}
+                      hideText={true}
+                    />
+                  </View>
+                  {/* Row 2: Physics + Biology */}
+                  <View style={styles.cardRow}>
+                    <AnimatedCard
+                      title="A Level Physics"
+                      subtitle="Understand the Laws of Nature"
+                      imageSource={require('../../assets/images/alevel_physics_card.png')}
+                      onPress={() => navigateToALevelSubject('physics', 'Physics')}
+                      glowColor={aLevelColors.physics}
+                      index={2}
+                      hideText={true}
+                    />
+                    <AnimatedCard
+                      title="A Level Biology"
+                      subtitle="Cell biology & genetics"
+                      imageSource={require('../../assets/images/alevel_biology_card.png')}
+                      onPress={() => navigateToALevelSubject('biology', 'Biology')}
+                      glowColor={aLevelColors.biology}
+                      index={3}
+                      hideText={true}
+                    />
+                  </View>
+                  {/* Row 3: Computer Science + Geography */}
+                  <View style={styles.cardRow}>
+                    <AnimatedCard
+                      title="A Level Computer Science"
+                      subtitle="Master Code, Algorithms & Systems"
+                      imageSource={require('../../assets/images/alevel_computer_science_card.png')}
+                      onPress={() => navigateToALevelSubject('computer_science', 'Computer Science')}
+                      glowColor={aLevelColors.computer_science}
+                      index={4}
+                      hideText={true}
+                    />
+                    <AnimatedCard
+                      title="A Level Geography"
+                      subtitle="Explore Advanced Concepts & Systems"
+                      imageSource={require('../../assets/images/alevel_geography_card.png')}
+                      onPress={() => navigateToALevelSubject('geography', 'Geography')}
+                      glowColor={aLevelColors.geography}
+                      index={5}
+                      hideText={true}
+                    />
+                  </View>
                 </>
               )}
 
-              {/* ✨ Teacher Mode & Virtual Labs - Side by Side */}
-              <AnimatedCard
-                title="Teacher Mode"
-                subtitle="Interactive AI Teaching"
-                imageSource={require('../../assets/images/teacher_mode_card.png')}
-                onPress={handleTeacherMode}
-                glowColor={Colors.subjects.science}
-                index={5}
-                hideText={true}
-              />
-
-              <AnimatedCard
-                title="Virtual Labs"
-                subtitle="Interactive Science Simulations"
-                imageSource={require('../../assets/images/virtual_labs_card.png')}
-                onPress={navigateToVirtualLab}
-                glowColor={Colors.subjects.science}
-                index={6}
-                hideText={true}
-              />
+              {/* Row: Teacher Mode + Virtual Labs */}
+              <View style={styles.cardRow}>
+                <AnimatedCard
+                  title="Teacher Mode"
+                  subtitle="Interactive AI Teaching"
+                  imageSource={require('../../assets/images/teacher_mode_card.png')}
+                  onPress={handleTeacherMode}
+                  glowColor={Colors.subjects.science}
+                  index={5}
+                  hideText={true}
+                />
+                <AnimatedCard
+                  title="Virtual Labs"
+                  subtitle="Interactive Science Simulations"
+                  imageSource={require('../../assets/images/virtual_labs_card.png')}
+                  onPress={navigateToVirtualLab}
+                  glowColor={Colors.subjects.science}
+                  index={6}
+                  hideText={true}
+                />
+              </View>
 
               {/* Full Width Cards - Always visible */}
               <AnimatedCard
@@ -1072,9 +1079,14 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   gridContainer: {
+    width: '100%',
+  },
+  cardRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    width: '100%',
+    marginBottom: 12,
   },
   featureCard: {
     backgroundColor: Colors.background.paper,

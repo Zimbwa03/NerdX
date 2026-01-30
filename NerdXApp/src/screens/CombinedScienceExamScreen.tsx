@@ -20,6 +20,7 @@ import { Colors } from '../theme/colors';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import { StatusBar } from 'react-native';
+import { formatQuestionParts } from '../utils/formatQuestionText';
 
 interface ExamQuestion extends Question {
   userAnswer?: string;
@@ -465,7 +466,7 @@ const CombinedScienceExamScreen: React.FC = () => {
                     )}
                   </View>
                 </View>
-                <Text style={[styles.questionText, { color: themedColors.text.primary }]}>{currentQuestion.question_text}</Text>
+                <Text style={[styles.questionText, { color: themedColors.text.primary }]}>{formatQuestionParts(currentQuestion.question_text)}</Text>
               </Card>
 
               <View style={styles.optionsContainer}>
@@ -692,7 +693,7 @@ const CombinedScienceExamScreen: React.FC = () => {
                   </View>
                 </View>
 
-                <Text style={[styles.reviewQuestionText, { color: themedColors.text.primary }]}>{question.question_text}</Text>
+                <Text style={[styles.reviewQuestionText, { color: themedColors.text.primary }]}>{formatQuestionParts(question.question_text)}</Text>
 
                 <View style={[styles.reviewAnswerSection, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : Colors.background.default }]}>
                   <View style={styles.reviewAnswerRow}>

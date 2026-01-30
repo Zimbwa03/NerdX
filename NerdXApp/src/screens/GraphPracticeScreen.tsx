@@ -27,6 +27,7 @@ import { Colors } from '../theme/colors';
 import VoiceMathInput from '../components/VoiceMathInput';
 import ZoomableImageModal from '../components/ZoomableImageModal';
 import MathRenderer from '../components/MathRenderer';
+import { formatQuestionParts } from '../utils/formatQuestionText';
 
 type Mode = 'generate' | 'custom' | 'upload' | 'linear';
 type GraphLevel = 'o_level' | 'a_level';
@@ -834,7 +835,13 @@ const GraphPracticeScreen: React.FC = () => {
             </View>
           )}
 
-          <View style={[styles.questionContainer, { backgroundColor: themedColors.background.paper }]}>
+          <View style={[
+            styles.questionContainer,
+            {
+              backgroundColor: themedColors.background.paper,
+              borderColor: themedColors.border.light || 'rgba(0,0,0,0.06)',
+            },
+          ]}>
             {!(graphData.no_plot || graphData.graph_type?.toLowerCase() === 'statistics') && (
               <>
                 <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Equation (same as graph & question):</Text>
@@ -865,13 +872,13 @@ const GraphPracticeScreen: React.FC = () => {
             <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Question:</Text>
             {/\\\(|\\\[|\$/.test(graphData.question || '') ? (
               <MathRenderer
-                content={graphData.question || 'Describe what you observe from the graph.'}
+                content={formatQuestionParts(graphData.question || 'Describe what you observe from the graph.')}
                 fontSize={16}
                 style={{ marginBottom: 20 }}
                 minHeight={24}
               />
             ) : (
-              <Text style={[styles.question, { color: themedColors.text.primary }]}>{graphData.question || 'Describe what you observe from the graph.'}</Text>
+              <Text style={[styles.question, { color: themedColors.text.primary }]}>{formatQuestionParts(graphData.question || 'Describe what you observe from the graph.')}</Text>
             )}
 
             {!showSolution && (
@@ -1255,6 +1262,12 @@ const styles = StyleSheet.create({
   // graphImage: { ... } - Duplicate removed/merged
   questionContainer: {
     backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    marginBottom: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
   },
   questionLabel: {
     fontSize: 16,
@@ -1277,6 +1290,14 @@ const styles = StyleSheet.create({
     color: '#212121',
     lineHeight: 24,
     marginBottom: 20,
+  },
+  questionFallback: {
+    fontStyle: 'italic',
+    paddingVertical: 8,
+  },
+  questionMathWrap: {
+    marginBottom: 20,
+    minHeight: 24,
   },
   answerContainer: {
     marginTop: 20,

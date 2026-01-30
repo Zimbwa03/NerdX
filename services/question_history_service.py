@@ -28,7 +28,38 @@ class QuestionHistoryService:
         
         # Recent question threshold (prevent immediate repeats)
         self.recent_threshold = 10  # Last 10 questions per subject
-        
+
+        # Recent subtopics per (user_id, topic) for math subtopic rotation
+        # Key: "user_id:topic" or ":topic" when user_id missing. Value: [subtopic, ...] most recent last.
+        self.recent_subtopics: Dict[str, List[str]] = {}
+        self.recent_subtopics_max = 12  # Prefer subtopics not in last N
+
+    def add_recent_subtopic(self, user_id: Optional[str], topic: str, subtopic: str) -> None:
+        """Record a subtopic used for (user_id, topic) to prefer others next time."""
+        try:
+            key = f"{user_id or ''}:{topic}"
+            if key not in self.recent_subtopics:
+                self.recent_subtopics[key] = []
+            lst = self.recent_subtopics[key]
+            if subtopic in lst:
+                lst.remove(subtopic)
+            lst.append(subtopic)
+            if len(lst) > self.recent_subtopics_max:
+                lst.pop(0)
+            logger.debug("Added recent subtopic %s for %s", subtopic, key)
+        except Exception as e:
+            logger.error("Error adding recent subtopic: %s", e)
+
+    def get_recent_subtopics(self, user_id: Optional[str], topic: str) -> List[str]:
+        """Return last N subtopics used for (user_id, topic)."""
+        try:
+            key = f"{user_id or ''}:{topic}"
+            lst = self.recent_subtopics.get(key, [])
+            return list(lst[-self.recent_subtopics_max:])
+        except Exception as e:
+            logger.error("Error getting recent subtopics: %s", e)
+            return []
+
     def add_question_to_history(self, user_id: str, subject: str, question_id: str):
         """Add a question to user's history for a specific subject"""
         try:

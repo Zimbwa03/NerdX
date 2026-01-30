@@ -146,7 +146,8 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
 
     // Original card sizing: two large cards per row on dashboard,
     // with full-width variants for wide feature rows.
-    const CARD_WIDTH = fullWidth ? width - 48 : (width - 48) / 2;
+    const GAP = 12;
+    const CARD_WIDTH = fullWidth ? width - 48 : (width - 48 - GAP) / 2;
     const CARD_HEIGHT = fullWidth ? 140 : CARD_WIDTH * 1.2;
 
     // Dynamic styles based on theme
@@ -257,6 +258,7 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
                 entranceTransform,
                 {
                     width: CARD_WIDTH,
+                    maxWidth: CARD_WIDTH,
                     height: CARD_HEIGHT,
                 },
             ]}

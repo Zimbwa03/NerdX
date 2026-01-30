@@ -28,6 +28,7 @@ import { Card } from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import MathRenderer from '../components/MathRenderer';
 import { isMathSubjectId, toMathLatex } from '../utils/mathText';
+import { formatQuestionParts } from '../utils/formatQuestionText';
 import LoadingProgress from '../components/LoadingProgress';
 import { getExamLoadingConfig } from '../utils/loadingProgress';
 import {
@@ -602,7 +603,7 @@ const ExamSessionScreen: React.FC = () => {
                                 </Text>
                             </View>
                             <Text style={[styles.partPrompt, { color: themedColors.text.primary }]}>
-                                {part.prompt}
+                                {formatQuestionParts(part.prompt)}
                             </Text>
                         </View>
                     ))}
@@ -795,13 +796,13 @@ const ExamSessionScreen: React.FC = () => {
 
                     {isMathSubject && currentQuestion?.stem ? (
                         <MathRenderer 
-                            content={toMathLatex(currentQuestion.stem, isMathSubject)} 
+                            content={toMathLatex(formatQuestionParts(currentQuestion.stem), isMathSubject)} 
                             fontSize={16}
                             style={styles.questionStem}
                         />
                     ) : (
                         <Text style={[styles.questionStem, { color: themedColors.text.primary }]}>
-                            {currentQuestion?.stem}
+                            {formatQuestionParts(currentQuestion?.stem ?? '')}
                         </Text>
                     )}
                 </Card>

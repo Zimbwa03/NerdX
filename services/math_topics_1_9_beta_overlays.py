@@ -91,9 +91,24 @@ SETS_VENN = {
         "difficult": [],
     },
 }
-for d in ("easy", "medium", "difficult"):
-    SETS_VENN["prompts"].setdefault(d, [])
-SETS_BETA = [SETS_VENN]
+SETS_NOTATION = {
+    "subtopic": "Set Notation and Operations",
+    "prompts": {
+        "easy": [{"id": "ST_BETA_Not_E01", "subtopic": "Set Notation and Operations",
+            "prompt": _base("Set Notation and Operations",
+                ["∈, ∉, ⊂, ∅", "Union and intersection", "List elements", "n(A)"],
+                ["P1, P2: Set notation", "P1, P2: n(A)", "P2: Union/intersection"],
+                "",
+                "Use ⊆, ∪, ∩, ∅, ∈, ∉. List elements; find n(A).",
+                "A = {1,2,3,4}, B = {3,4,5}. Find A∩B, A∪B, n(A∪B). Is 2 ∈ A?",
+                "easy"), "learning_objective": "Use set notation and basic operations"}],
+        "medium": [], "difficult": [],
+    },
+}
+for _b in (SETS_VENN, SETS_NOTATION):
+    for d in ("easy", "medium", "difficult"):
+        _b["prompts"].setdefault(d, [])
+SETS_BETA = [SETS_VENN, SETS_NOTATION]
 
 # ---- FINANCIAL MATHEMATICS ----
 FM_INTEREST = {
@@ -160,9 +175,24 @@ MM_AREA_VOL = {
         "difficult": [],
     },
 }
-for d in ("easy", "medium", "difficult"):
-    MM_AREA_VOL["prompts"].setdefault(d, [])
-MENSURATION_BETA = [MM_AREA_VOL]
+MM_UNITS_SCALE = {
+    "subtopic": "Units and Scale",
+    "prompts": {
+        "easy": [{"id": "MM_BETA_Scale_E01", "subtopic": "Units and Scale",
+            "prompt": _base("Units and Scale",
+                ["Convert lengths, areas, volumes", "Map scale 1:n", "Scale drawings"],
+                ["P1, P2: Unit conversion", "P2: Map scale", "P2: Scale drawing"],
+                "Scale 1:n means 1 cm on map = n cm real. Convert using 1 m = 100 cm, etc.",
+                "Use mm, cm, m, km; convert between units. Use scale to find real distance from map distance.",
+                "Convert 2.5 km to m. Map scale 1:50000; 4 cm on map = ? km real. Scale drawing.",
+                "easy"), "learning_objective": "Convert units; use map scale and scale drawings"}],
+        "medium": [], "difficult": [],
+    },
+}
+for _b in (MM_AREA_VOL, MM_UNITS_SCALE):
+    for d in ("easy", "medium", "difficult"):
+        _b["prompts"].setdefault(d, [])
+MENSURATION_BETA = [MM_AREA_VOL, MM_UNITS_SCALE]
 
 # ---- GRAPHS ----
 GR_LINEAR = {
@@ -187,9 +217,24 @@ GR_LINEAR = {
         "difficult": [],
     },
 }
-for d in ("easy", "medium", "difficult"):
-    GR_LINEAR["prompts"].setdefault(d, [])
-GRAPHS_BETA = [GR_LINEAR]
+GR_TRAVEL = {
+    "subtopic": "Travel and Real-World Graphs",
+    "prompts": {
+        "easy": [{"id": "GR_BETA_Trav_E01", "subtopic": "Travel and Real-World Graphs",
+            "prompt": _base("Travel and Real-World Graphs",
+                ["Distance–time graphs", "Speed–time graphs", "Gradient = speed", "Area under curve"],
+                ["P2: Distance–time", "P2: Speed–time", "P2: Interpret"],
+                "Distance–time: gradient = speed. Speed–time: area = distance.",
+                "Interpret distance–time: constant speed, at rest, return. Interpret speed–time; find distance.",
+                "From distance–time graph: find speed, when at rest, total distance. From speed–time: find distance from area.",
+                "easy"), "learning_objective": "Interpret travel graphs"}],
+        "medium": [], "difficult": [],
+    },
+}
+for _b in (GR_LINEAR, GR_TRAVEL):
+    for d in ("easy", "medium", "difficult"):
+        _b["prompts"].setdefault(d, [])
+GRAPHS_BETA = [GR_LINEAR, GR_TRAVEL]
 
 # ---- VARIATION ----
 VAR_DIRECT = {
@@ -218,32 +263,209 @@ for d in ("easy", "medium", "difficult"):
     VAR_DIRECT["prompts"].setdefault(d, [])
 VARIATION_BETA = [VAR_DIRECT]
 
-# ---- ALGEBRA (light overlay; already rich in main prompts) ----
-ALG_EXPRESSIONS = {
-    "subtopic": "Algebraic Manipulation and Equations",
+# ---- ALGEBRA (multiple subtopics for rotation) ----
+ALG_INDICES = {
+    "subtopic": "Indices",
     "prompts": {
-        "easy": [{"id": "AL_BETA_Expr_E01", "subtopic": "Algebraic Manipulation and Equations",
-            "prompt": _base("Algebraic Manipulation and Equations",
-                ["Simplify, expand, factorise", "Linear equations", "Change of subject"],
-                ["P1, P2: Simplify", "P1, P2: Factorise", "P1, P2: Solve linear equation", "P2: Change subject"],
-                "",
-                "Expand (a+b)(c+d). Factorise ax²+bx+c. Solve 3x+4=10. Make x subject of y=2x-5.",
-                "Expand and simplify. Factorise. Solve 5-2x=3(x+7). Make t subject of v=u+at.",
-                "easy"), "learning_objective": "Simplify, expand, factorise; solve linear equations"}],
-        "medium": [{"id": "AL_BETA_Expr_M01", "subtopic": "Algebraic Manipulation and Equations",
-            "prompt": _base("Algebraic Manipulation and Equations",
-                ["Simultaneous equations", "Quadratic equations", "Inequalities", "Indices"],
-                ["P2: Simultaneous", "P2: Quadratics", "P2: Inequalities", "P1, P2: Indices"],
-                "",
-                "Elimination or substitution. Factorise or formula for quadratics. Solve 2x+3 < 7. Use a^m × a^n = a^(m+n) etc.",
-                "Solve 2x+y=11, x-y=1. Solve x²-7x+10=0. Solve -3x+4 ≤ 16. Simplify 2³ × 2⁵.",
-                "medium"), "learning_objective": "Solve simultaneous and quadratic equations; use indices"}],
+        "easy": [{"id": "AL_BETA_Idx_E01", "subtopic": "Indices",
+            "prompt": _base("Indices",
+                ["a^m × a^n = a^(m+n)", "a^m ÷ a^n = a^(m-n)", "a⁰ = 1", "Simplify using index laws"],
+                ["P1, P2: Simplify indices", "P1, P2: Evaluate powers"],
+                "aᵐ × aⁿ = aᵐ⁺ⁿ; aᵐ ÷ aⁿ = aᵐ⁻ⁿ; (aᵐ)ⁿ = aᵐⁿ; a⁰ = 1.",
+                "Use positive integer indices only. Whole number bases.",
+                "Simplify 2³ × 2⁵. Simplify 3⁷ ÷ 3⁴. Evaluate 5⁰. Write 2² × 2⁴ as single power.",
+                "easy"), "learning_objective": "Use laws of indices for positive integers"}],
+        "medium": [{"id": "AL_BETA_Idx_M01", "subtopic": "Indices",
+            "prompt": _base("Indices",
+                ["Negative indices a⁻ⁿ = 1/aⁿ", "Fractional indices", "Simplify expressions with mixed indices"],
+                ["P1, P2: Negative indices", "P2: Fractional indices"],
+                "a⁻ⁿ = 1/aⁿ. a^(1/n) = ⁿ√a. a^(m/n) = ⁿ√(aᵐ).",
+                "Simplify 2⁻³, 5^(-2). Simplify 8^(1/3), 16^(3/4). Combine laws.",
+                "Simplify 3⁻² × 3⁵. Evaluate 27^(2/3). Express with positive indices.",
+                "medium"), "learning_objective": "Use negative and fractional indices"}],
         "difficult": [],
     },
 }
-for d in ("easy", "medium", "difficult"):
-    ALG_EXPRESSIONS["prompts"].setdefault(d, [])
-ALGEBRA_BETA = [ALG_EXPRESSIONS]
+ALG_FRACTIONS = {
+    "subtopic": "Algebraic Fractions",
+    "prompts": {
+        "easy": [{"id": "AL_BETA_Frac_E01", "subtopic": "Algebraic Fractions",
+            "prompt": _base("Algebraic Fractions",
+                ["Simplify by cancelling common factors", "Multiply and divide simple algebraic fractions"],
+                ["P1, P2: Simplify", "P2: Multiply/divide"],
+                "Factorise numerator and denominator; cancel. (a/b)×(c/d) = ac/(bd); (a/b)÷(c/d) = ad/(bc).",
+                "Single variable. Factorise quadratics in num/denom.",
+                "Simplify (x²-4)/(x+2). Simplify (2x+6)/(4x+12). Multiply (x/3)×(6/(x+2)).",
+                "easy"), "learning_objective": "Simplify and multiply/divide algebraic fractions"}],
+        "medium": [{"id": "AL_BETA_Frac_M01", "subtopic": "Algebraic Fractions",
+            "prompt": _base("Algebraic Fractions",
+                ["Add and subtract with different denominators", "Express as single fraction", "Simplify complex fractions"],
+                ["P2: Add/subtract", "P2: Single fraction"],
+                "LCD; combine numerators. Simplify (A/B) ± (C/D) = (AD ± BC)/(BD).",
+                "Find LCD, combine. Factorise where needed.",
+                "Add 1/(x+1) + 2/(x-1). Express 3/(x+2) - 1/x as single fraction. Simplify (1 + 1/x) / (1 - 1/x).",
+                "medium"), "learning_objective": "Add, subtract, and simplify algebraic fractions"}],
+        "difficult": [],
+    },
+}
+ALG_FACTORISE = {
+    "subtopic": "Factorisation",
+    "prompts": {
+        "easy": [{"id": "AL_BETA_Fac_E01", "subtopic": "Factorisation",
+            "prompt": _base("Factorisation",
+                ["Common factor", "Difference of two squares", "Quadratic trinomials ax²+bx+c"],
+                ["P1, P2: Common factor", "P1, P2: Difference of two squares", "P1, P2: Factorise quadratics"],
+                "a² - b² = (a-b)(a+b). ax²+bx+c with a=1 or simple a.",
+                "Integer coefficients. No fancy quadratics.",
+                "Factorise 6x+12. Factorise x²-9. Factorise x²+5x+6. Factorise 2x²+7x+3.",
+                "easy"), "learning_objective": "Factorise using common factor, difference of two squares, quadratics"}],
+        "medium": [{"id": "AL_BETA_Fac_M01", "subtopic": "Factorisation",
+            "prompt": _base("Factorisation",
+                ["Grouping", "Quadratics with a>1", "Factorise and solve"],
+                ["P2: Grouping", "P2: Harder quadratics", "P2: Solve by factorising"],
+                "Grouping: ax+ay+bx+by = a(x+y)+b(x+y) = (a+b)(x+y).",
+                "Factorise by grouping; quadratics with a>1; solve equations by factorising.",
+                "Factorise 2x²+4x+3x+6. Factorise 6x²-7x-20. Solve x²-5x+6=0 by factorising.",
+                "medium"), "learning_objective": "Factorise by grouping and harder quadratics; solve"}],
+        "difficult": [],
+    },
+}
+ALG_LINEAR_EQ = {
+    "subtopic": "Linear Equations",
+    "prompts": {
+        "easy": [{"id": "AL_BETA_Lin_E01", "subtopic": "Linear Equations",
+            "prompt": _base("Linear Equations",
+                ["One- and two-step equations", "Equations with brackets", "Fractions in equations"],
+                ["P1, P2: Solve linear", "P2: Brackets", "P2: Fractions"],
+                "Expand brackets; clear fractions by multiplying through by LCD.",
+                "Integer solutions or simple fractions.",
+                "Solve 3x+4=13. Solve 2(x-3)=10. Solve (x/2) + (x/3) = 5.",
+                "easy"), "learning_objective": "Solve linear equations including brackets and fractions"}],
+        "medium": [{"id": "AL_BETA_Lin_M01", "subtopic": "Linear Equations",
+            "prompt": _base("Linear Equations",
+                ["Variables on both sides", "Form equations from word problems", "Change of subject"],
+                ["P2: Both sides", "P2: Word problems", "P2: Change subject"],
+                "Collect like terms; isolate variable. Form equation from context.",
+                "Avoid 'length in between' style only; use variety: ages, costs, distances, etc.",
+                "Solve 5x-3 = 2x+9. Form equation: 'John is 3 years older than Mary...'. Make t subject of s = ut + ½at².",
+                "medium"), "learning_objective": "Solve harder linear equations; form equations; change subject"}],
+        "difficult": [],
+    },
+}
+ALG_QUADRATICS = {
+    "subtopic": "Quadratics",
+    "prompts": {
+        "easy": [{"id": "AL_BETA_Quad_E01", "subtopic": "Quadratics",
+            "prompt": _base("Quadratics",
+                ["Solve by factorisation", "Use formula x = (-b ± √(b²-4ac))/(2a)", "Completing the square"],
+                ["P1, P2: Factorise", "P2: Formula", "P2: Completing square"],
+                "Formula: x = (-b ± √(b²-4ac))/(2a). Complete square: x²+bx+c = (x + b/2)² + (c - b²/4).",
+                "Real roots. Give exact or rounded answers as appropriate.",
+                "Solve x²-5x+6=0. Solve 2x²+3x-2=0 using formula. Write x²+6x+5 in form (x+p)²+q.",
+                "easy"), "learning_objective": "Solve quadratic equations; complete the square"}],
+        "medium": [{"id": "AL_BETA_Quad_M01", "subtopic": "Quadratics",
+            "prompt": _base("Quadratics",
+                ["Discriminant b²-4ac", "Quadratic word problems", "Find range of values for real roots"],
+                ["P2: Discriminant", "P2: Word problems", "P2: Conditions on k"],
+                "Δ = b²-4ac. Real roots ⟺ Δ ≥ 0; equal roots ⟺ Δ = 0.",
+                "Vary contexts: area, projectile, profit, etc. Not only 'length between'.",
+                "Find k so x²+kx+4=0 has equal roots. For what k does 2x²-5x+k=0 have real roots? Area of rectangle 24; perimeter 20. Find dimensions.",
+                "medium"), "learning_objective": "Use discriminant; quadratic word problems"}],
+        "difficult": [],
+    },
+}
+ALG_SIMULTANEOUS = {
+    "subtopic": "Simultaneous Equations",
+    "prompts": {
+        "easy": [{"id": "AL_BETA_Sim_E01", "subtopic": "Simultaneous Equations",
+            "prompt": _base("Simultaneous Equations",
+                ["Elimination", "Substitution", "Both linear"],
+                ["P1, P2: Elimination", "P1, P2: Substitution"],
+                "Two linear equations. Eliminate or substitute.",
+                "Integer or simple fractional solutions.",
+                "Solve 2x+y=7, x-y=2. Solve 3x+2y=12, 2x+3y=13.",
+                "easy"), "learning_objective": "Solve linear simultaneous equations"}],
+        "medium": [{"id": "AL_BETA_Sim_M01", "subtopic": "Simultaneous Equations",
+            "prompt": _base("Simultaneous Equations",
+                ["One linear, one quadratic", "Form from word problems"],
+                ["P2: Linear–quadratic", "P2: Word problems"],
+                "Substitute from linear into quadratic; solve resulting quadratic.",
+                "Vary contexts.",
+                "Solve y=2x+1, x²+y²=25. Form and solve: two numbers sum 12, product 35.",
+                "medium"), "learning_objective": "Solve linear–quadratic simultaneous; form from context"}],
+        "difficult": [],
+    },
+}
+ALG_INEQUALITIES = {
+    "subtopic": "Inequalities",
+    "prompts": {
+        "easy": [{"id": "AL_BETA_Ineq_E01", "subtopic": "Inequalities",
+            "prompt": _base("Inequalities",
+                ["Linear inequalities", "Number line", "Integer solutions"],
+                ["P1, P2: Solve inequality", "P2: Number line"],
+                "Same steps as equations; reverse inequality when ×/÷ by negative.",
+                "Solve linear inequalities; represent on number line; list integer solutions in range.",
+                "Solve 2x+3 < 11. Represent x ≥ -2 on number line. List integer x such that -3 < x ≤ 4.",
+                "easy"), "learning_objective": "Solve linear inequalities; number line"}],
+        "medium": [{"id": "AL_BETA_Ineq_M01", "subtopic": "Inequalities",
+            "prompt": _base("Inequalities",
+                ["Quadratic inequalities", "Simultaneous inequalities"],
+                ["P2: Quadratic inequalities", "P2: Combined"],
+                "Solve x²-5x+6>0 via sign chart or sketch. Combine ranges.",
+                "Quadratic: factorise, sign chart, solution set. Combined: intersect solution sets.",
+                "Solve x²-4<0. Solve 2x+1>3 and x-1<7; represent solution.",
+                "medium"), "learning_objective": "Solve quadratic and combined inequalities"}],
+        "difficult": [],
+    },
+}
+ALG_SEQUENCES = {
+    "subtopic": "Sequences",
+    "prompts": {
+        "easy": [{"id": "AL_BETA_Seq_E01", "subtopic": "Sequences",
+            "prompt": _base("Sequences",
+                ["Term-to-term rule", "nth term (linear)", "Find missing terms"],
+                ["P1, P2: Next terms", "P1, P2: nth term", "P2: Missing terms"],
+                "AP: nth term a+(n-1)d; first n terms S = n/2(2a+(n-1)d).",
+                "Identify AP; find d, a; nth term and sum.",
+                "2, 5, 8, 11, ... Write nth term. Find 10th term. Find sum of first 20 terms.",
+                "easy"), "learning_objective": "Use term-to-term and nth term for AP"}],
+        "medium": [{"id": "AL_BETA_Seq_M01", "subtopic": "Sequences",
+            "prompt": _base("Sequences",
+                ["Geometric progressions", "nth term GP", "Sum to n terms", "Simple series"],
+                ["P2: GP nth term", "P2: Sum GP", "P2: Sum to infinity"],
+                "GP: nth term ar^(n-1); S_n = a(1-r^n)/(1-r); S∞ = a/(1-r) when |r|<1.",
+                "Identify GP; find r, a; nth term, sum, sum to infinity where applicable.",
+                "3, 6, 12, ... GP. Find 8th term. Sum of first 10 terms. Sum to infinity?",
+                "medium"), "learning_objective": "Use GP; nth term; sum; sum to infinity"}],
+        "difficult": [],
+    },
+}
+ALG_CHANGE_SUBJECT = {
+    "subtopic": "Change of Subject",
+    "prompts": {
+        "easy": [{"id": "AL_BETA_Subj_E01", "subtopic": "Change of Subject",
+            "prompt": _base("Change of Subject",
+                ["Two-step formulae", "Make variable subject"],
+                ["P1, P2: Change subject"],
+                "Reverse operations: +/− then ×/÷; squares and square roots.",
+                "Linear or simple rearrangement.",
+                "Make x subject of y = 2x + 5. Make r subject of A = πr².",
+                "easy"), "learning_objective": "Change subject of simple formulae"}],
+        "medium": [{"id": "AL_BETA_Subj_M01", "subtopic": "Change of Subject",
+            "prompt": _base("Change of Subject",
+                ["Subject in multiple terms", "Formulae with fractions", "Roots and powers"],
+                ["P2: Harder change of subject"],
+                "Collect terms in subject; factorise; divide. Use ± for square roots.",
+                "Subject appears in more than one term; formulae with fractions or roots.",
+                "Make t subject of v = u + at. Make h subject of A = ½(a+b)h. Make x subject of y = (2x+1)/(x-3).",
+                "medium"), "learning_objective": "Change subject in harder formulae"}],
+        "difficult": [],
+    },
+}
+for _b in (ALG_INDICES, ALG_FRACTIONS, ALG_FACTORISE, ALG_LINEAR_EQ, ALG_QUADRATICS, ALG_SIMULTANEOUS, ALG_INEQUALITIES, ALG_SEQUENCES, ALG_CHANGE_SUBJECT):
+    for d in ("easy", "medium", "difficult"):
+        _b["prompts"].setdefault(d, [])
+ALGEBRA_BETA = [ALG_INDICES, ALG_FRACTIONS, ALG_FACTORISE, ALG_LINEAR_EQ, ALG_QUADRATICS, ALG_SIMULTANEOUS, ALG_INEQUALITIES, ALG_SEQUENCES, ALG_CHANGE_SUBJECT]
 
 # ---- GEOMETRY ----
 GEO_ANGLES = {
@@ -268,9 +490,24 @@ GEO_ANGLES = {
         "difficult": [],
     },
 }
-for d in ("easy", "medium", "difficult"):
-    GEO_ANGLES["prompts"].setdefault(d, [])
-GEOMETRY_BETA = [GEO_ANGLES]
+GEO_PYTH_LOCI = {
+    "subtopic": "Pythagoras and Loci",
+    "prompts": {
+        "easy": [{"id": "GEO_BETA_Pyth_E01", "subtopic": "Pythagoras and Loci",
+            "prompt": _base("Pythagoras and Loci",
+                ["Pythagoras a²+b²=c²", "Find side or diagonal", "Simple loci (circle, perpendicular bisector)"],
+                ["P1, P2: Pythagoras", "P2: Loci"],
+                "a²+b²=c². Locus: equidistant from point (circle); equidistant from two points (perpendicular bisector).",
+                "Find hypotenuse or shorter side. Construct perpendicular bisector of AB. Locus of P such that PA = 5 cm.",
+                "Right triangle sides 3, 4, 5: find hypotenuse. Rectangle 6×8: diagonal length? Locus of points 5 cm from A.",
+                "easy"), "learning_objective": "Use Pythagoras; simple loci"}],
+        "medium": [], "difficult": [],
+    },
+}
+for _b in (GEO_ANGLES, GEO_PYTH_LOCI):
+    for d in ("easy", "medium", "difficult"):
+        _b["prompts"].setdefault(d, [])
+GEOMETRY_BETA = [GEO_ANGLES, GEO_PYTH_LOCI]
 
 # ---- STATISTICS ----
 STAT_REPRESENT = {
@@ -295,6 +532,21 @@ STAT_REPRESENT = {
         "difficult": [],
     },
 }
-for d in ("easy", "medium", "difficult"):
-    STAT_REPRESENT["prompts"].setdefault(d, [])
-STATISTICS_BETA = [STAT_REPRESENT]
+STAT_PROB = {
+    "subtopic": "Probability and Counting",
+    "prompts": {
+        "easy": [{"id": "ST_BETA_Prob_E01", "subtopic": "Probability and Counting",
+            "prompt": _base("Probability and Counting",
+                ["Simple probability P(A) = n(A)/n(S)", "Expected frequency", "Listing outcomes"],
+                ["P1, P2: Simple probability", "P2: Expected frequency"],
+                "P(A) = n(A)/n(S). Expected freq = P × number of trials.",
+                "Single event. Dice, cards, beads. Find P(red). Expected number of red in 60 draws.",
+                "Bag 3 red, 5 blue: P(red)? Fair dice: P(6). Expected 6s in 120 rolls.",
+                "easy"), "learning_objective": "Simple probability and expected frequency"}],
+        "medium": [], "difficult": [],
+    },
+}
+for _b in (STAT_REPRESENT, STAT_PROB):
+    for d in ("easy", "medium", "difficult"):
+        _b["prompts"].setdefault(d, [])
+STATISTICS_BETA = [STAT_REPRESENT, STAT_PROB]

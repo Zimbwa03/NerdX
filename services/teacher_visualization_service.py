@@ -2,6 +2,8 @@ import logging
 import re
 from typing import Dict, Optional, Tuple
 
+from config import Config
+
 logger = logging.getLogger(__name__)
 
 
@@ -260,43 +262,47 @@ def handle_teacher_plot_trigger(
             out["graph_url"] = f"/static/graphs/{filename}"
 
         # Manim video (deterministic)
-        try:
-            from services.manim_service import get_manim_service
+        if Config.ENABLE_MANIM_RENDERING:
+            try:
+                from services.manim_service import get_manim_service
 
-            manim = get_manim_service()
-            video_result = None
+                manim = get_manim_service()
+                deps = manim.check_dependencies()
+                if not deps.get("ffmpeg"):
+                    logger.warning("Teacher plot trigger: Skipping Manim animation because FFmpeg is missing")
+                elif graph_spec:
+                    video_result = None
+                    spec_type = graph_spec.get("graph_type")
+                    coeffs = graph_spec.get("coefficients") or {}
+                    xr = graph_spec.get("x_range")
+                    yr = graph_spec.get("y_range")
 
-            if graph_spec:
-                spec_type = graph_spec.get("graph_type")
-                coeffs = graph_spec.get("coefficients") or {}
-                xr = graph_spec.get("x_range")
-                yr = graph_spec.get("y_range")
+                    if spec_type == "linear" and "m" in coeffs:
+                        video_result = manim.render_linear(float(coeffs.get("m", 1.0)), float(coeffs.get("c", 0.0)), x_range=xr, y_range=yr)
+                    elif spec_type == "quadratic" and "a" in coeffs:
+                        video_result = manim.render_quadratic(
+                            float(coeffs.get("a", 1.0)),
+                            float(coeffs.get("b", 0.0)),
+                            float(coeffs.get("c", 0.0)),
+                            x_range=xr,
+                            y_range=yr,
+                        )
+                    else:
+                        clean_expr = graph_spec.get("clean_expression") or expression
+                        video_result = manim.render_expression(clean_expr, x_range=xr, y_range=yr)
 
-                if spec_type == "linear" and "m" in coeffs:
-                    video_result = manim.render_linear(float(coeffs.get("m", 1.0)), float(coeffs.get("c", 0.0)), x_range=xr, y_range=yr)
-                elif spec_type == "quadratic" and "a" in coeffs:
-                    video_result = manim.render_quadratic(
-                        float(coeffs.get("a", 1.0)),
-                        float(coeffs.get("b", 0.0)),
-                        float(coeffs.get("c", 0.0)),
-                        x_range=xr,
-                        y_range=yr,
-                    )
-                else:
-                    # trig/exponential/other → expression-based animation
-                    clean_expr = graph_spec.get("clean_expression") or expression
-                    video_result = manim.render_expression(clean_expr, x_range=xr, y_range=yr)
+                    if video_result and video_result.get("success"):
+                        v_path = video_result.get("video_path")
+                        if v_path:
+                            out["video_url"] = f"/{v_path}"
 
-            if video_result and video_result.get("success"):
-                v_path = video_result.get("video_path")
-                if v_path:
-                    out["video_url"] = f"/{v_path}"
-        except Exception as e:
-            logger.warning(f"Teacher plot trigger: manim render failed: {e}")
+            except Exception as e:
+                logger.warning(f"Teacher plot trigger: manim render failed: {e}")
+        else:
+            logger.debug("Teacher plot trigger: Manim rendering disabled via config")
 
     except Exception as e:
         logger.error(f"Teacher plot trigger failed: {e}", exc_info=True)
 
     return out
-
 

@@ -1,5 +1,17 @@
 import os
 
+
+def _env_int(name: str, default: int) -> int:
+    """Parse an integer environment variable safely."""
+    value = os.getenv(name)
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
+
 class Config:
     """Configuration class for the NerdX Quiz Bot"""
 
@@ -207,6 +219,10 @@ class Config:
 
     # Image Hosting
     IMGBB_API_KEY = os.getenv('IMGBB_API_KEY')
+
+    # Teacher visualization controls
+    MANIM_RENDER_TIMEOUT = _env_int('MANIM_RENDER_TIMEOUT', 20)
+    ENABLE_MANIM_RENDERING = os.getenv('ENABLE_MANIM_RENDERING', 'true').lower() in ('true', '1', 'yes')
 
     # ZIMSEC Beta Math Prompts (template-based from ZIMSEC MD files)
     USE_ZIMSEC_BETA_MATH_PROMPTS = os.getenv('USE_ZIMSEC_BETA_MATH_PROMPTS', 'false').lower() in ('true', '1', 'yes')

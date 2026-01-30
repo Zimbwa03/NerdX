@@ -129,6 +129,7 @@ const VirtualLabScreen: React.FC = () => {
             'programming-lab': 'ProgrammingLabEditor',
             'web-design-lab': 'WebDesignLabEditor',
             'database-lab': 'DatabaseLabEditor',
+            'project-gates-lab': 'ProjectGatesLab',
 
             // Geography - Map work & fieldwork
             'map-work-grid-scale': 'MapWorkLab',

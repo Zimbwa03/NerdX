@@ -34,6 +34,7 @@ import LoadingProgress from '../components/LoadingProgress';
 import { getSubjectLoadingSteps } from '../utils/loadingProgress';
 import MathText from '../components/MathText';
 import VoiceMathInput from '../components/VoiceMathInput';
+import { formatQuestionParts } from '../utils/formatQuestionText';
 
 const QuizScreen: React.FC = () => {
   const route = useRoute();
@@ -1504,7 +1505,7 @@ const QuizScreen: React.FC = () => {
                   />
                   <Text style={styles.questionLabel}>Question</Text>
                 </View>
-                <MathText style={styles.questionTextContainer} fontSize={16}>{question.question_text}</MathText>
+                <MathText style={styles.questionTextContainer} fontSize={16}>{formatQuestionParts(question.question_text)}</MathText>
 
                 {/* Question Image */}
                 {question.question_image_url && (
@@ -1595,7 +1596,7 @@ const QuizScreen: React.FC = () => {
                         <Text style={styles.structuredPartLabel}>{part.label}</Text>
                         <Text style={styles.structuredPartMarks}>[{part.marks}]</Text>
                       </View>
-                      <Text style={styles.structuredPartQuestion}>{part.question}</Text>
+                      <MathText style={styles.structuredPartQuestion} fontSize={15}>{formatQuestionParts(part.question)}</MathText>
 
                       {!result ? (
                         <View style={styles.structuredInputBlock}>

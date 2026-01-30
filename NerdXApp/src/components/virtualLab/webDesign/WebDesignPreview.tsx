@@ -5,16 +5,20 @@ import { useThemedColors } from '../../../theme/useThemedStyles';
 
 export interface WebDesignPreviewProps {
     htmlContent: string;
+    cssContent?: string;
+    jsContent?: string;
+    enableJavaScript?: boolean;
 }
 
 // Renders the student's HTML in a sandboxed WebView.
-const WebDesignPreview: React.FC<WebDesignPreviewProps> = ({ htmlContent }) => {
+const WebDesignPreview: React.FC<WebDesignPreviewProps> = ({ htmlContent, cssContent, jsContent, enableJavaScript }) => {
     const colors = useThemedColors();
 
     // Ensure there is a full HTML document; if the student only writes body
     // content, wrap it for them.
     const isFullDocument = /<html[\s\S]*<\/html>/i.test(htmlContent);
-    const wrappedHtml = isFullDocument
+
+    const baseHtml = isFullDocument
         ? htmlContent
         : `<!DOCTYPE html>
 <html lang="en">
@@ -27,13 +31,29 @@ ${htmlContent}
 </body>
 </html>`;
 
+    const insertBeforeClosingTag = (content: string, tag: string, snippet: string) => {
+        const regex = new RegExp(`</${tag}>`, 'i');
+        if (regex.test(content)) {
+            return content.replace(regex, `${snippet}</${tag}>`);
+        }
+        return content + snippet;
+    };
+
+    const withCss = cssContent && cssContent.trim()
+        ? insertBeforeClosingTag(baseHtml, 'head', `<style>${cssContent}</style>`)
+        : baseHtml;
+    const withJs = jsContent && jsContent.trim()
+        ? insertBeforeClosingTag(withCss, 'body', `<script>${jsContent}</script>`)
+        : withCss;
+    const jsEnabled = enableJavaScript ?? Boolean(jsContent && jsContent.trim());
+
     return (
         <View style={[styles.container, { backgroundColor: colors.background.paper }]}>
             <WebView
                 originWhitelist={['*']}
-                source={{ html: wrappedHtml }}
+                source={{ html: withJs }}
                 style={styles.webview}
-                javaScriptEnabled={false}
+                javaScriptEnabled={jsEnabled}
                 domStorageEnabled={false}
                 setSupportMultipleWindows={false}
             />

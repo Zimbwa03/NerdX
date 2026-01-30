@@ -141,4 +141,56 @@ export const PROGRAMMING_LAB_SIMULATIONS: SimulationMetadata[] = [
             },
         ],
     },
+    {
+        id: 'project-gates-lab',
+        title: 'Project Gates Lab',
+        subject: 'computer_science',
+        topic: 'Project Planning & Logic Gates',
+        description:
+            'Plan projects with stage gates, build logic diagrams, and calculate readiness. A practical simulation for decision making.',
+        difficulty: 'medium',
+        xpReward: 175,
+        estimatedTime: '20-30 mins',
+        icon: 'git-branch',
+        color: '#546E7A',
+        learningObjectives: [
+            { id: 'pg-1', text: 'Explain what a project gate is and when to enable it' },
+            { id: 'pg-2', text: 'Build simple logic diagrams and predict outputs' },
+            { id: 'pg-3', text: 'Calculate readiness and delivery time from gate progress' },
+            { id: 'pg-4', text: 'Communicate decisions with evidence and calculations' },
+        ],
+        quizQuestions: [
+            {
+                id: 'pg-q1',
+                question: 'What is the main purpose of a project gate?',
+                options: [
+                    'To skip planning and start building',
+                    'To pause and check if criteria are met before moving on',
+                    'To change the programming language',
+                    'To remove tasks from the plan',
+                ],
+                correctIndex: 1,
+                explanation: 'Project gates are checkpoints where criteria must be met before progressing.',
+            },
+            {
+                id: 'pg-q2',
+                question: 'For an AND gate, the output is 1 only when:',
+                options: ['Any input is 1', 'Both inputs are 0', 'Both inputs are 1', 'Exactly one input is 1'],
+                correctIndex: 2,
+                explanation: 'AND outputs 1 only if both inputs are 1.',
+            },
+            {
+                id: 'pg-q3',
+                question: 'Why are calculations included in gate decisions?',
+                options: [
+                    'To make decisions based on evidence, not guesses',
+                    'To avoid writing documentation',
+                    'To increase the number of tasks',
+                    'To ignore risk',
+                ],
+                correctIndex: 0,
+                explanation: 'Calculations quantify readiness, effort, and risk for better decisions.',
+            },
+        ],
+    },
 ];

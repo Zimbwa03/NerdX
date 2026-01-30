@@ -1,6 +1,6 @@
 // Web Design Lab - shared types for HTML/CSS editor
 
-export type WebLanguage = 'html';
+export type WebLanguage = 'html' | 'css' | 'js';
 
 export interface WebFileMetadata {
     templateId?: string;
@@ -23,6 +23,8 @@ export interface WebTemplate {
     description: string;
     language: WebLanguage;
     code: string;
+    css?: string;
+    js?: string;
     tags: string[];
     board?: 'zimsec' | 'cambridge' | 'both';
 }

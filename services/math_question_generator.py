@@ -26,22 +26,29 @@ def _load_math_prompts():
                 get_random_prompt as _grp,
                 get_prompt as _gp,
                 get_all_topics as _ga,
+                get_random_prompt_subtopic_first as _grpf,
             )
             logger.info("ZIMSEC beta math prompts loaded (template-based)")
-            return _grp, _gp, _ga, True
+            return _grp, _gp, _ga, _grpf, True
         except ImportError as e:
             logger.warning("ZIMSEC beta math prompts not available (%s), falling back to master", e)
     try:
-        from services.math_prompts_master import get_random_prompt as _grp, get_prompt as _gp, get_all_topics as _ga
+        from services.math_prompts_master import (
+            get_random_prompt as _grp,
+            get_prompt as _gp,
+            get_all_topics as _ga,
+            get_random_prompt_subtopic_first as _grpf,
+        )
         logger.info("Structured math prompts loaded (2,520 prompts)")
-        return _grp, _gp, _ga, True
+        return _grp, _gp, _ga, _grpf, True
     except ImportError:
-        return None, None, None, False
+        return None, None, None, None, False
 
-_grp, _gp, _ga, PROMPTS_AVAILABLE = _load_math_prompts()
+_grp, _gp, _ga, _grpf, PROMPTS_AVAILABLE = _load_math_prompts()
 get_random_prompt = _grp
 get_prompt = _gp
 get_all_topics = _ga
+get_random_prompt_subtopic_first = _grpf
 if not PROMPTS_AVAILABLE:
     logger.warning("Structured prompts not available, using default prompts")
 
@@ -296,17 +303,20 @@ class MathQuestionGenerator:
         """
         try:
             recent_topics = set()
+            recent_subtopics = []
             if user_id:
                 try:
                     from services.question_history_service import question_history_service
                     ai_subject_key = f"{subject}_AI"
                     recent_questions = question_history_service.get_recent_questions(user_id, ai_subject_key)
                     recent_topics = {q.split('_')[0] for q in recent_questions if '_' in q}
+                    recent_subtopics = question_history_service.get_recent_subtopics(user_id, topic)
                 except ImportError:
                     logger.info("Question history service not available, continuing without anti-repetition")
                     recent_topics = set()
+                    recent_subtopics = []
 
-            prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics)
+            prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics, recent_subtopics)
             context = f"{subject}/{topic}"
 
             logger.info(f"Trying Vertex AI (primary) for {context} on platform={platform}")
@@ -316,6 +326,7 @@ class MathQuestionGenerator:
                 if question_data:
                     question_data['source'] = 'vertex_ai'
                     logger.info(f"Vertex AI generated question for {context}")
+                    self._record_math_subtopic(user_id, topic)
                     return question_data
                 logger.warning(f"Vertex AI response validation failed for {context}")
 
@@ -344,6 +355,7 @@ class MathQuestionGenerator:
                         if question_data:
                             question_data['source'] = 'deepseek_ai_fallback'
                             logger.info(f"DeepSeek fallback generated question for {context} on attempt {attempt + 1}")
+                            self._record_math_subtopic(user_id, topic)
                             return question_data
                         logger.warning(f"DeepSeek fallback validation failed for {context} on attempt {attempt + 1}")
                     else:
@@ -565,12 +577,29 @@ Return JSON:
             'source': 'fallback'
         }
 
-    def _create_question_prompt(self, subject: str, topic: str, difficulty: str, recent_topics: set = None) -> str:
+    def _record_math_subtopic(self, user_id: Optional[str], topic: str) -> None:
+        """Record the subtopic used for (user_id, topic) to prefer others next time."""
+        try:
+            if not getattr(self, "_last_math_subtopic", None):
+                return
+            t, s = self._last_math_subtopic
+            if t != topic or not s:
+                return
+            from services.question_history_service import question_history_service
+            question_history_service.add_recent_subtopic(user_id, topic, s)
+            del self._last_math_subtopic
+        except Exception as e:
+            logger.debug("Could not record math subtopic: %s", e)
+
+    def _create_question_prompt(self, subject: str, topic: str, difficulty: str, recent_topics: set = None, recent_subtopics: list = None) -> str:
         """Create optimized prompt using structured prompts when available with expert examiner persona"""
         
         if recent_topics is None:
             recent_topics = set()
-        
+        if recent_subtopics is None:
+            recent_subtopics = []
+        if hasattr(self, "_last_math_subtopic"):
+            del self._last_math_subtopic
         difficulty_descriptions = {
             "easy": "Direct application of basic concepts, straightforward calculations, minimal steps (1-2 steps)",
             "medium": "Requires understanding of multiple concepts, moderate calculations, 2-3 steps",
@@ -592,14 +621,15 @@ Return JSON:
         subtopic = selected_subtopic
         learning_obj = f"Test understanding of {selected_subtopic}"
         
-        if PROMPTS_AVAILABLE:
+        if PROMPTS_AVAILABLE and get_random_prompt_subtopic_first:
             try:
-                prompt_data = get_random_prompt(topic, difficulty=difficulty)
+                prompt_data = get_random_prompt_subtopic_first(topic, difficulty=difficulty, recent_subtopics=recent_subtopics)
                 if prompt_data:
                     structured_prompt = prompt_data.get('prompt', '')
                     subtopic = prompt_data.get('subtopic', selected_subtopic)
                     learning_obj = prompt_data.get('learning_objective', learning_obj)
-                    logger.info(f"Using structured prompt: {prompt_data.get('id', 'unknown')} for {topic}")
+                    self._last_math_subtopic = (topic, subtopic)
+                    logger.info(f"Using structured prompt: {prompt_data.get('id', 'unknown')} for {topic} (subtopic: {subtopic})")
             except Exception as e:
                 logger.warning(f"Error getting structured prompt: {e}")
         
@@ -657,11 +687,11 @@ CORE PRINCIPLES (NON-NEGOTIABLE):
 
 SUBJECT: Mathematics (ZIMSEC O-Level)
 TOPIC: {topic}
-SPECIFIC SUBTOPIC TO TEST: {selected_subtopic}
+SPECIFIC SUBTOPIC TO TEST: {subtopic}
 DIFFICULTY: {difficulty} - {difficulty_descriptions[difficulty]}
 
 COMPREHENSIVE COVERAGE REQUIREMENT:
-- This question MUST test understanding of a SPECIFIC subtopic: "{selected_subtopic}"
+- This question MUST test understanding of a SPECIFIC subtopic: "{subtopic}"
 - All available subtopics for this topic: {chr(10).join(f"  - {obj}" for obj in objectives)}
 - To ensure full syllabus coverage, different subtopics should be tested across multiple question generations
 - Questions should rotate through all learning objectives to ensure comprehensive topic coverage
@@ -686,6 +716,7 @@ FRESHNESS REQUIREMENTS - CREATE UNIQUE QUESTIONS:
 - Vary contexts: Zimbabwean school/community situations, everyday life, practical applications
 - Vary numbers and approaches to test the same concept
 - Ensure question feels professionally crafted like a real ZIMSEC exam question
+- Vary **subtopic** and **question type** across generations (e.g. indices, factorisation, algebraic fractions, sequences, equations). Do NOT repeatedly use the same question style (e.g. "length in between" or perimeter/area word problems).
 
 CRITICAL MATH FORMATTING - PLAIN TEXT ONLY:
 - ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
@@ -695,6 +726,7 @@ CRITICAL MATH FORMATTING - PLAIN TEXT ONLY:
 - Use √ for square root: √(x+1) (NOT $\\sqrt{{}}$)
 - Use π for pi, ± for plus/minus, × for multiply
 - Examples: "x² + 3x - 4 = 0", "√(16) = 4", "3/4 + 1/2"
+- Multi-part layout: Put each part on its own line. Use a blank line before (a), (b), (c)... and a new line before (i), (ii), (iii)... so the question reads like an exam paper, not one paragraph.
 
 **Specific Instructions:**
 {structured_prompt}
@@ -705,14 +737,14 @@ OUTPUT FORMAT: Return ONLY valid JSON. No markdown. No extra text.
 
 JSON schema (required fields):
 {{
-    "question": "Clear, focused ZIMSEC exam-style question testing: {selected_subtopic} (plain text math)",
+    "question": "Clear, focused ZIMSEC exam-style question testing: {subtopic} (plain text math)",
     "solution": "Complete step-by-step solution with working showing method marks (plain text math)",
     "answer": "Final answer only",
     "points": {points},
     "explanation": "Conceptual explanation of what is being tested and why it matters for ZIMSEC exams",
     "teaching_explanation": "Friendly tutor-style explanation with analogies and common mistakes to avoid",
     "difficulty": "{difficulty}",
-    "subtopic": "{selected_subtopic}",
+    "subtopic": "{subtopic}",
     "topic": "{topic}",
     "zimsec_paper_reference": "Paper 1 or Paper 2 (as appropriate)",
     "marking_notes": "Brief notes on how marks are allocated (method marks vs accuracy marks) and common examiner comments"
@@ -775,6 +807,7 @@ FRESHNESS REQUIREMENTS - CREATE UNIQUE QUESTIONS:
 - Vary contexts: Zimbabwean school/community situations, everyday life, practical applications
 - Vary numbers and approaches to test the same concept
 - Ensure question feels professionally crafted like a real ZIMSEC exam question
+- Vary **subtopic** and **question type** (e.g. indices, factorisation, algebraic fractions, sequences, equations). Do NOT repeatedly use the same style (e.g. "length in between" or perimeter/area word problems).
 
 {variation_note}
 
@@ -786,6 +819,7 @@ CRITICAL MATH FORMATTING - PLAIN TEXT ONLY:
 - Use √ for square root: √(x+1) (NOT $\\sqrt{{}}$)
 - Use π for pi, ± for plus/minus, × for multiply
 - Examples: "x² + 3x - 4 = 0", "√(16) = 4", "3/4 + 1/2"
+- Multi-part layout: Put each part on its own line. Use a blank line before (a), (b), (c)... and a new line before (i), (ii), (iii)... so the question reads like an exam paper, not one paragraph.
 
 Requirements:
 - Create a clear, specific question following ZIMSEC exam format

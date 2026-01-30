@@ -54,7 +54,8 @@ def get_prompt(topic_name, subtopic=None, difficulty=None):
     
     results = []
     for subtopic_data in prompts:
-        if subtopic and subtopic_data.get("subtopic") != subtopic:
+        block_label = subtopic_data.get("subtopic") or subtopic_data.get("topic")
+        if subtopic and block_label != subtopic:
             continue
         
         if difficulty:
@@ -70,6 +71,23 @@ def get_random_prompt(topic_name, difficulty=None):
     import random
     prompts = get_prompt(topic_name, difficulty=difficulty)
     return random.choice(prompts) if prompts else None
+
+
+def get_random_prompt_subtopic_first(topic_name, difficulty=None, recent_subtopics=None):
+    """Pick a random subtopic, then a random prompt for that subtopic. Prefer subtopics not in recent_subtopics."""
+    import random
+    subtopics = [s for s in get_subtopics(topic_name) if s]
+    if not subtopics:
+        return get_random_prompt(topic_name, difficulty=difficulty)
+    recent = list(recent_subtopics) if recent_subtopics else []
+    preferred = [s for s in subtopics if s not in recent]
+    pool = preferred if preferred else subtopics
+    chosen = random.choice(pool)
+    candidates = get_prompt(topic_name, subtopic=chosen, difficulty=difficulty)
+    if candidates:
+        return random.choice(candidates)
+    return get_random_prompt(topic_name, difficulty=difficulty)
+
 
 def count_prompts(topic_name=None):
     """Count prompts for a topic or all topics."""
@@ -89,9 +107,9 @@ def get_all_topics():
     return list(ALL_MATH_PROMPTS.keys())
 
 def get_subtopics(topic_name):
-    """Get all subtopics for a given topic."""
+    """Get all subtopics for a given topic (block-level subtopic or topic)."""
     prompts = get_prompts_for_topic(topic_name)
-    return [s.get("subtopic") for s in prompts]
+    return [s.get("subtopic") or s.get("topic") for s in prompts]
 
 # Quick stats when run directly
 if __name__ == "__main__":

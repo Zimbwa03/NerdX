@@ -40,6 +40,7 @@ const getIconName = (iconKey: string): keyof typeof Ionicons.glyphMap => {
         'code-slash': 'code-slash-outline',
         'map': 'map-outline',
         'compass': 'compass-outline',
+        'git-branch': 'git-branch-outline',
     };
     return iconMap[iconKey] || 'help-circle-outline';
 };

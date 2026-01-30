@@ -4,7 +4,7 @@
 export interface NotesSection {
     title: string;
     content: string; // Markdown formatted
-    diagrams: string[];
+    diagrams: Array<string | number>;
     subsections?: NotesSection[];
 }
 

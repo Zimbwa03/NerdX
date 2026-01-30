@@ -18,6 +18,7 @@ import { Card } from '../components/Card';
 import { examApi, ExamReview, ReviewQuestion } from '../services/api/examApi';
 import MathRenderer from '../components/MathRenderer';
 import { shouldRenderMathText, toMathLatex } from '../utils/mathText';
+import { formatQuestionParts } from '../utils/formatQuestionText';
 
 const ExamReviewScreen: React.FC = () => {
     const route = useRoute();
@@ -118,7 +119,7 @@ const ExamReviewScreen: React.FC = () => {
                 )}
 
                 {/* Question Stem */}
-                {renderContent(question.stem, [styles.questionStem, { color: themedColors.text.primary }], 16)}
+                {renderContent(formatQuestionParts(question.stem), [styles.questionStem, { color: themedColors.text.primary }], 16)}
 
                 {/* Options for MCQ */}
                 {question.question_type === 'MCQ' && question.options && (

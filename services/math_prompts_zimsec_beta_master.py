@@ -75,6 +75,22 @@ def get_random_prompt(topic_name, difficulty=None):
     return random.choice(prompts) if prompts else None
 
 
+def get_random_prompt_subtopic_first(topic_name, difficulty=None, recent_subtopics=None):
+    """Pick a random subtopic, then a random prompt for that subtopic. Prefer subtopics not in recent_subtopics."""
+    import random
+    subtopics = [s for s in get_subtopics(topic_name) if s]
+    if not subtopics:
+        return get_random_prompt(topic_name, difficulty=difficulty)
+    recent = list(recent_subtopics) if recent_subtopics else []
+    preferred = [s for s in subtopics if s not in recent]
+    pool = preferred if preferred else subtopics
+    chosen = random.choice(pool)
+    candidates = get_prompt(topic_name, subtopic=chosen, difficulty=difficulty)
+    if candidates:
+        return random.choice(candidates)
+    return get_random_prompt(topic_name, difficulty=difficulty)
+
+
 def count_prompts(topic_name=None):
     """Count prompts for a topic or all topics."""
     if topic_name:

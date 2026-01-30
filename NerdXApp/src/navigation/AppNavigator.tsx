@@ -130,6 +130,7 @@ import SimultaneousEquationsLabScreen from '../screens/virtualLab/SimultaneousEq
 import ProgrammingLabEditorScreen from '../screens/virtualLab/ProgrammingLabEditorScreen';
 import WebDesignLabEditorScreen from '../screens/virtualLab/WebDesignLabEditorScreen';
 import DatabaseLabEditorScreen from '../screens/virtualLab/DatabaseLabEditorScreen';
+import ProjectGatesLabScreen from '../screens/virtualLab/ProjectGatesLabScreen';
 
 const Stack = createStackNavigator();
 
@@ -591,6 +592,11 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="DatabaseLabEditor"
               component={DatabaseLabEditorScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ProjectGatesLab"
+              component={ProjectGatesLabScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen

@@ -9,20 +9,23 @@ import {
     ScrollView,
     KeyboardAvoidingView,
     Platform,
+    useWindowDimensions,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useTheme } from '../../context/ThemeContext';
 import { useThemedColors } from '../../theme/useThemedStyles';
 import type { CodeFile, ProgrammingLanguage, SyntaxError as SyntaxErrorType, ExecutionResult } from '../../types/programmingLabTypes';
 import {
     EditorTopBar,
     FileTabBar,
     LineNumberDisplay,
-    SyntaxHighlighter,
     ErrorHighlighter,
     ExecutionPanel,
     FloatingActionMenu,
     AIAssistantPanel,
+    HintPanel,
+    DocumentationPanel,
+    SidePanelTabs,
+    type SidePanelTabId,
 } from '../../components/virtualLab/programmingLab';
 import { syntaxValidator } from '../../utils/programmingLab/syntaxValidator';
 import { programmingLabApi } from '../../services/api/programmingLabApi';
@@ -30,6 +33,7 @@ import { gamificationService } from '../../services/GamificationService';
 import { findExerciseById } from '../../data/virtualLab/programmingLab/curriculum';
 import { PROGRAMMING_TEMPLATES, type ProgrammingTemplate } from '../../data/virtualLab/programmingLab/templates';
 import { Modal, ModalOptionCard } from '../../components/Modal';
+import LearningPathStrip from '../../components/virtualLab/LearningPathStrip';
 
 type RouteParams = {
     exerciseId?: string;
@@ -62,12 +66,13 @@ function createDefaultFile(language: ProgrammingLanguage): CodeFile {
 const ProgrammingLabEditorScreen: React.FC = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
-    const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
+    const { width } = useWindowDimensions();
     const params = (route.params || {}) as RouteParams;
 
     const initialExercise = findExerciseById(params.exerciseId);
     const language = (params.language ?? initialExercise?.language ?? 'python') as ProgrammingLanguage;
+    const isWideLayout = width >= 1100;
 
     const [files, setFiles] = useState<CodeFile[]>(() => {
         if (initialExercise) {
@@ -92,6 +97,8 @@ const ProgrammingLabEditorScreen: React.FC = () => {
     const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
     const [templatesVisible, setTemplatesVisible] = useState(false);
     const [aiVisible, setAiVisible] = useState(false);
+    const [activeSideTab, setActiveSideTab] = useState<SidePanelTabId>('ai');
+    const [completedSteps, setCompletedSteps] = useState<string[]>([]);
     const validationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const activeFile = files.find((f) => f.id === activeFileId) ?? files[0];
@@ -250,6 +257,17 @@ const ProgrammingLabEditorScreen: React.FC = () => {
     }, []);
 
     const lineCount = code.split('\n').length;
+    const learningSteps = [
+        { id: 'plan', title: 'Plan', description: 'Define inputs, outputs, and edge cases.' },
+        { id: 'build', title: 'Build', description: 'Write the core logic and functions.' },
+        { id: 'verify', title: 'Verify', description: 'Run, debug, and refactor your solution.' },
+    ];
+
+    const toggleStep = useCallback((stepId: string) => {
+        setCompletedSteps((prev) =>
+            prev.includes(stepId) ? prev.filter((id) => id !== stepId) : [...prev, stepId],
+        );
+    }, []);
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: themedColors.background.default }]}>
@@ -266,6 +284,15 @@ const ProgrammingLabEditorScreen: React.FC = () => {
                     onUndo={() => {}}
                     onRedo={() => {}}
                     onAiPress={() => setAiVisible(true)}
+                />
+
+                <LearningPathStrip
+                    title="Programming Learning Path"
+                    subtitle="Keep moving from planning to verification for strong answers."
+                    steps={learningSteps}
+                    completedSteps={completedSteps}
+                    onToggleStep={toggleStep}
+                    accentColor={themedColors.primary.main}
                 />
 
                 <View style={styles.mainRow}>
@@ -325,6 +352,30 @@ const ProgrammingLabEditorScreen: React.FC = () => {
                             <ErrorHighlighter errors={syntaxErrors} onErrorClick={handleErrorClick} />
                         </View>
                     </View>
+
+                    {isWideLayout && (
+                        <View
+                            style={[
+                                styles.sidePanel,
+                                { borderLeftColor: themedColors.border?.light ?? themedColors.text.secondary + '20' },
+                            ]}
+                        >
+                            <SidePanelTabs activeTab={activeSideTab} onTabChange={setActiveSideTab}>
+                                {activeSideTab === 'ai' && (
+                                    <AIAssistantPanel
+                                        language={activeFile?.language ?? 'python'}
+                                        code={code}
+                                        userLevel={params.userLevel ?? 'a-level'}
+                                        exerciseId={params.exerciseId}
+                                        lab="programming"
+                                        board={params.courseId as 'zimsec' | 'cambridge' | undefined}
+                                    />
+                                )}
+                                {activeSideTab === 'hints' && <HintPanel />}
+                                {activeSideTab === 'docs' && <DocumentationPanel />}
+                            </SidePanelTabs>
+                        </View>
+                    )}
                 </View>
 
                 <ExecutionPanel
@@ -340,7 +391,9 @@ const ProgrammingLabEditorScreen: React.FC = () => {
                     actions={[
                         { id: 'run', label: 'Run', icon: 'play', onPress: handleRunCode },
                         { id: 'templates', label: 'Templates', icon: 'list', onPress: () => setTemplatesVisible(true) },
-                        { id: 'ai-help', label: 'AI Help', icon: 'sparkles', onPress: () => setAiVisible(true) },
+                        ...(isWideLayout
+                            ? []
+                            : [{ id: 'ai-help', label: 'AI Help', icon: 'sparkles', onPress: () => setAiVisible(true) }]),
                     ]}
                 />
 
@@ -396,6 +449,10 @@ const styles = StyleSheet.create({
     editorColumn: {
         flex: 1,
         minWidth: 0,
+    },
+    sidePanel: {
+        width: 260,
+        borderLeftWidth: 1,
     },
     editorWrapper: {
         flex: 1,
