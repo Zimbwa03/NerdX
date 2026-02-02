@@ -98,6 +98,10 @@ class ContextPackService:
             model=model or "gemini-2.5-flash",
         )
 
+        # Treat Vertex failure as hard error so API returns 500 and client sees clear error
+        if isinstance(analysis, dict) and (analysis.get("success") is False or analysis.get("error")):
+            raise RuntimeError(analysis.get("error") or "Image analysis failed")
+
         # Map model output back onto stored images by index
         images_out: List[Dict[str, Any]] = []
         model_images = (analysis or {}).get("images") or []

@@ -30,6 +30,7 @@ export interface GradingResult {
   total_score: number;
   total_possible: number;
   overall_feedback: string;
+  credits_remaining?: number;
 }
 
 export interface SummaryGradingResult {
@@ -40,6 +41,7 @@ export interface SummaryGradingResult {
   word_count: number;
   feedback: string;
   key_points_missed: string[];
+  credits_remaining?: number;
 }
 
 // ZIMSEC Essay Types
@@ -266,7 +268,11 @@ export const englishApi = {
         questions,
         answers,
       });
-      return response.data.data || null;
+      const data = response.data.data || null;
+      if (data && response.data.credits_remaining !== undefined) {
+        data.credits_remaining = response.data.credits_remaining;
+      }
+      return data;
     } catch (error: any) {
       console.error('Grade comprehension error:', error);
       throw error;
@@ -284,7 +290,11 @@ export const englishApi = {
         prompt,
         summary,
       });
-      return response.data.data || null;
+      const data = response.data.data || null;
+      if (data && response.data.credits_remaining !== undefined) {
+        data.credits_remaining = response.data.credits_remaining;
+      }
+      return data;
     } catch (error: any) {
       console.error('Grade summary error:', error);
       throw error;

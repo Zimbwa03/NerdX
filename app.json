@@ -2,6 +2,11 @@
   "expo": {
     "android": {
       "package": "com.Ngoni03.nerdxapp"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6062dc52-333f-4bad-90db-dfcbe5ce6735"
+      }
     }
   }
 }

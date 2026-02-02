@@ -67,6 +67,15 @@ except ImportError:
 
 class MathQuestionGenerator:
     """Vertex AI mathematics question generator with DeepSeek fallback."""
+
+    # LaTeX formatting rules for all generated math (aligned with Teacher Mode / mathematics_teacher_service)
+    MATH_LATEX_GUIDELINES = """
+**CRITICAL: LaTeX Formatting for Mathematical Expressions**
+ALL mathematical expressions, equations, formulas, and notation MUST be in LaTeX:
+- Inline math: $x + 2 = 5$, $x^2 + 3x - 4$, $\\frac{a}{b}$, $\\sqrt{16}$, $\\sin(\\theta)$, $\\alpha$, $\\pi$
+- Display math (centered): $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
+- Rules: Wrap ALL math in $ for inline or $$ for display. Use \\frac{num}{den}, \\sqrt{}, ^ for powers, _ for subscripts. Never plain text (e.g. write $x^2$ not x squared).
+"""
     
     # Comprehensive learning objectives for all 14 O-Level Mathematics topics
     learning_objectives = {
@@ -518,6 +527,71 @@ class MathQuestionGenerator:
             logger.error(f"Critical error generating graph question: {e}", exc_info=True)
             return self._generate_fallback_graph_question(equation, graph_type, difficulty)
     
+    def generate_graph_question_from_template(
+        self,
+        equation_display: str,
+        graph_type: str,
+        level: str,
+        template_question: str,
+        template_solution: str,
+    ) -> Optional[Dict]:
+        """
+        Generate a graph practice question using Vertex AI, guided by the template structure.
+        The template tells the AI what kind of question to generate (structure, parts (a)(b)(c), style).
+        Returns {"question": str, "solution": str} or None if Vertex AI fails.
+        """
+        prompt = self._create_template_guided_graph_prompt(
+            equation_display, graph_type, level, template_question, template_solution
+        )
+        context = f"graph_template_{graph_type}_{level}"
+        logger.info("Generating graph question from template (Vertex AI) for equation: %s", equation_display[:50])
+        vertex_response = try_vertex_json(prompt, logger=logger, context=context)
+        if not vertex_response or not isinstance(vertex_response, dict):
+            return None
+        question = (vertex_response.get("question") or "").strip()
+        solution = (vertex_response.get("solution") or "").strip()
+        if not question:
+            return None
+        if not solution:
+            solution = template_solution
+        return {"question": question, "solution": solution, "source": "vertex_ai_template"}
+
+    def _create_template_guided_graph_prompt(
+        self,
+        equation_display: str,
+        graph_type: str,
+        level: str,
+        template_question: str,
+        template_solution: str,
+    ) -> str:
+        """Create a Vertex AI prompt that uses the template as the structure guide for the question."""
+        level_label = "O-Level" if (level or "o_level").lower() == "o_level" else "A-Level"
+        return f"""You are a ZIMSEC/Cambridge examiner. Generate ONE graph practice question for the student.
+
+**CRITICAL – follow the template structure:**
+The template below defines the STRUCTURE and STYLE of the question. Your output must follow the same structure: same parts (a), (b), (c), same type of tasks (table, sketch, find roots, etc.), and same exam style. Do NOT output the template literally; generate a concrete question that matches this structure for the given equation.
+
+{self.MATH_LATEX_GUIDELINES}
+
+**Template question (structure to follow):**
+{template_question}
+
+**Template solution (style to follow):**
+{template_solution}
+
+**Equation for the student (use y = ... in the question):** y = {equation_display}
+**Graph type:** {graph_type}
+**Level:** {level_label}
+
+Generate a NEW question that:
+1. Uses the equation $y = {equation_display}$ (or display form) throughout, in LaTeX.
+2. Follows the same structure as the template (same parts (a), (b), (c), etc.).
+3. Uses STANDARD LaTeX for ALL math: inline $...$ or display $$...$$, \\frac{{}}{{}}, \\sqrt{{}}, \\sin, \\cos, \\theta, etc. No plain text for math.
+4. Is appropriate for {level_label} ZIMSEC/Cambridge and displays professionally.
+
+Return ONLY a JSON object with no markdown, no code block:
+{{"question": "Your generated question with all math in LaTeX", "solution": "Your generated solution with all math in LaTeX"}}"""
+
     def _create_graph_question_prompt(self, equation: str, graph_type: str, difficulty: str) -> str:
         """Create a prompt for graph-specific questions about the given equation."""
         graph_contexts = {
@@ -529,31 +603,32 @@ class MathQuestionGenerator:
         context = graph_contexts.get(graph_type.lower(), "Focus on key graph features.")
         points = {'easy': 10, 'medium': 20, 'difficult': 30}.get(difficulty, 20)
         
-        return f"""Generate a ZIMSEC O-Level question about this SPECIFIC equation:
+        return f"""Generate a ZIMSEC O-Level question about this SPECIFIC equation.
+
+{self.MATH_LATEX_GUIDELINES}
 
 **Equation:** {equation}
 **Graph Type:** {graph_type.title()}
 **Difficulty:** {difficulty}
 {context}
 
-CRITICAL: The question MUST be about {equation} - ask students to calculate specific values.
-Use PLAIN TEXT math (x², √, π) - NO LaTeX.
+CRITICAL: The question MUST be about {equation} - ask students to calculate specific values. Use STANDARD LaTeX for ALL math: $...$ or $$...$$, \\frac{{}}{{}}, \\sqrt{{}}, etc. No plain text for math.
 
 Return JSON:
 {{
-    "question": "Question about {equation}",
-    "solution": "Step-by-step solution for {equation}",
-    "answer": "Final answer",
+    "question": "Question about {equation} with all math in LaTeX",
+    "solution": "Step-by-step solution with all math in LaTeX",
+    "answer": "Final answer in LaTeX",
     "points": {points},
-    "explanation": "Concept explanation"
+    "explanation": "Concept explanation with LaTeX where needed"
 }}"""
 
     def _generate_fallback_graph_question(self, equation: str, graph_type: str, difficulty: str) -> Dict:
-        """Generate fallback question when AI fails."""
+        """Generate fallback question when AI fails. Use LaTeX for professional display."""
         if graph_type.lower() == 'linear':
             return {
-                'question': f"The graph shows {equation}. Find the gradient of this line.",
-                'solution': f"For y = mx + c, the gradient is m. In {equation}, identify the x coefficient.",
+                'question': f"The graph shows $y = {equation}$. Find the gradient of this line.",
+                'solution': f"For $y = mx + c$, the gradient is $m$. In $y = {equation}$, identify the coefficient of $x$.",
                 'answer': "Read gradient from equation",
                 'points': 10 if difficulty == 'easy' else 20,
                 'equation': equation,
@@ -561,17 +636,17 @@ Return JSON:
             }
         elif graph_type.lower() == 'quadratic':
             return {
-                'question': f"For {equation}, state whether the parabola opens up or down.",
-                'solution': f"If coefficient of x² is positive, opens up. If negative, opens down.",
-                'answer': "Check x² coefficient sign",
+                'question': f"For $y = {equation}$, state whether the parabola opens up or down.",
+                'solution': f"If the coefficient of $x^2$ is positive, the parabola opens up. If negative, it opens down.",
+                'answer': "Check $x^2$ coefficient sign",
                 'points': 10 if difficulty == 'easy' else 20,
                 'equation': equation,
                 'source': 'fallback'
             }
         return {
-            'question': f"Find the y-intercept of {equation}.",
-            'solution': f"Set x = 0 in {equation} and solve for y.",
-            'answer': "Calculate y when x=0",
+            'question': f"Find the $y$-intercept of $y = {equation}$.",
+            'solution': f"Set $x = 0$ in $y = {equation}$ and solve for $y$.",
+            'answer': "Calculate $y$ when $x=0$",
             'points': 10,
             'equation': equation,
             'source': 'fallback'
@@ -718,14 +793,8 @@ FRESHNESS REQUIREMENTS - CREATE UNIQUE QUESTIONS:
 - Ensure question feels professionally crafted like a real ZIMSEC exam question
 - Vary **subtopic** and **question type** across generations (e.g. indices, factorisation, algebraic fractions, sequences, equations). Do NOT repeatedly use the same question style (e.g. "length in between" or perimeter/area word problems).
 
-CRITICAL MATH FORMATTING - PLAIN TEXT ONLY:
-- ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
-- Use Unicode superscripts: x², x³, xⁿ (NOT x^2 or $x^2$)
-- Use Unicode subscripts: x₁, x₂, aₙ (NOT x_1)
-- Write fractions as: (a+b)/(c+d) or a/b (NOT $\\frac{{a}}{{b}}$)
-- Use √ for square root: √(x+1) (NOT $\\sqrt{{}}$)
-- Use π for pi, ± for plus/minus, × for multiply
-- Examples: "x² + 3x - 4 = 0", "√(16) = 4", "3/4 + 1/2"
+CRITICAL MATH FORMATTING - STANDARD LaTeX (same as Teacher Mode):
+{self.MATH_LATEX_GUIDELINES}
 - Multi-part layout: Put each part on its own line. Use a blank line before (a), (b), (c)... and a new line before (i), (ii), (iii)... so the question reads like an exam paper, not one paragraph.
 
 **Specific Instructions:**
@@ -737,8 +806,8 @@ OUTPUT FORMAT: Return ONLY valid JSON. No markdown. No extra text.
 
 JSON schema (required fields):
 {{
-    "question": "Clear, focused ZIMSEC exam-style question testing: {subtopic} (plain text math)",
-    "solution": "Complete step-by-step solution with working showing method marks (plain text math)",
+    "question": "Clear, focused ZIMSEC exam-style question testing: {subtopic} (all math in LaTeX: $...$ or $$...$$)",
+    "solution": "Complete step-by-step solution with working showing method marks (all math in LaTeX)",
     "answer": "Final answer only",
     "points": {points},
     "explanation": "Conceptual explanation of what is being tested and why it matters for ZIMSEC exams",
@@ -811,19 +880,13 @@ FRESHNESS REQUIREMENTS - CREATE UNIQUE QUESTIONS:
 
 {variation_note}
 
-CRITICAL MATH FORMATTING - PLAIN TEXT ONLY:
-- ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
-- Use Unicode superscripts: x², x³, xⁿ (NOT x^2 or $x^2$)
-- Use Unicode subscripts: x₁, x₂, aₙ (NOT x_1)
-- Write fractions as: (a+b)/(c+d) or a/b (NOT $\\frac{{a}}{{b}}$)
-- Use √ for square root: √(x+1) (NOT $\\sqrt{{}}$)
-- Use π for pi, ± for plus/minus, × for multiply
-- Examples: "x² + 3x - 4 = 0", "√(16) = 4", "3/4 + 1/2"
+CRITICAL MATH FORMATTING - STANDARD LaTeX (same as Teacher Mode):
+{self.MATH_LATEX_GUIDELINES}
 - Multi-part layout: Put each part on its own line. Use a blank line before (a), (b), (c)... and a new line before (i), (ii), (iii)... so the question reads like an exam paper, not one paragraph.
 
 Requirements:
 - Create a clear, specific question following ZIMSEC exam format
-- Use PLAIN TEXT Unicode math notation - NO LaTeX
+- Use STANDARD LaTeX for ALL math: $...$ or $$...$$, \\frac{{}}{{}}, \\sqrt{{}}, etc.
 - Include specific numbers and realistic scenarios
 - Appropriate for {difficulty} difficulty level: {difficulty_descriptions[difficulty]}
 - Focus specifically on {selected_subtopic} within {topic}
@@ -838,9 +901,9 @@ OUTPUT FORMAT: Return ONLY valid JSON. No markdown. No extra text.
 
 JSON schema (required fields):
 {{
-    "question": "Clear, focused ZIMSEC exam-style question testing: {selected_subtopic} (plain text math)",
-    "solution": "Complete step-by-step solution with working showing method marks (plain text math)",
-    "answer": "Final answer only",
+    "question": "Clear, focused ZIMSEC exam-style question testing: {selected_subtopic} (all math in LaTeX: $...$ or $$...$$)",
+    "solution": "Complete step-by-step solution with working showing method marks (all math in LaTeX)",
+    "answer": "Final answer only (LaTeX if math)",
     "points": {points},
     "explanation": "Conceptual explanation of what is being tested and why it matters for ZIMSEC exams",
     "teaching_explanation": "Friendly tutor-style explanation with analogies and common mistakes to avoid",

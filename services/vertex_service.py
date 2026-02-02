@@ -278,8 +278,12 @@ If you see handwritten math, interpret it as accurately as possible. Convert fra
 Only respond with the JSON, no other text."""
 
             # Create the image part
+            image_bytes = self._decode_base64(image_base64)
+            if image_bytes is None:
+                return {'success': False, 'error': 'Invalid base64 image data'}
+
             image_part = Part.from_bytes(
-                data=base64.b64decode(image_base64),
+                data=image_bytes,
                 mime_type=mime_type
             )
             
@@ -466,8 +470,9 @@ User instruction: {user_prompt.strip() if user_prompt else "(none)"}"""
 
             return {'success': False, 'error': 'No response from model'}
         except Exception as e:
-            logger.error(f"❌ ContextPack image analysis failed: {e}", exc_info=True)
-            return {'success': False, 'error': str(e)}
+            err_msg = str(e)
+            logger.error("❌ ContextPack image analysis failed: %s", err_msg, exc_info=True)
+            return {'success': False, 'error': err_msg}
     
     def transcribe_audio(
         self, 
@@ -500,7 +505,9 @@ User instruction: {user_prompt.strip() if user_prompt else "(none)"}"""
             client = speech_v1.SpeechClient()
             
             # Decode audio data
-            audio_data = base64.b64decode(audio_base64)
+            audio_data = self._decode_base64(audio_base64)
+            if audio_data is None:
+                return {'success': False, 'error': 'Invalid base64 audio data'}
             
             # Map MIME types to Speech-to-Text encoding
             # Use ENCODING_UNSPECIFIED for compressed formats (API will auto-detect)
@@ -560,8 +567,12 @@ User instruction: {user_prompt.strip() if user_prompt else "(none)"}"""
             logger.info(f"🎤 Transcribing audio with Gemini multimodal (fallback)...")
             
             # Create the audio part
+            audio_data = self._decode_base64(audio_base64)
+            if audio_data is None:
+                return {'success': False, 'error': 'Invalid base64 audio data'}
+
             audio_part = Part.from_bytes(
-                data=base64.b64decode(audio_base64),
+                data=audio_data,
                 mime_type=mime_type
             )
             
@@ -634,8 +645,12 @@ If this is an educational document, also identify:
 Format your response clearly with headers and bullet points for easy reading."""
 
             # Create the document part
+            document_bytes = self._decode_base64(document_base64)
+            if document_bytes is None:
+                return {'success': False, 'error': 'Invalid base64 document data'}
+
             document_part = Part.from_bytes(
-                data=base64.b64decode(document_base64),
+                data=document_bytes,
                 mime_type=mime_type
             )
             
@@ -824,6 +839,26 @@ Generate a high-quality visual science question now!"""
             logger.error(f"JSON parsing failed: {e}")
         
         return None
+
+    def _decode_base64(self, data: str) -> Optional[bytes]:
+        """Decode base64 strings safely (handles data URLs and padding)."""
+        if not isinstance(data, str) or not data:
+            return None
+        value = data.strip()
+        if 'base64,' in value:
+            value = value.split('base64,', 1)[1]
+        value = value.replace("\n", "").replace("\r", "").replace(" ", "")
+        # Pad to multiple of 4
+        pad_len = (-len(value)) % 4
+        if pad_len:
+            value = value + ("=" * pad_len)
+        try:
+            return base64.b64decode(value, validate=True)
+        except Exception:
+            try:
+                return base64.b64decode(value)
+            except Exception:
+                return None
     
     def _save_image_to_static(self, image_bytes: bytes, filename: str) -> str:
         """Save image bytes to static folder and return public URL."""

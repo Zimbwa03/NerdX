@@ -101,11 +101,11 @@ const ALevelBiologyScreen: React.FC = () => {
 
     const startQuestion = async (topic: ALevelBiologyTopic, questionType: BiologyQuestionType) => {
         try {
-            // A-Level Biology: MCQ = 0.25 credit, Structured/Essay = 0.5 credit
-            const creditCost = questionType === 'mcq' ? 0.25 : 0.5;
+            // A-Level Biology: MCQ = 0.5 credit, Structured = 0.5 credit, Essay = 1 credit (per FEATURE_CREDITS_TABLE)
+            const creditCost = questionType === 'essay' ? 1 : 0.5;
             const currentCredits = user?.credits || 0;
             if (currentCredits < creditCost) {
-                showError(`❌ Insufficient credits! You need at least ${creditCost} credit${creditCost === 0.25 ? '' : 's'}. Please top up your credits.`, 5000);
+                showError(`❌ Insufficient credits! You need at least ${creditCost} credit${creditCost === 1 ? '' : 's'}. Please top up your credits.`, 5000);
                 return;
             }
 
@@ -130,16 +130,18 @@ const ALevelBiologyScreen: React.FC = () => {
             setIsGeneratingQuestion(false);
 
             if (question) {
-                // Backend deducts credits - update UI estimate based on question type
-                const newCredits = Math.max(0, (user?.credits || 0) - creditCost);
-                updateUser({ credits: newCredits });
+                // Update credits from server response (backend handles deduction, returns credits_remaining)
+                const serverCredits = (question as any).credits_remaining;
+                if (user && serverCredits !== undefined) {
+                    updateUser({ credits: serverCredits });
+                }
+                const creditsRemaining = serverCredits ?? currentCredits - creditCost;
+                const costText = creditCost === 1 ? '1 credit' : '0.5 credit';
+                showSuccess(`✅ ${questionType.toUpperCase()} question generated! (-${costText}) ${creditsRemaining} credits remaining.`, 3000);
 
-                const costText = creditCost === 0.25 ? '0.25 credit' : '0.5 credit';
-                showSuccess(`✅ ${questionType.toUpperCase()} question generated! (-${costText}) ${newCredits} credits remaining.`, 3000);
-
-                if (newCredits <= 3 && newCredits > 0) {
+                if (creditsRemaining <= 3 && creditsRemaining > 0) {
                     setTimeout(() => {
-                        showWarning(`⚠️ Running low on credits! Only ${newCredits} credits left.`, 5000);
+                        showWarning(`⚠️ Running low on credits! Only ${creditsRemaining} credits left.`, 5000);
                     }, 3500);
                 }
 

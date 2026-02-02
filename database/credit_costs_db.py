@@ -72,20 +72,20 @@ def create_credit_costs_table():
             
             # Insert default credit costs (units)
             default_costs = [
-                # Combined Science (O-Level)
+                # Combined Science (O-Level) – 0.5 credit each
                 {
                     'action_key': 'combined_science_topical',
-                    'cost': 3,
+                    'cost': 5,
                     'category': 'Combined Science',
                     'component': 'Topical Questions (MCQ default)',
-                    'description': '0.25 credit per MCQ'
+                    'description': '0.5 credit per question'
                 },
                 {
                     'action_key': 'combined_science_topical_mcq',
-                    'cost': 3,
+                    'cost': 5,
                     'category': 'Combined Science',
                     'component': 'Topical Questions (MCQ)',
-                    'description': '0.25 credit per MCQ'
+                    'description': '0.5 credit per MCQ'
                 },
                 {
                     'action_key': 'combined_science_topical_structured',
@@ -126,10 +126,10 @@ def create_credit_costs_table():
                 },
                 {
                     'action_key': 'computer_science_exam_mcq',
-                    'cost': 5,
+                    'cost': 3,
                     'category': 'Computer Science',
                     'component': 'Exam MCQ',
-                    'description': '0.3 credit per exam MCQ'
+                    'description': '0.3 credit per exam MCQ (3 units)'
                 },
                 {
                     'action_key': 'computer_science_exam_structured',
@@ -140,10 +140,10 @@ def create_credit_costs_table():
                 },
                 {
                     'action_key': 'computer_science_exam_essay',
-                    'cost': 5,
+                    'cost': 10,
                     'category': 'Computer Science',
                     'component': 'Exam Essay',
-                    'description': '1 credit per exam essay'
+                    'description': '1 credit per exam essay (10 units)'
                 },
 
                 # Mathematics (O-Level)
@@ -170,10 +170,10 @@ def create_credit_costs_table():
                 },
                 {
                     'action_key': 'math_graph_practice',
-                    'cost': 10,
+                    'cost': 5,
                     'category': 'Mathematics',
                     'component': 'Graph Practice',
-                    'description': '1 credit per graph/question/video'
+                    'description': '0.5 credit per graph/question/video'
                 },
 
                 # English (units)
@@ -508,6 +508,14 @@ class CreditCostService:
             'computer_science_exam_structured': 5,  # 0.5 credit per exam structured (5 units)
             'computer_science_exam_essay': 10,  # 1 credit per exam essay (10 units)
 
+            # A-Level Computer Science – same pricing as O-Level (MCQ 0.3, Structured 0.5, Essay 1)
+            'a_level_computer_science_topical_mcq': 3,
+            'a_level_computer_science_topical_structured': 5,
+            'a_level_computer_science_topical_essay': 10,
+            'a_level_computer_science_exam_mcq': 3,
+            'a_level_computer_science_exam_structured': 5,
+            'a_level_computer_science_exam_essay': 10,
+
             # Mathematics (O-Level) – 0.5 credit each
             'math_topical': 5,
             'math_exam': 5,
@@ -517,6 +525,10 @@ class CreditCostService:
 
             # English (Topical)
             'english_topical': 5,  # 0.5 credit
+
+            # Geography (O-Level)
+            'geography_topical': 5,  # 0.5 credit
+            'geography_exam': 5,  # 0.5 credit
 
             # AI Teacher Mode
             'teacher_mode_start': 1,  # 0.1 credit
@@ -561,8 +573,13 @@ class CreditCostService:
             'a_level_biology_exam_mcq': 5,
             'a_level_biology_exam_structured': 5,
             'a_level_biology_exam_essay': 10,
-            'a_level_geography_topical_essay': 5,  # 0.5 credit
-            'a_level_geography_exam_essay': 10,  # 1 credit
+            # A-Level Geography – MCQ 0.3, Structured 0.5, Topical essay 0.5, Exam essay 1
+            'a_level_geography_topical_mcq': 3,
+            'a_level_geography_topical_structured': 5,
+            'a_level_geography_topical_essay': 5,  # 0.5 credit (per FEATURE_CREDITS_TABLE)
+            'a_level_geography_exam_mcq': 3,
+            'a_level_geography_exam_structured': 5,
+            'a_level_geography_exam_essay': 10,  # 1 credit (per FEATURE_CREDITS_TABLE)
 
             # Audio & Vision – 2 credits / 1 credit
             'audio_feature': 20,

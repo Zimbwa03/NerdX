@@ -162,6 +162,10 @@ const QuizScreen: React.FC = () => {
           if (firstQuestion) {
             const normalizedQ = normalizeQuestion(firstQuestion);
             setQuestion(normalizedQ);
+            // Update credits from server (credits deducted on backend)
+            if (user && (firstQuestion as any).credits_remaining !== undefined) {
+              updateUser({ credits: (firstQuestion as any).credits_remaining });
+            }
             // Clear loading immediately when question is ready - especially for Mathematics O-level
             setGeneratingQuestion(false);
             // Update question type state

@@ -89,7 +89,11 @@ export const projectApi = {
         message,
         context_pack_id: contextPackId,
       });
-      return response.data.data || null;
+      const data = response.data.data || null;
+      if (data && response.data.credits_remaining !== undefined) {
+        data.credits_remaining = response.data.credits_remaining;
+      }
+      return data;
     } catch (error: any) {
       console.error('Send project message error:', error);
       throw error;
@@ -259,7 +263,11 @@ export const projectApi = {
         message,
         attachments,
       });
-      return response.data.data || null;
+      const data = response.data.data || null;
+      if (data && response.data.credits_remaining !== undefined) {
+        data.credits_remaining = response.data.credits_remaining;
+      }
+      return data;
     } catch (error: any) {
       console.error('Multimodal message error:', error);
       throw error;
@@ -312,7 +320,11 @@ export const projectApi = {
         payload.aspect_ratio = aspectRatio;
       }
       const response = await api.post(`/api/mobile/project/${projectId}/generate-image`, payload);
-      return response.data.data || null;
+      const data = response.data.data || null;
+      if (data && response.data.credits_remaining !== undefined) {
+        data.credits_remaining = response.data.credits_remaining;
+      }
+      return data;
     } catch (error: any) {
       console.error('Generate image error:', error);
       throw error;

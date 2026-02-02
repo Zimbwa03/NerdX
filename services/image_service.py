@@ -31,9 +31,9 @@ class ImageService:
                 return None
                 
             base64_image = base64.b64encode(image_bytes).decode('utf-8')
-            
-            # Use same prompt logic as solve_math_image
-            raw_result = self._solve_with_deepseek(base64_image)
+
+            # Enforce Vertex-only image analysis
+            raw_result = self._solve_with_vertex(base64_image, getattr(image_file, "mimetype", "image/jpeg"))
             
             if not raw_result:
                 return None
@@ -58,10 +58,75 @@ class ImageService:
                 return None
             
             base64_image = base64.b64encode(image_data).decode('utf-8')
-            return self._solve_with_deepseek(base64_image)
+            # Enforce Vertex-only image analysis
+            result = self._solve_with_vertex(base64_image, "image/jpeg")
+            if result:
+                return result
+            return None
                 
         except Exception as e:
             logger.error(f"Error solving math image: {e}")
+            return None
+
+    def _solve_with_vertex(self, base64_image: str, mime_type: str) -> Optional[Dict]:
+        """Internal helper to call Vertex AI Gemini Vision for math image solving."""
+        try:
+            from services.vertex_service import vertex_service
+            if not vertex_service.is_available():
+                return None
+
+            try:
+                from google.genai.types import Part
+            except Exception as e:
+                logger.error(f"Vertex AI SDK not available for image solve: {e}")
+                return None
+
+            prompt = """
+You are an expert mathematics tutor. Analyze this image containing a mathematical problem or graph and provide a complete solution.
+
+Please:
+1. Identify and transcribe the mathematical problem or graph features from the image
+2. Solve the problem step by step with clear explanations
+3. Provide the final answer
+4. If the image is unclear or doesn't contain a math problem, explain what you see
+
+Format your response as JSON:
+{
+    "problem_identified": "The mathematical problem as seen in the image",
+    "solution_steps": "Step 1: ...\\nStep 2: ...\\nStep 3: ...",
+    "final_answer": "The final numerical or algebraic answer",
+    "confidence": "high/medium/low based on image clarity",
+    "notes": "Any additional observations or clarifications"
+}
+"""
+
+            image_part = Part.from_bytes(
+                data=base64.b64decode(base64_image),
+                mime_type=mime_type or "image/jpeg",
+            )
+
+            response = vertex_service.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[image_part, prompt],
+            )
+            if not response or not response.text:
+                return None
+
+            content = response.text
+            json_start = content.find('{')
+            json_end = content.rfind('}') + 1
+            if json_start == -1 or json_end <= json_start:
+                return None
+
+            json_str = content[json_start:json_end]
+            solution_data = json.loads(json_str)
+            if all(key in solution_data for key in ['problem_identified', 'solution_steps', 'final_answer']):
+                logger.info("Successfully solved math image problem (Vertex AI)")
+                return solution_data
+
+            return None
+        except Exception as e:
+            logger.error(f"Error calling Vertex AI for image solve: {e}")
             return None
 
     def _solve_with_deepseek(self, base64_image: str) -> Optional[Dict]:

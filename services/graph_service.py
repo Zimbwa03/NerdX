@@ -108,7 +108,7 @@ class GraphService:
                 x_clean = x[mask]
                 y_clean = y[mask]
 
-                ax.plot(x_clean, y_clean, 'b-', linewidth=3, label=f'f(x) = {function}', alpha=0.8)
+                ax.plot(x_clean, y_clean, 'b-', linewidth=3, label=f'y = {function}', alpha=0.8)
 
                 # Add enhanced grid with major and minor gridlines for ZIMSEC standards
                 ax.grid(True, which='major', alpha=0.7, linestyle='-', linewidth=0.8, color='gray')
@@ -858,7 +858,7 @@ class GraphService:
                     y_clean = y_vals[mask]
 
                     # Plot the function
-                    ax.plot(x_clean, y_clean, 'b-', linewidth=3, label=f'f(x) = {expression}', alpha=0.8)
+                    ax.plot(x_clean, y_clean, 'b-', linewidth=3, label=f'y = {expression}', alpha=0.8)
 
             except Exception as eval_error:
                 # This commonly happens when users pass a descriptive label instead of a math function.
@@ -1014,7 +1014,7 @@ class GraphService:
                     y_max += 2
 
                 # Plot the function
-                plot_label = (f"{axis_y_label} vs {axis_x_label}") if is_relationship else (f"f(x) = {expression}")
+                plot_label = (f"{axis_y_label} vs {axis_x_label}") if is_relationship else (f"y = {expression}")
                 ax.plot(x_clean, y_clean, 'b-', linewidth=3, label=plot_label, alpha=0.85)
 
                 # Build a shared graph spec for deterministic Manim animations

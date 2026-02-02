@@ -846,7 +846,13 @@ const GraphPracticeScreen: React.FC = () => {
               <>
                 <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Equation (same as graph & question):</Text>
                 <Text style={[styles.equation, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#F5F5F5', color: themedColors.secondary.main }]}>
-                  {graphData.equation_display ?? (graphData.equation && !['linear', 'quadratic', 'exponential', 'trigonometric'].includes(String(graphData.equation).trim().toLowerCase()) ? graphData.equation : null) ?? '—'}
+                  {(() => {
+                    const raw = graphData.equation_display ?? (graphData.equation && !['linear', 'quadratic', 'exponential', 'trigonometric'].includes(String(graphData.equation).trim().toLowerCase()) ? graphData.equation : null) ?? '—';
+                    if (typeof raw !== 'string' || raw === '—') return raw;
+                    const s = raw.trim().toLowerCase();
+                    if (s.startsWith('y=') || s.startsWith('y =') || s.startsWith('f(x)=') || s.startsWith('f(x) =')) return raw;
+                    return `y = ${raw}`;
+                  })()}
                 </Text>
               </>
             )}
@@ -870,16 +876,19 @@ const GraphPracticeScreen: React.FC = () => {
             )}
 
             <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Question:</Text>
-            {/\\\(|\\\[|\$/.test(graphData.question || '') ? (
-              <MathRenderer
-                content={formatQuestionParts(graphData.question || 'Describe what you observe from the graph.')}
-                fontSize={16}
-                style={{ marginBottom: 20 }}
-                minHeight={24}
-              />
-            ) : (
-              <Text style={[styles.question, { color: themedColors.text.primary }]}>{formatQuestionParts(graphData.question || 'Describe what you observe from the graph.')}</Text>
-            )}
+            {(() => {
+              const questionText = (graphData.question && String(graphData.question).trim()) || 'Describe what you observe from the graph. Use intercepts, gradient, and shape.';
+              return /\\\(|\\\[|\$/.test(questionText) ? (
+                <MathRenderer
+                  content={formatQuestionParts(questionText)}
+                  fontSize={16}
+                  style={{ marginBottom: 20 }}
+                  minHeight={24}
+                />
+              ) : (
+                <Text style={[styles.question, { color: themedColors.text.primary }]}>{formatQuestionParts(questionText)}</Text>
+              );
+            })()}
 
             {!showSolution && (
               <View style={styles.answerContainer}>

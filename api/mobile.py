@@ -11,6 +11,7 @@ import time
 import re
 from datetime import datetime, timedelta
 from functools import wraps
+from typing import Optional
 from flask import Blueprint, request, jsonify, g
 from werkzeug.utils import secure_filename
 import uuid
@@ -243,12 +244,8 @@ def _get_exam_question_cost_units(subject: str, level: str, question_type: str) 
 
     if is_a_level and 'biology' in subject_key:
         return 3 if q_type == 'MCQ' else 5  # 0.25 credit for MCQ, 0.5 credit for structured/essay
-    if is_a_level:
-        return 5  # 0.5 credit
-    if 'math' in subject_key:
-        return 5  # 0.5 credit
-    if subject_key == 'computer_science':
-        # Computer Science: MCQ = 0.3 credit (3 units), Structured = 0.5 credit (5 units), Essay = 1 credit (10 units)
+    if subject_key == 'a_level_computer_science' or subject_key == 'computer_science':
+        # A-Level & O-Level CS: MCQ=0.3, Structured=0.5, Essay=1 credit
         if q_type == 'MCQ':
             return 3  # 0.3 credit per exam MCQ (3 units)
         elif q_type in ['STRUCTURED', 'STRUCTURED_ONLY']:
@@ -256,6 +253,19 @@ def _get_exam_question_cost_units(subject: str, level: str, question_type: str) 
         elif q_type in ['ESSAY', 'ESSAY_ONLY']:
             return 10  # 1 credit per exam essay (10 units)
         return 5  # Default to structured cost
+    if subject_key == 'a_level_geography':
+        # A-Level Geography: MCQ=0.3, Structured=0.5, Essay=1 credit (exam essay)
+        if q_type == 'MCQ':
+            return 3  # 0.3 credit per exam MCQ (3 units)
+        elif q_type in ['STRUCTURED', 'STRUCTURED_ONLY']:
+            return 5  # 0.5 credit per exam structured (5 units)
+        elif q_type in ['ESSAY', 'ESSAY_ONLY']:
+            return 10  # 1 credit per exam essay (10 units)
+        return 5  # Default to structured cost
+    if is_a_level:
+        return 5  # 0.5 credit
+    if 'math' in subject_key:
+        return 5  # 0.5 credit
     if any(key in subject_key for key in ['biology', 'chemistry', 'physics', 'combined_science']):
         return 5  # 0.5 credit
     return 5  # 0.5 credit (English and other subjects)
@@ -670,6 +680,8 @@ def analyze_attachments():
         prompt = (request.form.get('prompt') or '').strip()
         chat_id = request.form.get('chat_id')
 
+        logger.info("attachments/analyze: files=%s, has_prompt=%s, chat_id=%s", len(files or []), bool(prompt), bool(chat_id))
+
         if not files or len(files) < 1:
             return jsonify({'success': False, 'message': 'At least 1 image is required'}), 400
         if len(files) > 10:
@@ -701,6 +713,7 @@ def analyze_attachments():
 
         from services.context_pack_service import context_pack_service
 
+        logger.info("attachments/analyze: creating context pack for user_id=%s, %s images", g.current_user_id, len(images))
         pack = context_pack_service.create_context_pack(
             user_id=str(g.current_user_id),
             chat_id=chat_id,
@@ -712,8 +725,11 @@ def analyze_attachments():
 
     except ValueError as e:
         return jsonify({'success': False, 'message': str(e)}), 400
+    except RuntimeError as e:
+        logger.error("Analyze attachments error (Vertex/context pack): %s", str(e), exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
     except Exception as e:
-        logger.error(f"Analyze attachments error: {e}", exc_info=True)
+        logger.error("Analyze attachments error: %s", str(e), exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 def generate_nerdx_id() -> str:
@@ -3256,7 +3272,7 @@ def generate_virtual_lab_knowledge_check():
 def geo_maps_feedback():
     """
     Geography Maps Lab – AI feedback from map_actions (DeepSeek).
-    Costs 1 credit (geo_maps_feedback).
+    Costs 0.1 credit (geo_maps_feedback).
 
     Payload:
       - level: "O" | "A"
@@ -4100,12 +4116,15 @@ def generate_math_graph_custom():
         )
         if credits_remaining is None:
             return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
-        question = "Describe what the graph shows. What are the key features (intercepts, gradient, shape)?"
+        from services.graph_practice_templates import equation_to_display
+        eq_display = equation_to_display(equation)
+        question = f"Using the graph of y = {eq_display or equation}, describe the key features: intercepts, gradient (or slope), and shape. Use your graph to answer the question set."
         solution = "Check your answer using the equation above. Compare intercepts and behaviour with the graph."
         payload = {
             'graph_url': graph_url,
             'image_url': graph_url,
             'equation': equation,
+            'equation_display': eq_display or equation,
             'question': question,
             'solution': solution,
             'credits_remaining': credits_remaining
@@ -4192,12 +4211,31 @@ def generate_math_graph_generate():
         if credits_remaining is None:
             return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
         # Template question/solution by graph type and level (O-Level and A-Level ZIMSEC/Cambridge templates).
-        # Use the same equation for graph image, graph_spec (Manim video), and question for consistency.
+        # Templates GUIDE Vertex AI: AI generates a question in the structure of the template for the student.
         from services.graph_practice_templates import get_template_for_graph_type, equation_to_display
         eq_display = equation_to_display(function_text)
         templ = get_template_for_graph_type(gt, level, eq_display)
         question = templ['question']
         solution = templ['solution']
+        # Use Vertex AI to generate a question in the structure of the template (templates guide the AI).
+        try:
+            from services.math_question_generator import MathQuestionGenerator
+            math_generator = MathQuestionGenerator()
+            ai_result = math_generator.generate_graph_question_from_template(
+                eq_display, gt, level, templ['question'], templ['solution']
+            )
+            if ai_result and ai_result.get('question'):
+                question = ai_result['question']
+                solution = ai_result.get('solution') or solution
+                logger.info("Graph practice question generated by Vertex AI (template-guided)")
+        except Exception as e:
+            logger.warning("Vertex AI graph question from template failed, using template: %s", e)
+        # Normalize spacing for professional display (keep LaTeX intact for MathRenderer)
+        try:
+            question = LaTeXConverter.normalize_explanation_spacing(question or '')
+            solution = LaTeXConverter.normalize_explanation_spacing(solution or '')
+        except Exception as e:
+            logger.warning("LaTeX spacing normalization for graph practice failed (non-blocking): %s", e)
         payload = {
             'graph_url': graph_url,
             'image_url': graph_url,
@@ -5627,6 +5665,18 @@ def exam_next():
         if session.get('user_id') != g.current_user_id:
             return jsonify({'success': False, 'message': 'Forbidden'}), 403
         idx = int(question_index) if question_index is not None else session.get('current_index', 0)
+
+        # Pre-check credits (use STRUCTURED for conservative check - highest cost for mixed exams)
+        subject = session.get('subject', '')
+        level = session.get('level', 'O_LEVEL')
+        cost_units = _get_exam_question_cost_units(subject, level, 'STRUCTURED')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        if user_credits < cost_units:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {_credits_text(cost_units)}, Available: {_credits_text(user_credits)}'
+            }), 402
+
         question = exam_session_service.generate_next_question(
             session_id=session_id,
             question_index=idx,
@@ -5634,6 +5684,21 @@ def exam_next():
         )
         if not question:
             return jsonify({'success': False, 'message': 'No more questions or generation failed'}), 500
+
+        # Deduct credits for this exam question (per question, after successful generation)
+        subject = session.get('subject', '')
+        level = session.get('level', 'O_LEVEL')
+        q_type = question.get('question_type', 'MCQ')
+        cost_units = _get_exam_question_cost_units(subject, level, q_type)
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(cost_units),
+            'exam_question',
+            f'Exam question #{idx + 1} ({subject})',
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+
         # Build QuestionResponse: question (ExamQuestion shape), question_index, total_questions, remaining_seconds, prompt
         start_time = datetime.fromisoformat(session['start_time'])
         elapsed = (datetime.utcnow() - start_time).total_seconds()
@@ -5659,6 +5724,7 @@ def exam_next():
             'total_questions': session['total_questions'],
             'remaining_seconds': remaining,
             'prompt': prompt,
+            'credits_remaining': credits_remaining,
         }
         return jsonify({'success': True, 'data': response_data}), 200
     except Exception as e:
@@ -5808,7 +5874,8 @@ def start_teacher_mode():
         if not credit_result.get('success'):
             return jsonify({
                 'success': False,
-                'message': credit_result.get('message', 'Insufficient credits. Please purchase credits to use Teacher Mode.')
+                'message': credit_result.get('message', 'Insufficient credits. Please purchase credits to use Teacher Mode.'),
+                'credits_remaining': _credits_display(credit_result.get('current_credits', 0))
             }), 402
 
         # Store session for this user (so /teacher/message can resolve by session_id)
@@ -5834,7 +5901,9 @@ def start_teacher_mode():
             'data': {
                 'session_id': session_id,
                 'initial_message': initial_message,
-            }
+                'credits_remaining': _credits_display(credit_result.get('new_balance', 0)),
+            },
+            'credits_remaining': _credits_display(credit_result.get('new_balance', 0)),
         }), 200
 
     except Exception as e:
@@ -5851,11 +5920,18 @@ def teacher_message():
         
         data = request.get_json()
         session_id = data.get('session_id', '')
-        message = data.get('message', '')
+        message = (data.get('message') or '').strip()
         context_pack_id = data.get('context_pack_id')
         
-        if not session_id or not message:
-            return jsonify({'success': False, 'message': 'session_id and message required'}), 400
+        # Require session_id and either message or context_pack_id (image-only send)
+        if not session_id:
+            return jsonify({'success': False, 'message': 'session_id required'}), 400
+        if not message and not context_pack_id:
+            return jsonify({'success': False, 'message': 'message or context_pack_id required'}), 400
+        
+        # When user sends only images, use a default prompt so the tutor responds about the images
+        if not message and context_pack_id:
+            message = "What can you tell me about the attached image(s)?"
         
         # Retrieve session data
         session_data = session_manager.get_data(g.current_user_id, 'mobile_teacher')
@@ -5875,9 +5951,34 @@ def teacher_message():
             return jsonify({
                 'success': False,
                 'message': f'Insufficient credits. You need credits to continue the conversation.',
-                'credits_remaining': credit_result.get('credits_remaining', 0)
+                'credits_remaining': _credits_display(credit_result.get('current_credits', 0))
             }), 402
-        
+
+        # Load context pack when present so the AI can ground the reply on the analyzed image(s)
+        image_context_block = ""
+        if context_pack_id:
+            from services.context_pack_service import context_pack_service
+            pack = context_pack_service.get_context_pack(context_pack_id)
+            if not pack:
+                return jsonify({'success': False, 'message': 'Invalid or expired context pack'}), 400
+            combined_summary = (pack.get('combined_summary') or '').strip()
+            images_meta = pack.get('images') or []
+            if combined_summary:
+                per_image_parts = []
+                for i, img in enumerate(images_meta):
+                    summary = (img.get('per_image_summary') or '').strip()
+                    extracted = (img.get('extracted_text') or '').strip()
+                    if summary or extracted:
+                        per_image_parts.append(f"Image {i + 1}: {summary}" + (f" | Extracted text: {extracted[:300]}" if extracted else ""))
+                per_image_text = "\n".join(per_image_parts) if per_image_parts else ""
+                image_context_block = f"""
+The user has attached {len(images_meta)} image(s). Use the following context from those images in your response.
+
+Context from images:
+{combined_summary}
+{f'{chr(10)}{per_image_text}' if per_image_text else ''}
+"""
+
         # Build context for AI
         system_prompt = f"""You are an expert {subject} tutor helping a {grade_level} student.
 {f"Current topic: {topic}" if topic else ""}
@@ -5889,7 +5990,10 @@ Guidelines:
 - For Physics: Include formulas, units, and worked examples
 - Be encouraging and supportive
 - Ask follow-up questions to check understanding
-- Keep responses concise but comprehensive"""
+- Keep responses concise but comprehensive
+- When image context is provided below, base your answer on that content and refer to what is in the images."""
+        if image_context_block:
+            system_prompt = system_prompt.rstrip() + image_context_block
 
         # Build conversation context (last 10 turns) for prompt
         conv_lines = []
@@ -5938,9 +6042,9 @@ Guidelines:
                 'session_id': session_id,
                 'context_pack_id': context_pack_id
             },
-            'credits_remaining': credit_result.get('credits_remaining', 0)
+            'credits_remaining': _credits_display(credit_result.get('new_balance', 0))
         }), 200
-        
+
     except Exception as e:
         logging.exception("teacher_message failed")
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -6012,14 +6116,14 @@ def teacher_generate_notes():
             return jsonify({
                 'success': False,
                 'message': 'Insufficient credits for PDF generation.',
-                'credits_remaining': credit_result.get('credits_remaining', 0)
+                'credits_remaining': _credits_display(credit_result.get('current_credits', 0))
             }), 402
         
         # Placeholder: return empty notes; full PDF generation can be wired later
         return jsonify({
             'success': True,
             'data': {'notes': None, 'pdf_url': None},
-            'credits_remaining': credit_result.get('credits_remaining', 0)
+            'credits_remaining': _credits_display(credit_result.get('new_balance', 0))
         }), 200
     except Exception as e:
         logging.exception("teacher_generate_notes failed")
@@ -6036,10 +6140,39 @@ def teacher_multimodal():
         data = request.get_json() or {}
         message = data.get('message', '')
         attachments = data.get('attachments', [])
+        context_pack_id = data.get('context_pack_id')
         session_id = data.get('session_id', '')
         
         if not message and not attachments:
             return jsonify({'success': False, 'message': 'message or attachments required'}), 400
+
+        # If attachments are provided, try to build a Context Pack for grounded responses.
+        if attachments and not context_pack_id:
+            try:
+                from services.context_pack_service import context_pack_service
+                images = []
+                for att in attachments:
+                    att_type = (att.get('type') or 'image').lower()
+                    if att_type != 'image':
+                        continue
+                    att_mime = (att.get('mime_type') or att.get('mimeType') or 'image/png').strip()
+                    att_data = att.get('data') or ''
+                    if isinstance(att_data, str):
+                        img_bytes = _decode_base64_payload(att_data) or b""
+                    else:
+                        img_bytes = att_data if isinstance(att_data, (bytes, bytearray)) else b""
+                    if img_bytes:
+                        images.append({'bytes': img_bytes, 'mime_type': att_mime})
+                if images:
+                    pack = context_pack_service.create_context_pack(
+                        user_id=g.current_user_id,
+                        chat_id=session_id or None,
+                        images=images,
+                        prompt=message or "",
+                    )
+                    context_pack_id = pack.get('id')
+            except Exception as e:
+                logger.warning("Teacher multimodal context pack creation failed: %s", e)
         
         # Resolve session: use provided session_id or current user's Teacher Mode session
         if not session_id:
@@ -6051,8 +6184,8 @@ def teacher_multimodal():
         if session_id:
             session_data = session_manager.get_data(g.current_user_id, 'mobile_teacher')
             if session_data and session_data.get('session_id') == session_id:
-                # For now: append note about attachments and call same AI flow
-                if attachments:
+                # For now: append note about attachments if we couldn't make a context pack
+                if attachments and not context_pack_id:
                     message = f"{message}\n[User attached {len(attachments)} file(s)]".strip()
                 # Reuse teacher_message logic inline to avoid redirect
                 credit_result = advanced_credit_service.check_and_deduct_credits(
@@ -6062,13 +6195,43 @@ def teacher_multimodal():
                     return jsonify({
                         'success': False,
                         'message': 'Insufficient credits.',
-                        'credits_remaining': credit_result.get('credits_remaining', 0)
+                        'credits_remaining': _credits_display(credit_result.get('current_credits', 0))
                     }), 402
                 subject = session_data.get('subject', '')
                 grade_level = session_data.get('grade_level', '')
                 topic = session_data.get('topic', '')
                 conversation_history = session_data.get('conversation_history', [])
+                image_context_block = ""
+                if context_pack_id:
+                    try:
+                        from services.context_pack_service import context_pack_service
+                        pack = context_pack_service.get_context_pack(context_pack_id)
+                        if pack:
+                            combined_summary = (pack.get('combined_summary') or '').strip()
+                            images_meta = pack.get('images') or []
+                            if combined_summary:
+                                per_image_parts = []
+                                for i, img in enumerate(images_meta):
+                                    summary = (img.get('per_image_summary') or '').strip()
+                                    extracted = (img.get('extracted_text') or '').strip()
+                                    if summary or extracted:
+                                        per_image_parts.append(
+                                            f"Image {i + 1}: {summary}" + (f" | Extracted text: {extracted[:300]}" if extracted else "")
+                                        )
+                                per_image_text = "\n".join(per_image_parts) if per_image_parts else ""
+                                image_context_block = f"""
+The user has attached {len(images_meta)} image(s). Use the following context from those images in your response.
+
+Context from images:
+{combined_summary}
+{f'{chr(10)}{per_image_text}' if per_image_text else ''}
+"""
+                    except Exception as e:
+                        logger.warning("Teacher multimodal context pack load failed: %s", e)
+
                 system_prompt = f"You are an expert {subject} tutor for {grade_level}. {f'Topic: {topic}' if topic else ''} Explain clearly and support with examples."
+                if image_context_block:
+                    system_prompt = system_prompt.rstrip() + image_context_block
                 conv_lines = []
                 for h in conversation_history[-10:]:
                     role_label = "User" if h['role'] == 'user' else "Assistant"
@@ -6105,8 +6268,12 @@ def teacher_multimodal():
                 session_manager.set_data(g.current_user_id, 'mobile_teacher', session_data)
                 return jsonify({
                     'success': True,
-                    'data': {'response': ai_response, 'session_id': session_id},
-                    'credits_remaining': credit_result.get('credits_remaining', 0)
+                    'data': {
+                        'response': ai_response,
+                        'session_id': session_id,
+                        'context_pack_id': context_pack_id,
+                    },
+                    'credits_remaining': _credits_display(credit_result.get('new_balance', 0))
                 }), 200
         
         return jsonify({'success': False, 'message': 'Valid session_id required for multimodal'}), 400
@@ -6122,9 +6289,17 @@ def teacher_analyze_image():
     try:
         data = request.get_json() or {}
         image_b64 = data.get('image', '')
+        mime_type = (data.get('mime_type') or data.get('mimeType') or 'image/png').strip()
         prompt = data.get('prompt', 'Explain this image in the context of the subject.')
         if not image_b64:
             return jsonify({'success': False, 'message': 'image (base64) required'}), 400
+
+        from services.vertex_service import vertex_service
+        if not vertex_service.is_available():
+            return jsonify({
+                'success': False,
+                'message': 'Vertex AI image analysis is not available. Please try again later.'
+            }), 503
         
         credit_result = advanced_credit_service.check_and_deduct_credits(
             g.current_user_id, 'ocr_solve'
@@ -6133,14 +6308,30 @@ def teacher_analyze_image():
             return jsonify({
                 'success': False,
                 'message': 'Insufficient credits for image analysis.',
-                'credits_remaining': credit_result.get('credits_remaining', 0)
+                'credits_remaining': _credits_display(credit_result.get('current_credits', 0))
             }), 402
-        
-        # Placeholder: return short message; can wire Vertex/DeepSeek vision later
+
+        result = vertex_service.analyze_image(
+            image_base64=image_b64,
+            mime_type=mime_type,
+            prompt=prompt,
+        )
+        if not result or not result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': (result or {}).get('error', 'Image analysis failed'),
+            }), 500
+
         return jsonify({
             'success': True,
-            'data': {'analysis': 'Image analysis is available. Describe what you see and I can help explain it.'},
-            'credits_remaining': credit_result.get('credits_remaining', 0)
+            'data': {
+                'analysis': result.get('text', ''),
+                'latex': result.get('latex', result.get('text', '')),
+                'confidence': result.get('confidence', 0.9),
+                'content_type': result.get('content_type', 'text'),
+                'method': 'vertex-vision',
+            },
+            'credits_remaining': _credits_display(credit_result.get('new_balance', 0))
         }), 200
     except Exception as e:
         logging.exception("teacher_analyze_image failed")
@@ -6154,9 +6345,17 @@ def teacher_analyze_document():
     try:
         data = request.get_json() or {}
         document_b64 = data.get('document', '')
+        mime_type = (data.get('mime_type') or data.get('mimeType') or 'application/pdf').strip()
         prompt = data.get('prompt', 'Summarize this document.')
         if not document_b64:
             return jsonify({'success': False, 'message': 'document (base64) required'}), 400
+
+        from services.vertex_service import vertex_service
+        if not vertex_service.is_available():
+            return jsonify({
+                'success': False,
+                'message': 'Document analysis is not available. Please try again later.'
+            }), 503
         
         credit_result = advanced_credit_service.check_and_deduct_credits(
             g.current_user_id, 'ocr_solve'
@@ -6165,13 +6364,30 @@ def teacher_analyze_document():
             return jsonify({
                 'success': False,
                 'message': 'Insufficient credits for document analysis.',
-                'credits_remaining': credit_result.get('credits_remaining', 0)
+                'credits_remaining': _credits_display(credit_result.get('current_credits', 0))
             }), 402
-        
+
+        result = vertex_service.analyze_document(
+            document_base64=document_b64,
+            mime_type=mime_type,
+            prompt=prompt,
+        )
+        if not result or not result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': (result or {}).get('error', 'Document analysis failed'),
+            }), 500
+
+        analysis_text = result.get('analysis') or result.get('text', '')
         return jsonify({
             'success': True,
-            'data': {'analysis': 'Document analysis is available. Paste or describe the content and I can help.'},
-            'credits_remaining': credit_result.get('credits_remaining', 0)
+            'data': {
+                'analysis': analysis_text,
+                'summary': result.get('summary', analysis_text[:500]),
+                'mime_type': result.get('mime_type', mime_type),
+                'method': 'document-understanding',
+            },
+            'credits_remaining': _credits_display(credit_result.get('new_balance', 0))
         }), 200
     except Exception as e:
         logging.exception("teacher_analyze_document failed")
@@ -6195,14 +6411,14 @@ def teacher_search():
             return jsonify({
                 'success': False,
                 'message': 'Insufficient credits.',
-                'credits_remaining': credit_result.get('credits_remaining', 0)
+                'credits_remaining': _credits_display(credit_result.get('current_credits', 0))
             }), 402
-        
+
         # Placeholder: return message; can wire Google Search / grounding later
         return jsonify({
             'success': True,
             'data': {'response': f'Search for "{query[:80]}..." is available. Try asking your question in the chat for a direct answer.'},
-            'credits_remaining': credit_result.get('credits_remaining', 0)
+            'credits_remaining': _credits_display(credit_result.get('new_balance', 0))
         }), 200
     except Exception as e:
         logging.exception("teacher_search failed")
@@ -6226,13 +6442,13 @@ def teacher_deep_research():
             return jsonify({
                 'success': False,
                 'message': 'Insufficient credits.',
-                'credits_remaining': credit_result.get('credits_remaining', 0)
+                'credits_remaining': _credits_display(credit_result.get('current_credits', 0))
             }), 402
-        
+
         return jsonify({
             'success': True,
             'data': {'response': f'Deep research for your question is available. You can also ask follow-ups in the chat.', 'status': 'ok'},
-            'credits_remaining': credit_result.get('credits_remaining', 0)
+            'credits_remaining': _credits_display(credit_result.get('new_balance', 0))
         }), 200
     except Exception as e:
         logging.exception("teacher_deep_research failed")
@@ -6319,18 +6535,29 @@ def project_chat(project_id):
         user_id = g.current_user_id
         data = request.get_json() or {}
         message = (data.get('message') or '').strip()
-        if not message:
-            return jsonify({'success': False, 'message': 'message is required'}), 400
-        result = project_assistant_service.process_mobile_chat(user_id, project_id, message)
+        context_pack_id = data.get('context_pack_id')
+        if not message and not context_pack_id:
+            return jsonify({'success': False, 'message': 'message or context_pack_id is required'}), 400
+        if not message and context_pack_id:
+            message = "What can you tell me about the attached image(s)?"
+        result = project_assistant_service.process_mobile_chat(
+            user_id,
+            project_id,
+            message,
+            context_pack_id=context_pack_id,
+        )
         if not result:
             return jsonify({'success': False, 'message': 'Project not found or error processing message'}), 404
+        credits_rem = result.get('credits_remaining')
         return jsonify({
             'success': True,
             'data': {
                 'response': result.get('response', ''),
                 'project_id': project_id,
-                'credits_remaining': result.get('credits_remaining'),
-            }
+                'credits_remaining': credits_rem,
+                'context_pack_id': context_pack_id,
+            },
+            'credits_remaining': credits_rem,
         }), 200
     except Exception as e:
         logger.exception("project_chat failed")
@@ -6404,14 +6631,16 @@ def project_generate_image(project_id):
                 'message': result.get('error', 'Image generation failed'),
                 'data': {'credits_remaining': result.get('credits_remaining')},
             }), 400
+        creds = result.get('credits_remaining')
         return jsonify({
             'success': True,
             'data': {
                 'response': result.get('response', ''),
                 'image_url': result.get('image_url'),
                 'aspect_ratio': result.get('aspect_ratio'),
-                'credits_remaining': result.get('credits_remaining'),
+                'credits_remaining': creds,
             },
+            'credits_remaining': creds,
         }), 200
     except Exception as e:
         logger.exception("project_generate_image failed")
@@ -6481,15 +6710,17 @@ def project_multimodal_chat(project_id):
                 'message': result.get('error', 'Failed to process message'),
                 'data': {'credits_remaining': result.get('credits_remaining')},
             }), 400
+        creds = result.get('credits_remaining')
         return jsonify({
             'success': True,
             'data': {
                 'response': result.get('response', ''),
                 'project_id': project_id,
                 'image_url': result.get('image_url'),
-                'credits_remaining': result.get('credits_remaining'),
+                'credits_remaining': creds,
                 'context_pack_id': result.get('context_pack_id'),
             },
+            'credits_remaining': creds,
         }), 200
     except Exception as e:
         logger.exception("project_multimodal_chat failed")

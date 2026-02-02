@@ -1566,7 +1566,13 @@ Credits are deducted per AI response.
             fallback_msg = "I'm here to help! Could you rephrase that or ask a specific question about your project?"
             self.whatsapp_service.send_message(user_id, fallback_msg)
     
-    def _get_ai_response(self, user_id: str, message_text: str, project_data: dict) -> str:
+    def _get_ai_response(
+        self,
+        user_id: str,
+        message_text: str,
+        project_data: dict,
+        image_context_block: str = "",
+    ) -> str:
         """Get intelligent response from Gemini AI (primary) with DeepSeek fallback"""
         try:
             # Build context
@@ -1601,6 +1607,8 @@ Credits are deducted per AI response.
 
 **Recent Conversation:**
 {history_text if history_text else "(First message)"}
+
+{image_context_block if image_context_block else ""}
 
 **Current Student Message:**
 {message_text}
@@ -1974,7 +1982,13 @@ Credits are deducted per AI response.
             logger.error(f"Error getting project details {project_id}: {e}")
             return None
 
-    def process_mobile_chat(self, user_id: str, project_id: int, message_text: str) -> Optional[Dict]:
+    def process_mobile_chat(
+        self,
+        user_id: str,
+        project_id: int,
+        message_text: str,
+        context_pack_id: Optional[str] = None,
+    ) -> Optional[Dict]:
         """
         Process a chat message for a project (mobile API).
         Loads project from DB, gets AI response, saves to chat history and project_data, deducts credits.
@@ -2005,7 +2019,40 @@ Credits are deducted per AI response.
                 'content': message_text,
                 'timestamp': datetime.now().isoformat(),
             })
-            ai_response = self._get_ai_response(user_id, message_text, project_data)
+            image_context_block = ""
+            if context_pack_id:
+                try:
+                    from services.context_pack_service import context_pack_service
+                    pack = context_pack_service.get_context_pack(context_pack_id)
+                    if pack:
+                        combined_summary = (pack.get('combined_summary') or '').strip()
+                        images_meta = pack.get('images') or []
+                        if combined_summary:
+                            per_image_parts = []
+                            for i, img in enumerate(images_meta):
+                                summary = (img.get('per_image_summary') or '').strip()
+                                extracted = (img.get('extracted_text') or '').strip()
+                                if summary or extracted:
+                                    per_image_parts.append(
+                                        f"Image {i + 1}: {summary}" + (f" | Extracted text: {extracted[:300]}" if extracted else "")
+                                    )
+                            per_image_text = "\n".join(per_image_parts) if per_image_parts else ""
+                            image_context_block = f"""
+The user has attached {len(images_meta)} image(s). Use the following context from those images in your response.
+
+Context from images:
+{combined_summary}
+{f'{chr(10)}{per_image_text}' if per_image_text else ''}
+"""
+                except Exception as e:
+                    logger.warning("Project chat context pack load failed: %s", e)
+
+            ai_response = self._get_ai_response(
+                user_id,
+                message_text,
+                project_data,
+                image_context_block=image_context_block,
+            )
             conversation_history.append({
                 'role': 'assistant',
                 'content': ai_response,
@@ -2879,8 +2926,16 @@ Please provide:
                         from google.genai.types import Part
                         
                         # Create document part for Gemini
+                        doc_value = document_data.strip() if isinstance(document_data, str) else ""
+                        if "base64," in doc_value:
+                            doc_value = doc_value.split("base64,", 1)[1]
+                        doc_value = doc_value.replace("\n", "").replace("\r", "").replace(" ", "")
+                        pad_len = (-len(doc_value)) % 4
+                        if pad_len:
+                            doc_value = doc_value + ("=" * pad_len)
+                        doc_bytes = base64.b64decode(doc_value)
                         doc_part = Part.from_bytes(
-                            data=base64.b64decode(document_data),
+                            data=doc_bytes,
                             mime_type=mime_type
                         )
                         
@@ -2955,8 +3010,10 @@ Please provide:
                     if att_type == 'image' and vertex_service.is_available():
                         try:
                             r = vertex_service.analyze_image(att_data, att_mime, "Describe this image in detail for a school project context.")
-                            if r and r.get('success') and r.get('analysis'):
-                                enriched_parts.append(f"[Attached image description: {r.get('analysis', '')[:800]}]")
+                            if r and r.get('success'):
+                                txt = r.get('text') or r.get('analysis', '')
+                                if txt:
+                                    enriched_parts.append(f"[Attached image description: {txt[:800]}]")
                         except Exception as e:
                             logger.warning(f"Vertex image analysis failed: {e}")
                     elif att_type == 'document' and vertex_service.is_available():

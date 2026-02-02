@@ -101,15 +101,22 @@ const EnglishComprehensionScreen: React.FC = () => {
         answers
       );
       setGradingResult(gradeResult);
+      if (user && gradeResult?.credits_remaining !== undefined) {
+        updateUser({ credits: gradeResult.credits_remaining });
+      }
 
       // Grade summary if exists
+      let sumResult = null;
       if (comprehension.summary_question && summaryAnswer) {
-        const sumResult = await englishApi.gradeSummary(
+        sumResult = await englishApi.gradeSummary(
           comprehension.passage,
           comprehension.summary_question.question,
           summaryAnswer
         );
         setSummaryResult(sumResult);
+        if (user && sumResult?.credits_remaining !== undefined) {
+          updateUser({ credits: sumResult.credits_remaining });
+        }
       }
 
       setSubmitted(true);

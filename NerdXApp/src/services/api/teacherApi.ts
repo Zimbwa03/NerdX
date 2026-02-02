@@ -50,7 +50,11 @@ export const teacherApi = {
         topic,
       });
       console.log('teacherApi.startSession response:', response.data);
-      return response.data.data || null;
+      const data = response.data.data || null;
+      if (data && response.data.credits_remaining !== undefined) {
+        data.credits_remaining = response.data.credits_remaining;
+      }
+      return data;
     } catch (error: any) {
       console.error('Start teacher session error:', error);
       throw error;
@@ -85,7 +89,11 @@ export const teacherApi = {
       const response = await api.post('/api/mobile/teacher/generate-notes', {
         session_id: sessionId,
       });
-      return response.data.data || null;
+      const data = response.data.data || null;
+      if (data && response.data.credits_remaining !== undefined) {
+        (data as any).credits_remaining = response.data.credits_remaining;
+      }
+      return data;
     } catch (error: any) {
       console.error('Generate notes error:', error);
       throw error;
@@ -151,7 +159,11 @@ export const teacherApi = {
         message,
         attachments,
       });
-      return response.data.data || null;
+      const data = response.data.data || null;
+      if (data && response.data.credits_remaining !== undefined) {
+        data.credits_remaining = response.data.credits_remaining;
+      }
+      return data;
     } catch (error: any) {
       console.error('Multimodal message error:', error);
       throw error;

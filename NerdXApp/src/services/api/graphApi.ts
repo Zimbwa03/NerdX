@@ -52,10 +52,18 @@ export const graphApi = {
         equation,
         level: level || 'o_level',
       });
-      const data = response.data.data || null;
+      const payload = response.data?.data ?? response.data;
+      const data = payload && typeof payload === 'object' ? payload : null;
       // Include credits_remaining from server response
-      if (data && response.data.credits_remaining !== undefined) {
+      if (data && response.data?.credits_remaining !== undefined) {
         data.credits_remaining = response.data.credits_remaining;
+      }
+      // Ensure question/solution exist so UI is never empty
+      if (data && !data.question && (response.data?.data?.question ?? response.data?.question)) {
+        data.question = (response.data?.data?.question ?? response.data?.question) as string;
+      }
+      if (data && !data.solution && (response.data?.data?.solution ?? response.data?.solution)) {
+        data.solution = (response.data?.data?.solution ?? response.data?.solution) as string;
       }
       return data;
     } catch (error: any) {

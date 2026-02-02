@@ -114,13 +114,13 @@ QUADRATIC_A_LEVEL_TEMPLATES = [
         "solution": "Substitute \(y = mx + 1\) into the curve to get a quadratic in \(x\). Discriminant determines number of intersections. Two points: \(\Delta > 0\); one point (tangent): \(\Delta = 0\); no points: \(\Delta < 0\). For equal roots, solve to find \(m\) then the point.",
     },
     {
-        "question": r"The function \(f\) is defined by \(f(x) = {equation}\). "
-        r"Factorise \(f(x)\) and hence find the roots of the equation \(f(x) = 0\). "
-        r"Sketch the graph of \(y = f(x)\), clearly indicating the intercepts and the vertex. "
-        r"Solve the inequality \(f(x) > 0\). "
-        r"Solve the inequality \(f(x) \leq c\) for a given constant \(c\). "
+        "question": r"The curve has equation \(y = {equation}\). "
+        r"Factorise and hence find the roots of the equation \(y = 0\). "
+        r"Sketch the graph of \(y = {equation}\), clearly indicating the intercepts and the vertex. "
+        r"Solve the inequality \(y > 0\). "
+        r"Solve the inequality \(y \leq c\) for a given constant \(c\). "
         r"Express the solutions of both inequalities using interval notation.",
-        "solution": "Factorise (e.g. by inspection or formula). Roots from factors. Parabola: vertex from completing the square; \(f(x) > 0\) outside the roots (if \(a > 0\)) or between (if \(a < 0\)). Use graph or algebra for the second inequality; write as intervals.",
+        "solution": "Factorise (e.g. by inspection or formula). Roots from factors. Parabola: vertex from completing the square; \(y > 0\) outside the roots (if \(a > 0\)) or between (if \(a < 0\)). Use graph or algebra for the second inequality; write as intervals.",
     },
     {
         "question": r"A projectile's height \(h\) metres after \(t\) seconds is modelled by \(h = {equation}\). "
@@ -132,13 +132,13 @@ QUADRATIC_A_LEVEL_TEMPLATES = [
         "solution": "\(t = 0\) gives initial height. Complete the square in \(t\); maximum at vertex \((p, q)\). Ground when \(h = 0\); solve quadratic for \(t\). Sketch parabola; solve \(h \geq 25\) for the time interval.",
     },
     {
-        "question": r"The function \(f\) is defined for all real \(x\) by \(f(x) = {equation}\). "
-        r"Complete the square to express \(f(x)\) in the form \(a(x + p)^2 + q\). "
-        r"Hence determine the minimum value of \(f(x)\) and the value of \(x\) at which it occurs. "
-        r"Solve the equation \(f(x) = 0\), giving your answers in exact form. "
-        r"Hence or otherwise, solve the inequality \(f(x) \geq 2\). "
-        r"Sketch the graph of \(y = f(x)\), clearly showing the vertex and the intersections with the axes (if any).",
-        "solution": "Complete the square. Minimum = \(q\) at \(x = -p\) (if \(a > 0\)). Solve \(f(x) = 0\) with the quadratic formula. \(f(x) \geq 2\) gives a quadratic inequality; solve and express as intervals. Sketch using vertex and roots.",
+        "question": r"The curve has equation \(y = {equation}\) for all real \(x\). "
+        r"Complete the square to express \(y\) in the form \(a(x + p)^2 + q\). "
+        r"Hence determine the minimum value of \(y\) and the value of \(x\) at which it occurs. "
+        r"Solve the equation \(y = 0\), giving your answers in exact form. "
+        r"Hence or otherwise, solve the inequality \(y \geq 2\). "
+        r"Sketch the graph of \(y = {equation}\), clearly showing the vertex and the intersections with the axes (if any).",
+        "solution": "Complete the square. Minimum = \(q\) at \(x = -p\) (if \(a > 0\)). Solve \(y = 0\) with the quadratic formula. \(y \geq 2\) gives a quadratic inequality; solve and express as intervals. Sketch using vertex and roots.",
     },
     {
         "question": r"The function \(g\) is defined by \(g(x) = \frac{1}{{equation}}\) (where the denominator is a quadratic). "
@@ -158,13 +158,13 @@ QUADRATIC_A_LEVEL_TEMPLATES = [
         "solution": "Complete the square: \(y = a(x-p)^2 + q\) represents stretch scale factor \(|a|\), reflection in \(x\)-axis if \(a < 0\), then translation by \((p, q)\). Vertex at \((p, q)\). Axes of symmetry: \(x = 0\) for \(C_1\); \(x = p\) for \(C_2\).",
     },
     {
-        "question": r"The function \(f\) is defined by \(f(x) = {equation}\), for all real \(x\). "
-        r"Show that \(f(x)\) can be written in the form \((x - a)^2 + b\). "
-        r"Hence state the minimum value of \(f(x)\) and its corresponding value of \(x\). "
-        r"The function \(g\) is defined by \(g(x) = x - 4\). Find an expression for \(f(g(x))\) in simplified form. "
-        r"Solve the equation \(f(g(x)) = 0\), giving your answers in exact form. "
-        r"Sketch, on the same diagram, the graphs of \(y = f(x)\) and \(y = f(g(x))\), indicating how one is obtained from the other.",
-        "solution": "Complete the square. Minimum = \(b\) at \(x = a\). \(f(g(x)) = f(x-4)\): substitute and expand/simplify. Solve \(f(g(x)) = 0\) for exact roots. Graph of \(f(g(x))\) is translation of \(y = f(x)\) by 4 units in the positive \(x\)-direction.",
+        "question": r"The curve has equation \(y = {equation}\), for all real \(x\). "
+        r"Show that \(y\) can be written in the form \((x - a)^2 + b\). "
+        r"Hence state the minimum value of \(y\) and its corresponding value of \(x\). "
+        r"The function \(g\) is defined by \(g(x) = x - 4\). Find an expression for \(y\) when \(x\) is replaced by \(g(x)\), in simplified form. "
+        r"Solve the equation obtained when \(y = 0\) (with \(x\) replaced by \(g(x)\)), giving your answers in exact form. "
+        r"Sketch, on the same diagram, the graphs of \(y = {equation}\) and the graph of \(y\) with \(x\) replaced by \(g(x)\), indicating how one is obtained from the other.",
+        "solution": "Complete the square. Minimum = \(b\) at \(x = a\). Substitute \(g(x) = x - 4\) into the equation; expand/simplify. Solve for exact roots. Second graph is translation of the first by 4 units in the positive \(x\)-direction.",
     },
     {
         "question": r"The curve \(C\) has equation \(y = {equation}\). "
@@ -898,12 +898,13 @@ def get_template_for_graph_type(graph_type: str, level: str, equation_display: s
             "solution": "Use the equation and graph to identify intercepts, gradient, turning points, or other relevant features.",
         }
 
+    # Always replace {equation} in question so it never shows literal "{equation}"
+    if out and "{equation}" in out.get("question", ""):
+        out["question"] = out["question"].replace("{equation}", eq)
     # Consistency: for plotted types, ensure the question explicitly references the same equation as the graph and video
     if out and gt in plotted_types and eq and "{equation}" not in out.get("question", ""):
-        tie_in = r" The graph above shows \(y = {equation}\). Use it to answer the questions."
-        out["question"] = out["question"] + tie_in.replace("{equation}", eq)
-    elif out and eq and "{equation}" in out.get("question", ""):
-        out["question"] = out["question"].replace("{equation}", eq)
+        tie_in = r" The graph above shows \(y = " + eq + r". Use it to answer the questions."
+        out["question"] = out["question"] + tie_in
     return out
 
 
