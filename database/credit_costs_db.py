@@ -146,6 +146,66 @@ def create_credit_costs_table():
                     'description': '1 credit per exam essay (10 units)'
                 },
 
+                # Principles of Accounting (O-Level 7112) – MCQ 0.3, Essay 1 credit
+                {
+                    'action_key': 'accounting_topical_mcq',
+                    'cost': 3,
+                    'category': 'Accounting',
+                    'component': 'Topical MCQ',
+                    'description': '0.3 credit per MCQ (3 units)'
+                },
+                {
+                    'action_key': 'accounting_topical_essay',
+                    'cost': 10,
+                    'category': 'Accounting',
+                    'component': 'Topical Essay',
+                    'description': '1 credit per essay question'
+                },
+                {
+                    'action_key': 'accounting_exam_mcq',
+                    'cost': 3,
+                    'category': 'Accounting',
+                    'component': 'Exam MCQ',
+                    'description': '0.3 credit per exam MCQ'
+                },
+                {
+                    'action_key': 'accounting_exam_essay',
+                    'cost': 10,
+                    'category': 'Accounting',
+                    'component': 'Exam Essay',
+                    'description': '1 credit per exam essay'
+                },
+
+                # Business Enterprise and Skills (O-Level 4048) – MCQ 0.3, Essay 1 (same as Computer Science pricing)
+                {
+                    'action_key': 'bes_topical_mcq',
+                    'cost': 3,
+                    'category': 'Business Enterprise and Skills',
+                    'component': 'Topical MCQ (Paper 1)',
+                    'description': '0.3 credit per MCQ (3 units) – 1 credit = 3 MCQs'
+                },
+                {
+                    'action_key': 'bes_topical_essay',
+                    'cost': 10,
+                    'category': 'Business Enterprise and Skills',
+                    'component': 'Topical Essay (Paper 2)',
+                    'description': '1 credit per essay question (10 units)'
+                },
+                {
+                    'action_key': 'bes_exam_mcq',
+                    'cost': 3,
+                    'category': 'Business Enterprise and Skills',
+                    'component': 'Exam MCQ (Paper 1)',
+                    'description': '0.3 credit per exam MCQ (3 units)'
+                },
+                {
+                    'action_key': 'bes_exam_essay',
+                    'cost': 10,
+                    'category': 'Business Enterprise and Skills',
+                    'component': 'Exam Essay (Paper 2)',
+                    'description': '1 credit per exam essay (10 units)'
+                },
+
                 # Mathematics (O-Level)
                 {
                     'action_key': 'math_topical',
@@ -507,6 +567,29 @@ class CreditCostService:
             'computer_science_exam_mcq': 3,   # 0.3 credit per exam MCQ (3 units) - 1 credit = 3 MCQs
             'computer_science_exam_structured': 5,  # 0.5 credit per exam structured (5 units)
             'computer_science_exam_essay': 10,  # 1 credit per exam essay (10 units)
+
+            # Principles of Accounting (O-Level 7112) – MCQ 0.3, Essay 1 credit
+            'accounting_topical_mcq': 3,
+            'accounting_topical_essay': 10,
+            'accounting_exam_mcq': 3,
+            'accounting_exam_essay': 10,
+
+            # Business Enterprise and Skills (O-Level 4048) – MCQ 0.3, Essay 1 credit (same as Accounting)
+            'bes_topical_mcq': 3,
+            'bes_topical_essay': 10,
+            'bes_exam_mcq': 3,
+            'bes_exam_essay': 10,
+
+            # Commerce (O-Level Principles of Commerce) – same as BES: MCQ 0.3, Essay 1 credit
+            'commerce_topical_mcq': 3,
+            'commerce_topical_essay': 10,
+            'commerce_exam_mcq': 3,
+            'commerce_exam_essay': 10,
+
+            # History (ZIMSEC O-Level) – Paper 1 Essays only (3-part ZIMSEC format)
+            'history_topical_essay': 10,
+            'history_exam_essay': 10,
+            'history_essay_marking': 0,
 
             # A-Level Computer Science – same pricing as O-Level (MCQ 0.3, Structured 0.5, Essay 1)
             'a_level_computer_science_topical_mcq': 3,

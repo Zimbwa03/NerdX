@@ -132,6 +132,46 @@ const SUBJECT_TOPICS: Record<string, string[]> = {
     'Settlement and Population',
     'Transport and Trade',
   ],
+  'Principles of Accounting': [
+    'Introduction to Principles of Accounting',
+    'Types of Business Organizations',
+    'Source Documents and Books of Prime Entry',
+    'Ledger and Double Entry',
+    'Trial Balance',
+    'Correction of Errors',
+    'Financial Statements (Sole Trader)',
+    'Adjustments (Accruals, Prepayments, Depreciation)',
+    'Incomplete Records',
+    'Partnership Accounts',
+    'Company Accounts',
+    'Cash Flow',
+    'Interpretation of Financial Statements',
+    'Not-for-Profit Organizations',
+    'Manufacturing Accounts',
+  ],
+  Commerce: [
+    'Production',
+    'Trade',
+    'Consumer Protection',
+    'Business Organisations',
+    'Enterprise',
+    'Finance and Banking',
+    'Insurance and Assurance',
+    'Business Communication',
+    'Transport',
+    'Warehousing',
+    'Marketing',
+  ],
+  'Business Enterprise and Skills': [
+    'The Business Enterprise',
+    'The Enterprising Environment',
+    'Setting Up a New Enterprise',
+    'Business Planning',
+    'Enterprise Finance and Securing Investors',
+    'People in Business Enterprises',
+    'Markets and Marketing',
+    'Operations Management',
+  ],
 };
 
 // A-Level Topics by Subject
@@ -361,6 +401,9 @@ const SUBJECT_COLORS: Record<string, string> = {
   'A-Level Computer Science': '#0D47A1',
   Geography: '#2E7D32',
   'A-Level Geography': '#2E7D32',
+  Commerce: '#B8860B',
+  'Principles of Accounting': '#B8860B',
+  'Business Enterprise and Skills': '#2E7D32',
 };
 
 const SUBJECT_ICONS: Record<string, string> = {
@@ -374,6 +417,9 @@ const SUBJECT_ICONS: Record<string, string> = {
   'A-Level Computer Science': '💻',
   Geography: '🌍',
   'A-Level Geography': '🌍',
+  Commerce: '🏪',
+  'Principles of Accounting': '📒',
+  'Business Enterprise and Skills': '💼',
 };
 
 const TeacherModeSetupScreen: React.FC = () => {
@@ -393,7 +439,7 @@ const TeacherModeSetupScreen: React.FC = () => {
   const [selectedGradeLevel, setSelectedGradeLevel] = useState<string>('Form 3-4 (O-Level)');
   const [selectedTopic, setSelectedTopic] = useState<string>(preselectedTopic || '');
 
-  const subjects = ['O Level Mathematics', 'Pure Mathematics', 'English', 'Biology', 'Chemistry', 'Physics', 'Computer Science', 'A-Level Computer Science', 'Geography', 'A-Level Geography'];
+  const subjects = ['O Level Mathematics', 'Pure Mathematics', 'English', 'Biology', 'Chemistry', 'Physics', 'Computer Science', 'A-Level Computer Science', 'Geography', 'A-Level Geography', 'Principles of Accounting', 'Business Enterprise and Skills'];
   const gradeLevels = ['Form 1-2', 'Form 3-4 (O-Level)', 'A-Level'];
 
   // Get topics for selected subject

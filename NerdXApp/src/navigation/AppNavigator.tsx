@@ -25,6 +25,7 @@ import ProjectListScreen from '../screens/ProjectListScreen';
 import GraphPracticeScreen from '../screens/GraphPracticeScreen';
 import EnglishComprehensionScreen from '../screens/EnglishComprehensionScreen';
 import EnglishEssayScreen from '../screens/EnglishEssayScreen';
+import HistoryEssayScreen from '../screens/HistoryEssayScreen';
 import CombinedScienceExamScreen from '../screens/CombinedScienceExamScreen';
 import VirtualLabScreen from '../screens/VirtualLabScreen';
 import FormulaSheetScreen from '../screens/FormulaSheetScreen';
@@ -45,6 +46,11 @@ import ALevelPureMathScreen from '../screens/ALevelPureMathScreen';
 import ALevelPureMathNotesScreen from '../screens/ALevelPureMathNotesScreen';
 import ALevelBiologyScreen from '../screens/ALevelBiologyScreen';
 import ALevelBiologyNotesScreen from '../screens/ALevelBiologyNotesScreen';
+import GeographyNotesScreen from '../screens/GeographyNotesScreen';
+import AccountingNotesScreen from '../screens/AccountingNotesScreen';
+import CommerceNotesScreen from '../screens/CommerceNotesScreen';
+import BusinessEnterpriseSkillsNotesScreen from '../screens/BusinessEnterpriseSkillsNotesScreen';
+import HistoryNotesScreen from '../screens/HistoryNotesScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import NotificationDetailScreen from '../screens/NotificationDetailScreen';
 import UpdateRequiredScreen from '../screens/UpdateRequiredScreen';
@@ -127,6 +133,23 @@ import StatisticsExplorerScreen from '../screens/virtualLab/StatisticsExplorerSc
 import LogarithmsLabScreen from '../screens/virtualLab/LogarithmsLabScreen';
 import SequencesSeriesLabScreen from '../screens/virtualLab/SequencesSeriesLabScreen';
 import SimultaneousEquationsLabScreen from '../screens/virtualLab/SimultaneousEquationsLabScreen';
+import RatioProportionLabScreen from '../screens/virtualLab/RatioProportionLabScreen';
+import IndicesStandardFormLabScreen from '../screens/virtualLab/IndicesStandardFormLabScreen';
+import BoundsAccuracyLabScreen from '../screens/virtualLab/BoundsAccuracyLabScreen';
+import LinearGraphsLabScreen from '../screens/virtualLab/LinearGraphsLabScreen';
+import InequalitiesRegionLabScreen from '../screens/virtualLab/InequalitiesRegionLabScreen';
+import AngleRulesLabScreen from '../screens/virtualLab/AngleRulesLabScreen';
+import SimilarityScaleLabScreen from '../screens/virtualLab/SimilarityScaleLabScreen';
+import MensurationLabScreen from '../screens/virtualLab/MensurationLabScreen';
+import PythagorasTrigLabScreen from '../screens/virtualLab/PythagorasTrigLabScreen';
+import TransformationsLabScreen from '../screens/virtualLab/TransformationsLabScreen';
+import BalanceSheetLabScreen from '../screens/virtualLab/BalanceSheetLabScreen';
+import IncomeStatementLabScreen from '../screens/virtualLab/IncomeStatementLabScreen';
+import PartnershipAppropriationLabScreen from '../screens/virtualLab/PartnershipAppropriationLabScreen';
+import CashFlowStatementLabScreen from '../screens/virtualLab/CashFlowStatementLabScreen';
+import ManufacturingAccountLabScreen from '../screens/virtualLab/ManufacturingAccountLabScreen';
+import CorrectionOfErrorsLabScreen from '../screens/virtualLab/CorrectionOfErrorsLabScreen';
+import NotForProfitLabScreen from '../screens/virtualLab/NotForProfitLabScreen';
 import ProgrammingLabEditorScreen from '../screens/virtualLab/ProgrammingLabEditorScreen';
 import WebDesignLabEditorScreen from '../screens/virtualLab/WebDesignLabEditorScreen';
 import DatabaseLabEditorScreen from '../screens/virtualLab/DatabaseLabEditorScreen';
@@ -462,6 +485,13 @@ const AppNavigator: React.FC = () => {
               }}
             />
             <Stack.Screen
+              name="HistoryEssay"
+              component={HistoryEssayScreen}
+              options={{
+                title: 'History Essay',
+              }}
+            />
+            <Stack.Screen
               name="CombinedScienceExam"
               component={CombinedScienceExamScreen}
               options={{
@@ -743,6 +773,91 @@ const AppNavigator: React.FC = () => {
               options={{ headerShown: false }}
             />
             <Stack.Screen
+              name="RatioProportionLabScreen"
+              component={RatioProportionLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="IndicesStandardFormLabScreen"
+              component={IndicesStandardFormLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="BoundsAccuracyLabScreen"
+              component={BoundsAccuracyLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="LinearGraphsLabScreen"
+              component={LinearGraphsLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="InequalitiesRegionLabScreen"
+              component={InequalitiesRegionLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="AngleRulesLabScreen"
+              component={AngleRulesLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="SimilarityScaleLabScreen"
+              component={SimilarityScaleLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="MensurationLabScreen"
+              component={MensurationLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="PythagorasTrigLabScreen"
+              component={PythagorasTrigLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="TransformationsLabScreen"
+              component={TransformationsLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="BalanceSheetLabScreen"
+              component={BalanceSheetLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="IncomeStatementLabScreen"
+              component={IncomeStatementLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="PartnershipAppropriationLabScreen"
+              component={PartnershipAppropriationLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CashFlowStatementLabScreen"
+              component={CashFlowStatementLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ManufacturingAccountLabScreen"
+              component={ManufacturingAccountLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CorrectionOfErrorsLabScreen"
+              component={CorrectionOfErrorsLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="NotForProfitLabScreen"
+              component={NotForProfitLabScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
               name="FormulaSheet"
               component={FormulaSheetScreen}
               options={{
@@ -868,6 +983,42 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="ALevelBiologyNotes"
               component={ALevelBiologyNotesScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            {/* Geography Notes (O-Level and A-Level) */}
+            <Stack.Screen
+              name="GeographyNotes"
+              component={GeographyNotesScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="AccountingNotes"
+              component={AccountingNotesScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="BESNotes"
+              component={BusinessEnterpriseSkillsNotesScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="HistoryNotes"
+              component={HistoryNotesScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="CommerceNotes"
+              component={CommerceNotesScreen}
               options={{
                 headerShown: false,
               }}

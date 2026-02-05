@@ -9,7 +9,7 @@ import hashlib
 import secrets
 import time
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from typing import Optional
 from flask import Blueprint, request, jsonify, g
@@ -51,8 +51,17 @@ from services.vertex_service import vertex_service, get_image_question_credit_co
 from services.exam_session_service import exam_session_service
 from services.database_lab_execution_service import database_lab_execution_service
 from services.programming_lab_ai_service import programming_lab_ai_service
+from services.balance_sheet_generator import generate_balance_sheet_question
+from services.income_statement_generator import generate_income_statement_question
+from services.partnership_appropriation_generator import generate_partnership_appropriation_question
+from services.cash_flow_generator import generate_cash_flow_question
+from services.manufacturing_account_generator import generate_manufacturing_account_question
+from services.correction_of_errors_generator import generate_correction_of_errors_question
+from services.not_for_profit_generator import generate_not_for_profit_question
 from services.flashcard_service import flashcard_service
 from services.project_assistant_service import ProjectAssistantService
+from services.history_generator import generate_question as history_generate_question
+from services.history_marking_service import mark_history_essay
 from utils.url_utils import convert_local_path_to_public_url
 from utils.credit_units import format_credits, units_to_credits, credits_to_units
 from utils.question_cache import QuestionCacheService
@@ -191,6 +200,29 @@ def _get_quiz_credit_action(
         if geo_fmt == 'essay':
             return 'a_level_geography_topical_essay'
         return 'a_level_geography_topical_mcq'
+    if subject_key == 'accounting':
+        # Principles of Accounting (ZIMSEC 7112): MCQ 0.3, Essay 1 credit
+        acc_fmt = (qf or 'mcq').lower()
+        if qt == 'exam':
+            return 'accounting_exam_essay' if acc_fmt == 'essay' else 'accounting_exam_mcq'
+        return 'accounting_topical_essay' if acc_fmt == 'essay' else 'accounting_topical_mcq'
+    if subject_key == 'business_enterprise_skills':
+        # BES (ZIMSEC 4048): MCQ 0.3, Essay 1 credit (same as Accounting)
+        bes_fmt = (qf or 'mcq').lower()
+        if qt == 'exam':
+            return 'bes_exam_essay' if bes_fmt == 'essay' else 'bes_exam_mcq'
+        return 'bes_topical_essay' if bes_fmt == 'essay' else 'bes_topical_mcq'
+    if subject_key == 'commerce':
+        # Commerce (ZIMSEC Principles of Commerce): MCQ 0.3, Essay 1 credit (same as BES/CS O-Level)
+        com_fmt = (qf or 'mcq').lower()
+        if qt == 'exam':
+            return 'commerce_exam_essay' if com_fmt == 'essay' else 'commerce_exam_mcq'
+        return 'commerce_topical_essay' if com_fmt == 'essay' else 'commerce_topical_mcq'
+    if subject_key == 'history':
+        # History (ZIMSEC O-Level): Paper 1 Essays only (3-part ZIMSEC format)
+        if qt == 'exam':
+            return 'history_exam_essay'
+        return 'history_topical_essay'
 
     return f"{subject}_topical" if qt == 'topical' else f"{subject}_exam"
 
@@ -218,6 +250,13 @@ def _get_exam_session_cost_units(
         elif subject_key == 'computer_science':
             mcq_cost = 3  # 0.3 credit per exam MCQ (3 units) - 1 credit = 3 MCQs
             structured_cost = 5  # 0.5 credit per exam structured (5 units)
+        elif subject_key in ('commerce', 'business_enterprise_skills'):
+            mcq_cost = 3  # 0.3 credit per MCQ (Paper 1)
+            structured_cost = 10  # 1 credit per Essay (Paper 2)
+        elif subject_key == 'history':
+            # History: Essay only (no MCQ)
+            mcq_cost = 10  # not used; essay only
+            structured_cost = 10  # 1 credit per 3-part essay question
         elif any(key in subject_key for key in ['biology', 'chemistry', 'physics', 'combined_science']):
             mcq_cost = 5  # 0.5 credit
             structured_cost = 5  # 0.5 credit
@@ -253,6 +292,30 @@ def _get_exam_question_cost_units(subject: str, level: str, question_type: str) 
         elif q_type in ['ESSAY', 'ESSAY_ONLY']:
             return 10  # 1 credit per exam essay (10 units)
         return 5  # Default to structured cost
+    if subject_key == 'accounting':
+        # Principles of Accounting: MCQ=0.3, Essay=1
+        if q_type == 'MCQ':
+            return 3
+        elif q_type in ['ESSAY', 'ESSAY_ONLY']:
+            return 10
+        return 3  # Default to MCQ
+    if subject_key == 'business_enterprise_skills':
+        # BES: MCQ=0.3, Essay=1 (same as Accounting)
+        if q_type == 'MCQ':
+            return 3
+        elif q_type in ['ESSAY', 'ESSAY_ONLY']:
+            return 10
+        return 3  # Default to MCQ
+    if subject_key == 'history':
+        # History: Essay only (3-part ZIMSEC format) = 1 credit
+        return 10  # 1 credit per essay question
+    if subject_key == 'commerce':
+        # Commerce: MCQ=0.3, Essay=1 (same as BES)
+        if q_type == 'MCQ':
+            return 3
+        elif q_type in ['ESSAY', 'ESSAY_ONLY']:
+            return 10
+        return 3  # Default to MCQ
     if subject_key == 'a_level_geography':
         # A-Level Geography: MCQ=0.3, Structured=0.5, Essay=1 credit (exam essay)
         if q_type == 'MCQ':
@@ -291,8 +354,71 @@ def login():
         
         if not user_identifier or not password:
             return jsonify({'success': False, 'message': 'Identifier and password are required'}), 400
-        
-        # Get user data
+
+        # --- School-student login: identifier = full name, password = School ID (6 letters) ---
+        if '@' not in user_identifier:
+            school_id_raw = (password or '').strip().upper()
+            if len(school_id_raw) == 6 and school_id_raw.isalpha():
+                schools = make_supabase_request(
+                    "GET", "schools", select="id,name,subscription_expires_at",
+                    filters={"school_id": f"eq.{school_id_raw}"}, use_service_role=True
+                )
+                if schools and len(schools) > 0:
+                    school = schools[0]
+                    expires_at = school.get("subscription_expires_at")
+                    if expires_at:
+                        try:
+                            exp_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00')) if isinstance(expires_at, str) else expires_at
+                            if getattr(exp_dt, 'tzinfo', None):
+                                exp_dt = exp_dt.astimezone(timezone.utc).replace(tzinfo=None)
+                            if exp_dt < datetime.utcnow():
+                                return jsonify({
+                                    'success': False,
+                                    'message': 'School subscription expired. Contact your school administrator.'
+                                }), 403
+                        except Exception:
+                            pass
+                    students = make_supabase_request(
+                        "GET", "users_registration",
+                        select="id,chat_id,name,surname,user_type,active_session_id,subscription_expires_at",
+                        filters={"school_id": f"eq.{school['id']}", "user_type": "eq.school_student"},
+                        use_service_role=True
+                    )
+                    student_name_normalized = (user_identifier or "").strip().lower()
+                    user_data = None
+                    for s in (students or []):
+                        full = ((s.get("name") or "") + " " + (s.get("surname") or "")).strip().lower()
+                        if full == student_name_normalized:
+                            user_data = s
+                            break
+                    if user_data:
+                        # Single-session: only one device can be logged in. New login overwrites previous session; old token gets 401 on next request.
+                        session_id = str(uuid.uuid4())
+                        token = generate_token(user_data["chat_id"], jti=session_id)
+                        make_supabase_request(
+                            "PATCH", "users_registration", {"active_session_id": session_id},
+                            filters={"chat_id": f"eq.{user_data['chat_id']}"}, use_service_role=True
+                        )
+                        credit_units = get_user_credits(user_data["chat_id"]) or 0
+                        return jsonify({
+                            'success': True,
+                            'token': token,
+                            'user': {
+                                'id': user_data['chat_id'],
+                                'nerdx_id': user_data.get('nerdx_id'),
+                                'name': user_data.get('name'),
+                                'surname': user_data.get('surname'),
+                                'email': user_data.get('email'),
+                                'credits': _credits_display(credit_units),
+                                'user_type': 'school_student',
+                                'credit_breakdown': {'total': _credits_display(credit_units), 'free_credits': _credits_display(credit_units), 'purchased_credits': 0}
+                            },
+                            'notifications': {},
+                            'message': 'Login successful'
+                        }), 200
+            return jsonify({'success': False, 'message': 'Invalid credentials or user not found'}), 401
+
+        # Get user data (email/phone login)
         user_data = get_user_registration(user_identifier)
         
         if not user_data:
@@ -451,12 +577,13 @@ def login():
         return jsonify({'success': False, 'message': f'Login failed: {str(e)}'}), 500
 
 # Helper Functions
-def generate_token(user_id: str) -> str:
-    """Generate JWT token for user"""
+def generate_token(user_id: str, jti: Optional[str] = None) -> str:
+    """Generate JWT token for user. jti (session id) used for school_student single-device enforcement."""
     payload = {
         'user_id': user_id,
         'exp': datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS),
-        'iat': datetime.utcnow()
+        'iat': datetime.utcnow(),
+        'jti': jti or str(uuid.uuid4())
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
@@ -482,7 +609,7 @@ def verify_password(password: str, password_hash: str, salt: str) -> bool:
     return new_hash.hex() == password_hash
 
 def require_auth(f):
-    """Decorator to require authentication"""
+    """Decorator to require authentication. For school_student, enforces single-device via active_session_id."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         token = request.headers.get('Authorization', '').replace('Bearer ', '')
@@ -491,7 +618,32 @@ def require_auth(f):
         
         try:
             payload = verify_token(token)
-            g.current_user_id = payload['user_id']
+            user_id = payload['user_id']
+            g.current_user_id = user_id
+            g.current_user_jti = payload.get('jti')
+            user_data = get_user_registration(user_id)
+            g.current_user_type = (user_data.get('user_type') or '').strip() if user_data else ''
+            if user_data and g.current_user_type == 'school_student':
+                session_jti = payload.get('jti')
+                active_sid = (user_data.get('active_session_id') or '').strip()
+                if active_sid and session_jti != active_sid:
+                    return jsonify({
+                        'success': False,
+                        'message': 'This account is logged in on another device. Use only one device at a time.'
+                    }), 401
+                exp = user_data.get('subscription_expires_at')
+                if exp:
+                    try:
+                        exp_dt = datetime.fromisoformat(exp.replace('Z', '+00:00')) if isinstance(exp, str) else exp
+                        if getattr(exp_dt, 'tzinfo', None):
+                            exp_dt = exp_dt.astimezone(timezone.utc).replace(tzinfo=None)
+                        if exp_dt < datetime.utcnow():
+                            return jsonify({
+                                'success': False,
+                                'message': 'School subscription expired. Contact your school administrator.'
+                            }), 403
+                    except Exception:
+                        pass
             return f(*args, **kwargs)
         except Exception as e:
             return jsonify({'success': False, 'message': str(e)}), 401
@@ -1085,9 +1237,12 @@ def verify_otp():
 @mobile_bp.route('/auth/refresh-token', methods=['POST'])
 @require_auth
 def refresh_token():
-    """Refresh JWT token"""
+    """Refresh JWT token. For school_student, keeps same jti so single-session stays valid."""
     try:
-        new_token = generate_token(g.current_user_id)
+        if getattr(g, 'current_user_type', '') == 'school_student' and getattr(g, 'current_user_jti', None):
+            new_token = generate_token(g.current_user_id, jti=g.current_user_jti)
+        else:
+            new_token = generate_token(g.current_user_id)
         return jsonify({
             'success': True,
             'token': new_token
@@ -1098,9 +1253,16 @@ def refresh_token():
 @mobile_bp.route('/auth/logout', methods=['POST'])
 @require_auth
 def logout():
-    """Logout user"""
-    # Token invalidation can be handled client-side
-    # For server-side invalidation, maintain a blacklist
+    """Logout user. For school_student, clear active_session_id so they can log in again elsewhere."""
+    try:
+        user_data = get_user_registration(g.current_user_id)
+        if user_data and (user_data.get('user_type') or '').strip() == 'school_student':
+            make_supabase_request(
+                "PATCH", "users_registration", {"active_session_id": None},
+                filters={"chat_id": f"eq.{g.current_user_id}"}, use_service_role=True
+            )
+    except Exception as e:
+        logger.warning(f"Logout clear session: {e}")
     return jsonify({'success': True, 'message': 'Logged out successfully'}), 200
 
 # ============================================================================
@@ -1289,6 +1451,12 @@ def get_subjects():
                 'color': '#4CAF50'
             },
             {
+                'id': 'business_enterprise_skills',
+                'name': 'Business Enterprise and Skills',
+                'icon': 'briefcase',
+                'color': '#2E7D32'
+            },
+            {
                 'id': 'geography',
                 'name': 'Geography',
                 'icon': 'public',
@@ -1300,6 +1468,24 @@ def get_subjects():
                 'name': 'English',
                 'icon': 'menu-book',
                 'color': '#FF9800'
+            },
+            {
+                'id': 'accounting',
+                'name': 'Principles of Accounting',
+                'icon': 'receipt',
+                'color': '#B8860B'
+            },
+            {
+                'id': 'commerce',
+                'name': 'Commerce',
+                'icon': 'receipt',
+                'color': '#B8860B'
+            },
+            {
+                'id': 'history',
+                'name': 'History',
+                'icon': 'book',
+                'color': '#5D4037'
             }
         ]
         
@@ -1491,6 +1677,42 @@ def get_topics():
                         'name': topic,
                         'subject': 'geography',
                         'board': 'zimsec'
+                    })
+        elif subject == 'accounting':
+            # ZIMSEC O-Level Principles of Accounting 7112 – 15 topics (Paper 1 MCQ)
+            if 'Principles of Accounting' in TOPICS:
+                for topic in TOPICS['Principles of Accounting']:
+                    topics.append({
+                        'id': topic.lower().replace(' ', '_').replace('-', '_').replace('&', 'and'),
+                        'name': topic,
+                        'subject': 'accounting',
+                    })
+        elif subject == 'business_enterprise_skills':
+            # ZIMSEC O-Level Business Enterprise and Skills 4048 – 8 topics (Paper 1 MCQs, Paper 2 Essays)
+            if 'Business Enterprise and Skills' in TOPICS:
+                for topic in TOPICS['Business Enterprise and Skills']:
+                    topics.append({
+                        'id': topic.lower().replace(' ', '_').replace('-', '_').replace('&', 'and'),
+                        'name': topic,
+                        'subject': 'business_enterprise_skills',
+                    })
+        elif subject == 'commerce':
+            # ZIMSEC O-Level Principles of Commerce – 11 topics (Paper 1 MCQs, Paper 2 Essays)
+            if 'Commerce' in TOPICS:
+                for topic in TOPICS['Commerce']:
+                    topics.append({
+                        'id': topic.lower().replace(' ', '_').replace('-', '_').replace('&', 'and'),
+                        'name': topic,
+                        'subject': 'commerce',
+                    })
+        elif subject == 'history':
+            # ZIMSEC O-Level History – flat topic list (Paper 1 Essays only)
+            if 'History' in TOPICS:
+                for topic in TOPICS['History']:
+                    topics.append({
+                        'id': topic.lower().replace(' ', '_').replace('-', '_').replace('&', 'and'),
+                        'name': topic,
+                        'subject': 'history',
                     })
         elif subject in TOPICS:
             # Default handling for other subjects
@@ -1908,6 +2130,57 @@ def generate_question():
                 else:
                     question_data = geo_generator.generate_topical_question(selected_topic, difficulty, g.current_user_id)
             
+            elif subject == 'accounting':
+                # ZIMSEC O-Level Principles of Accounting 7112 – Paper 1 MCQ only
+                from services.accounting_generator import AccountingGenerator
+                from constants import TOPICS
+                import random
+                acc_gen = AccountingGenerator()
+                if question_type == 'exam':
+                    acc_topics = TOPICS.get('Principles of Accounting', [])
+                    if acc_topics:
+                        topic = random.choice(acc_topics)
+                selected_topic = topic or 'Introduction to Principles of Accounting'
+                if isinstance(selected_topic, dict):
+                    selected_topic = selected_topic.get('name') or selected_topic.get('id') or 'Introduction to Principles of Accounting'
+                question_data = acc_gen.generate_topical_question(selected_topic, difficulty, g.current_user_id)
+
+            elif subject == 'business_enterprise_skills':
+                # ZIMSEC O-Level Business Enterprise and Skills 4048 – Paper 1 MCQs, Paper 2 Essays
+                from services.bes_generator import BESGenerator
+                from constants import TOPICS
+                import random
+                bes_gen = BESGenerator()
+                bes_topics = TOPICS.get('Business Enterprise and Skills', [])
+                if question_type == 'exam' and bes_topics:
+                    topic = random.choice(bes_topics)
+                selected_topic = topic or 'The Business Enterprise'
+                if isinstance(selected_topic, dict):
+                    selected_topic = selected_topic.get('name') or selected_topic.get('id') or 'The Business Enterprise'
+                qf_bes = (data.get('question_format') or data.get('question_type') or 'mcq').lower()
+                if qf_bes == 'essay':
+                    question_data = bes_gen.generate_essay_question(selected_topic, difficulty, g.current_user_id)
+                else:
+                    question_data = bes_gen.generate_topical_question(selected_topic, difficulty, g.current_user_id)
+
+            elif subject == 'commerce':
+                # ZIMSEC O-Level Principles of Commerce – Paper 1 MCQs, Paper 2 Essays (Vertex AI primary)
+                from services.commerce_generator import CommerceGenerator
+                from constants import TOPICS
+                import random
+                commerce_gen = CommerceGenerator()
+                commerce_topics = TOPICS.get('Commerce', [])
+                if question_type == 'exam' and commerce_topics:
+                    topic = random.choice(commerce_topics)
+                selected_topic = topic or 'Production'
+                if isinstance(selected_topic, dict):
+                    selected_topic = selected_topic.get('name') or selected_topic.get('id') or 'Production'
+                qf_com = (data.get('question_format') or data.get('question_type') or 'mcq').lower()
+                if qf_com == 'essay':
+                    question_data = commerce_gen.generate_essay_question(selected_topic, difficulty, g.current_user_id)
+                else:
+                    question_data = commerce_gen.generate_mcq_question(selected_topic, difficulty, g.current_user_id)
+            
             elif subject == 'a_level_geography':
                 # ZIMSEC A-Level Geography – MCQ, structured, essay (same as other A-Level subjects)
                 from services.a_level_geography_generator import ALevelGeographyGenerator
@@ -2000,6 +2273,16 @@ def generate_question():
                     error_msg = f'Failed to generate {subject.replace("a_level_", "").replace("_", " ").title()} essay question. The AI service may be experiencing high load. Please try again in a moment.'
                 else:
                     error_msg = f'Failed to generate {subject.replace("a_level_", "").replace("_", " ").title()} question. Please try again.'
+            elif subject == 'business_enterprise_skills':
+                if question_format_used == 'essay':
+                    error_msg = 'Failed to generate Business Enterprise and Skills essay question. The AI service may be experiencing high load. Please try again in a moment.'
+                else:
+                    error_msg = 'Failed to generate Business Enterprise and Skills question. Please try again.'
+            elif subject == 'commerce':
+                if question_format_used == 'essay':
+                    error_msg = 'Failed to generate Commerce essay question. The AI service may be experiencing high load. Please try again in a moment.'
+                else:
+                    error_msg = 'Failed to generate Commerce question. Please try again.'
             else:
                 error_msg = 'Failed to generate question. Please try again.'
             logger.error(f"Question generation failed for {subject}/{topic} (type: {question_format_used})")
@@ -2152,7 +2435,12 @@ def generate_question():
                 # Computer Science essay/structured questions support image upload for diagrams, code screenshots
                 (subject in ('computer_science', 'a_level_computer_science') and question_type_mobile in ('essay', 'structured')) or
                 # Geography essay/structured questions support image upload for maps, diagrams
-                (subject in ('geography', 'a_level_geography') and question_type_mobile in ('essay', 'structured'))
+                (subject in ('geography', 'a_level_geography') and question_type_mobile in ('essay', 'structured')) or
+                # Commerce essay questions support image upload for handwritten/diagram answers
+                (subject == 'accounting' and question_type_mobile == 'essay') or
+                # BES essay questions support image upload for handwritten/diagram answers
+                (subject == 'business_enterprise_skills' and question_type_mobile == 'essay') or
+                (subject == 'commerce' and question_type_mobile == 'essay')
             ),
             
             # New AI Tutor Fields
@@ -2332,6 +2620,84 @@ def generate_question():
                     geo_essay_solution_parts.append(", ".join(question_data.get('case_studies', [])[:4]))
                 if geo_essay_solution_parts:
                     question['solution'] = '\n'.join(geo_essay_solution_parts)
+
+        # Handle Commerce essay questions (Paper 2)
+        if subject == 'accounting' and (question_type_mobile == 'essay' or question_data.get('question_type') == 'essay'):
+            question['question_type'] = 'essay'
+            question['allows_text_input'] = True
+            question['allows_image_upload'] = True
+            question['question_text'] = question_data.get('question', '') or question_data.get('question_text', '')
+            question['essay_data'] = {
+                'command_word': question_data.get('command_word', 'Discuss'),
+                'total_marks': question_data.get('total_marks', 20),
+                'time_allocation': question_data.get('time_allocation', '35-40 minutes'),
+                'essay_plan': question_data.get('essay_plan', {}),
+                'must_include_terms': question_data.get('must_include_terms', []),
+                'marking_criteria': question_data.get('marking_criteria', {}),
+                'model_answer_outline': question_data.get('sample_answer_outline', '') or question_data.get('model_answer_outline', ''),
+                'common_mistakes': question_data.get('common_mistakes', [])
+            }
+            com_essay_solution_parts = []
+            if question_data.get('essay_plan'):
+                com_essay_solution_parts.append("📋 ESSAY PLAN:")
+                plan = question_data.get('essay_plan', {})
+                if plan.get('introduction'):
+                    com_essay_solution_parts.append(f"Introduction: {plan['introduction']}")
+                if plan.get('main_body'):
+                    for section in (plan.get('main_body') or []):
+                        com_essay_solution_parts.append(f"{section.get('section', 'Section')} [{section.get('marks', 0)} marks]: {section.get('content', '')}")
+                if plan.get('conclusion'):
+                    com_essay_solution_parts.append(f"Conclusion: {plan['conclusion']}")
+            if question_data.get('must_include_terms'):
+                com_essay_solution_parts.append(f"\n🔑 Key Terms to Include: {', '.join(question_data['must_include_terms'])}")
+            if question_data.get('marking_criteria'):
+                com_essay_solution_parts.append("\n📊 MARKING CRITERIA:")
+                for grade, desc in (question_data.get('marking_criteria') or {}).items():
+                    com_essay_solution_parts.append(f"{grade}: {desc}")
+            if question_data.get('sample_answer_outline'):
+                com_essay_solution_parts.append("\n📝 MODEL ANSWER OUTLINE:")
+                com_essay_solution_parts.append(question_data['sample_answer_outline'])
+            if com_essay_solution_parts:
+                question['solution'] = '\n'.join(com_essay_solution_parts)
+
+        # Handle BES essay questions (Paper 2)
+        if (subject == 'business_enterprise_skills' or subject == 'commerce') and (question_type_mobile == 'essay' or question_data.get('question_type') == 'essay'):
+            question['question_type'] = 'essay'
+            question['allows_text_input'] = True
+            question['allows_image_upload'] = True
+            question['question_text'] = question_data.get('question', '') or question_data.get('question_text', '')
+            question['essay_data'] = {
+                'command_word': question_data.get('command_word', 'Discuss'),
+                'total_marks': question_data.get('total_marks', 20),
+                'time_allocation': question_data.get('time_allocation', '35-40 minutes'),
+                'essay_plan': question_data.get('essay_plan', {}),
+                'must_include_terms': question_data.get('must_include_terms', []),
+                'marking_criteria': question_data.get('marking_criteria', {}),
+                'model_answer_outline': question_data.get('sample_answer_outline', '') or question_data.get('model_answer_outline', ''),
+                'common_mistakes': question_data.get('common_mistakes', [])
+            }
+            bes_essay_solution_parts = []
+            if question_data.get('essay_plan'):
+                bes_essay_solution_parts.append("📋 ESSAY PLAN:")
+                plan = question_data.get('essay_plan', {})
+                if plan.get('introduction'):
+                    bes_essay_solution_parts.append(f"Introduction: {plan['introduction']}")
+                if plan.get('main_body'):
+                    for section in (plan.get('main_body') or []):
+                        bes_essay_solution_parts.append(f"{section.get('section', 'Section')} [{section.get('marks', 0)} marks]: {section.get('content', '')}")
+                if plan.get('conclusion'):
+                    bes_essay_solution_parts.append(f"Conclusion: {plan['conclusion']}")
+            if question_data.get('must_include_terms'):
+                bes_essay_solution_parts.append(f"\n🔑 Key Terms to Include: {', '.join(question_data['must_include_terms'])}")
+            if question_data.get('marking_criteria'):
+                bes_essay_solution_parts.append("\n📊 MARKING CRITERIA:")
+                for grade, desc in (question_data.get('marking_criteria') or {}).items():
+                    bes_essay_solution_parts.append(f"{grade}: {desc}")
+            if question_data.get('sample_answer_outline') or question_data.get('model_answer_outline'):
+                bes_essay_solution_parts.append("\n📝 MODEL ANSWER OUTLINE:")
+                bes_essay_solution_parts.append(question_data.get('sample_answer_outline') or question_data.get('model_answer_outline', ''))
+            if bes_essay_solution_parts:
+                question['solution'] = '\n'.join(bes_essay_solution_parts)
 
         # Convert LaTeX in structured_question (stem/parts) when it was added in blocks above
         if subject in ('mathematics', 'a_level_pure_math', 'combined_science') and question.get('structured_question'):
@@ -2771,8 +3137,8 @@ Step 3: Identify where your approach differed and learn from it.
                 is_correct = True
                 detailed_solution = solution or 'No detailed feedback available.'
                 analysis_result = {}
-        elif subject == 'a_level_geography' or (subject == 'geography' and question_type == 'essay'):
-            # A-Level Geography (and O-Level Geography essay): show analysis and detailed model answer
+        elif subject == 'a_level_geography' or (subject == 'geography' and question_type == 'essay') or (subject == 'accounting' and question_type == 'essay') or (subject == 'business_enterprise_skills' and question_type == 'essay') or (subject == 'commerce' and question_type == 'essay'):
+            # A-Level Geography (and O-Level Geography/Accounting/BES essay): show analysis and detailed model answer
             try:
                 feedback = (
                     '📝 Essay submitted! Your answer has been recorded. '
@@ -3108,6 +3474,177 @@ def programming_lab_ai_endpoint():
         }), 200
     except Exception as e:
         logger.error(f"Programming Lab AI error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/virtual-lab/balance-sheet-question', methods=['POST'])
+@require_auth
+def get_balance_sheet_question():
+    """
+    Generate a Balance Sheet practice question for the Virtual Lab using Vertex AI only.
+    Students can request a new question to practice different scenarios (sole trader, difficulty, etc.).
+    No credits deducted for this endpoint (practice lab).
+    """
+    try:
+        data = request.get_json() or {}
+        business_type = (data.get('business_type') or 'sole_trader').strip().lower()
+        difficulty_level = (data.get('difficulty_level') or 'intermediate').strip().lower()
+        format_type = (data.get('format') or 'vertical').strip().lower()
+        if business_type not in ('sole_trader', 'partnership', 'limited_company', 'non_profit'):
+            business_type = 'sole_trader'
+        if difficulty_level not in ('basic', 'intermediate', 'advanced'):
+            difficulty_level = 'intermediate'
+
+        question = generate_balance_sheet_question(
+            business_type=business_type,
+            difficulty_level=difficulty_level,
+            format_type=format_type,
+        )
+        return jsonify({
+            'success': True,
+            'data': question,
+        }), 200
+    except Exception as e:
+        logger.error("Balance sheet question generation error: %s", e, exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/virtual-lab/income-statement-question', methods=['POST'])
+@require_auth
+def get_income_statement_question():
+    """
+    Generate an Income Statement / P&L practice question for the Virtual Lab using Vertex AI only.
+    Students can request a new question to practice different scenarios.
+    """
+    try:
+        data = request.get_json() or {}
+        business_type = (data.get('business_type') or 'sole_trader').strip().lower()
+        difficulty_level = (data.get('difficulty_level') or 'intermediate').strip().lower()
+        format_type = (data.get('format') or 'vertical').strip().lower()
+        if business_type not in ('sole_trader', 'partnership', 'limited_company', 'non_profit'):
+            business_type = 'sole_trader'
+        if difficulty_level not in ('basic', 'intermediate', 'advanced'):
+            difficulty_level = 'intermediate'
+
+        question = generate_income_statement_question(
+            business_type=business_type,
+            difficulty_level=difficulty_level,
+            format_type=format_type,
+        )
+        return jsonify({
+            'success': True,
+            'data': question,
+        }), 200
+    except Exception as e:
+        logger.error("Income statement question generation error: %s", e, exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/virtual-lab/partnership-appropriation-question', methods=['POST'])
+@require_auth
+def get_partnership_appropriation_question():
+    """Generate a Partnership Appropriation practice question for the Virtual Lab using Vertex AI only."""
+    try:
+        data = request.get_json() or {}
+        difficulty_level = (data.get('difficulty_level') or 'intermediate').strip().lower()
+        format_type = (data.get('format') or 'vertical').strip().lower()
+        if difficulty_level not in ('basic', 'intermediate', 'advanced'):
+            difficulty_level = 'intermediate'
+
+        question = generate_partnership_appropriation_question(
+            difficulty_level=difficulty_level,
+            format_type=format_type,
+        )
+        return jsonify({
+            'success': True,
+            'data': question,
+        }), 200
+    except Exception as e:
+        logger.error("Partnership appropriation question generation error: %s", e, exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/virtual-lab/cash-flow-question', methods=['POST'])
+@require_auth
+def get_cash_flow_question():
+    """Generate a Cash Flow Statement practice question for the Virtual Lab using Vertex AI only."""
+    try:
+        data = request.get_json() or {}
+        difficulty_level = (data.get('difficulty_level') or 'intermediate').strip().lower()
+        format_type = (data.get('format') or 'vertical').strip().lower()
+        if difficulty_level not in ('basic', 'intermediate', 'advanced'):
+            difficulty_level = 'intermediate'
+
+        question = generate_cash_flow_question(
+            difficulty_level=difficulty_level,
+            format_type=format_type,
+        )
+        return jsonify({'success': True, 'data': question}), 200
+    except Exception as e:
+        logger.error("Cash flow question generation error: %s", e, exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/virtual-lab/manufacturing-account-question', methods=['POST'])
+@require_auth
+def get_manufacturing_account_question():
+    """Generate a Manufacturing Account practice question for the Virtual Lab using Vertex AI only."""
+    try:
+        data = request.get_json() or {}
+        difficulty_level = (data.get('difficulty_level') or 'intermediate').strip().lower()
+        format_type = (data.get('format') or 'vertical').strip().lower()
+        if difficulty_level not in ('basic', 'intermediate', 'advanced'):
+            difficulty_level = 'intermediate'
+
+        question = generate_manufacturing_account_question(
+            difficulty_level=difficulty_level,
+            format_type=format_type,
+        )
+        return jsonify({'success': True, 'data': question}), 200
+    except Exception as e:
+        logger.error("Manufacturing account question generation error: %s", e, exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/virtual-lab/correction-of-errors-question', methods=['POST'])
+@require_auth
+def get_correction_of_errors_question():
+    """Generate a Correction of Errors practice question for the Virtual Lab using Vertex AI only."""
+    try:
+        data = request.get_json() or {}
+        difficulty_level = (data.get('difficulty_level') or 'intermediate').strip().lower()
+        format_type = (data.get('format') or 'vertical').strip().lower()
+        if difficulty_level not in ('basic', 'intermediate', 'advanced'):
+            difficulty_level = 'intermediate'
+
+        question = generate_correction_of_errors_question(
+            difficulty_level=difficulty_level,
+            format_type=format_type,
+        )
+        return jsonify({'success': True, 'data': question}), 200
+    except Exception as e:
+        logger.error("Correction of errors question generation error: %s", e, exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/virtual-lab/not-for-profit-question', methods=['POST'])
+@require_auth
+def get_not_for_profit_question():
+    """Generate a Not-for-Profit Income & Expenditure practice question for the Virtual Lab using Vertex AI only."""
+    try:
+        data = request.get_json() or {}
+        difficulty_level = (data.get('difficulty_level') or 'intermediate').strip().lower()
+        format_type = (data.get('format') or 'vertical').strip().lower()
+        if difficulty_level not in ('basic', 'intermediate', 'advanced'):
+            difficulty_level = 'intermediate'
+
+        question = generate_not_for_profit_question(
+            difficulty_level=difficulty_level,
+            format_type=format_type,
+        )
+        return jsonify({'success': True, 'data': question}), 200
+    except Exception as e:
+        logger.error("Not-for-profit question generation error: %s", e, exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 
@@ -3956,6 +4493,63 @@ def get_referral_stats_simple():
 # MATH ENDPOINTS
 # ============================================================================
 
+def _latex_to_sympy_like(s: str) -> str:
+    """Convert common LaTeX to SymPy-parseable form."""
+    s = s.strip()
+    s = s.replace('\\times', '*').replace('\\cdot', '*')
+    s = s.replace('\\div', '/')
+    s = s.replace('^', '**')
+    s = re.sub(r'\\frac\{([^{}]*)\}\{([^{}]*)\}', r'(\1)/(\2)', s)
+    s = re.sub(r'\\sqrt\{([^{}]*)\}', r'sqrt(\1)', s)
+    s = re.sub(r'\\sqrt\[2\]\{([^{}]*)\}', r'sqrt(\1)', s)
+    s = s.replace('\\left(', '(').replace('\\right)', ')')
+    s = s.replace('\\left[', '[').replace('\\right]', ']')
+    return s
+
+
+@mobile_bp.route('/math/solve', methods=['POST'])
+@require_auth
+def math_solve():
+    """Solve math equation with step-by-step solution (SymPy, free)."""
+    try:
+        data = request.get_json() or {}
+        problem = (data.get('problem') or '').strip()
+        if not problem:
+            return jsonify({'success': False, 'message': 'problem is required'}), 400
+        problem = _latex_to_sympy_like(problem)
+        symbolic_solver = SymbolicSolverService()
+        result = symbolic_solver.solve_equation_with_steps(problem, 'x')
+        if not result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': result.get('fallback', result.get('error', 'Could not solve')),
+                'data': result
+            }), 200
+        steps = result.get('steps', [])
+        steps_formatted = [
+            {
+                'step': s.get('step', i + 1),
+                'description': s.get('description', ''),
+                'latex': s.get('latex', ''),
+                'explanation': s.get('explanation', ''),
+            }
+            for i, s in enumerate(steps)
+        ]
+        return jsonify({
+            'success': True,
+            'data': {
+                'success': True,
+                'steps': steps_formatted,
+                'latex_solutions': result.get('latex_solutions', result.get('solutions', [])),
+                'explanation': result.get('explanation', ''),
+                'solvedOffline': False,
+            }
+        }), 200
+    except Exception as e:
+        logger.error(f"Math solve error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
 @mobile_bp.route('/math/scan-gemini', methods=['POST'])
 @require_auth
 def math_scan_gemini():
@@ -4760,6 +5354,124 @@ def extract_essay_text_from_images():
     except Exception as e:
         logger.error(f"Extract essay from images error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e) or 'Server error'}), 500
+
+
+# ============== History Essay (ZIMSEC 3-part format) ==============
+@mobile_bp.route('/history/essay/generate', methods=['POST'])
+@require_auth
+def history_essay_generate():
+    """Generate a 3-part ZIMSEC History essay question for a topic. Deducts history_topical_essay credits."""
+    try:
+        data = request.get_json() or {}
+        topic = data.get('topic')  # id or name
+        difficulty = (data.get('difficulty') or 'medium').lower()
+        credit_action = 'history_topical_essay'
+        credit_cost = advanced_credit_service.get_credit_cost(credit_action, platform='mobile')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}',
+                'credit_cost': _credits_display(credit_cost),
+            }), 402
+        question = history_generate_question(topic, difficulty, g.current_user_id)
+        if not question:
+            return jsonify({'success': False, 'message': 'Failed to generate question'}), 500
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            credit_action,
+            'History 3-part essay question',
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+        return jsonify({
+            'success': True,
+            'data': question,
+            'credits_remaining': credits_remaining,
+            'credits_deducted': _credits_display(int(credit_cost)),
+        }), 200
+    except Exception as e:
+        logger.error(f"History essay generate error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/history/essay/submit', methods=['POST'])
+@require_auth
+def history_essay_submit():
+    """Submit 3-part History essay answers for AI marking. No extra credit (1 credit = 10 units charged on generate)."""
+    try:
+        data = request.get_json() or {}
+        question = data.get('question')
+        answers = data.get('answers') or {}
+        if not question or not isinstance(answers, dict):
+            return jsonify({'success': False, 'message': 'question and answers required'}), 400
+        credit_action = 'history_essay_marking'
+        credit_cost = advanced_credit_service.get_credit_cost(credit_action, platform='mobile')
+        user_credits = get_user_credits(g.current_user_id) or 0
+        if user_credits < credit_cost:
+            return jsonify({
+                'success': False,
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}',
+            }), 402
+        result = mark_history_essay(question, answers, g.current_user_id)
+        if not result.get('success'):
+            return jsonify({'success': False, 'message': result.get('error', 'Marking failed')}), 500
+        credits_remaining = _deduct_credits_or_fail(
+            g.current_user_id,
+            int(credit_cost),
+            credit_action,
+            'History essay marking',
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+        result['credits_remaining'] = credits_remaining
+        result['credits_deducted'] = _credits_display(int(credit_cost))
+        # Save to history_essay_submissions for "Past attempts"
+        try:
+            submission_data = {
+                'user_id': g.current_user_id,
+                'topic': question.get('topic', ''),
+                'question_snapshot': question,
+                'part_a_answer': (answers.get('part_a') or '').strip(),
+                'part_b_answer': (answers.get('part_b') or '').strip(),
+                'part_c_answer': (answers.get('part_c') or '').strip(),
+                'part_a_score': result.get('part_a_score', 0),
+                'part_b_score': result.get('part_b_score', 0),
+                'part_c_score': result.get('part_c_score', 0),
+                'total': result.get('total', 0),
+                'constructive_feedback': result.get('constructive_feedback', ''),
+                'part_a_feedback': result.get('part_a_feedback', ''),
+                'part_b_feedback': result.get('part_b_feedback', ''),
+                'part_c_feedback': result.get('part_c_feedback', ''),
+            }
+            make_supabase_request('POST', 'history_essay_submissions', submission_data, use_service_role=True)
+        except Exception as db_err:
+            logger.error(f"Failed to save history essay submission: {db_err}")
+        return jsonify({'success': True, 'data': result}), 200
+    except Exception as e:
+        logger.error(f"History essay submit error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/history/essay/history', methods=['GET'])
+@require_auth
+def get_history_essay_history():
+    """Get History essay submission history for current user."""
+    try:
+        result = make_supabase_request(
+            'GET',
+            'history_essay_submissions',
+            filters={'user_id': f'eq.{g.current_user_id}'},
+            use_service_role=True,
+        ) or []
+        # Sort by created_at desc if not already
+        if isinstance(result, list) and len(result) > 1:
+            result = sorted(result, key=lambda x: (x.get('created_at') or ''), reverse=True)
+        return jsonify({'success': True, 'data': result}), 200
+    except Exception as e:
+        logger.error(f"Get history essay history error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 @mobile_bp.route('/english/essay/history', methods=['GET'])
@@ -6029,10 +6741,11 @@ Guidelines:
                 logger.error("Teacher mode AI error: %s", e)
                 ai_response = f"I apologize, but I'm having trouble processing your question right now. Please try again in a moment. Error: {str(e)}"
         
-        # Update conversation history
+        # Update conversation history and updated_at
         conversation_history.append({'role': 'user', 'content': message})
         conversation_history.append({'role': 'assistant', 'content': ai_response})
         session_data['conversation_history'] = conversation_history
+        session_data['updated_at'] = datetime.now().isoformat()
         session_manager.set_data(g.current_user_id, 'mobile_teacher', session_data)
         
         return jsonify({
@@ -6053,24 +6766,27 @@ Guidelines:
 @mobile_bp.route('/teacher/history', methods=['GET'])
 @require_auth
 def teacher_history():
-    """Get Teacher Mode session history for the current user"""
+    """Get Teacher Mode session history for the current user (current + past sessions)."""
     try:
         from utils.session_manager import session_manager
         
-        # For now, return the current session if it exists
         session_data = session_manager.get_data(g.current_user_id, 'mobile_teacher')
-        history = []
+        history = list(session_data.get('past_sessions', [])) if session_data else []
         
         if session_data and session_data.get('session_id'):
-            history.append({
+            conv = session_data.get('conversation_history') or []
+            last_msg = conv[-1].get('content', '') if conv else ''
+            current_entry = {
                 'session_id': session_data['session_id'],
                 'subject': session_data.get('subject', ''),
                 'grade_level': session_data.get('grade_level', ''),
                 'topic': session_data.get('topic', ''),
-                'last_message': session_data.get('conversation_history', [{}])[-1].get('content', '') if session_data.get('conversation_history') else '',
-                'updated_at': session_data.get('started_at', datetime.now().isoformat())
-            })
+                'last_message': last_msg,
+                'updated_at': session_data.get('updated_at') or session_data.get('started_at', datetime.now().isoformat()),
+            }
+            history.insert(0, current_entry)
         
+        history.sort(key=lambda x: x.get('updated_at', ''), reverse=True)
         return jsonify({
             'success': True,
             'data': history
@@ -6084,14 +6800,22 @@ def teacher_history():
 @mobile_bp.route('/teacher/session/<session_id>', methods=['DELETE'])
 @require_auth
 def delete_teacher_session(session_id):
-    """Delete a Teacher Mode session"""
+    """Delete a Teacher Mode session (current or from history)."""
     try:
         from utils.session_manager import session_manager
         
         session_data = session_manager.get_data(g.current_user_id, 'mobile_teacher')
-        if session_data and session_data.get('session_id') == session_id:
-            session_manager.clear_data(g.current_user_id, 'mobile_teacher')
-        
+        if not session_data:
+            return jsonify({'success': True}), 200
+        if session_data.get('session_id') == session_id:
+            # Remove current session; keep past_sessions
+            new_data = {'past_sessions': session_data.get('past_sessions', [])}
+            session_manager.set_data(g.current_user_id, 'mobile_teacher', new_data)
+        else:
+            # Remove from past_sessions
+            past = [p for p in session_data.get('past_sessions', []) if p.get('session_id') != session_id]
+            session_data['past_sessions'] = past
+            session_manager.set_data(g.current_user_id, 'mobile_teacher', session_data)
         return jsonify({'success': True}), 200
         
     except Exception as e:
@@ -6265,6 +6989,7 @@ Context from images:
                 conversation_history.append({'role': 'user', 'content': message})
                 conversation_history.append({'role': 'assistant', 'content': ai_response})
                 session_data['conversation_history'] = conversation_history
+                session_data['updated_at'] = datetime.now().isoformat()
                 session_manager.set_data(g.current_user_id, 'mobile_teacher', session_data)
                 return jsonify({
                     'success': True,

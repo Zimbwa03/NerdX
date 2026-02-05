@@ -49,6 +49,18 @@ const SubjectsScreen: React.FC = () => {
     if (subjectId === 'combined_science') {
       // Go directly to practice mode (Teacher Mode is now in the dashboard)
       navigation.navigate('Topics' as never, { subject } as never);
+    } else if (subjectId === 'accounting') {
+      // Show modal for Principles of Accounting: Notes, Virtual Labs, Teacher Mode, Practice Mode
+      setSelectedSubject(subject);
+      setMathModalVisible(true);
+    } else if (subjectId === 'business_enterprise_skills') {
+      // Show modal for Business Enterprise and Skills: Notes, Virtual Labs, Teacher Mode, Practice Mode
+      setSelectedSubject(subject);
+      setMathModalVisible(true);
+    } else if (subjectId === 'history') {
+      // Show modal for History: Notes, Virtual Labs, Teacher Mode, Practice Mode (Essays only)
+      setSelectedSubject(subject);
+      setMathModalVisible(true);
     } else if (subjectId === 'mathematics' || subject.name.toLowerCase() === 'mathematics') {
       // Show modal for Mathematics
       setSelectedSubject(subject);
@@ -221,17 +233,146 @@ const SubjectsScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      {/* Combined Science / Math Modal */}
+      {/* Combined Science / Principles of Accounting / Math Modal */}
       <Modal
         visible={mathModalVisible}
         onClose={() => setMathModalVisible(false)}
-        title={selectedSubject?.id === 'combined_science' ? 'Combined Science' : 'Mathematics Hub'}
+        title={
+          selectedSubject?.id === 'combined_science'
+            ? 'Combined Science'
+            : selectedSubject?.id === 'accounting'
+              ? 'Principles of Accounting'
+              : selectedSubject?.id === 'business_enterprise_skills'
+                ? 'Business Enterprise and Skills'
+                : selectedSubject?.id === 'history'
+                  ? 'History'
+                  : 'Mathematics Hub'
+        }
       >
         <Text style={styles.modalDescription}>
-          {selectedSubject?.id === 'combined_science' ? 'Choose your learning mode:' : 'Select a learning tool:'}
+          {selectedSubject?.id === 'combined_science'
+            ? 'Choose your learning mode:'
+            : selectedSubject?.id === 'accounting'
+              ? 'Choose your learning mode:'
+              : selectedSubject?.id === 'business_enterprise_skills'
+                ? 'Choose your learning mode:'
+                : selectedSubject?.id === 'history'
+                  ? 'Choose your learning mode:'
+                  : 'Select a learning tool:'}
         </Text>
 
-        {selectedSubject?.id === 'combined_science' ? (
+        {selectedSubject?.id === 'history' ? (
+          <>
+            <ModalOptionCard
+              icon="📚"
+              title="History Notes"
+              description="Comprehensive study notes for ZIMSEC O-Level History"
+              onPress={() => {
+                setMathModalVisible(false);
+                navigation.navigate('HistoryNotes' as never);
+              }}
+              color="#5D4037"
+            />
+            <ModalOptionCard
+              icon="🔬"
+              title="Virtual Labs"
+              description="Interactive history simulations"
+              onPress={() => {
+                setMathModalVisible(false);
+                navigation.navigate('VirtualLab' as never);
+              }}
+              color="#5D4037"
+            />
+            <ModalOptionCard
+              icon="👨‍🏫"
+              title="Teacher Mode"
+              description="Interactive AI teaching for History"
+              onPress={handleTeacherMode}
+              color="#5D4037"
+            />
+            <ModalOptionCard
+              icon="📝"
+              title="Practice Mode"
+              description="Paper 1 Essays (3-part ZIMSEC format) by topic"
+              onPress={handlePracticeMode}
+              color={Colors.primary.main}
+            />
+          </>
+        ) : selectedSubject?.id === 'business_enterprise_skills' ? (
+          <>
+            <ModalOptionCard
+              icon="📚"
+              title="Business Enterprise Skills Notes"
+              description="Comprehensive study notes for Business Enterprise and Skills (4048)"
+              onPress={() => {
+                setMathModalVisible(false);
+                navigation.navigate('BESNotes' as never);
+              }}
+              color="#2E7D32"
+            />
+            <ModalOptionCard
+              icon="🔬"
+              title="Virtual Labs"
+              description="Interactive business enterprise simulations"
+              onPress={() => {
+                setMathModalVisible(false);
+                navigation.navigate('VirtualLab' as never);
+              }}
+              color="#2E7D32"
+            />
+            <ModalOptionCard
+              icon="👨‍🏫"
+              title="Teacher Mode"
+              description="Interactive AI teaching for Business Enterprise and Skills"
+              onPress={handleTeacherMode}
+              color="#2E7D32"
+            />
+            <ModalOptionCard
+              icon="📝"
+              title="Practice Mode"
+              description="Paper 1 MCQs and Paper 2 Essays by topic"
+              onPress={handlePracticeMode}
+              color={Colors.primary.main}
+            />
+          </>
+        ) : selectedSubject?.id === 'accounting' ? (
+          <>
+            <ModalOptionCard
+              icon="📚"
+              title="Accounting Notes"
+              description="Comprehensive study notes for Principles of Accounting (7112)"
+              onPress={() => {
+                setMathModalVisible(false);
+                navigation.navigate('AccountingNotes' as never);
+              }}
+              color="#B8860B"
+            />
+            <ModalOptionCard
+              icon="🔬"
+              title="Virtual Labs"
+              description="Interactive accounting simulations"
+              onPress={() => {
+                setMathModalVisible(false);
+                navigation.navigate('VirtualLab' as never);
+              }}
+              color="#B8860B"
+            />
+            <ModalOptionCard
+              icon="👨‍🏫"
+              title="Teacher Mode"
+              description="Interactive AI teaching for Principles of Accounting"
+              onPress={handleTeacherMode}
+              color="#B8860B"
+            />
+            <ModalOptionCard
+              icon="📝"
+              title="Practice Mode"
+              description="Paper 1 MCQs and topical questions by topic"
+              onPress={handlePracticeMode}
+              color={Colors.primary.main}
+            />
+          </>
+        ) : selectedSubject?.id === 'combined_science' ? (
           <>
             <ModalOptionCard
               icon="👨‍🏫"
@@ -333,6 +474,8 @@ const getSubjectIcon = (icon: string): React.ReactNode => {
     science: Icons.science(32, Colors.subjects.science),
     'menu-book': Icons.english(32, Colors.subjects.english),
     healing: Icons.science(32, '#E91E63'),
+    receipt: Icons.quiz(32, '#B8860B'),
+    briefcase: Icons.projectAssistant(32, '#2E7D32'),
   };
   return iconMap[icon] || Icons.quiz(32, Colors.primary.main);
 };
@@ -342,6 +485,8 @@ const getSubjectIconBg = (subjectId: string): string => {
     mathematics: Colors.iconBg.mathematics,
     combined_science: Colors.iconBg.science,
     english: Colors.iconBg.english,
+    accounting: 'rgba(184, 134, 11, 0.2)',
+    business_enterprise_skills: 'rgba(46, 125, 50, 0.2)',
   };
   return bgMap[subjectId] || Colors.iconBg.default;
 };

@@ -263,7 +263,7 @@ export const quizApi = {
     type: string = 'topical',
     parent_subject?: string,
     questionType?: string,  // For A-Level Biology: 'mcq', 'structured', 'essay'
-    questionFormat?: 'mcq' | 'structured',  // For O-Level Paper 2 style structured questions
+    questionFormat?: 'mcq' | 'structured' | 'essay',  // For Paper 1/2; Commerce uses mcq | essay
     question_type?: string,  // Alternative key for backend compatibility
     mixImages?: boolean,  // NEW: Enable visual questions with Vertex AI
     questionCount?: number,  // NEW: Current question number in session

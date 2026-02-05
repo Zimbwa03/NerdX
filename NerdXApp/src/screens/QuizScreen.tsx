@@ -43,7 +43,7 @@ const QuizScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
   const { showSuccess, showError, showWarning, showInfo } = useNotification();
-  const { question: initialQuestion, subject, topic, isExamMode, year, paper, isReviewMode, reviewItems, questionType, mixImagesEnabled: initialMixImagesEnabled, board } = route.params as {
+  const { question: initialQuestion, subject, topic, isExamMode, year, paper, isReviewMode, reviewItems, questionType, questionFormat: initialQuestionFormat, mixImagesEnabled: initialMixImagesEnabled, board } = route.params as {
     question?: Question;
     subject: any;
     topic?: any;
@@ -53,6 +53,7 @@ const QuizScreen: React.FC = () => {
     isReviewMode?: boolean;
     reviewItems?: any[];
     questionType?: string; // 'mcq', 'structured', or 'essay'
+    questionFormat?: 'mcq' | 'structured' | 'essay'; // For Commerce, Geography, CS
     mixImagesEnabled?: boolean;
     board?: 'zimsec' | 'cambridge'; // Computer Science exam board
   };
@@ -68,7 +69,8 @@ const QuizScreen: React.FC = () => {
       subject?.id === 'computer_science' ||
       subject?.id === 'a_level_computer_science' ||
       subject?.id === 'geography' ||
-      subject?.id === 'a_level_geography';
+      subject?.id === 'a_level_geography' ||
+      subject?.id === 'accounting';
     
     // Essay and structured questions should support image upload for diagrams/screenshots
     const isImageSupportedQuestionType =
@@ -79,10 +81,11 @@ const QuizScreen: React.FC = () => {
         ? true // Always allow text input for structured and essay questions
         : !hasOptions;
 
+    const allowsImage = q.allows_image_upload ?? ((isImageSupportedSubject && isImageSupportedQuestionType) || (subject?.id === 'accounting' && q.question_type === 'essay'));
     return {
       ...q,
       allows_text_input: q.allows_text_input ?? defaultAllowsTextInput,
-      allows_image_upload: q.allows_image_upload ?? (isImageSupportedSubject && isImageSupportedQuestionType) ?? isImageSupportedSubject,
+      allows_image_upload: allowsImage,
     };
   }, [subject?.id]);
 
@@ -592,22 +595,27 @@ const QuizScreen: React.FC = () => {
 
         // Fall back to route param if still not detected
         if (!nextQuestionType) {
-          nextQuestionType = questionType;
+          nextQuestionType = questionType ?? initialQuestionFormat;
         }
 
         console.log(`🔄 Generating next ${nextQuestionType || 'MCQ'} question for topic: ${topic?.id || 'general'}`);
 
-        // Keep structured format sticky for Combined Science and A-Level subjects
-        const supportsStructuredFormat = [
+        // Keep format sticky for Combined Science, A-Level subjects, Commerce, Geography, CS
+        const supportsFormatChoice = [
           'combined_science',
           'a_level_biology',
           'a_level_chemistry',
-          'a_level_physics'
+          'a_level_physics',
+          'accounting',
+          'geography',
+          'a_level_geography',
+          'computer_science',
+          'a_level_computer_science',
         ].includes(subject?.id || '');
 
         const nextQuestionFormat =
-          supportsStructuredFormat && (nextQuestionType === 'structured' || question?.structured_question)
-            ? 'structured'
+          supportsFormatChoice && (nextQuestionType === 'mcq' || nextQuestionType === 'structured' || nextQuestionType === 'essay')
+            ? (nextQuestionType as 'mcq' | 'structured' | 'essay')
             : undefined;
 
         const canStreamMath = subject?.id === 'mathematics' && !topic?.id;

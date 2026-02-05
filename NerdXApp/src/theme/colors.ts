@@ -52,6 +52,7 @@ export const DarkColors = {
     science: '#00E676', // Neon Green
     english: '#FF9100', // Neon Orange
     combinedScience: '#00E5FF', // Cyan
+    accounting: '#B8860B', // Dark Goldenrod (Principles of Accounting)
   },
 
   // Background Colors
@@ -83,6 +84,7 @@ export const DarkColors = {
     mathematics: 'rgba(41, 121, 255, 0.15)',
     science: 'rgba(0, 230, 118, 0.15)',
     english: 'rgba(255, 145, 0, 0.15)',
+    accounting: 'rgba(184, 134, 11, 0.2)',
     default: 'rgba(124, 77, 255, 0.15)',
   },
 
@@ -156,6 +158,7 @@ export const LightColors = {
     science: '#388E3C',
     english: '#E65100',
     combinedScience: '#00796B',
+    accounting: '#B8860B',
   },
 
   // Light Background Colors
@@ -187,6 +190,7 @@ export const LightColors = {
     mathematics: 'rgba(25, 118, 210, 0.1)',
     science: 'rgba(56, 142, 60, 0.1)',
     english: 'rgba(230, 81, 0, 0.1)',
+    accounting: 'rgba(184, 134, 11, 0.2)',
     default: 'rgba(98, 0, 238, 0.1)',
   },
 

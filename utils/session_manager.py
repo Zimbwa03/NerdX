@@ -323,5 +323,17 @@ class SessionManager:
             logger.error(f"Error clearing session: {e}")
             return False
 
+    def clear_data(self, user_id: str, session_type: str) -> bool:
+        """Clear session data for user when current session type matches (e.g. mobile_teacher)."""
+        try:
+            session = get_user_session(user_id)
+            if session and session.get('session_type') == session_type:
+                clear_user_session(user_id)
+                logger.info(f"Cleared {session_type} session for user {user_id}")
+            return True
+        except Exception as e:
+            logger.error(f"Error clearing session data: {e}")
+            return False
+
 # Global session manager instance
 session_manager = SessionManager()

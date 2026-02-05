@@ -56,6 +56,11 @@ class SecureCreditSystem:
             # Audio Features
             'audio_feature': 10,
             'voice_chat': 10,                   # 1 credit per 5 seconds (live)
+
+            # History (ZIMSEC O-Level) – Paper 1 Essays only (3-part ZIMSEC format)
+            'history_topical_essay': 10,
+            'history_exam_essay': 10,
+            'history_essay_marking': 0,
         }
         
         self.transaction_log = []  # Audit trail
@@ -94,12 +99,14 @@ class SecureCreditSystem:
             # 🚨 CRITICAL: ZERO CREDIT USERS MUST BE BLOCKED
             if current_credits == 0:
                 logger.error(f"🚨 ZERO CREDIT BLOCK: User {user_id} has 0 credits - ACCESS DENIED")
+                is_school_student = (user_data.get('user_type') or '').strip() == 'school_student'
+                message = 'Daily limit reached. Try again tomorrow.' if is_school_student else '🚫 Access denied - You have 0 credits. Please purchase credits to continue.'
                 return {
                     'success': False,
                     'zero_credits': True,
                     'current_credits': 0,
                     'required_credits': required_credits,
-                    'message': '🚫 Access denied - You have 0 credits. Please purchase credits to continue.'
+                    'message': message
                 }
             
             # SECURITY LAYER 3: Insufficient credits check

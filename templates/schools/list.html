@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Schools - NerdX Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-0"><i class="fas fa-school me-2"></i>Schools</h1>
+                    <p class="text-muted">Manage schools and student access</p>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSchoolModal">
+                        <i class="fas fa-plus me-1"></i> Add School
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="schoolsTable">
+                    <thead>
+                        <tr>
+                            <th>School Name</th>
+                            <th>School ID</th>
+                            <th>Subscription</th>
+                            <th>Expiry Date</th>
+                            <th>Students</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="schoolsBody">
+                        <tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add School Modal -->
+<div class="modal fade" id="addSchoolModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-school me-2"></i>Add School</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="addSchoolError" class="alert alert-danger d-none"></div>
+                <form id="addSchoolForm">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label">School Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="name" required placeholder="e.g. Example High School">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">School ID (6 letters)</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="school_id" id="addSchoolId" maxlength="6" placeholder="e.g. ABXKLM" readonly>
+                                <button type="button" class="btn btn-outline-secondary" id="btnGenerateSchoolId">Generate</button>
+                            </div>
+                            <small class="text-muted">Students use this as their password. Generate before saving.</small>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Phone</label>
+                            <input type="text" class="form-control" name="phone" placeholder="School phone">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" placeholder="school@example.com">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address (optional)</label>
+                        <input type="text" class="form-control" name="address" placeholder="Physical address">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contact Person (optional)</label>
+                        <input type="text" class="form-control" name="contact_person" placeholder="Name of contact">
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Subscription Type</label>
+                            <select class="form-select" name="subscription_type" id="addSubscriptionType">
+                                <option value="monthly">Monthly (30 days)</option>
+                                <option value="custom_months">Custom Months</option>
+                                <option value="term">Term (90 days)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" id="addCustomMonthsWrap" style="display:none;">
+                            <label class="form-label">Months</label>
+                            <input type="number" class="form-control" name="subscription_months" id="addSubscriptionMonths" min="1" max="12" value="1">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btnSaveSchool">Save School</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const baseUrl = '{{ url_for("schools.api_schools_list") }}'.replace('/api/list', '');
+    const listUrl = '{{ url_for("schools.api_schools_list") }}';
+    const generateIdUrl = '{{ url_for("schools.api_generate_school_id") }}';
+    const createUrl = baseUrl + '/api';
+
+    function loadSchools() {
+        fetch(listUrl, { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                const tbody = document.getElementById('schoolsBody');
+                const schools = data.schools || [];
+                if (schools.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No schools yet. Click Add School to create one.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = schools.map(s => {
+                    const expiry = s.subscription_expires_at ? new Date(s.subscription_expires_at).toLocaleDateString() : '—';
+                    const subLabel = s.subscription_type === 'term' ? 'Term' : (s.subscription_type === 'custom_months' ? s.subscription_months + ' mo' : 'Monthly');
+                    return '<tr><td>' + escapeHtml(s.name) + '</td><td><code>' + escapeHtml(s.school_id) + '</code></td><td>' + escapeHtml(subLabel) + '</td><td>' + escapeHtml(expiry) + '</td><td>' + (s.student_count || 0) + '</td><td><a href="' + baseUrl + '/' + s.id + '" class="btn btn-sm btn-outline-primary">View</a></td></tr>';
+                }).join('');
+            })
+            .catch(err => {
+                document.getElementById('schoolsBody').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Failed to load schools.</td></tr>';
+            });
+    }
+
+    function escapeHtml(s) {
+        if (s == null) return '';
+        const div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+    }
+
+    document.getElementById('btnGenerateSchoolId').addEventListener('click', function() {
+        fetch(generateIdUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: '{}' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.school_id) document.getElementById('addSchoolId').value = data.school_id;
+            });
+    });
+
+    document.getElementById('addSubscriptionType').addEventListener('change', function() {
+        document.getElementById('addCustomMonthsWrap').style.display = this.value === 'custom_months' ? 'block' : 'none';
+    });
+
+    document.getElementById('btnSaveSchool').addEventListener('click', function() {
+        const form = document.getElementById('addSchoolForm');
+        const schoolId = document.getElementById('addSchoolId').value.trim().toUpperCase();
+        if (!schoolId || schoolId.length !== 6) {
+            document.getElementById('addSchoolError').textContent = 'Please generate a 6-letter School ID first.';
+            document.getElementById('addSchoolError').classList.remove('d-none');
+            return;
+        }
+        const payload = {
+            name: form.name.value.trim(),
+            school_id: schoolId,
+            phone: form.phone.value.trim() || null,
+            email: form.email.value.trim() || null,
+            address: form.address.value.trim() || null,
+            contact_person: form.contact_person.value.trim() || null,
+            subscription_type: form.subscription_type.value,
+            subscription_months: parseInt(form.subscription_months.value, 10) || 1
+        };
+        if (!payload.name) {
+            document.getElementById('addSchoolError').textContent = 'School name is required.';
+            document.getElementById('addSchoolError').classList.remove('d-none');
+            return;
+        }
+        document.getElementById('addSchoolError').classList.add('d-none');
+        this.disabled = true;
+        fetch(createUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(payload) })
+            .then(r => r.json().then(data => ({ status: r.status, data })))
+            .then(({ status, data }) => {
+                if (status === 200 && data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('addSchoolModal')).hide();
+                    form.reset();
+                    document.getElementById('addSchoolId').value = '';
+                    loadSchools();
+                } else {
+                    document.getElementById('addSchoolError').textContent = data.message || data.error || 'Failed to create school.';
+                    document.getElementById('addSchoolError').classList.remove('d-none');
+                }
+            })
+            .catch(() => { document.getElementById('addSchoolError').textContent = 'Network error.'; document.getElementById('addSchoolError').classList.remove('d-none'); })
+            .finally(() => { this.disabled = false; });
+    });
+
+    loadSchools();
+})();
+</script>
+{% endblock %}

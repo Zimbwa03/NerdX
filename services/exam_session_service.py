@@ -34,6 +34,8 @@ TIME_CONFIG = {
         "computer_science": 85,  # O-Level CS (ZimSec/Cambridge)
         "geography": 85,  # O-Level Geography (ZIMSEC)
         "a_level_geography": 1500,  # A-Level Geography: essay-only (25-mark, ~25 min per essay)
+        "business_enterprise_skills": 85,  # BES 4048 – Paper 1 MCQ / Paper 2 Essay
+        "commerce": 85,  # ZIMSEC Principles of Commerce – Paper 1 MCQ / Paper 2 Essay
         "biology": 80,
         "chemistry": 80,
         "physics": 80,
@@ -363,6 +365,17 @@ class ExamSessionService:
         if subject_key == "a_level_geography":
             return self._generate_a_level_geography_exam_question(session, question_index)
 
+        if subject_key == "accounting":
+            return self._generate_accounting_exam_question(session, question_index)
+
+        if subject_key == "business_enterprise_skills":
+            question_type = self._get_question_type_for_index(session, question_index)
+            return self._generate_bes_exam_question(session, question_index, question_type)
+
+        if subject_key == "commerce":
+            question_type = self._get_question_type_for_index(session, question_index)
+            return self._generate_commerce_exam_question(session, question_index, question_type)
+
         # Determine question type for this index
         question_type = self._get_question_type_for_index(session, question_index)
 
@@ -558,6 +571,253 @@ class ExamSessionService:
             "question_index": question_index,
             "generated_at": datetime.utcnow().isoformat(),
             "ai_model": "geography_generator",
+        }
+
+    def _generate_accounting_exam_question(self, session: Dict, question_index: int) -> Optional[Dict]:
+        """Generate a Principles of Accounting (7112) exam question – Paper 1 MCQ only."""
+        try:
+            from services.accounting_generator import AccountingGenerator
+            from constants import TOPICS
+            acc_gen = AccountingGenerator()
+        except Exception as e:
+            logger.error("Failed to load AccountingGenerator: %s", e)
+            return self._get_fallback_question(session)
+
+        topic = self._get_topic_for_index(session, question_index)
+        if not topic:
+            allowed = session.get("allowed_topics") or session.get("topic_plan") or []
+            acc_topics = TOPICS.get("Principles of Accounting", [])
+            topic = random.choice(allowed) if allowed else (random.choice(acc_topics) if acc_topics else "Introduction to Principles of Accounting")
+        difficulty = (session.get("difficulty") or "standard").lower()
+        if difficulty == "standard":
+            difficulty = "medium"
+        user_id = session.get("user_id")
+
+        raw = acc_gen.generate_topical_question(topic, difficulty, user_id)
+
+        if not raw:
+            return self._get_fallback_question(session)
+
+        username = session.get("username", "Student")
+        prompt_to_student = (
+            f"Let's go, {username}! Here's your first question."
+            if question_index == 0
+            else f"Great work, {username}! Here's question {question_index + 1}."
+        )
+
+        opts = raw.get("options") or []
+        if isinstance(opts, dict):
+            options = [{"label": k, "text": v} for k, v in opts.items()]
+        elif isinstance(opts, list):
+            options = [{"label": chr(65 + i), "text": str(o)} for i, o in enumerate(opts)]
+        else:
+            options = []
+        correct = raw.get("correct_answer", "")
+        correct_option = "A"
+        if options and correct:
+            for i, opt in enumerate(options):
+                if isinstance(opt, dict) and opt.get("text") == correct:
+                    correct_option = opt.get("label", chr(65 + i))
+                    break
+                elif isinstance(opt, dict) and opt.get("label") == correct:
+                    correct_option = correct
+                    break
+        return {
+            "id": str(uuid.uuid4()),
+            "question_type": "MCQ",
+            "topic": raw.get("topic") or topic,
+            "subtopic": raw.get("subtopic", ""),
+            "stem": raw.get("question", ""),
+            "options": options,
+            "correct_option": correct_option,
+            "explanation": raw.get("explanation", ""),
+            "difficulty": difficulty,
+            "prompt_to_student": prompt_to_student,
+            "question_index": question_index,
+            "generated_at": datetime.utcnow().isoformat(),
+            "ai_model": "accounting_generator",
+        }
+
+    def _generate_bes_exam_question(
+        self, session: Dict, question_index: int, question_type: str
+    ) -> Optional[Dict]:
+        """Generate a Business Enterprise and Skills (4048) exam question – Paper 1 MCQ or Paper 2 Essay."""
+        try:
+            from services.bes_generator import BESGenerator
+            from constants import TOPICS
+            bes_gen = BESGenerator()
+        except Exception as e:
+            logger.error("Failed to load BESGenerator: %s", e)
+            return self._get_fallback_question(session)
+
+        topic = self._get_topic_for_index(session, question_index)
+        if not topic:
+            allowed = session.get("allowed_topics") or session.get("topic_plan") or []
+            bes_topics = TOPICS.get("Business Enterprise and Skills", [])
+            topic = random.choice(allowed) if allowed else (random.choice(bes_topics) if bes_topics else "The Business Enterprise")
+        difficulty = (session.get("difficulty") or "standard").lower()
+        if difficulty == "standard":
+            difficulty = "medium"
+        user_id = session.get("user_id")
+
+        raw = None
+        if (question_type or "MCQ").upper() == "MCQ":
+            raw = bes_gen.generate_topical_question(topic, difficulty, user_id)
+        else:
+            raw = bes_gen.generate_essay_question(topic, difficulty, user_id)
+
+        if not raw:
+            return self._get_fallback_question(session)
+
+        username = session.get("username", "Student")
+        prompt_to_student = (
+            f"Let's go, {username}! Here's your first question."
+            if question_index == 0
+            else f"Great work, {username}! Here's question {question_index + 1}."
+        )
+
+        q_type = (question_type or "MCQ").upper()
+        if q_type == "MCQ":
+            opts = raw.get("options") or []
+            if isinstance(opts, dict):
+                options = [{"label": k, "text": v} for k, v in opts.items()]
+            elif isinstance(opts, list):
+                options = [{"label": chr(65 + i), "text": str(o.get("text", o)) if isinstance(o, dict) else str(o)} for i, o in enumerate(opts)]
+            else:
+                options = []
+            correct = raw.get("correct_answer", "")
+            correct_option = "A"
+            if options and correct:
+                for i, opt in enumerate(options):
+                    text = opt.get("text", opt) if isinstance(opt, dict) else opt
+                    if text == correct:
+                        correct_option = opt.get("label", chr(65 + i)) if isinstance(opt, dict) else chr(65 + i)
+                        break
+            return {
+                "id": str(uuid.uuid4()),
+                "question_type": "MCQ",
+                "topic": raw.get("topic") or topic,
+                "subtopic": raw.get("subtopic", ""),
+                "stem": raw.get("question_text") or raw.get("question", ""),
+                "options": options,
+                "correct_option": correct_option,
+                "explanation": raw.get("explanation", ""),
+                "difficulty": difficulty,
+                "prompt_to_student": prompt_to_student,
+                "question_index": question_index,
+                "generated_at": datetime.utcnow().isoformat(),
+                "ai_model": "bes_generator",
+            }
+
+        # Essay
+        stem = raw.get("question_text") or raw.get("question", "")
+        solution = raw.get("solution") or raw.get("model_answer", "") or raw.get("explanation", "")
+        return {
+            "id": str(uuid.uuid4()),
+            "question_type": "essay",
+            "topic": raw.get("topic") or topic,
+            "subtopic": raw.get("subtopic", ""),
+            "stem": stem,
+            "explanation": solution,
+            "difficulty": difficulty,
+            "prompt_to_student": prompt_to_student,
+            "question_index": question_index,
+            "generated_at": datetime.utcnow().isoformat(),
+            "ai_model": "bes_generator",
+            "allows_text_input": True,
+        }
+
+    def _generate_commerce_exam_question(
+        self, session: Dict, question_index: int, question_type: str
+    ) -> Optional[Dict]:
+        """Generate a Principles of Commerce exam question – Paper 1 MCQ or Paper 2 Essay (Vertex AI primary)."""
+        try:
+            from services.commerce_generator import CommerceGenerator
+            from constants import TOPICS
+            commerce_gen = CommerceGenerator()
+        except Exception as e:
+            logger.error("Failed to load CommerceGenerator: %s", e)
+            return self._get_fallback_question(session)
+
+        topic = self._get_topic_for_index(session, question_index)
+        if not topic:
+            allowed = session.get("allowed_topics") or session.get("topic_plan") or []
+            commerce_topics = TOPICS.get("Commerce", [])
+            topic = random.choice(allowed) if allowed else (random.choice(commerce_topics) if commerce_topics else "Production")
+        difficulty = (session.get("difficulty") or "standard").lower()
+        if difficulty == "standard":
+            difficulty = "medium"
+        user_id = session.get("user_id")
+
+        raw = None
+        if (question_type or "MCQ").upper() == "MCQ":
+            raw = commerce_gen.generate_mcq_question(topic, difficulty, user_id)
+        else:
+            raw = commerce_gen.generate_essay_question(topic, difficulty, user_id)
+
+        if not raw:
+            return self._get_fallback_question(session)
+
+        username = session.get("username", "Student")
+        prompt_to_student = (
+            f"Let's go, {username}! Here's your first question."
+            if question_index == 0
+            else f"Great work, {username}! Here's question {question_index + 1}."
+        )
+
+        q_type = (question_type or "MCQ").upper()
+        if q_type == "MCQ":
+            opts = raw.get("options") or []
+            if isinstance(opts, dict):
+                options = [{"label": k, "text": v} for k, v in opts.items()]
+            elif isinstance(opts, list):
+                options = [{"label": chr(65 + i), "text": str(o.get("text", o)) if isinstance(o, dict) else str(o)} for i, o in enumerate(opts)]
+            else:
+                options = []
+            correct = raw.get("correct_answer", "")
+            correct_option = "A"
+            if options and correct:
+                for i, opt in enumerate(options):
+                    text = opt.get("text", opt) if isinstance(opt, dict) else opt
+                    if text == correct:
+                        correct_option = opt.get("label", chr(65 + i)) if isinstance(opt, dict) else chr(65 + i)
+                        break
+            return {
+                "id": str(uuid.uuid4()),
+                "question_type": "MCQ",
+                "topic": raw.get("topic") or topic,
+                "subtopic": raw.get("subtopic", ""),
+                "stem": raw.get("question_text") or raw.get("question", ""),
+                "options": options,
+                "correct_option": correct_option,
+                "explanation": raw.get("explanation", ""),
+                "difficulty": difficulty,
+                "prompt_to_student": prompt_to_student,
+                "question_index": question_index,
+                "generated_at": datetime.utcnow().isoformat(),
+                "ai_model": "commerce_generator",
+            }
+
+        # Essay
+        stem = raw.get("question_text") or raw.get("question", "")
+        solution = raw.get("solution") or raw.get("model_answer", "") or raw.get("explanation", "")
+        essay_data = raw.get("essay_data") or {}
+        return {
+            "id": str(uuid.uuid4()),
+            "question_type": "essay",
+            "topic": raw.get("topic") or topic,
+            "subtopic": raw.get("subtopic", ""),
+            "stem": stem,
+            "explanation": solution,
+            "difficulty": difficulty,
+            "prompt_to_student": prompt_to_student,
+            "question_index": question_index,
+            "generated_at": datetime.utcnow().isoformat(),
+            "ai_model": "commerce_generator",
+            "allows_text_input": True,
+            "essay_plan": essay_data.get("essay_plan"),
+            "marking_criteria": essay_data.get("marking_criteria"),
+            "must_include_terms": essay_data.get("must_include_terms"),
         }
 
     def _generate_a_level_geography_exam_question(
@@ -998,6 +1258,18 @@ Requirements:
             return fallback_questions["biology"]
         elif subject_key == "computer_science":
             return fallback_questions["computer_science"]
+        elif subject_key == "accounting":
+            return {
+                "id": f"fallback-{uuid.uuid4()}",
+                "question_type": "MCQ",
+                "topic": "Introduction to Principles of Accounting",
+                "stem": "What is the PRIMARY purpose of accounting?",
+                "question": "What is the PRIMARY purpose of accounting?",
+                "options": [{"label": "A", "text": "To prepare tax returns"}, {"label": "B", "text": "To provide financial information for decision-making"}, {"label": "C", "text": "To record all business transactions"}, {"label": "D", "text": "To prepare budgets"}],
+                "correct_option": "B",
+                "explanation": "Accounting provides systematic financial information to help stakeholders make informed business decisions.",
+                "prompt_to_student": "Here's a question while we prepare the next one.",
+            }
         elif subject_key == "a_level_geography":
             return {
                 "id": f"fallback-{uuid.uuid4()}",
@@ -1012,6 +1284,40 @@ Requirements:
                 "explanation": "Address command word; use Zimbabwean/African examples where relevant.",
                 "prompt_to_student": "Here's an essay question while we prepare the next one.",
                 "allows_text_input": True,
+            }
+        elif subject_key == "business_enterprise_skills":
+            return {
+                "id": f"fallback-{uuid.uuid4()}",
+                "question_type": "MCQ",
+                "topic": "The Business Enterprise",
+                "stem": "What is a key characteristic of an entrepreneur?",
+                "question": "What is a key characteristic of an entrepreneur?",
+                "options": [
+                    {"label": "A", "text": "Avoids taking risks"},
+                    {"label": "B", "text": "Identifies opportunities and takes initiative"},
+                    {"label": "C", "text": "Works only in large organisations"},
+                    {"label": "D", "text": "Depends entirely on government support"},
+                ],
+                "correct_option": "B",
+                "explanation": "Entrepreneurs identify opportunities and take initiative to create value.",
+                "prompt_to_student": "Here's a question while we prepare the next one.",
+            }
+        elif subject_key == "commerce":
+            return {
+                "id": f"fallback-{uuid.uuid4()}",
+                "question_type": "MCQ",
+                "topic": "Production",
+                "stem": "What are the four factors of production?",
+                "question": "What are the four factors of production?",
+                "options": [
+                    {"label": "A", "text": "Land, labour, capital and enterprise"},
+                    {"label": "B", "text": "Buying, selling, trading and advertising"},
+                    {"label": "C", "text": "Import, export, wholesale and retail"},
+                    {"label": "D", "text": "Money, bank, insurance and transport"},
+                ],
+                "correct_option": "A",
+                "explanation": "The four factors of production are land, labour, capital and enterprise.",
+                "prompt_to_student": "Here's a question while we prepare the next one.",
             }
 
         return fallback_questions.get(subject, fallback_questions["mathematics"])
@@ -1061,6 +1367,18 @@ Requirements:
         # A-Level Geography (essay-only, Paper 1 + Paper 2 topics)
         if subject_key == "a_level_geography":
             return list(A_LEVEL_GEOGRAPHY_ALL_TOPICS)
+
+        # O-Level Principles of Accounting 7112 – 15 topics
+        if subject_key == "accounting":
+            return list(TOPICS.get("Principles of Accounting", []))
+
+        # O-Level Business Enterprise and Skills 4048 – 8 topics
+        if subject_key == "business_enterprise_skills":
+            return list(TOPICS.get("Business Enterprise and Skills", []))
+
+        # O-Level Principles of Commerce – 11 topics
+        if subject_key == "commerce":
+            return list(TOPICS.get("Commerce", []))
 
         # O-Level Mathematics
         if subject_key in ("mathematics", "math") or subject_key.startswith("mathematics_"):
@@ -1147,6 +1465,25 @@ Requirements:
         subject_key = (session.get("subject") or "").lower().replace(" ", "_").replace("-", "_")
         if subject_key == "a_level_geography":
             return "essay"
+        if subject_key == "accounting":
+            # Paper 1 MCQ only for Principles of Accounting 7112
+            return "MCQ"
+        if subject_key == "business_enterprise_skills":
+            # BES 4048: Paper 1 MCQ, Paper 2 Essay; MIXED = alternate
+            mode = (session.get("question_mode") or "MCQ_ONLY").upper()
+            if mode == "MCQ_ONLY":
+                return "MCQ"
+            if mode == "STRUCTURED_ONLY":
+                return "essay"
+            return "MCQ" if question_index % 2 == 0 else "essay"
+        if subject_key == "commerce":
+            # Commerce: Paper 1 MCQ, Paper 2 Essay; MIXED = alternate
+            mode = (session.get("question_mode") or "MCQ_ONLY").upper()
+            if mode == "MCQ_ONLY":
+                return "MCQ"
+            if mode == "STRUCTURED_ONLY":
+                return "essay"
+            return "MCQ" if question_index % 2 == 0 else "essay"
         mode = (session.get("question_mode") or "MCQ_ONLY").upper()
         if mode == "MCQ_ONLY":
             return "MCQ"

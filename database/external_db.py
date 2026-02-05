@@ -532,33 +532,116 @@ def calculate_level_from_xp(xp):
     level = int(math.sqrt(xp / 100)) + 1
     return max(level, 1)  # Minimum level is 1
 
+# School students: 100 credits per day = 1000 units. Reset at 06:00 every day (configurable TZ). Stops when subscription (month/term) is over.
+SCHOOL_STUDENT_DAILY_CREDITS_UNITS = 100 * CREDIT_UNITS_PER_CREDIT  # 1000
+SCHOOL_CREDITS_RESET_HOUR = 6  # 06:00
+SCHOOL_CREDITS_RESET_TZ = os.environ.get("SCHOOL_CREDITS_RESET_TIMEZONE", "Africa/Harare")
+
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    ZoneInfo = None  # Python < 3.9: fall back to 24h-from-last-reset
+
+
+def _school_student_reset_boundary_utc():
+    """Current period start: last 06:00 in configured TZ, as naive UTC. If before 06:00 today, use yesterday 06:00."""
+    from datetime import timezone
+    if ZoneInfo is None:
+        return None
+    try:
+        tz = ZoneInfo(SCHOOL_CREDITS_RESET_TZ)
+        now_local = datetime.now(tz)
+        if now_local.hour >= SCHOOL_CREDITS_RESET_HOUR:
+            period_start = now_local.replace(hour=SCHOOL_CREDITS_RESET_HOUR, minute=0, second=0, microsecond=0)
+        else:
+            yesterday = now_local - timedelta(days=1)
+            period_start = yesterday.replace(hour=SCHOOL_CREDITS_RESET_HOUR, minute=0, second=0, microsecond=0)
+        period_start_utc = period_start.astimezone(timezone.utc).replace(tzinfo=None)
+        return period_start_utc
+    except Exception as e:
+        logger.warning(f"School credits reset boundary: {e}")
+        return None
+
+
+def _school_student_effective_credits(creds_id: str, row: dict) -> int:
+    """Compute effective credit units for school_student: 100 credits/day, reset at 06:00 daily (or 24h fallback). Stops when subscription expired."""
+    from datetime import timezone
+    exp = row.get("subscription_expires_at")
+    if exp:
+        try:
+            exp_dt = datetime.fromisoformat(exp.replace("Z", "+00:00")) if isinstance(exp, str) else exp
+            if getattr(exp_dt, "tzinfo", None):
+                exp_dt = exp_dt.astimezone(timezone.utc).replace(tzinfo=None)
+            if exp_dt < datetime.utcnow():
+                return 0
+        except Exception:
+            pass
+    reset_at = row.get("daily_credits_reset_at")
+    used = int(row.get("daily_credits_used") or 0)
+    now = datetime.utcnow()
+    period_start_utc = _school_student_reset_boundary_utc()
+    if period_start_utc is not None:
+        reset_dt = _parse_utc(reset_at) if reset_at else None
+        if reset_dt is None or reset_dt < period_start_utc:
+            make_supabase_request(
+                "PATCH", "users_registration",
+                {"daily_credits_used": 0, "daily_credits_reset_at": period_start_utc.isoformat() + "Z"},
+                filters={"chat_id": f"eq.{creds_id}"}, use_service_role=True
+            )
+            return SCHOOL_STUDENT_DAILY_CREDITS_UNITS
+    else:
+        if not reset_at:
+            return max(0, SCHOOL_STUDENT_DAILY_CREDITS_UNITS - used)
+        try:
+            reset_dt = _parse_utc(reset_at)
+            if (now - reset_dt) >= timedelta(hours=24):
+                make_supabase_request(
+                    "PATCH", "users_registration",
+                    {"daily_credits_used": 0, "daily_credits_reset_at": now.isoformat()},
+                    filters={"chat_id": f"eq.{creds_id}"}, use_service_role=True
+                )
+                return SCHOOL_STUDENT_DAILY_CREDITS_UNITS
+        except Exception as e:
+            logger.warning(f"School student reset check: {e}")
+    return max(0, SCHOOL_STUDENT_DAILY_CREDITS_UNITS - used)
+
+
+def _parse_utc(value):
+    """Parse datetime to naive UTC for comparison."""
+    from datetime import timezone
+    if value is None:
+        return None
+    dt = datetime.fromisoformat(str(value).replace("Z", "+00:00")) if isinstance(value, str) else value
+    if getattr(dt, "tzinfo", None):
+        dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+    return dt
+
+
 def get_user_credits(user_id: str, check_expiry: bool = True) -> int:
     """
     Get user's current credit balance in units from users_registration table (primary source).
-    Automatically checks and expires credits if subscription has expired.
-    Resolves user_id (email/phone/chat_id) to users_registration.chat_id for lookup.
+    School students: 100 credits per day, reset every 24h. Other users: normal credits/purchased.
     """
     try:
-        if check_expiry:
-            check_and_expire_user_credits(user_id)
         reg = get_user_registration(user_id)
         creds_id = str((reg.get("chat_id") or user_id)) if (reg and isinstance(reg, dict)) else str(user_id or "")
         result = make_supabase_request(
             "GET", "users_registration",
-            select="credits,purchased_credits",
+            select="credits,purchased_credits,user_type,subscription_expires_at,daily_credits_reset_at,daily_credits_used",
             filters={"chat_id": f"eq.{creds_id}"},
             use_service_role=True,
         )
-
-        if result and len(result) > 0:
-            free_credits = int(result[0].get('credits', 0) or 0)
-            purchased_credits = int(result[0].get('purchased_credits', 0) or 0)
-            total = free_credits + purchased_credits
-            return total
-        else:
+        if not result or len(result) == 0:
             logger.warning(f"No user registration found for {user_id}")
             return 0
-
+        row = result[0]
+        if (row.get("user_type") or "").strip() == "school_student":
+            return _school_student_effective_credits(creds_id, row)
+        if check_expiry:
+            check_and_expire_user_credits(user_id)
+        free_credits = int(row.get("credits", 0) or 0)
+        purchased_credits = int(row.get("purchased_credits", 0) or 0)
+        return free_credits + purchased_credits
     except Exception as e:
         logger.error(f"Error getting user credits for {user_id}: {e}")
         return 0
@@ -706,12 +789,40 @@ def deduct_credits_with_balance(
 ) -> Tuple[bool, Optional[int]]:
     """
     Deduct credit units from user account with transaction logging.
+    School students: deduct from daily allowance (daily_credits_used). Others: credits/purchased or RPC.
     Returns (success, new_balance_units). new_balance_units is None on failure or if unavailable.
-    Uses 'deduct_credits_atomic' RPC when available for atomic ops and real-time balance.
     """
     creds_id = _resolve_credits_user_id(user_id)
     try:
-        # 1. Try RPC atomic deduction first
+        reg = get_user_registration(user_id)
+        if reg and (reg.get("user_type") or "").strip() == "school_student":
+            balance_before = get_user_credits(user_id, check_expiry=False)
+            if balance_before < amount:
+                logger.warning(f"School student {user_id}: daily limit reached or insufficient (has {balance_before}, needs {amount})")
+                return False, None
+            result = make_supabase_request(
+                "GET", "users_registration",
+                select="daily_credits_used,daily_credits_reset_at",
+                filters={"chat_id": f"eq.{creds_id}"},
+                use_service_role=True,
+            )
+            if not result or len(result) == 0:
+                return False, None
+            row = result[0]
+            used = int(row.get("daily_credits_used") or 0)
+            update_data = {"daily_credits_used": used + amount}
+            if not row.get("daily_credits_reset_at"):
+                period_start = _school_student_reset_boundary_utc()
+                update_data["daily_credits_reset_at"] = (period_start.isoformat() + "Z") if period_start else datetime.utcnow().isoformat()
+            make_supabase_request(
+                "PATCH", "users_registration", update_data,
+                filters={"chat_id": f"eq.{creds_id}"}, use_service_role=True
+            )
+            new_balance = get_user_credits(user_id, check_expiry=False)
+            logger.info(f"School student {user_id} deducted {amount} daily credits, remaining={new_balance}")
+            return True, new_balance
+
+        # 1. Try RPC atomic deduction first (individual users)
         rpc_payload = {
             "p_user_id": creds_id,
             "p_amount": amount,

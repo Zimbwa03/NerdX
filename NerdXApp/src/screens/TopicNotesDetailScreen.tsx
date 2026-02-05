@@ -25,6 +25,13 @@ import { getTopicNotes as getScienceTopicNotes } from '../data/scienceNotes';
 import { getTopicNotes as getALevelChemistryNotes } from '../data/aLevelChemistry';
 import { getTopicNotes as getALevelPhysicsNotes } from '../data/aLevelPhysics';
 import { getTopicNotes as getALevelBiologyNotes } from '../data/aLevelBiology';
+import { getTopicNotes as getALevelGeographyNotes } from '../data/aLevelGeography';
+import { getTopicNotes as getOLevelGeographyNotes } from '../data/oLevelGeography';
+import { getTopicNotes as getAccountingTopicNotes } from '../data/accounting';
+import { getTopicNotes as getBESTopicNotes } from '../data/businessEnterpriseSkills';
+import { getTopicNotes as getHistoryTopicNotes } from '../data/history';
+import { getTopicNotes as getCommerceTopicNotes } from '../data/commerce';
+import { getTopicNotes as getCSTopicNotes } from '../data/computerScienceNotes';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
 import Markdown from 'react-native-markdown-display';
@@ -64,7 +71,35 @@ const TopicNotesDetailScreen: React.FC = () => {
             // Check if this is A Level Biology (subject is 'Biology' but isALevel is true)
             else if (isALevel && subject === 'Biology') {
                 return getALevelBiologyNotes(topic);
-            } 
+            }
+            // Check if this is A Level Geography
+            else if (isALevel && subject === 'A Level Geography') {
+                return getALevelGeographyNotes(topic);
+            }
+            // O Level Geography (subject is 'Geography', isALevel is false)
+            else if (!isALevel && subject === 'Geography') {
+                return getOLevelGeographyNotes(topic);
+            }
+            // Principles of Accounting (O-Level 7112)
+            else if (subject === 'Principles of Accounting' || subject === 'Accounting') {
+                return getAccountingTopicNotes(topic);
+            }
+            // Business Enterprise and Skills (O-Level 4048)
+            else if (subject === 'Business Enterprise and Skills' || subject === 'BES') {
+                return getBESTopicNotes(topic);
+            }
+            // History (ZIMSEC O-Level)
+            else if (subject === 'History') {
+                return getHistoryTopicNotes(topic);
+            }
+            // Commerce (ZIMSEC O-Level Principles of Commerce)
+            else if (subject === 'Commerce') {
+                return getCommerceTopicNotes(topic);
+            }
+            // Computer Science (O-Level)
+            else if (subject === 'Computer Science') {
+                return getCSTopicNotes(topic);
+            }
             else {
                 // O Level science notes - synchronous access
                 return getScienceTopicNotes(
@@ -115,6 +150,27 @@ const TopicNotesDetailScreen: React.FC = () => {
         }
         if (isALevel && subject === 'Biology') {
             return '#10B981'; // Green for A Level Biology
+        }
+        if (isALevel && subject === 'A Level Geography') {
+            return '#2E7D32'; // Green for A Level Geography
+        }
+        if (!isALevel && subject === 'Geography') {
+            return '#2E7D32'; // Green for O Level Geography
+        }
+        if (subject === 'Principles of Accounting' || subject === 'Accounting') {
+            return '#B8860B'; // Gold for Accounting
+        }
+        if (subject === 'Commerce') {
+            return '#B8860B'; // Amber/gold for Commerce
+        }
+        if (subject === 'Business Enterprise and Skills' || subject === 'BES') {
+            return '#6B4E9D'; // Purple for BES
+        }
+        if (subject === 'History') {
+            return '#8B4513'; // Sienna for History
+        }
+        if (subject === 'Computer Science') {
+            return '#0288D1'; // Blue for Computer Science
         }
         switch (subject) {
             case 'Biology':
@@ -451,9 +507,17 @@ const TopicNotesDetailScreen: React.FC = () => {
                         </View>
                     )}
 
-                    {/* AI Flashcards Section - All Science topics (O-Level and A-Level) */}
-                    {((subject === 'Biology' || subject === 'Chemistry' || subject === 'Physics') || 
-                      (isALevel && (subject === 'A Level Chemistry' || subject === 'A Level Physics' || subject === 'Biology'))) && notes && (
+                    {/* AI Flashcards Section - Science, Geography, Accounting, Commerce, BES, History, Computer Science (O & A-Level) */}
+                    {(
+                        (subject === 'Biology' || subject === 'Chemistry' || subject === 'Physics') ||
+                        (isALevel && (subject === 'A Level Chemistry' || subject === 'A Level Physics' || subject === 'Biology')) ||
+                        subject === 'Geography' || subject === 'A Level Geography' ||
+                        subject === 'Principles of Accounting' || subject === 'Accounting' ||
+                        subject === 'Commerce' ||
+                        subject === 'Business Enterprise and Skills' || subject === 'BES' ||
+                        subject === 'History' ||
+                        subject === 'Computer Science'
+                    ) && notes && (
                         <FlashcardSection
                             subject={isALevel && subject === 'Biology' ? 'A Level Biology' : subject}
                             topic={topic}

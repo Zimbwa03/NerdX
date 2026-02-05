@@ -316,7 +316,7 @@
         <!-- Form -->
         <div class="registration-form">
             <!-- Back Button -->
-            <a href="/admin-users" class="btn-back">
+            <a href="/admin/admin-users" class="btn-back">
                 <i class="fas fa-arrow-left me-2"></i>Back to Admin Users
             </a>
             
@@ -595,7 +595,7 @@
             setLoading(true);
             
             try {
-                const response = await fetch('/api/register', {
+                const response = await fetch('/admin/api/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -613,7 +613,7 @@
                     
                     // Redirect after 2 seconds
                     setTimeout(() => {
-                        window.location.href = '/admin-users';
+                        window.location.href = '/admin/admin-users';
                     }, 2000);
                 } else {
                     showError(data.message || 'Registration failed');

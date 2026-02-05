@@ -340,6 +340,11 @@ export const SUBJECTS = [
     { id: 'biology', name: 'Biology', icon: 'leaf', color: '#4CAF50' },
     { id: 'chemistry', name: 'Chemistry', icon: 'flask', color: '#9C27B0' },
     { id: 'physics', name: 'Physics', icon: 'flash', color: '#F44336' },
+    { id: 'accounting', name: 'Principles of Accounting', icon: 'receipt', color: '#B8860B' },
+    { id: 'commerce', name: 'Commerce', icon: 'receipt', color: '#B8860B' },
+    { id: 'business_enterprise_skills', name: 'Business Enterprise and Skills', icon: 'bulb', color: '#2E7D32' },
+    { id: 'geography', name: 'Geography', icon: 'earth', color: '#2E7D32' },
+    { id: 'a_level_geography', name: 'A-Level Geography', icon: 'earth', color: '#1B5E20' },
 ] as const;
 
 export const QUESTION_MODES = [

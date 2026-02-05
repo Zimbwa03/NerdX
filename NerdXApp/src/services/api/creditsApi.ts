@@ -27,6 +27,11 @@ export const creditsApi = {
       // API returns 'balance' field, not 'credits'
       return response.data.data?.balance || response.data.data?.credits || 0;
     } catch (error: any) {
+      // 401 = not authenticated or token expired; avoid noisy logs
+      if (error.response?.status === 401) {
+        if (__DEV__) console.debug('Get balance: not authenticated (401)');
+        return 0;
+      }
       console.error('Get balance error:', error);
       return 0;
     }
@@ -37,6 +42,11 @@ export const creditsApi = {
       const response = await api.get('/api/mobile/credits/info');
       return response.data.data || null;
     } catch (error: any) {
+      // 401 = not authenticated or token expired; avoid noisy logs
+      if (error.response?.status === 401) {
+        if (__DEV__) console.debug('Get credit info: not authenticated (401)');
+        return null;
+      }
       console.error('Get credit info error:', error);
       return null;
     }

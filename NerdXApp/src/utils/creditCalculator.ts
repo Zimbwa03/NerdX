@@ -86,6 +86,30 @@ export function calculateQuizCreditCost(params: CreditCostParams): number {
     return 0.3; // MCQ
   }
 
+  // Commerce – same as Computer Science O-Level: MCQ 0.3, Essay 1 credit
+  if (subjectKey === 'accounting') {
+    const fmt = (questionFormat || bioQuestionType || 'mcq').toLowerCase();
+    if (fmt === 'essay') return 1;
+    return 0.3; // MCQ
+  }
+
+  // Business Enterprise and Skills (BES) – MCQ 0.3, Essay 1 credit (same as Accounting)
+  if (subjectKey === 'business_enterprise_skills') {
+    const fmt = (questionFormat || bioQuestionType || 'mcq').toLowerCase();
+    if (fmt === 'essay') return 1;
+    return 0.3; // MCQ
+  }
+
+  // History (O-Level) – Essay only, 1 credit per question + marking
+  if (subjectKey === 'history') {
+    return 1; // Essay only
+  }
+
+  // Geography (O-Level)
+  if (subjectKey === 'geography') {
+    return 0.3; // MCQ
+  }
+
   // Default fallback
   return 1;
 }

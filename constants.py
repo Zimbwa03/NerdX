@@ -97,6 +97,38 @@ TOPICS = {
         "Settlement and Population",
         "Transport and Trade"
     ],
+    # ZIMSEC O-Level Principles of Commerce — 11 topics
+    "Commerce": [
+        "Production",
+        "Trade",
+        "Consumer Protection",
+        "Business Organisations",
+        "Enterprise",
+        "Finance and Banking",
+        "Insurance and Assurance",
+        "Business Communication",
+        "Transport",
+        "Warehousing",
+        "Marketing",
+    ],
+    # ZIMSEC O-Level Principles of Accounting 7112 — 15 topics (Paper 1 MCQs, Paper 2 Structured)
+    "Principles of Accounting": [
+        "Introduction to Principles of Accounting",
+        "Types of Business Organizations",
+        "Source Documents and Books of Prime Entry",
+        "Ledger and Double Entry",
+        "Trial Balance",
+        "Correction of Errors",
+        "Financial Statements (Sole Trader)",
+        "Adjustments (Accruals, Prepayments, Depreciation)",
+        "Incomplete Records",
+        "Partnership Accounts",
+        "Company Accounts",
+        "Cash Flow",
+        "Interpretation of Financial Statements",
+        "Not-for-Profit Organizations",
+        "Manufacturing Accounts",
+    ],
     # ZIMSEC O-Level Computer Science 7014 — 11 topics (theory; practical in Virtual Labs)
     "Computer Science": [
         "Hardware and Software",
@@ -110,7 +142,40 @@ TOPICS = {
         "Databases",
         "Web Design and Internet Uses",
         "Automated and Emerging Technologies",
-    ]
+    ],
+    # ZIMSEC O-Level Business Enterprise and Skills 4048 — 8 topics (Paper 1 MCQs, Paper 2 Essays)
+    "Business Enterprise and Skills": [
+        "The Business Enterprise",
+        "The Enterprising Environment",
+        "Setting Up a New Enterprise",
+        "Business Planning",
+        "Enterprise Finance and Securing Investors",
+        "People in Business Enterprises",
+        "Markets and Marketing",
+        "Operations Management",
+    ],
+    # ZIMSEC O-Level History — flat list (no Form 1/Form 2 division)
+    "History": [
+        "Conceptualisation of History",
+        "Origins of Humankind",
+        "Ancient Civilisations Egypt",
+        "Development of Zimbabwean Societies",
+        "Slavery and the Slave Trade",
+        "Early European Contacts",
+        "Colonisation",
+        "Colonial Administration",
+        "Nationalism",
+        "Armed Struggle",
+        "Post-Independence",
+        "Regional Cooperation",
+        "Sources of History",
+        "Zimbabwean Societies",
+        "European Contacts",
+        "World Wars",
+        "International Cooperation",
+        "Socialism and Communism",
+        "Constitution Democracy and Human Rights",
+    ],
 }
 
 # A Level Physics Topics (Cambridge/ZIMSEC A Level Syllabus)

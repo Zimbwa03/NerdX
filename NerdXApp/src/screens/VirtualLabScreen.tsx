@@ -19,7 +19,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import { SimulationCard } from '../components/virtualLab';
-import { PHASE1_SIMULATIONS, PHASE2_SIMULATIONS, getAllSimulations, SUBJECT_COLORS, Subject } from '../data/virtualLab';
+import { PHASE1_SIMULATIONS, PHASE2_SIMULATIONS, getAllSimulations, getSimulationById, SUBJECT_COLORS, Subject } from '../data/virtualLab';
 
 const { width } = Dimensions.get('window');
 
@@ -124,12 +124,31 @@ const VirtualLabScreen: React.FC = () => {
             'logarithms-lab': 'LogarithmsLabScreen',
             'sequences-series-lab': 'SequencesSeriesLabScreen',
             'simultaneous-equations-lab': 'SimultaneousEquationsLabScreen',
+            'ratio-proportion-lab': 'RatioProportionLabScreen',
+            'indices-standard-form-lab': 'IndicesStandardFormLabScreen',
+            'bounds-accuracy-lab': 'BoundsAccuracyLabScreen',
+            'linear-graphs-lab': 'LinearGraphsLabScreen',
+            'inequalities-region-lab': 'InequalitiesRegionLabScreen',
+            'angle-rules-lab': 'AngleRulesLabScreen',
+            'similarity-scale-lab': 'SimilarityScaleLabScreen',
+            'mensuration-lab': 'MensurationLabScreen',
+            'pythagoras-trig-lab': 'PythagorasTrigLabScreen',
+            'transformations-lab': 'TransformationsLabScreen',
 
             // Computer Science - Labs
             'programming-lab': 'ProgrammingLabEditor',
             'web-design-lab': 'WebDesignLabEditor',
             'database-lab': 'DatabaseLabEditor',
             'project-gates-lab': 'ProjectGatesLab',
+
+            // Accounting - Balance Sheet, Income Statement, and 5 in-depth labs
+            'accounting-balance-sheet-lab': 'BalanceSheetLabScreen',
+            'accounting-income-statement-lab': 'IncomeStatementLabScreen',
+            'accounting-partnership-appropriation-lab': 'PartnershipAppropriationLabScreen',
+            'accounting-cash-flow-lab': 'CashFlowStatementLabScreen',
+            'accounting-manufacturing-lab': 'ManufacturingAccountLabScreen',
+            'accounting-correction-of-errors-lab': 'CorrectionOfErrorsLabScreen',
+            'accounting-not-for-profit-lab': 'NotForProfitLabScreen',
 
             // Geography - Map work & fieldwork
             'map-work-grid-scale': 'MapWorkLab',
@@ -146,8 +165,13 @@ const VirtualLabScreen: React.FC = () => {
         if (screenName) {
             navigation.navigate(screenName);
         } else {
-            // Fallback to interactive screen for newly added simulations
-            navigation.navigate('VirtualLabInteractive', { simulationId });
+            // BES business plan stages use template (checklist + quiz); others use interactive
+            const sim = getSimulationById(simulationId);
+            if (sim?.subject === 'business_enterprise_skills') {
+                navigation.navigate('VirtualLabTemplate', { simulationId });
+            } else {
+                navigation.navigate('VirtualLabInteractive', { simulationId });
+            }
         }
     };
 
@@ -160,6 +184,9 @@ const VirtualLabScreen: React.FC = () => {
         { key: 'english', label: 'English', color: SUBJECT_COLORS.english.primary },
         { key: 'computer_science', label: 'Computer Science', color: SUBJECT_COLORS.computer_science.primary },
         { key: 'geography', label: 'Geography', color: SUBJECT_COLORS.geography.primary },
+        { key: 'accounting', label: 'Accounting', color: SUBJECT_COLORS.accounting.primary },
+        { key: 'business_enterprise_skills', label: 'Business Enterprise & Skills', color: SUBJECT_COLORS.business_enterprise_skills.primary },
+        { key: 'history', label: 'History', color: SUBJECT_COLORS.history.primary },
     ];
 
     return (
@@ -195,7 +222,7 @@ const VirtualLabScreen: React.FC = () => {
                     </View>
                     <View style={[styles.statDivider, { backgroundColor: '#FFFFFF30' }]} />
                     <View style={styles.statItem}>
-                        <Text style={styles.statNumber}>7</Text>
+                        <Text style={styles.statNumber}>{filterOptions.length - 1}</Text>
                         <Text style={styles.statLabel}>Subjects</Text>
                     </View>
                     <View style={[styles.statDivider, { backgroundColor: '#FFFFFF30' }]} />

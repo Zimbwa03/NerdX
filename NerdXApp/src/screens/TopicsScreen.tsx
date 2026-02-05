@@ -32,6 +32,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { calculateQuizCreditCost, formatCreditCost, getMinimumCreditsForQuiz } from '../utils/creditCalculator';
 import { getSubjectDisplayName, getSubjectLoadingSteps } from '../utils/loadingProgress';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { accountingTopics as accountingTopicsList } from '../data/accounting';
+import { businessEnterpriseSkillsTopics as besTopicsList } from '../data/businessEnterpriseSkills';
+import { commerceTopics as commerceTopicsList } from '../data/commerce';
+import { historyTopicsForQuiz } from '../data/history';
 
 const { width } = Dimensions.get('window');
 
@@ -80,6 +84,21 @@ const TopicsScreen: React.FC = () => {
   const [selectedGeoTopic, setSelectedGeoTopic] = useState<Topic | null>(null);
   const [selectedGeoQuestionType, setSelectedGeoQuestionType] = useState<'mcq' | 'structured' | 'essay'>('mcq');
 
+  // Principles of Accounting Question Type Modal (Paper 1 MCQ only – modal kept for future Paper 2)
+  const [accountingQuestionTypeModalVisible, setAccountingQuestionTypeModalVisible] = useState(false);
+  const [selectedAccountingTopic, setSelectedAccountingTopic] = useState<Topic | null>(null);
+  const [selectedAccountingQuestionFormat, setSelectedAccountingQuestionFormat] = useState<'mcq' | 'essay'>('mcq');
+
+  // Business Enterprise and Skills Question Type Modal (Paper 1 MCQ, Paper 2 Essay)
+  const [besQuestionTypeModalVisible, setBESQuestionTypeModalVisible] = useState(false);
+  const [selectedBESTopic, setSelectedBESTopic] = useState<Topic | null>(null);
+  const [selectedBESQuestionFormat, setSelectedBESQuestionFormat] = useState<'mcq' | 'essay'>('mcq');
+
+  // Commerce Question Type Modal (Paper 1 MCQ, Paper 2 Essay)
+  const [commerceQuestionTypeModalVisible, setCommerceQuestionTypeModalVisible] = useState(false);
+  const [selectedCommerceTopic, setSelectedCommerceTopic] = useState<Topic | null>(null);
+  const [selectedCommerceQuestionFormat, setSelectedCommerceQuestionFormat] = useState<'mcq' | 'essay'>('mcq');
+
   // Computer Science board (ZimSec vs Cambridge) — O-Level
   const [csBoard, setCsBoard] = useState<'zimsec' | 'cambridge'>('zimsec');
   // A-Level Computer Science board (ZIMSEC vs Cambridge 9618)
@@ -89,7 +108,7 @@ const TopicsScreen: React.FC = () => {
   const [startQuizModalVisible, setStartQuizModalVisible] = useState(false);
   const [pendingTopic, setPendingTopic] = useState<Topic | null>(null);
   const [pendingQuestionType, setPendingQuestionType] = useState<string | undefined>(undefined);
-  const [pendingQuestionFormat, setPendingQuestionFormat] = useState<'mcq' | 'structured' | undefined>(undefined);
+  const [pendingQuestionFormat, setPendingQuestionFormat] = useState<'mcq' | 'structured' | 'essay' | undefined>(undefined);
   const [mixImagesEnabled, setMixImagesEnabled] = useState(false);
 
   // Exam Setup Modal state
@@ -129,8 +148,26 @@ const TopicsScreen: React.FC = () => {
         subject.id === 'computer_science' ? csBoard : subject.id === 'a_level_computer_science' ? aLevelCsBoard : undefined
       );
 
-      // Fallback for Mathematics if API returns empty
-      if (subject.id === 'mathematics' && (!data || data.length === 0)) {
+      // Fallback for Principles of Accounting if API returns empty
+      if (subject.id === 'accounting' && (!data || data.length === 0)) {
+        const accountingTopicList: Topic[] = accountingTopicsList.map((t) => ({
+          id: t.id,
+          name: t.name,
+          subject: 'accounting',
+        }));
+        setTopics(accountingTopicList);
+      } else if (subject.id === 'business_enterprise_skills' && (!data || data.length === 0)) {
+        setTopics(besTopicsList);
+      } else if (subject.id === 'commerce' && (!data || data.length === 0)) {
+        const commerceTopicList: Topic[] = commerceTopicsList.map((t) => ({
+          id: t.id,
+          name: t.name,
+          subject: 'commerce',
+        }));
+        setTopics(commerceTopicList);
+      } else if (subject.id === 'history' && (!data || data.length === 0)) {
+        setTopics(historyTopicsForQuiz);
+      } else if (subject.id === 'mathematics' && (!data || data.length === 0)) {
         const mathTopics: Topic[] = [
           { id: 'num', name: 'Number Theory', subject: 'mathematics' },
           { id: 'sets', name: 'Sets', subject: 'mathematics' },
@@ -155,8 +192,24 @@ const TopicsScreen: React.FC = () => {
         setTopics(data);
       }
     } catch (error) {
-      // Fallback for Mathematics on error
-      if (subject.id === 'mathematics') {
+      // Fallback for Principles of Accounting on error
+      if (subject.id === 'accounting') {
+        const accountingTopicList: Topic[] = accountingTopicsList.map((t) => ({
+          id: t.id,
+          name: t.name,
+          subject: 'accounting',
+        }));
+        setTopics(accountingTopicList);
+      } else if (subject.id === 'business_enterprise_skills') {
+        setTopics(besTopicsList);
+      } else if (subject.id === 'commerce') {
+        const commerceTopicList: Topic[] = commerceTopicsList.map((t) => ({
+          id: t.id,
+          name: t.name,
+          subject: 'commerce',
+        }));
+        setTopics(commerceTopicList);
+      } else if (subject.id === 'mathematics') {
         const mathTopics: Topic[] = [
           { id: 'num', name: 'Number Theory', subject: 'mathematics' },
           { id: 'sets', name: 'Sets', subject: 'mathematics' },
@@ -226,13 +279,29 @@ const TopicsScreen: React.FC = () => {
       setSelectedGeoQuestionType('mcq');
       setMixImagesEnabled(false);
       setGeoQuestionTypeModalVisible(true);
+    } else if (subject.id === 'accounting') {
+      // Principles of Accounting: Paper 1 MCQs only – no format modal
+      openStartQuizModal(topic, undefined, 'mcq');
+    } else if (subject.id === 'business_enterprise_skills') {
+      // BES: Paper 1 (MCQ) or Paper 2 (Essay) – show format modal
+      setSelectedBESTopic(topic);
+      setSelectedBESQuestionFormat('mcq');
+      setBESQuestionTypeModalVisible(true);
+    } else if (subject.id === 'commerce') {
+      // Commerce: Paper 1 (MCQ) or Paper 2 (Essay) – show format modal
+      setSelectedCommerceTopic(topic);
+      setSelectedCommerceQuestionFormat('mcq');
+      setCommerceQuestionTypeModalVisible(true);
+    } else if (subject.id === 'history') {
+      // History: Paper 1 Essays only (3-part ZIMSEC format) – go to History Essay screen
+      navigation.navigate('HistoryEssay' as never, { topic, subject } as never);
     } else {
       // Start quiz modal with visual learning toggle
       openStartQuizModal(topic);
     }
   };
 
-  const openStartQuizModal = (topic?: Topic, questionType?: string, questionFormat?: 'mcq' | 'structured') => {
+  const openStartQuizModal = (topic?: Topic, questionType?: string, questionFormat?: 'mcq' | 'structured' | 'essay') => {
     setPendingTopic(topic || null);
     setPendingQuestionType(questionType);
     setPendingQuestionFormat(questionFormat);
@@ -299,7 +368,7 @@ const TopicsScreen: React.FC = () => {
   };
 
   const handleGeographyNotes = () => {
-    navigation.navigate('GeographyNotes' as never);
+    navigation.navigate('GeographyNotes' as never, { subjectId: subject.id } as never);
   };
 
   const handleGeographyVirtualLab = () => {
@@ -314,6 +383,47 @@ const TopicsScreen: React.FC = () => {
     } as never);
   };
 
+  const handleAccountingNotes = () => {
+    navigation.navigate('AccountingNotes' as never);
+  };
+
+  const handleAccountingVirtualLab = () => {
+    navigation.navigate('VirtualLab' as never);
+  };
+
+  const handleAccountingTeacherMode = () => {
+    navigation.navigate('TeacherModeSetup' as never, {
+      preselectedSubject: 'Principles of Accounting',
+    } as never);
+  };
+
+  const handleBESNotes = () => {
+    navigation.navigate('BESNotes' as never);
+  };
+
+  const handleCommerceNotes = () => {
+    navigation.navigate('CommerceNotes' as never);
+  };
+
+  const handleCommerceVirtualLab = () => {
+    navigation.navigate('VirtualLab' as never);
+  };
+
+  const handleCommerceTeacherMode = () => {
+    navigation.navigate('TeacherModeSetup' as never, {
+      preselectedSubject: 'Commerce',
+    } as never);
+  };
+
+  const handleBESVirtualLab = () => {
+    navigation.navigate('VirtualLab' as never);
+  };
+
+  const handleBESTeacherMode = () => {
+    navigation.navigate('TeacherModeSetup' as never, {
+      preselectedSubject: 'Business Enterprise and Skills',
+    } as never);
+  };
 
   const handleMathNotes = (topicName: string) => {
     navigation.navigate('MathNotesDetail' as never, { topic: topicName } as never);
@@ -460,6 +570,7 @@ const TopicsScreen: React.FC = () => {
           topic,
           mixImagesEnabled: !!mixImages,
           ...(questionType ? { questionType } : {}),
+          ...(questionFormat ? { questionFormat } : {}),
           ...(subject.id === 'computer_science' ? { board: csBoard } : subject.id === 'a_level_computer_science' ? { board: aLevelCsBoard } : {}),
         } as never);
       } else {
@@ -488,6 +599,9 @@ const TopicsScreen: React.FC = () => {
     if (subject.id === 'english') return [Colors.subjects.english, Colors.warning.dark];
     if (subject.id === 'computer_science') return [Colors.subjects.combinedScience, Colors.info.dark];
     if (subject.id === 'geography' || subject.id === 'a_level_geography') return ['#2E7D32', Colors.secondary.dark];
+    if (subject.id === 'accounting') return ['#B8860B', Colors.secondary.dark];
+    if (subject.id === 'business_enterprise_skills') return ['#2E7D32', Colors.secondary.dark];
+    if (subject.id === 'commerce') return ['#B8860B', Colors.secondary.dark];
     return Colors.gradients.primary;
   };
 
@@ -1286,6 +1400,156 @@ const TopicsScreen: React.FC = () => {
             </>
           )}
 
+          {/* Principles of Accounting Features - Notes, Virtual Labs, Teacher Mode */}
+          {subject.id === 'accounting' && !currentParentSubject && (
+            <>
+              <Card variant="elevated" onPress={handleAccountingNotes} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="document-text-outline" size={28} color="#B8860B" />}
+                    size={56}
+                    backgroundColor="rgba(184, 134, 11, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Accounting Notes</Text>
+                    <Text style={styles.featureSubtitle}>Principles of Accounting (7112) study notes</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              <Card variant="elevated" onPress={handleAccountingVirtualLab} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="flask-outline" size={28} color="#B8860B" />}
+                    size={56}
+                    backgroundColor="rgba(184, 134, 11, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Virtual Labs</Text>
+                    <Text style={styles.featureSubtitle}>Interactive accounting simulations</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              <Card variant="elevated" onPress={handleAccountingTeacherMode} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="school-outline" size={28} color="#B8860B" />}
+                    size={56}
+                    backgroundColor="rgba(184, 134, 11, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Teacher Mode</Text>
+                    <Text style={styles.featureSubtitle}>AI tutor for Principles of Accounting</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+            </>
+          )}
+
+          {/* Commerce Features - Notes, Virtual Labs, Teacher Mode */}
+          {subject.id === 'commerce' && !currentParentSubject && (
+            <>
+              <Card variant="elevated" onPress={handleCommerceNotes} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="document-text-outline" size={28} color="#B8860B" />}
+                    size={56}
+                    backgroundColor="rgba(184, 134, 11, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Commerce Notes</Text>
+                    <Text style={styles.featureSubtitle}>ZIMSEC O-Level Principles of Commerce study notes</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              <Card variant="elevated" onPress={handleCommerceVirtualLab} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="flask-outline" size={28} color="#B8860B" />}
+                    size={56}
+                    backgroundColor="rgba(184, 134, 11, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Virtual Labs</Text>
+                    <Text style={styles.featureSubtitle}>Interactive commerce and business simulations</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              <Card variant="elevated" onPress={handleCommerceTeacherMode} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="school-outline" size={28} color="#B8860B" />}
+                    size={56}
+                    backgroundColor="rgba(184, 134, 11, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Teacher Mode</Text>
+                    <Text style={styles.featureSubtitle}>AI tutor for Principles of Commerce</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+            </>
+          )}
+
+          {/* Business Enterprise and Skills Features - Notes, Virtual Labs, Teacher Mode */}
+          {subject.id === 'business_enterprise_skills' && !currentParentSubject && (
+            <>
+              <Card variant="elevated" onPress={handleBESNotes} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="document-text-outline" size={28} color="#2E7D32" />}
+                    size={56}
+                    backgroundColor="rgba(46, 125, 50, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Business Enterprise Skills Notes</Text>
+                    <Text style={styles.featureSubtitle}>Business Enterprise and Skills (4048) study notes</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              <Card variant="elevated" onPress={handleBESVirtualLab} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="flask-outline" size={28} color="#2E7D32" />}
+                    size={56}
+                    backgroundColor="rgba(46, 125, 50, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Virtual Labs</Text>
+                    <Text style={styles.featureSubtitle}>Interactive business enterprise simulations</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              <Card variant="elevated" onPress={handleBESTeacherMode} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="school-outline" size={28} color="#2E7D32" />}
+                    size={56}
+                    backgroundColor="rgba(46, 125, 50, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>Teacher Mode</Text>
+                    <Text style={styles.featureSubtitle}>AI tutor for Business Enterprise and Skills</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+            </>
+          )}
+
           {/* Exam Quiz Card - Only show at top level or for Combined Science tabs */}
           {(!currentParentSubject || subject.id === 'combined_science') && (
             <Card
@@ -1304,6 +1568,12 @@ const TopicsScreen: React.FC = () => {
                   setExamSetupModalVisible(true);
                 } else if (subject.id === 'geography' || subject.id === 'a_level_geography') {
                   setExamSetupModalVisible(true);
+                } else if (subject.id === 'accounting') {
+                  setExamSetupModalVisible(true);
+                } else if (subject.id === 'business_enterprise_skills') {
+                  setExamSetupModalVisible(true);
+                } else if (subject.id === 'commerce') {
+                  setExamSetupModalVisible(true);
                 } else {
                   openStartQuizModal();
                 }
@@ -1317,8 +1587,8 @@ const TopicsScreen: React.FC = () => {
                   backgroundColor="rgba(255, 255, 255, 0.2)"
                 />
                 <View style={styles.examInfo}>
-                  <Text style={styles.examTitle}>Start {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : ''} Exam</Text>
-                  <Text style={styles.examSubtitle}>Mixed questions from all {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : ''} topics</Text>
+                  <Text style={styles.examTitle}>Start {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : subject.id === 'accounting' ? 'Principles of Accounting' : subject.id === 'business_enterprise_skills' ? 'Business Enterprise and Skills' : subject.id === 'commerce' ? 'Commerce' : ''} Exam</Text>
+                  <Text style={styles.examSubtitle}>Mixed questions from all {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : subject.id === 'accounting' ? 'Principles of Accounting' : subject.id === 'business_enterprise_skills' ? 'Business Enterprise and Skills' : subject.id === 'commerce' ? 'Commerce' : ''} topics</Text>
                 </View>
               </View>
             </Card>
@@ -1591,6 +1861,189 @@ const TopicsScreen: React.FC = () => {
         </View>
       </Modal>
 
+      {/* Principles of Accounting Question Type Modal (Paper 1 MCQ only; Paper 2 kept for future) */}
+      <Modal
+        visible={accountingQuestionTypeModalVisible}
+        onClose={() => {
+          setAccountingQuestionTypeModalVisible(false);
+          setMixImagesEnabled(false);
+        }}
+        title={`Principles of Accounting – ${selectedAccountingTopic?.name || 'Topic'}`}
+      >
+        <Text style={styles.modalDescription}>Choose Paper 1 (MCQ) or Paper 2 (Essay):</Text>
+
+        <TouchableOpacity
+          style={[
+            styles.choiceCard,
+            selectedAccountingQuestionFormat === 'mcq' && styles.choiceCardSelected,
+          ]}
+          onPress={() => setSelectedAccountingQuestionFormat('mcq')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.choiceTitle}>Paper 1 (MCQ)</Text>
+          <Text style={styles.choiceDescription}>Multiple choice questions for quick revision</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.choiceCard,
+            selectedAccountingQuestionFormat === 'essay' && styles.choiceCardSelected,
+          ]}
+          onPress={() => setSelectedAccountingQuestionFormat('essay')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.choiceTitle}>Paper 2 (Essay)</Text>
+          <Text style={styles.choiceDescription}>Extended essay questions with text and image upload</Text>
+        </TouchableOpacity>
+
+        <Text style={[styles.visualModeCost, { marginTop: 12 }]}>
+          Estimated cost: {formatCreditCost(getEstimatedCost(selectedAccountingTopic, undefined, selectedAccountingQuestionFormat, false))} per question
+        </Text>
+
+        <View style={[styles.modalButtonRow, { marginBottom: Math.max(insets.bottom, 8), paddingBottom: Math.max(insets.bottom, 0) }]}>
+          <TouchableOpacity
+            style={[styles.modalButton, styles.cancelButton]}
+            onPress={() => setAccountingQuestionTypeModalVisible(false)}
+          >
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
+          <View style={styles.modalButtonSpacer} />
+          <TouchableOpacity
+            style={[styles.modalButton, styles.startButton]}
+            onPress={() => {
+              setAccountingQuestionTypeModalVisible(false);
+              if (selectedAccountingTopic) {
+                handleStartQuiz(selectedAccountingTopic, undefined, selectedAccountingQuestionFormat, false);
+              }
+            }}
+          >
+            <Text style={styles.startButtonText}>Start Quiz</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      {/* Commerce Question Type Modal (Paper 1 MCQ, Paper 2 Essay) */}
+      <Modal
+        visible={commerceQuestionTypeModalVisible}
+        onClose={() => {
+          setCommerceQuestionTypeModalVisible(false);
+          setMixImagesEnabled(false);
+        }}
+        title={`Commerce – ${selectedCommerceTopic?.name || 'Topic'}`}
+      >
+        <Text style={styles.modalDescription}>Choose Paper 1 (MCQ) or Paper 2 (Essay):</Text>
+
+        <TouchableOpacity
+          style={[
+            styles.choiceCard,
+            selectedCommerceQuestionFormat === 'mcq' && styles.choiceCardSelected,
+          ]}
+          onPress={() => setSelectedCommerceQuestionFormat('mcq')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.choiceTitle}>Paper 1 (MCQ)</Text>
+          <Text style={styles.choiceDescription}>Multiple choice questions for quick revision</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.choiceCard,
+            selectedCommerceQuestionFormat === 'essay' && styles.choiceCardSelected,
+          ]}
+          onPress={() => setSelectedCommerceQuestionFormat('essay')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.choiceTitle}>Paper 2 (Essay)</Text>
+          <Text style={styles.choiceDescription}>Extended essay questions with text and image upload</Text>
+        </TouchableOpacity>
+
+        <Text style={[styles.visualModeCost, { marginTop: 12 }]}>
+          Estimated cost: {formatCreditCost(getEstimatedCost(selectedCommerceTopic, undefined, selectedCommerceQuestionFormat, false))} per question
+        </Text>
+
+        <View style={[styles.modalButtonRow, { marginBottom: Math.max(insets.bottom, 8), paddingBottom: Math.max(insets.bottom, 0) }]}>
+          <TouchableOpacity
+            style={[styles.modalButton, styles.cancelButton]}
+            onPress={() => setCommerceQuestionTypeModalVisible(false)}
+          >
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
+          <View style={styles.modalButtonSpacer} />
+          <TouchableOpacity
+            style={[styles.modalButton, styles.startButton]}
+            onPress={() => {
+              setCommerceQuestionTypeModalVisible(false);
+              if (selectedCommerceTopic) {
+                handleStartQuiz(selectedCommerceTopic, undefined, selectedCommerceQuestionFormat, false);
+              }
+            }}
+          >
+            <Text style={styles.startButtonText}>Start Quiz</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      {/* Business Enterprise and Skills Question Type Modal (Paper 1 MCQ, Paper 2 Essay) */}
+      <Modal
+        visible={besQuestionTypeModalVisible}
+        onClose={() => {
+          setBESQuestionTypeModalVisible(false);
+          setMixImagesEnabled(false);
+        }}
+        title={`Business Enterprise and Skills – ${selectedBESTopic?.name || 'Topic'}`}
+      >
+        <Text style={styles.modalDescription}>Choose Paper 1 (MCQ) or Paper 2 (Essay):</Text>
+
+        <TouchableOpacity
+          style={[
+            styles.choiceCard,
+            selectedBESQuestionFormat === 'mcq' && styles.choiceCardSelected,
+          ]}
+          onPress={() => setSelectedBESQuestionFormat('mcq')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.choiceTitle}>Paper 1 (MCQ)</Text>
+          <Text style={styles.choiceDescription}>Multiple choice questions for quick revision</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.choiceCard,
+            selectedBESQuestionFormat === 'essay' && styles.choiceCardSelected,
+          ]}
+          onPress={() => setSelectedBESQuestionFormat('essay')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.choiceTitle}>Paper 2 (Essay)</Text>
+          <Text style={styles.choiceDescription}>Extended essay questions with text and image upload</Text>
+        </TouchableOpacity>
+
+        <Text style={[styles.visualModeCost, { marginTop: 12 }]}>
+          Estimated cost: {formatCreditCost(getEstimatedCost(selectedBESTopic, undefined, selectedBESQuestionFormat, false))} per question
+        </Text>
+
+        <View style={[styles.modalButtonRow, { marginBottom: Math.max(insets.bottom, 8), paddingBottom: Math.max(insets.bottom, 0) }]}>
+          <TouchableOpacity
+            style={[styles.modalButton, styles.cancelButton]}
+            onPress={() => setBESQuestionTypeModalVisible(false)}
+          >
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
+          <View style={styles.modalButtonSpacer} />
+          <TouchableOpacity
+            style={[styles.modalButton, styles.startButton]}
+            onPress={() => {
+              setBESQuestionTypeModalVisible(false);
+              if (selectedBESTopic) {
+                handleStartQuiz(selectedBESTopic, undefined, selectedBESQuestionFormat, false);
+              }
+            }}
+          >
+            <Text style={styles.startButtonText}>Start Quiz</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
       {/* A-Level Geography Question Type Modal */}
       <Modal
         visible={geoQuestionTypeModalVisible}
@@ -1753,6 +2206,9 @@ const getTopicIcon = (topic: Topic, subjectId: string): React.ReactNode => {
   if (subjectId === 'computer_science') {
     return <Ionicons name="desktop-outline" size={24} color={Colors.info.main} />;
   }
+  if (subjectId === 'commerce') {
+    return <Ionicons name="receipt-outline" size={24} color="#B8860B" />;
+  }
   return Icons.quiz(24, Colors.primary.main);
 };
 
@@ -1762,6 +2218,9 @@ const getTopicIconBg = (topic: Topic, subjectId: string): string => {
   }
   if (subjectId === 'computer_science') {
     return Colors.iconBg.info;
+  }
+  if (subjectId === 'commerce') {
+    return 'rgba(184, 134, 11, 0.2)';
   }
   return Colors.iconBg.default;
 };

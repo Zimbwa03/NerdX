@@ -186,6 +186,11 @@ class Config:
         # Audio Flashcards
         'flashcard_audio': 20,            # 2 credits - Audio flashcards
 
+        # History (ZIMSEC O-Level) – Paper 1 Essays only (3-part ZIMSEC format)
+        'history_topical_essay': 10,       # 1 credit (10 units) per essay question
+        'history_exam_essay': 10,         # 1 credit (10 units) per exam essay question
+        'history_essay_marking': 0,       # no extra – 1 credit total per essay (10 units)
+
         # Legacy compatibility (Mapped values)
         'math': 5,                         # Maps to math_topical (0.5 credit)
         'science': 5,                      # Maps to combined_science_topical (0.5 credit)

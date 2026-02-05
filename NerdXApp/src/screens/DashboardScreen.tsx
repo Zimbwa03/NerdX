@@ -210,6 +210,46 @@ const DashboardScreen: React.FC = () => {
     navigation.navigate('Topics' as never, { subject } as never);
   };
 
+  const handleAccountingPress = () => {
+    const subject: Partial<Subject> = {
+      id: 'accounting',
+      name: 'Principles of Accounting',
+      icon: 'receipt',
+      color: Colors.subjects.accounting ?? '#B8860B',
+    };
+    navigation.navigate('Topics' as never, { subject } as never);
+  };
+
+  const handleCommercePress = () => {
+    const subject: Partial<Subject> = {
+      id: 'commerce',
+      name: 'Commerce',
+      icon: 'receipt',
+      color: '#B8860B',
+    };
+    navigation.navigate('Topics' as never, { subject } as never);
+  };
+
+  const handleBESPress = () => {
+    const subject: Partial<Subject> = {
+      id: 'business_enterprise_skills',
+      name: 'Business Enterprise and Skills',
+      icon: 'bulb',
+      color: '#2E7D32',
+    };
+    navigation.navigate('Topics' as never, { subject } as never);
+  };
+
+  const handleHistoryPress = () => {
+    const subject: Partial<Subject> = {
+      id: 'history',
+      name: 'History',
+      icon: 'book',
+      color: '#5D4037',
+    };
+    navigation.navigate('Topics' as never, { subject } as never);
+  };
+
   const handleTeacherMode = () => {
     navigation.navigate('TeacherModeSetup' as never);
   };
@@ -664,7 +704,7 @@ const DashboardScreen: React.FC = () => {
                       hideText={true}
                     />
                   </View>
-                  {/* Row 3: Geography + Project Assistant */}
+                  {/* Row 3: Geography + Principles of Accounting */}
                   <View style={styles.cardRow}>
                     <AnimatedCard
                       title="Geography"
@@ -676,12 +716,54 @@ const DashboardScreen: React.FC = () => {
                       hideText={true}
                     />
                     <AnimatedCard
+                      title="Principles of Accounting"
+                      subtitle="Master Financial Fundamentals & Analysis"
+                      imageSource={require('../../assets/images/olevel_accounting_card.png')}
+                      onPress={handleAccountingPress}
+                      glowColor={Colors.subjects.accounting ?? '#B8860B'}
+                      index={5}
+                      hideText={true}
+                    />
+                  </View>
+                  {/* Row 4: Commerce + Project Assistant */}
+                  <View style={styles.cardRow}>
+                    <AnimatedCard
+                      title="Commerce"
+                      subtitle="Explore Business, Trade & Finance"
+                      imageSource={require('../../assets/images/olevel_commerce_card.png')}
+                      onPress={handleCommercePress}
+                      glowColor="#FF9800"
+                      index={6}
+                      hideText={true}
+                    />
+                    <AnimatedCard
                       title="Project Assistant"
                       subtitle="Plan, Research & Succeed"
                       imageSource={require('../../assets/images/project_assistant_card_new.png')}
                       onPress={navigateToProjectList}
                       glowColor={Colors.primary.main}
-                      index={5}
+                      index={7}
+                      hideText={true}
+                    />
+                  </View>
+                  {/* Row 5: Business Enterprise Skills + History */}
+                  <View style={styles.cardRow}>
+                    <AnimatedCard
+                      title="Business Enterprise Skills"
+                      subtitle="Develop Entrepreneurial Mindset & Strategy"
+                      imageSource={require('../../assets/images/olevel_bes_card.png')}
+                      onPress={handleBESPress}
+                      glowColor="#14B8A6"
+                      index={8}
+                      hideText={true}
+                    />
+                    <AnimatedCard
+                      title="History"
+                      subtitle="Explore Past Events & Civilizations"
+                      imageSource={require('../../assets/images/olevel_history_card.png')}
+                      onPress={handleHistoryPress}
+                      glowColor="#5D4037"
+                      index={9}
                       hideText={true}
                     />
                   </View>

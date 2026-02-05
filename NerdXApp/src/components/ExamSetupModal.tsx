@@ -182,6 +182,32 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
             costPerQuestion = 0.5; // Other A-Level subjects: 0.5 credit per question
         } else if (subjectKey === 'english') {
             costPerQuestion = 1; // English: 1 credit per question
+        } else if (subjectKey === 'accounting') {
+            // Principles of Accounting: MCQ 0.3, Essay 1
+            if (questionMode === 'MCQ_ONLY') {
+                costPerQuestion = 0.3;
+            } else if (questionMode === 'STRUCTURED_ONLY') {
+                costPerQuestion = 1;
+            } else if (questionMode === 'MIXED') {
+                const mcqCount = Math.floor(questionCount / 2);
+                const essayCount = questionCount - mcqCount;
+                return (mcqCount * 0.3) + (essayCount * 1);
+            } else {
+                costPerQuestion = 1;
+            }
+        } else if (subjectKey === 'commerce' || subjectKey === 'business_enterprise_skills') {
+            // Commerce & BES: same as Computer Science - MCQ 0.3, Essay 1 (Paper 1/Paper 2)
+            if (questionMode === 'MCQ_ONLY') {
+                costPerQuestion = 0.3;
+            } else if (questionMode === 'STRUCTURED_ONLY') {
+                costPerQuestion = 1; // Paper 2 Essay
+            } else if (questionMode === 'MIXED') {
+                const mcqCount = Math.floor(questionCount / 2);
+                const essayCount = questionCount - mcqCount;
+                return (mcqCount * 0.3) + (essayCount * 1);
+            } else {
+                costPerQuestion = 1;
+            }
         } else if (subjectKey === 'computer_science' || subjectKey === 'a_level_computer_science') {
             // Computer Science (O-Level or A-Level): MCQ = 0.3 credit, Structured = 0.5 credit, Essay = 1 credit
             if (questionMode === 'MCQ_ONLY') {

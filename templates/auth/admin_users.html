@@ -406,7 +406,7 @@ async function loadAdminUsers() {
     showLoading();
     
     try {
-        const response = await fetch('/api/admin-users');
+        const response = await fetch('/admin/api/admin-users');
         const data = await response.json();
         
         if (data.success) {
@@ -496,7 +496,7 @@ async function deactivateAdmin(adminId) {
     showLoading();
     
     try {
-        const response = await fetch(`/api/admin-users/${adminId}/deactivate`, {
+        const response = await fetch(`/admin/api/admin-users/${adminId}/deactivate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

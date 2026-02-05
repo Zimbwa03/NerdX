@@ -7,6 +7,8 @@ import { MATH_SIMULATIONS } from './mathSimulationsData';
 import { ENGLISH_SIMULATIONS } from './englishSimulationsData';
 import { PROGRAMMING_LAB_SIMULATIONS } from './programmingLabData';
 import { GEOGRAPHY_SIMULATIONS } from './geographySimulationsData';
+import { ACCOUNTING_SIMULATIONS } from './accountingSimulationsData';
+import { BES_BUSINESS_PLAN_SIMULATIONS } from './besBusinessPlanSimulationsData';
 
 // ============================================
 // PHASE 1 SIMULATIONS
@@ -1190,6 +1192,8 @@ const ALL_SIMULATIONS = [
     ...ENGLISH_SIMULATIONS,
     ...PROGRAMMING_LAB_SIMULATIONS,
     ...GEOGRAPHY_SIMULATIONS,
+    ...ACCOUNTING_SIMULATIONS,
+    ...BES_BUSINESS_PLAN_SIMULATIONS,
 ];
 
 // Helper function to get simulation by ID
