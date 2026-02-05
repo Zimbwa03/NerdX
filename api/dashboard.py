@@ -66,54 +66,65 @@ def get_dashboard_stats():
         # Database connection test
         db_status = test_connection()
         
-        # Get total users filtered by source
+        # Get total users filtered by source (use service role for admin dashboard reads)
         filters = {"registration_source": f"eq.{source}"}
-        users_data = make_supabase_request("GET", "users_registration", select="id", filters=filters)
+        users_data = make_supabase_request(
+            "GET", "users_registration",
+            select="id,chat_id",
+            filters=filters,
+            use_service_role=True
+        )
         total_users = len(users_data) if users_data else 0
+        user_ids_for_source = [u.get("chat_id") for u in (users_data or []) if u.get("chat_id")]
         
         # Get active users today filtered by source
         today = datetime.now().strftime('%Y-%m-%d')
         active_users_data = make_supabase_request(
-            "GET", "user_stats", 
+            "GET", "user_stats",
             select="user_id,last_activity",
-            filters={"last_activity": f"gte.{today}T00:00:00"}
+            filters={"last_activity": f"gte.{today}T00:00:00"},
+            use_service_role=True
         )
-        # Filter active users by source
-        user_ids_for_source = [user.get('chat_id') for user in users_data] if users_data else []
         if active_users_data and user_ids_for_source:
-            active_users_data = [user for user in active_users_data if user.get('user_id') in user_ids_for_source]
+            active_users_data = [u for u in active_users_data if u.get("user_id") in user_ids_for_source]
         active_users_today = len(active_users_data) if active_users_data else 0
         
-        # Get total credit transactions (proxy for questions answered) filtered by source
-        all_users_for_source = make_supabase_request("GET", "users_registration", select="chat_id", filters={"registration_source": f"eq.{source}"})
-        user_ids_list = [user.get('chat_id') for user in all_users_for_source] if all_users_for_source else []
+        # Use same user id list for credits/payments (already from users_registration by source)
+        user_ids_list = user_ids_for_source
         
-        credit_transactions = make_supabase_request("GET", "credit_transactions", select="id,user_id")
+        # Get total credit transactions (proxy for questions answered) filtered by source
+        credit_transactions = make_supabase_request(
+            "GET", "credit_transactions",
+            select="id,user_id",
+            use_service_role=True
+        )
         if credit_transactions and user_ids_list:
             credit_transactions = [tx for tx in credit_transactions if tx.get('user_id') in user_ids_list]
         total_questions_answered = len(credit_transactions) if credit_transactions else 0
         
         # Get total payments/revenue filtered by source
         payments_data = make_supabase_request(
-            "GET", "payment_transactions", 
+            "GET", "payment_transactions",
             select="amount,user_id",
-            filters={"status": "eq.completed"}
+            filters={"status": "eq.completed"},
+            use_service_role=True
         )
         # Filter payments by user source
         if payments_data and user_ids_list:
-            payments_data = [p for p in payments_data if p.get('user_id') in user_ids_list]
-        # Also try to get from completed payments table if payments table is empty
-        if not payments_data or len(payments_data) == 0:
-            completed_payments = make_supabase_request("GET", "payment_transactions", select="amount,user_id")
-            if completed_payments and user_ids_list:
-                completed_payments = [p for p in completed_payments if p.get('user_id') in user_ids_list]
-            payments_data = completed_payments if completed_payments else []
+            payments_data = [p for p in payments_data if p.get("user_id") in user_ids_list]
+        if not payments_data:
+            payments_data = []
         
-        total_revenue = sum(p.get('amount', 0) for p in payments_data) if payments_data else 0
+        total_revenue = sum((p.get("amount") or 0) for p in payments_data)
         
         # Get recent user registrations for growth trend filtered by source
         filters_with_source = {"registration_source": f"eq.{source}"}
-        all_registrations = make_supabase_request("GET", "users_registration", select="registration_date", filters=filters_with_source)
+        all_registrations = make_supabase_request(
+            "GET", "users_registration",
+            select="registration_date",
+            filters=filters_with_source,
+            use_service_role=True
+        )
         new_registrations_week = 0
         
         if all_registrations:
@@ -128,17 +139,19 @@ def get_dashboard_stats():
                     except:
                         continue
         
+        # Ensure all numeric values are JSON-serializable (float for decimals)
+        total_revenue_val = float(round(total_revenue, 2))
+        arpu_val = float(round(total_revenue / total_users, 2)) if total_users > 0 else 0.0
         stats = {
             'total_users': total_users,
             'active_users_today': active_users_today,
             'total_questions_answered': total_questions_answered,
-            'total_revenue': round(total_revenue, 2),
+            'total_revenue': total_revenue_val,
             'new_registrations_week': new_registrations_week,
-            'arpu': round(total_revenue / total_users, 2) if total_users > 0 else 0,
+            'arpu': arpu_val,
             'database_status': 'connected' if db_status else 'disconnected',
-            'source': source  # Include source in response
+            'source': source,
         }
-        
         return jsonify(stats)
         
     except Exception as e:

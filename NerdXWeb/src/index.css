@@ -4548,6 +4548,21 @@ body {
   margin: 12px 0;
 }
 
+.graph-practice-error {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: rgba(244, 67, 54, 0.15);
+  border: 1px solid rgba(244, 67, 54, 0.4);
+  border-radius: 10px;
+  color: #ff8a80;
+  font-size: 14px;
+}
+
+.graph-solution-fallback {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
 .graph-question-card {
   padding: 20px;
   background: rgba(255, 255, 255, 0.03);

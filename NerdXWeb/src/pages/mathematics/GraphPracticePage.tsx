@@ -2,8 +2,18 @@ import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { graphApi, getGraphImageUrl, type GraphData } from '../../services/api/graphApi';
+import { API_BASE_URL } from '../../services/api/config';
 import { MathRenderer } from '../../components/MathRenderer';
 import { ArrowLeft, ZoomIn, Upload, X } from 'lucide-react';
+
+function getErrorMessage(err: unknown): string {
+  if (err && typeof err === 'object' && 'response' in err) {
+    const res = (err as { response?: { data?: { message?: string } } }).response;
+    const msg = res?.data?.message;
+    if (typeof msg === 'string' && msg.trim()) return msg.trim();
+  }
+  return 'Something went wrong. Please try again.';
+}
 
 type Mode = 'generate' | 'custom' | 'upload' | 'linear';
 type Level = 'o_level' | 'a_level';
@@ -46,6 +56,7 @@ export function GraphPracticePage() {
   const [answerFiles, setAnswerFiles] = useState<File[]>([]);
   const [analyzingImages, setAnalyzingImages] = useState(false);
   const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const answerInputRef = useRef<HTMLInputElement>(null);
 
@@ -57,6 +68,7 @@ export function GraphPracticePage() {
     setVideoUrl(null);
     setVideoError(null);
     setAnswerFiles([]);
+    setErrorMessage(null);
   };
 
   const tryLoadAnimation = async (data: GraphData) => {
@@ -93,10 +105,12 @@ export function GraphPracticePage() {
       }
       if (anim?.video_path) {
         const path = anim.video_path.startsWith('/') ? anim.video_path : '/' + anim.video_path;
-        setVideoUrl(`${import.meta.env.VITE_API_BASE_URL || 'https://nerdx.onrender.com'}${path}`);
+        const base = API_BASE_URL.replace(/\/$/, '');
+        setVideoUrl(`${base}${path}`);
       }
-    } catch {
-      setVideoError('Animation service is currently unavailable.');
+    } catch (err) {
+      const msg = getErrorMessage(err);
+      setVideoError(msg !== 'Something went wrong. Please try again.' ? msg : 'Animation service is currently unavailable.');
     } finally {
       setVideoLoading(false);
     }
@@ -105,6 +119,10 @@ export function GraphPracticePage() {
   const handleGenerate = async () => {
     const credits = user?.credits ?? 0;
     if (credits < GRAPH_CREDIT) return;
+    if (mode === 'linear') {
+      const valid = constraints.filter((c) => c.trim());
+      if (valid.length < 2) return;
+    }
     setLoading(true);
     resetView();
     try {
@@ -113,7 +131,6 @@ export function GraphPracticePage() {
         data = await graphApi.generateCustomGraph(customEquation.trim());
       } else if (mode === 'linear') {
         const valid = constraints.filter((c) => c.trim());
-        if (valid.length < 2) return;
         data = await graphApi.generateLinearProgramming(
           valid,
           objective.trim() || undefined
@@ -122,12 +139,14 @@ export function GraphPracticePage() {
         data = await graphApi.generateGraph(graphType, undefined, level);
       }
       if (data) {
+        setErrorMessage(null);
         setGraphData(data);
         if (data.credits_remaining !== undefined) updateUser({ credits: data.credits_remaining });
         tryLoadAnimation(data);
       }
     } catch (err) {
       console.error(err);
+      setErrorMessage(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -142,6 +161,7 @@ export function GraphPracticePage() {
     try {
       const res = await graphApi.solveGraphFromImage(file);
       if (res) {
+        setErrorMessage(null);
         setImageSolution({
           processed_text: res.processed_text || '',
           solution: res.solution || '',
@@ -151,6 +171,7 @@ export function GraphPracticePage() {
       }
     } catch (err) {
       console.error(err);
+      setErrorMessage(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -162,6 +183,7 @@ export function GraphPracticePage() {
 
   const handleSubmitImages = async () => {
     if (!graphData?.question || answerFiles.length === 0) return;
+    setErrorMessage(null);
     setAnalyzingImages(true);
     try {
       const res = await graphApi.submitAnswerImages(graphData.question, answerFiles);
@@ -177,6 +199,7 @@ export function GraphPracticePage() {
       }
     } catch (err) {
       console.error(err);
+      setErrorMessage(getErrorMessage(err));
     } finally {
       setAnalyzingImages(false);
     }
@@ -236,6 +259,12 @@ export function GraphPracticePage() {
           </button>
         ))}
       </div>
+
+      {errorMessage && (
+        <div className="graph-practice-error" role="alert">
+          {errorMessage}
+        </div>
+      )}
 
       {/* Generate mode */}
       {mode === 'generate' && (
@@ -498,10 +527,14 @@ export function GraphPracticePage() {
             {showSolution && (
               <div className="graph-solution-box">
                 <h4>Solution:</h4>
-                {hasLatex(graphData.solution) ? (
-                  <MathRenderer content={graphData.solution} fontSize={15} />
+                {graphData.solution?.trim() ? (
+                  hasLatex(graphData.solution) ? (
+                    <MathRenderer content={graphData.solution} fontSize={15} />
+                  ) : (
+                    <p>{graphData.solution}</p>
+                  )
                 ) : (
-                  <p>{graphData.solution}</p>
+                  <p className="graph-solution-fallback">No solution text provided.</p>
                 )}
                 <button type="button" className="graph-new-btn" onClick={resetView}>
                   Generate New Graph

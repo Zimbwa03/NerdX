@@ -262,15 +262,26 @@ async function loadOverviewData() {
         const data = await response.json();
         console.log('Dashboard data loaded successfully:', data);
         
-        // Update metrics
-        document.getElementById('totalUsers').textContent = data.total_users || 0;
-        document.getElementById('activeToday').textContent = data.active_users_today || 0;
-        document.getElementById('questionsAnswered').textContent = data.total_questions_answered || 0;
-        document.getElementById('totalRevenue').textContent = `$${data.total_revenue || 0}`;
+        // If API returned error message, log it but still show zeros
+        if (data.error) {
+            console.warn('Dashboard API reported:', data.error);
+        }
+        
+        // Update metrics (use fallback 0 for any missing or invalid values)
+        const totalUsers = Number(data.total_users);
+        const activeToday = Number(data.active_users_today);
+        const questionsAnswered = Number(data.total_questions_answered);
+        const totalRevenue = Number(data.total_revenue);
+        document.getElementById('totalUsers').textContent = isNaN(totalUsers) ? 0 : totalUsers;
+        document.getElementById('activeToday').textContent = isNaN(activeToday) ? 0 : activeToday;
+        document.getElementById('questionsAnswered').textContent = isNaN(questionsAnswered) ? 0 : questionsAnswered;
+        document.getElementById('totalRevenue').textContent = '$' + (isNaN(totalRevenue) ? '0.00' : totalRevenue.toFixed(2));
         
         // Update growth metrics
-        document.getElementById('newUsersWeek').textContent = data.new_registrations_week || 0;
-        document.getElementById('arpu').textContent = `$${data.arpu || 0}`;
+        const newUsersWeek = Number(data.new_registrations_week);
+        const arpu = Number(data.arpu);
+        document.getElementById('newUsersWeek').textContent = isNaN(newUsersWeek) ? 0 : newUsersWeek;
+        document.getElementById('arpu').textContent = '$' + (isNaN(arpu) ? '0.00' : arpu.toFixed(2));
         
         // Update database status
         const dbStatus = document.getElementById('dbStatus');

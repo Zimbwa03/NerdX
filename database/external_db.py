@@ -534,8 +534,8 @@ def calculate_level_from_xp(xp):
 
 # School students: 100 credits per day = 1000 units. Reset at 06:00 every day (configurable TZ). Stops when subscription (month/term) is over.
 SCHOOL_STUDENT_DAILY_CREDITS_UNITS = 100 * CREDIT_UNITS_PER_CREDIT  # 1000
-SCHOOL_CREDITS_RESET_HOUR = 6  # 06:00
-SCHOOL_CREDITS_RESET_TZ = os.environ.get("SCHOOL_CREDITS_RESET_TIMEZONE", "Africa/Harare")
+SCHOOL_CREDITS_RESET_HOUR = 6  # 06:00 Africa/Harare
+SCHOOL_CREDITS_RESET_TZ = (os.environ.get("SCHOOL_CREDITS_RESET_TIMEZONE") or "Africa/Harare").strip() or "Africa/Harare"
 
 try:
     from zoneinfo import ZoneInfo
@@ -1107,21 +1107,29 @@ from config import Config
 WELCOME_BONUS_CREDITS = Config.REGISTRATION_BONUS
 
 def get_credit_breakdown(user_id: str) -> dict:
-    """Get detailed credit breakdown for a user"""
+    """Get detailed credit breakdown for a user. Returns values in units.
+    For school_student: effective daily 100 credits (1000 units), reset at 06:00 Africa/Harare."""
     try:
-        result = make_supabase_request("GET", "users_registration", 
-                                      select="credits,purchased_credits,welcome_bonus_claimed", 
-                                      filters={"chat_id": f"eq.{user_id}"})
+        result = make_supabase_request("GET", "users_registration",
+                                      select="credits,purchased_credits,welcome_bonus_claimed,user_type",
+                                      filters={"chat_id": f"eq.{user_id}"},
+                                      use_service_role=True)
         
         if result and len(result) > 0:
             user_data = result[0]
+            if (user_data.get("user_type") or "").strip() == "school_student":
+                # School package: 100 credits/day in units; get_user_credits applies reset logic
+                total_units = get_user_credits(user_id, check_expiry=True) or 0
+                return {
+                    "total": total_units,
+                    "free_credits": total_units,
+                    "purchased_credits": 0,
+                    "welcome_bonus_claimed": True,
+                }
             credits = user_data.get('credits', 0) or 0
             purchased_credits = user_data.get('purchased_credits', 0) or 0
             welcome_claimed = user_data.get('welcome_bonus_claimed', False)
-            
-            # Calculate total available
             total = credits + purchased_credits
-            
             return {
                 "total": total,
                 "free_credits": credits,
