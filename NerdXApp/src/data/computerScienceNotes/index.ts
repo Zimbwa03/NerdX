@@ -3,13 +3,15 @@
 
 import { TopicNotes } from './types';
 
+// Helper for graphviz diagrams
+const graphvizUrl = (dot: string) => `https://quickchart.io/graphviz?graph=${encodeURIComponent(dot)}`;
+
 // Export types
 export { TopicNotes, NotesSection } from './types';
 
 const CS_DIAGRAMS = {
     hardwareIpo: require('../../../assets/diagrams/cs_hardwareIpo.png'),
     cpuCycle: require('../../../assets/diagrams/cs_cpuCycle.png'),
-    softwareTypes: require('../../../assets/diagrams/cs_softwareTypes.png'),
     applications: require('../../../assets/diagrams/cs_applications.png'),
     infoSystem: require('../../../assets/diagrams/cs_infoSystem.png'),
     controlLoop: require('../../../assets/diagrams/cs_controlLoop.png'),
@@ -45,8 +47,9 @@ const CS_DIAGRAMS = {
     mlPipeline: require('../../../assets/diagrams/cs_mlPipeline.png'),
     iotCloud: require('../../../assets/diagrams/cs_iotCloud.png'),
     emergingTech: require('../../../assets/diagrams/cs_emergingTech.png'),
-};
-
+    softwareTypes: graphvizUrl(`digraph{
+        rankdir=LR;
+        node [shape=box, style=rounded];
         System -> {OS Utilities Drivers};
         Application -> {WordProcessor Spreadsheet Browser};
     }`),
