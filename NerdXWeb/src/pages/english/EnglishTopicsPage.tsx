@@ -1,3 +1,7 @@
+/**
+ * EnglishTopicsPage - Premium Desktop Design
+ * Features gradient cards, glassmorphism, and advanced desktop layout
+ */
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { quizApi, type Topic } from '../../services/api/quizApi';
@@ -6,7 +10,7 @@ import {
   formatCreditCost,
   getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
-import { ArrowLeft, BookOpen, PenLine, MessageSquare, ClipboardList } from 'lucide-react';
+import { ArrowLeft, BookOpen, PenLine, MessageSquare, ClipboardList, GraduationCap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const ENGLISH_TOPICS_FALLBACK: Topic[] = [
@@ -116,138 +120,162 @@ export function EnglishTopicsPage() {
   };
 
   return (
-    <div className="english-topics-page">
-      <header className="english-topics-header">
-        <Link to="/app" className="back-link">
-          <ArrowLeft size={20} /> Back
+    <div className="subject-page-v2">
+      {/* Header */}
+      <header className="subject-header-v2">
+        <Link to="/app" className="back-btn-v2">
+          <ArrowLeft size={20} />
+          <span>Back</span>
         </Link>
-        <h1 className="english-topics-title">English</h1>
-        <p className="english-topics-subtitle">Read, write & communicate</p>
-      </header>
-
-      {/* Feature cards: Comprehension, Essay, Tutor */}
-      <section className="english-features-section">
-        <button
-          type="button"
-          className="english-feature-card english-feature-comprehension"
-          onClick={() => navigate('/app/english/comprehension')}
-        >
-          <div className="english-feature-icon english-feature-icon-comprehension">
+        <div className="subject-header-content">
+          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #FF9100, #FF6D00)' }}>
             <BookOpen size={28} />
           </div>
-          <div className="english-feature-content">
-            <h3>Comprehension</h3>
-            <p>AI-generated passages with 10 questions & summary • 2 credits</p>
+          <div>
+            <h1>English Language</h1>
+            <p>Read, write & communicate effectively</p>
           </div>
-          <span className="english-feature-arrow">→</span>
-        </button>
+        </div>
+      </header>
 
-        <button
-          type="button"
-          className="english-feature-card english-feature-essay"
-          onClick={() => navigate('/app/english/essay')}
-        >
-          <div className="english-feature-icon english-feature-icon-essay">
-            <PenLine size={28} />
-          </div>
-          <div className="english-feature-content">
-            <h3>Essay Writing</h3>
-            <p>Free response, guided composition & mark essay • 2 credits</p>
-          </div>
-          <span className="english-feature-arrow">→</span>
-        </button>
-
-        <button
-          type="button"
-          className="english-feature-card"
-          onClick={() => navigate('/app/teacher', { state: { subject: 'English', gradeLevel: 'Form 3-4 (O-Level)' } })}
-        >
-          <div className="english-feature-icon">
-            <MessageSquare size={28} />
-          </div>
-          <div className="english-feature-content">
-            <h3>AI English Tutor</h3>
-            <p>Interactive Socratic tutoring for grammar & writing</p>
-          </div>
-          <span className="english-feature-arrow">→</span>
-        </button>
-      </section>
-
-      {/* Start Exam */}
-      <section className="english-exam-section">
-        <button
-          type="button"
-          className="english-exam-card"
-          onClick={() =>
-            navigate('/app/exam/setup', {
-              state: { subject: 'english', backTo: '/app/english', subjectLabel: 'English' },
-            })
-          }
-        >
-          <div className="english-exam-icon">
-            <ClipboardList size={32} />
-          </div>
-          <div className="english-exam-content">
-            <h3>Start Exam</h3>
-            <p>Timed exam with mixed questions from all topics</p>
-          </div>
-          <span className="english-feature-arrow">→</span>
-        </button>
-      </section>
-
-      {/* Topics grid for Quiz */}
-      <section className="english-topics-section">
-        <h2 className="english-section-title">Quiz – Grammar & Vocabulary</h2>
-        <p className="english-section-subtitle">Practice topical or exam-style questions</p>
-        {loading ? (
-          <div className="english-loading">Loading topics…</div>
-        ) : (
-          <div className="english-topics-grid">
-            {displayTopics.map((topic) => (
+      {/* Main content grid - desktop optimized */}
+      <div className="subject-content-grid">
+        {/* Left column - Features */}
+        <div className="subject-features-col">
+          {/* AI Features */}
+          <section className="subject-section-v2">
+            <h2>English Skills</h2>
+            <div className="feature-cards-v2">
               <button
-                key={topic.id}
                 type="button"
-                className="english-topic-card"
-                onClick={() => openStartQuiz(topic)}
+                className="feature-card-v2"
+                onClick={() => navigate('/app/english/comprehension')}
               >
-                <span className="english-topic-name">{topic.name}</span>
+                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #FF5252, #D50000)' }}>
+                  <BookOpen size={24} />
+                </div>
+                <div className="feature-card-text">
+                  <h3>Comprehension</h3>
+                  <p>AI-generated passages with 10 questions & summary</p>
+                </div>
+                <span className="feature-arrow">→</span>
               </button>
-            ))}
-          </div>
-        )}
-      </section>
+
+              <button
+                type="button"
+                className="feature-card-v2"
+                onClick={() => navigate('/app/english/essay')}
+              >
+                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #7C4DFF, #651FFF)' }}>
+                  <PenLine size={24} />
+                </div>
+                <div className="feature-card-text">
+                  <h3>Essay Writing</h3>
+                  <p>Free response, guided composition & mark essay</p>
+                </div>
+                <span className="feature-arrow">→</span>
+              </button>
+
+              <button
+                type="button"
+                className="feature-card-v2"
+                onClick={() => navigate('/app/teacher', { state: { subject: 'English', gradeLevel: 'Form 3-4 (O-Level)' } })}
+              >
+                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #00E676, #00C853)' }}>
+                  <MessageSquare size={24} />
+                </div>
+                <div className="feature-card-text">
+                  <h3>AI English Tutor</h3>
+                  <p>Interactive Socratic tutoring for grammar & writing</p>
+                </div>
+                <span className="feature-arrow">→</span>
+              </button>
+            </div>
+          </section>
+
+          {/* Exam Mode */}
+          <section className="subject-section-v2">
+            <h2>Exam Practice</h2>
+            <button
+              type="button"
+              className="exam-card-v2"
+              onClick={() =>
+                navigate('/app/exam/setup', {
+                  state: { subject: 'english', backTo: '/app/english', subjectLabel: 'English' },
+                })
+              }
+            >
+              <div className="exam-card-icon" style={{ background: 'linear-gradient(135deg, #FF9100, #EF6C00)' }}>
+                <ClipboardList size={28} />
+              </div>
+              <div className="exam-card-text">
+                <h3>Start Exam</h3>
+                <p>Timed exam with mixed questions from all topics</p>
+              </div>
+              <span className="feature-arrow">→</span>
+            </button>
+          </section>
+        </div>
+
+        {/* Right column - Topics Grid */}
+        <div className="subject-topics-col">
+          <section className="subject-section-v2">
+            <h2>Grammar & Quiz Topics</h2>
+            <p className="section-subtitle">Practice topical or exam-style questions</p>
+            {loading ? (
+              <div className="loading-state">Loading topics…</div>
+            ) : (
+              <div className="topics-grid-v2">
+                {displayTopics.map((topic) => (
+                  <button
+                    key={topic.id}
+                    type="button"
+                    className="topic-card-v2"
+                    onClick={() => openStartQuiz(topic)}
+                  >
+                    <div className="topic-card-icon" style={{ background: 'linear-gradient(135deg, #FF9100, #FF6D00)' }}>
+                      <GraduationCap size={18} />
+                    </div>
+                    <span className="topic-card-name">{topic.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
 
       {/* Start Quiz Modal */}
       {startQuizModalOpen && (
-        <div className="english-modal-overlay" onClick={() => !generating && setStartQuizModalOpen(false)}>
-          <div className="english-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="english-modal-title">
+        <div className="modal-overlay-v2" onClick={() => !generating && setStartQuizModalOpen(false)}>
+          <div className="modal-v2" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-title">
               {pendingTopic ? `Practice: ${pendingTopic.name}` : 'Start English Quiz'}
             </h3>
-            <div className="english-modal-options">
+            <div className="modal-options">
               <button
                 type="button"
-                className={`english-modal-option ${quizMode === 'topical' ? 'active' : ''}`}
+                className={`modal-option ${quizMode === 'topical' ? 'active' : ''}`}
                 onClick={() => setQuizMode('topical')}
               >
                 Topical
               </button>
               <button
                 type="button"
-                className={`english-modal-option ${quizMode === 'exam' ? 'active' : ''}`}
+                className={`modal-option ${quizMode === 'exam' ? 'active' : ''}`}
                 onClick={() => setQuizMode('exam')}
               >
                 Exam
               </button>
             </div>
-            <p className="english-modal-cost">
+            <p className="modal-cost">
               Cost: {formatCreditCost(creditCost)} per question
             </p>
-            {error && <p className="english-modal-error">{error}</p>}
-            <div className="english-modal-actions">
+            {error && <p className="modal-error">{error}</p>}
+            <div className="modal-actions">
               <button
                 type="button"
-                className="english-modal-cancel"
+                className="modal-cancel"
                 onClick={() => !generating && setStartQuizModalOpen(false)}
                 disabled={generating}
               >
@@ -255,7 +283,7 @@ export function EnglishTopicsPage() {
               </button>
               <button
                 type="button"
-                className="english-modal-start"
+                className="modal-start"
                 onClick={handleStartQuiz}
                 disabled={generating || !hasEnoughCredits}
               >
@@ -268,4 +296,3 @@ export function EnglishTopicsPage() {
     </div>
   );
 }
-

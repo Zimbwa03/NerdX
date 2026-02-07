@@ -1,41 +1,51 @@
+/**
+ * DashboardPage - Premium Desktop Dashboard
+ * Advanced design with gradient cards, floating particles, and glassmorphism
+ */
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { formatCreditBalance } from '../utils/creditCalculator';
-import { FeatureCard } from '../components/FeatureCard';
-import { LogOut } from 'lucide-react';
+import { FloatingParticles } from '../components/FloatingParticles';
+import { SubjectCard } from '../components/SubjectCard';
+import { LogOut, Calculator, FlaskConical, BookOpen, Monitor, Globe, Receipt, Briefcase, Clock, GraduationCap, MessageCircle, Beaker, TrendingUp, Coins, Wifi, Mic, Atom, Brain, Map } from 'lucide-react';
 
-const O_LEVEL_CARDS = [
-  { id: 'mathematics', title: 'O Level Mathematics', subtitle: 'Build Strong Math Foundations', image: '/images/olevel_mathematics_card.png', color: '#2979FF' },
-  { id: 'combined_science', title: 'Sciences', subtitle: 'Explore the World Around You', image: '/images/olevel_sciences_card.png', color: '#00E676' },
-  { id: 'business_enterprise_skills', title: 'Business Enterprise and Skills', subtitle: 'Enterprise, Leadership & Skills (4048)', image: '/images/olevel_sciences_card.png', color: '#2E7D32' },
-  { id: 'history', title: 'History', subtitle: 'ZIMSEC O-Level History', image: '/images/olevel_sciences_card.png', color: '#5D4037' },
-  { id: 'commerce', title: 'Commerce', subtitle: 'Business, Trade & Economics', image: '/images/olevel_sciences_card.png', color: '#B8860B' },
-  { id: 'english', title: 'English', subtitle: 'Read, Write & Communicate', image: '/images/olevel_english_card.png', color: '#FF9100' },
-  { id: 'computer_science', title: 'Computer Science', subtitle: 'ZimSec & Cambridge O Level', image: '/images/olevel_computer_science_card.png', color: '#0288D1' },
-  { id: 'geography', title: 'Geography', subtitle: 'All Level ZIMSEC Geography', image: '/images/olevel_geography_card.png', color: '#2E7D32' },
-  { id: 'project_assistant', title: 'Project Assistant', subtitle: 'Plan, Research & Succeed', image: '/images/project_assistant_card_new.png', color: '#7C4DFF' },
+// O Level subjects with gradient colors and icons
+const O_LEVEL_SUBJECTS = [
+  { id: 'mathematics', title: 'Mathematics', subtitle: 'Build Strong Math Foundations', icon: Calculator, from: '#2979FF', to: '#1565C0' },
+  { id: 'biology', title: 'Biology', subtitle: 'Life Sciences & Organisms', icon: Brain, from: '#00E676', to: '#00C853' },
+  { id: 'chemistry', title: 'Chemistry', subtitle: 'Matter & Reactions', icon: Beaker, from: '#00BCD4', to: '#0097A7' },
+  { id: 'physics', title: 'Physics', subtitle: 'Forces & Energy', icon: Atom, from: '#5C6BC0', to: '#3949AB' },
+  { id: 'english', title: 'English', subtitle: 'Read, Write & Communicate', icon: BookOpen, from: '#FF9100', to: '#FF6D00' },
+  { id: 'computer_science', title: 'Computer Science', subtitle: 'ZimSec & Cambridge O Level', icon: Monitor, from: '#0288D1', to: '#01579B' },
+  { id: 'geography', title: 'Geography', subtitle: 'Explore Our World', icon: Globe, from: '#2E7D32', to: '#1B5E20' },
+  { id: 'commerce', title: 'Commerce', subtitle: 'Business, Trade & Finance', icon: Receipt, from: '#FF9800', to: '#EF6C00' },
+  { id: 'business_enterprise_skills', title: 'Business Enterprise', subtitle: 'Leadership & Skills', icon: Briefcase, from: '#14B8A6', to: '#0D9488' },
+  { id: 'history', title: 'History', subtitle: 'Explore Past Events', icon: Clock, from: '#5D4037', to: '#4E342E' },
+  { id: 'project_assistant', title: 'Project Assistant', subtitle: 'Plan, Research & Succeed', icon: GraduationCap, from: '#7C4DFF', to: '#651FFF' },
 ];
 
-const A_LEVEL_CARDS = [
-  { id: 'pure_mathematics', title: 'A Level Pure Mathematics', subtitle: 'Build Logical & Analytical Skills', image: '/images/alevel_pure_math_card.png', color: '#8B5CF6' },
-  { id: 'chemistry', title: 'A Level Chemistry', subtitle: 'Explore Matter & Reactions', image: '/images/alevel_chemistry_card.png', color: '#10B981' },
-  { id: 'physics', title: 'A Level Physics', subtitle: 'Understand the Laws of Nature', image: '/images/alevel_physics_card.png', color: '#3B82F6' },
-  { id: 'biology', title: 'A Level Biology', subtitle: 'Cell biology & genetics', image: '/images/alevel_biology_card.png', color: '#14B8A6' },
-  { id: 'computer_science', title: 'A Level Computer Science', subtitle: 'Master Code, Algorithms & Systems', image: '/images/alevel_computer_science_card.png', color: '#0D47A1' },
-  { id: 'geography', title: 'A Level Geography', subtitle: 'Explore Advanced Concepts & Systems', image: '/images/alevel_geography_card.png', color: '#2E7D32' },
+// A Level subjects
+const A_LEVEL_SUBJECTS = [
+  { id: 'pure_mathematics', title: 'Pure Mathematics', subtitle: 'Logical & Analytical Skills', icon: Calculator, from: '#8B5CF6', to: '#6D28D9' },
+  { id: 'chemistry', title: 'Chemistry', subtitle: 'Matter & Reactions', icon: Beaker, from: '#10B981', to: '#059669' },
+  { id: 'physics', title: 'Physics', subtitle: 'Laws of Nature', icon: Atom, from: '#3B82F6', to: '#2563EB' },
+  { id: 'biology', title: 'Biology', subtitle: 'Cell Biology & Genetics', icon: Brain, from: '#14B8A6', to: '#0D9488' },
+  { id: 'computer_science', title: 'Computer Science', subtitle: 'Code, Algorithms & Systems', icon: Monitor, from: '#0D47A1', to: '#0A3A8A' },
+  { id: 'geography', title: 'Geography', subtitle: 'Advanced Concepts', icon: Map, from: '#2E7D32', to: '#1B5E20' },
 ];
 
-const FEATURE_CARDS_ROW = [
-  { id: 'teacher', title: 'Teacher Mode', subtitle: 'Interactive AI Teaching', image: '/images/teacher_mode_card.png', color: '#00E676' },
-  { id: 'virtual_labs', title: 'Virtual Labs', subtitle: 'Interactive Science Simulations', image: '/images/virtual_labs_card.png', color: '#00E676' },
+// Feature cards (no images, just gradients and icons)
+const FEATURE_CARDS = [
+  { id: 'teacher', title: 'Teacher Mode', subtitle: 'Interactive AI Teaching', icon: MessageCircle, from: '#00E676', to: '#00C853' },
+  { id: 'virtual_labs', title: 'Virtual Labs', subtitle: 'Interactive Simulations', icon: FlaskConical, from: '#FF6D00', to: '#E65100' },
 ];
 
-const FEATURE_CARDS_FULL = [
-  { id: 'offline', title: 'Offline Chat', subtitle: 'Free • Basic Questions • Works Offline', image: '/images/offline_chat_card.png', color: '#10B981' },
-  { id: 'nerdx_live', title: 'NerdX Live', subtitle: 'Real-time Speech-to-Speech Conversations', image: '/images/nerdx_live_card.png', color: '#6C63FF' },
-  { id: 'progress', title: 'My Progress', subtitle: 'Track Your Learning Journey', image: '/images/my_progress_card.png', color: '#a18cd1' },
-  { id: 'credits', title: 'Credits & Store', subtitle: 'Redeem Rewards & Boost Learning', image: '/images/credits_card_new.png', color: '#fbc2eb' },
+const MORE_TOOLS = [
+  { id: 'offline', title: 'Offline Chat', subtitle: 'Free • Works Offline', icon: Wifi, from: '#10B981', to: '#059669' },
+  { id: 'nerdx_live', title: 'NerdX Live', subtitle: 'Real-time Speech Conversations', icon: Mic, from: '#6C63FF', to: '#5A52E0' },
+  { id: 'progress', title: 'My Progress', subtitle: 'Track Your Learning', icon: TrendingUp, from: '#a18cd1', to: '#8B7FD1' },
+  { id: 'credits', title: 'Credits & Store', subtitle: 'Boost Your Learning', icon: Coins, from: '#fbc2eb', to: '#e8b4d9' },
 ];
 
 export function DashboardPage() {
@@ -49,80 +59,93 @@ export function DashboardPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleCardClick = (id: string) => {
-    switch (id) {
-      case 'credits':
-        navigate('/app/credits');
-        break;
-      case 'progress':
-        navigate('/app/progress');
-        break;
-      case 'mathematics':
-        navigate('/app/mathematics');
-        break;
-      case 'combined_science':
-        navigate('/app/sciences');
-        break;
-      case 'english':
-        navigate('/app/english');
-        break;
-      case 'computer_science':
-        navigate('/app/computer-science');
-        break;
-      case 'geography':
-        navigate('/app/geography');
-        break;
-      case 'commerce':
-        navigate('/app/commerce');
-        break;
-      case 'business_enterprise_skills':
-        navigate('/app/business-enterprise-skills');
-        break;
-      case 'history':
-        navigate('/app/history');
-        break;
-      default:
-        showComingSoon();
+  const handleSubjectClick = (id: string) => {
+    const routeMap: Record<string, string> = {
+      credits: '/app/credits',
+      progress: '/app/progress',
+      mathematics: '/app/mathematics',
+      biology: '/app/biology',
+      chemistry: '/app/chemistry',
+      physics: '/app/physics',
+      english: '/app/english',
+      computer_science: '/app/computer-science',
+      geography: '/app/geography',
+      commerce: '/app/commerce',
+      business_enterprise_skills: '/app/business-enterprise-skills',
+      history: '/app/history',
+      teacher: '/app/teacher',
+    };
+
+    if (routeMap[id]) {
+      navigate(routeMap[id]);
+    } else {
+      showComingSoon();
     }
   };
 
-  const subjectCards = selectedLevel === 'O Level' ? O_LEVEL_CARDS : A_LEVEL_CARDS;
+  const handleALevelClick = (id: string) => {
+    const routeMap: Record<string, string> = {
+      pure_mathematics: '/app/pure-math',
+      chemistry: '/app/a-level-chemistry',
+      physics: '/app/a-level-physics',
+      biology: '/app/a-level-biology',
+      computer_science: '/app/a-level-computer-science',
+      geography: '/app/a-level-geography',
+    };
+
+    if (routeMap[id]) {
+      navigate(routeMap[id]);
+    } else {
+      showComingSoon();
+    }
+  };
+
+  const subjects = selectedLevel === 'O Level' ? O_LEVEL_SUBJECTS : A_LEVEL_SUBJECTS;
 
   return (
-    <div className="dashboard-page">
+    <div className="dashboard-page-v2">
+      <FloatingParticles count={20} />
+
       {toast && (
         <div className="dashboard-toast" role="alert">
           {toast}
         </div>
       )}
 
-      <section className="dashboard-hero">
-        <div className="dashboard-hero-content">
-          <p className="dashboard-greeting">Welcome back</p>
-          <h1 className="dashboard-name">{user?.name ? `${user.name} ${user.surname || ''}`.trim() : 'Student'}</h1>
-          <span className="dashboard-id-badge">ID: {user?.nerdx_id || 'N/A'}</span>
+      {/* Hero Section */}
+      <section className="dashboard-hero-v2">
+        <div className="hero-content">
+          <span className="hero-greeting">Welcome back 👋</span>
+          <h1 className="hero-name">{user?.name ? `${user.name} ${user.surname || ''}`.trim() : 'Student'}</h1>
+          <div className="hero-id">
+            <span>NerdX ID:</span>
+            <code>{user?.nerdx_id || 'N/A'}</code>
+          </div>
         </div>
-        <Link to="/app/credits" className="dashboard-credits-badge">
-          <span className="credits-value">{formatCreditBalance(user?.credits)}</span>
+
+        <Link to="/app/credits" className="credits-card-v2">
+          <div className="credits-glow" />
+          <span className="credits-amount">{formatCreditBalance(user?.credits)}</span>
           <span className="credits-label">Credits</span>
-          <span className="credits-topup">+</span>
+          <span className="credits-add">+</span>
         </Link>
       </section>
 
-      <section className="dashboard-section">
-        <div className="dashboard-section-header">
-          <h2 className="dashboard-section-title">Learning Hub</h2>
-          <div className="level-tabs">
+      {/* Learning Hub */}
+      <section className="learning-hub-v2">
+        <div className="section-header-v2">
+          <h2>Learning Hub</h2>
+          <div className="level-toggle-v2">
             <button
               type="button"
-              className={`level-tab ${selectedLevel === 'O Level' ? 'level-tab-active' : ''}`}
+              className={`level-btn ${selectedLevel === 'O Level' ? 'active' : ''}`}
               onClick={() => setSelectedLevel('O Level')}
             >
               O Level
             </button>
             <button
               type="button"
-              className={`level-tab ${selectedLevel === 'A Level' ? 'level-tab-active' : ''}`}
+              className={`level-btn ${selectedLevel === 'A Level' ? 'active' : ''}`}
               onClick={() => setSelectedLevel('A Level')}
             >
               A Level
@@ -130,50 +153,60 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className="card-grid card-grid-subjects">
-          {subjectCards.map((card) => (
-            <FeatureCard
-              key={card.id}
-              title={card.title}
-              subtitle={card.subtitle}
-              imageSrc={card.image}
-              onClick={() => handleCardClick(card.id)}
-              glowColor={card.color}
-            />
-          ))}
-        </div>
-
-        <div className="card-grid card-grid-features">
-          {FEATURE_CARDS_ROW.map((card) => (
-            <FeatureCard
-              key={card.id}
-              title={card.title}
-              subtitle={card.subtitle}
-              imageSrc={card.image}
-              onClick={() => handleCardClick(card.id)}
-              glowColor={card.color}
-            />
-          ))}
-        </div>
-
-        <h3 className="dashboard-subsection-title">More Tools</h3>
-        <div className="card-grid card-grid-full">
-          {FEATURE_CARDS_FULL.map((card) => (
-            <FeatureCard
-              key={card.id}
-              title={card.title}
-              subtitle={card.subtitle}
-              imageSrc={card.image}
-              onClick={() => handleCardClick(card.id)}
-              fullWidth
-              glowColor={card.color}
+        <div className="subjects-grid-v2">
+          {subjects.map((subject) => (
+            <SubjectCard
+              key={subject.id}
+              title={subject.title}
+              subtitle={subject.subtitle}
+              icon={subject.icon}
+              gradientFrom={subject.from}
+              gradientTo={subject.to}
+              onClick={() => selectedLevel === 'O Level' ? handleSubjectClick(subject.id) : handleALevelClick(subject.id)}
             />
           ))}
         </div>
       </section>
 
-      <footer className="dashboard-footer">
-        <button type="button" className="logout-btn" onClick={() => logout()}>
+      {/* Features Section */}
+      <section className="features-section-v2">
+        <h3>AI Features</h3>
+        <div className="features-grid-v2">
+          {FEATURE_CARDS.map((card) => (
+            <SubjectCard
+              key={card.id}
+              title={card.title}
+              subtitle={card.subtitle}
+              icon={card.icon}
+              gradientFrom={card.from}
+              gradientTo={card.to}
+              onClick={() => handleSubjectClick(card.id)}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* More Tools Section */}
+      <section className="more-tools-v2">
+        <h3>More Tools</h3>
+        <div className="tools-grid-v2">
+          {MORE_TOOLS.map((tool) => (
+            <SubjectCard
+              key={tool.id}
+              title={tool.title}
+              subtitle={tool.subtitle}
+              icon={tool.icon}
+              gradientFrom={tool.from}
+              gradientTo={tool.to}
+              onClick={() => handleSubjectClick(tool.id)}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="dashboard-footer-v2">
+        <button type="button" className="logout-btn-v2" onClick={() => logout()}>
           <LogOut size={18} /> Sign Out
         </button>
       </footer>

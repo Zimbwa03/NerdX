@@ -63,7 +63,7 @@ const TopicNotesDetailScreen: React.FC = () => {
             // Check if this is A Level Chemistry
             if (isALevel && subject === 'A Level Chemistry') {
                 return getALevelChemistryNotes(topic);
-            } 
+            }
             // Check if this is A Level Physics
             else if (isALevel && subject === 'A Level Physics') {
                 return getALevelPhysicsNotes(topic);
@@ -249,7 +249,36 @@ const TopicNotesDetailScreen: React.FC = () => {
         },
         paragraph: {
             color: themedColors.text.primary,
-        }
+        },
+        table: {
+            borderWidth: 1,
+            borderColor: themedColors.border.light || '#e0e0e0',
+            borderRadius: 4,
+            marginVertical: 10,
+        },
+        tr: {
+            flexDirection: 'row',
+            borderBottomWidth: 1,
+            borderColor: themedColors.border.light || '#e0e0e0',
+        },
+        th: {
+            flex: 1,
+            padding: 8,
+            fontWeight: 'bold',
+            backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#f5f5f5',
+            color: themedColors.text.primary,
+            textAlign: 'center',
+            borderRightWidth: 1,
+            borderColor: themedColors.border.light || '#e0e0e0',
+        },
+        td: {
+            flex: 1,
+            padding: 8,
+            color: themedColors.text.primary,
+            textAlign: 'center',
+            borderRightWidth: 1,
+            borderColor: themedColors.border.light || '#e0e0e0',
+        },
     };
 
     const resolveDiagramSource = (diagram: string | number) =>
@@ -518,13 +547,13 @@ const TopicNotesDetailScreen: React.FC = () => {
                         subject === 'History' ||
                         subject === 'Computer Science'
                     ) && notes && (
-                        <FlashcardSection
-                            subject={isALevel && subject === 'Biology' ? 'A Level Biology' : subject}
-                            topic={topic}
-                            notes={notes}
-                            accentColor={getSubjectColor()}
-                        />
-                    )}
+                            <FlashcardSection
+                                subject={isALevel && subject === 'Biology' ? 'A Level Biology' : subject}
+                                topic={topic}
+                                notes={notes}
+                                accentColor={getSubjectColor()}
+                            />
+                        )}
                 </ScrollView>
             </LinearGradient>
         </View>

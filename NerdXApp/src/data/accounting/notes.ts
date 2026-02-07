@@ -76,300 +76,562 @@ Different users need different information: lenders focus on **liquidity** and *
       'State the purpose of accounting and list internal and external users with their needs.',
       'Explain going concern, accruals, prudence, and business entity with examples.',
     ],
+    questions: [
+      {
+        id: 'q1',
+        question: 'Define "Accounting" and explain why it is called the language of business.',
+        answer: 'Accounting is the process of recording, summarising, analysing, and interpreting financial information. It is called the language of business because it communicates the financial health and performance of an entity to stakeholders for decision-making.'
+      },
+      {
+        id: 'q2',
+        question: 'List three internal users and three external users of financial information.',
+        answer: 'Internal: Owners, Managers, Employees. External: Lenders (Banks), Suppliers, Government (Tax Authorities), Investors, Customers.'
+      },
+      {
+        id: 'q3',
+        question: 'Explain the "Business Entity" concept with an example.',
+        answer: 'The business is treated as separate from its owner. Personal transactions of the owner are not mixed with business transactions. Example: If the owner takes cash for personal use, it is Drawings, not a business expense.'
+      },
+      {
+        id: 'q4',
+        question: 'If Assets = $50,000 and Liabilities = $15,000, calculate the Capital.',
+        answer: 'Capital = Assets - Liabilities. Capital = $50,000 - $15,000 = $35,000.'
+      },
+      {
+        id: 'q5',
+        question: 'Which accounting concept requires that revenue and expenses are recorded when they occur, not just when cash changes hands?',
+        answer: 'The Accruals (Matching) Concept.'
+      }
+    ],
   },
 
   'Types of Business Organizations': {
     topic: 'Types of Business Organizations',
     subject: 'Principles of Accounting',
-    summary: 'Businesses can be organised as sole traders, partnerships, or limited companies. Each type has different legal status, liability, capital structure, and accounting implications (e.g. capital account, drawings, profit sharing, reserves).',
+    summary: 'Different forms of business ownership exist to suit different needs. The three main types are Sole Traders, Partnerships, and Limited Companies. Each has distinct legal characteristics, liability structures, and accounting treatments.',
     audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Accounts/Untitled%20folder/Sole_Traders_Partnerships_and_Limited_Liability.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9BY2NvdW50cy9VbnRpdGxlZCBmb2xkZXIvU29sZV9UcmFkZXJzX1BhcnRuZXJzaGlwc19hbmRfTGltaXRlZF9MaWFiaWxpdHkubTRhIiwiaWF0IjoxNzcwMjcxMTgwLCJleHAiOjUyNzA3NjcxODB9.H4iHQSDV9ADbkeU-J2ib-558TkzrYRVrdFX0iali1D8',
     videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Accounts/Principles_of_Accounting%20(1).mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9BY2NvdW50cy9QcmluY2lwbGVzX29mX0FjY291bnRpbmcgKDEpLm1wNCIsImlhdCI6MTc3MDI3MTY0MywiZXhwIjo1MjcwNzY3NjQzfQ.QtAVygMr2I4WFosVAV1V_m-ksJ1WvqTx_uFunnghFIE',
     sections: [
       {
         title: 'Sole Trader',
-        content: `**Definition** – A **sole trader** (sole proprietor) is a business owned and run by **one person**. There is no legal distinction between the owner and the business for liability purposes.
+        content: `**Definition**  
+A business owned and operated by one person. It is the simplest form of business organization.
 
-**Features**  
-- **Unlimited liability**: the owner is personally liable for all business debts; personal assets can be used to pay them.  
-- **Capital** is shown in a single **Capital account** (owner’s equity).  
-- **Drawings** – money or goods taken for personal use – reduce capital (Debit Drawings, Credit Cash/Inventory).  
-- **Profit** belongs to the owner and is added to capital; **loss** is deducted.  
-- **Accounting**: Capital account = Opening capital + Profit − Drawings (or − Loss − Drawings).  
-- Easy to set up; few formalities; full control; all profits to owner.`,
+**Characteristics**
+*   **Ownership**: One person.
+*   **Liability**: Unlimited (Owner is personally liable for debts).
+*   **Capital**: Provided by the owner.
+*   **Profit**: All profit belongs to the owner.
+*   **Decisions**: Owner makes all decisions.
+
+**Accounting Treatment**
+*   **Capital Account**: Records the owner's investment.
+*   **Drawings**: Items taken by the owner for personal use.
+*   **Financial Statements**: Income Statement and Statement of Financial Position are straightforward.
+*   **Pros**: Easy to set up, full control, privacy.
+*   **Cons**: Unlimited liability, limited capital, lack of continuity (if owner dies).`,
         diagrams: [],
         subsections: [],
       },
       {
         title: 'Partnership',
-        content: `**Definition** – A **partnership** is a business owned by **two or more persons** (partners) who share profits (and usually losses) according to an agreement.
+        content: `**Definition**  
+A business formed by two or more people (usually 2-20) with a view to profit. governed by a Partnership Act or a Deed of Partnership.
 
-**Features**  
-- **Partnership agreement** – profit-sharing ratio, salaries, interest on capital, interest on drawings, roles.  
-- **Unlimited liability** for partners (unless limited partners in a limited partnership).  
-- **Capital accounts** – each partner has a Capital account (long-term investment).  
-- **Current accounts** – used for profit share, salaries, interest on capital, interest on drawings, drawings.  
-- **Appropriation account** – shows how profit is shared (salaries, interest, remainder in profit-sharing ratio).  
-- **Accounting**: Profit is transferred to appropriation; then to partners’ current accounts; drawings reduce current accounts.  
-- **Admission/retirement of partner** – may require revaluation of assets and goodwill.`,
+**Characteristics**
+*   **Ownership**: 2 or more partners.
+*   **Liability**: Unlimited (Joint and Several Liability).
+*   **Agreement**: Deed of Partnership sets out rules (profit sharing ratio, salaries, interest largely).
+
+**Accounting Treatment**
+*   **Appropriation Account**: Used to share out the Net Profit.
+    *   Add Interest on Drawings.
+    *   Less Partner Salaries.
+    *   Less Interest on Capital.
+    *   Share Balance of Profit.
+*   **Current Accounts**: Record day-to-day transactions between partner and firm (Profit share, Drawings, Interest).
+*   **Capital Accounts**: Fixed capital contributed.
+
+**Pros**: More capital, shared responsibility and skills.
+**Cons**: Unlimited liability, disputes, slower decision making.`,
         diagrams: [],
         subsections: [],
       },
       {
         title: 'Limited Companies',
-        content: `**Definition** – A **limited company** is a **separate legal entity**. It can own assets, incur liabilities, and enter contracts in its own name. Shareholders have **limited liability** – they lose only what they invested (or agreed to pay).
+        content: `**Definition**  
+A business that has a separate legal identity from its owners (shareholders).
 
-**Private limited company (Pvt Ltd)**  
-- Shares **not** offered to the public.  
-- Minimum usually one director; often family-owned.  
-- Accounts may be less detailed than for a plc (depending on size).
+**Types**
+1.  **Private Limited Company (Pvt Ltd / Ltd)**: Shares sold privately to friends/family. Cannot sell to public.
+2.  **Public Limited Company (Plc)**: Shares can be sold to the public on the Stock Exchange.
 
-**Public limited company (Plc)**  
-- Shares can be **traded on a stock exchange** (e.g. ZSE).  
-- Stricter regulation; published accounts.  
-- Can raise large amounts of capital from the public.
+**Characteristics**
+*   **Separate Legal Entity**: The company can own property and be sued in its own name.
+*   **Limited Liability**: Shareholders are only liable up to the amount unpaid on their shares. They cannot lose personal assets.
+*   **Ownership vs Control**: Shareholders own it, Directors run it (divorce of ownership and control).
 
-**Accounting implications**  
-- **Share capital** – ordinary shares, preference shares; nominal value vs market value.  
-- **Reserves** – retained earnings, revaluation reserve, share premium.  
-- **Dividends** – declared and paid to shareholders; reduce retained earnings.  
-- **Directors’ remuneration** – expense in income statement; not “drawings”.  
-- **Statement of financial position**: Equity = Share capital + Reserves.  
-- **Income statement**: Profit after tax can be transferred to retained earnings or paid as dividends.`,
+**Accounting Treatment**
+*   **Share Capital**: Ordinary and Preference Shares.
+*   **Reserves**: Retained Earnings, Share Premium, Revaluation Reserve.
+*   **Dividends**: Part of profit distributed to shareholders.
+*   **Tax**: Company pays Corporation Tax.
+
+| Feature | Sole Trader | Partnership | Limited Company |
+|---|---|---|---|
+| **Liability** | Unlimited | Unlimited | Limited |
+| **Capital** | Owner | Partners | Shareholders |
+| **Control** | Owner | Partners | Directors |
+| **Profit** | To Owner | Shared | Dividends/Retained |`,
         diagrams: [],
         subsections: [],
       },
     ],
     key_points: [
       'Sole trader: one owner, unlimited liability, Capital and Drawings accounts.',
-      'Partnership: Capital and Current accounts; appropriation for profit sharing.',
-      'Limited company: separate legal entity, limited liability, share capital and reserves.',
+      'Partnership: Two or more owners, partnership deed, Appropriation Account required.',
+      'Limited company: separate legal entity, limited liability for shareholders, dividends paid from profits.',
     ],
     exam_tips: [
       'Compare liability and capital structure of sole trader, partnership, and company.',
-      'Prepare appropriation account and partners’ current accounts from given figures.',
+      'Remember that "Drawings" are for Sole Traders/Partnerships, while Companies pay "Dividends".',
+      'Explain the concept of "Separate Legal Entity".',
     ],
+    questions: [
+      {
+        id: 'q1',
+        question: 'Define "Limited Liability".',
+        answer: 'It means the liability of the shareholders is limited to the amount they have invested (or agreed to invest) in the company. Their personal assets cannot be taken to pay business debts.'
+      },
+      {
+        id: 'q2',
+        question: 'List two advantages of a Partnership over a Sole Trader.',
+        answer: '1. More capital available from multiple partners. 2. Shared workload and diverse skills/expertise.'
+      },
+      {
+        id: 'q3',
+        question: 'What is a "Deed of Partnership"?',
+        answer: 'A legal document that sets out the rules for the partnership, such as profit-sharing ratios, interest on capital, partner salaries, and procedures for admitting new partners.'
+      },
+      {
+        id: 'q4',
+        question: 'Distinguish between a Private Limited Company and a Public Limited Company.',
+        answer: 'A Private Limited Company cannot sell shares to the public and restricts share transfers. A Public Limited Company can sell shares to the general public on the stock exchange.'
+      },
+      {
+        id: 'q5',
+        question: 'What account is used in Partnership accounting to distribute Net Profit?',
+        answer: 'The Appropriation Account.'
+      }
+    ]
   },
 
   'Source Documents and Books of Prime Entry': {
     topic: 'Source Documents and Books of Prime Entry',
     subject: 'Principles of Accounting',
-    summary: 'Source documents (invoices, receipts, cheques, etc.) provide evidence of transactions. Books of prime entry (day books, cash book, journal) are where transactions are first recorded before being posted to the ledger.',
+    summary: 'Transactions must be recorded systematically. Source documents provide the evidence, and Books of Prime Entry (Journals) are the first place they are recorded before being posted to the Ledger.',
     audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Accounts/Untitled%20folder/Source_Documents_and_the_Chain_of_Custody%20(1).m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9BY2NvdW50cy9VbnRpdGxlZCBmb2xkZXIvU291cmNlX0RvY3VtZW50c19hbmRfdGhlX0NoYWluX29mX0N1c3RvZHkgKDEpLm00YSIsImlhdCI6MTc3MDI3MTE5NiwiZXhwIjo1MjcwNzY3MTk2fQ.mzuXFiGrsT5wWavxbR_quZTUCAA91pmXN_0IY2FMV-s',
     sections: [
       {
         title: 'Source Documents',
-        content: `**Invoice** – Sent by **seller** to buyer. Shows goods/services, quantities, prices, VAT (if any), total. **Sales invoice** (seller’s copy); **purchase invoice** (buyer’s copy).  
-**Credit note** – Issued when goods are returned or an overcharge is corrected; **reduces** the amount owed.  
-**Debit note** – Used by buyer to request a credit note, or by seller to increase amount owed (e.g. extra charges).  
-**Receipt** – Evidence that **cash** has been received.  
-**Cheque** – Instruction to bank to pay a stated amount; counterfoil kept as record.  
-**Bank statement** – Bank’s record of deposits, withdrawals, charges, interest.  
-**Payment voucher / petty cash voucher** – Internal document authorising a payment and recording it.  
-**Delivery note** – Lists goods delivered; customer may sign to confirm receipt.  
-**Order** – Customer’s request to supplier for goods/services.
+        content: `**Purpose**  
+Every transaction must be supported by a document (evidence).
 
-All of these support the **double entry** in the books and help with **audit trail** and **dispute resolution**.`,
+| Document | Purpose | Transaction Type |
+|---|---|---|
+| **Invoice** | Demand for payment for goods/services. | Credit Purchase / Credit Sale |
+| **Credit Note** | Reduces the amount owed (e.g. returns). | Returns Inwards / Outwards |
+| **Receipt** | Proof of payment received. | Cash Transaction |
+| **Cheque Counterfoil** | Record of payment made by cheque. | Bank Payment |
+| **Paying-in Slip** | Record of cash/cheques banked. | Bank Deposit |
+| **Petty Cash Voucher** | Authorisation for small cash payments. | Petty Cash Expense |
+| **Statement of Account** | Summary of transactions for the month. | Reminder (Not a transaction) |`,
         diagrams: [],
         subsections: [],
       },
       {
-        title: 'Books of Prime Entry',
-        content: `**Books of prime entry** (subsidiary books) are where transactions are **first recorded** by type. Totals or individual entries are then **posted** to the ledger. They reduce the number of ledger entries and group similar transactions.
+        title: 'Books of Prime Entry (Day Books)',
+        content: `Transactions are first recorded in these books.
 
-**Sales day book (sales journal)**  
-- Records **credit sales** from copies of sales invoices.  
-- Columns: Date, Customer, Invoice no., Total, VAT (if any), Net.  
-- **Posted**: Total sales → Credit Sales account; individual amounts → Credit each Debtors (receivables) account.
+**1. Sales Journal (Sales Day Book)**
+*   Records: **Credit Sales** of inventory.
+*   Source: Copies of Sales Invoices.
 
-**Purchases day book (purchases journal)**  
-- Records **credit purchases** from purchase invoices.  
-- **Posted**: Total → Debit Purchases; individual amounts → Debit each Creditors (payables) account.
+| Date | Customer | Invoice No. | Folio | Amount ($) |
+|---|---|---|---|---|
+| May 1 | A. Smith | 001 | SL1 | 100 |
+| May 4 | B. Jones | 002 | SL2 | 50 |
+| **Total** | | | | **150** |
+*   **Posting**: Total ($150) -> Cr Sales Account. Individual amounts -> Dr Customer Accounts.
 
-**Sales returns day book (returns outwards)**  
-- Records **goods returned by customers** (credit notes issued).  
-- **Posted**: Debit Sales returns; Credit Debtors.
+**2. Purchases Journal (Purchases Day Book)**
+*   Records: **Credit Purchases** of inventory.
+*   Source: Purchase Invoices received.
+*   **Posting**: Total -> Dr Purchases Account. Individual amounts -> Cr Supplier Accounts.
 
-**Purchases returns day book (returns inwards)**  
-- Records **goods returned to suppliers** (credit notes received).  
-- **Posted**: Credit Purchases returns; Debit Creditors.
+**3. Returns Inwards Journal (Sales Returns)**
+*   Records: Goods returned by customers.
+*   Source: Copies of Credit Notes sent.
+*   **Posting**: Total -> Dr Sales Returns Account. Individual amounts -> Cr Customer Accounts.
 
-**Cash book**  
-- Records all **cash and bank** receipts and payments.  
-- Often acts as **both** a book of prime entry **and** part of the ledger (cash and bank accounts).  
-- **Two-column cash book**: Cash | Bank. **Three-column**: + Discount allowed / received.  
-- **Contra entries**: When cash is paid into bank or withdrawn (same transaction, both columns).
+**4. Returns Outwards Journal (Purchases Returns)**
+*   Records: Goods returned to suppliers.
+*   Source: Credit Notes received.
+*   **Posting**: Total -> Cr Purchases Returns Account. Individual amounts -> Dr Supplier Accounts.
 
-**Journal (general journal)**  
-- Used for **non-routine** entries: opening entries, corrections, accruals, prepayments, depreciation, purchase/sale of assets, write-offs.  
-- Format: Date, Account, Debit, Credit, Narrative.  
-- **Posted** to ledger accounts.`,
+**5. Cash Book**
+*   Records: All Cash and Bank receipts and payments.
+*   Including Discounts Allowed (expense) and Discounts Received (income).
+
+**6. The General Journal**
+*   Records: Anything not in the other books (The "Dustbin" book).
+    *   Purchase/Sale of Non-Current Assets on credit.
+    *   Correction of errors.
+    *   Opening entries.
+    *   Bad debts written off.`,
         diagrams: [],
         subsections: [],
       },
       {
-        title: 'Flow from Documents to Ledger',
-        content: `**Sequence**  
-1. **Transaction** occurs (e.g. sale on credit).  
-2. **Source document** (e.g. sales invoice) is prepared.  
-3. **Book of prime entry** – entry in sales day book.  
-4. **Ledger** – total to Sales account; individual amount to Debtors account.  
-5. **Trial balance** – list of ledger balances to check double entry.  
-6. **Financial statements** – income statement, statement of financial position.
+        title: 'Trade Discount vs Cash Discount',
+        content: `**Trade Discount**
+*   Given to traders (bulk buying).
+*   Deducted on the Invoice.
+*   **Never recorded** in the ledger accounts. Only the net amount is recorded.
+*   Example: List price $100, Trade Discount 10%. Invoice = $90. Record $90.
 
-**Discounts**  
-- **Trade discount** – reduction off list price (e.g. bulk discount); **not** entered in books separately; invoice shows net price.  
-- **Cash discount** – for early payment; **Discount allowed** (seller) = expense; **Discount received** (buyer) = income. Recorded in cash book when payment is made/received.`,
+**Cash Discount**
+*   Given for **prompt payment** (e.g. pay within 7 days).
+*   Recorded in the Cash Book and Ledger.
+*   **Discount Allowed**: Expense (Dr) - For customers paying us.
+*   **Discount Received**: Income (Cr) - For us paying suppliers.`,
         diagrams: [],
         subsections: [],
       },
     ],
     key_points: [
-      'Source documents (invoice, receipt, cheque, etc.) provide evidence of transactions.',
-      'Sales day book: credit sales; Purchases day book: credit purchases.',
-      'Cash book records cash and bank; can include discount columns.',
-      'Journal used for non-routine entries (corrections, accruals, depreciation).',
+      'Source documents verify transactions.',
+      'Books of prime entry categorize transactions before posting to the ledger.',
+      'Sales/Purchases Journals are for CREDIT transactions of INVENTORY only.',
+      'Trade discount is not recorded; Cash discount is recorded.',
     ],
     exam_tips: [
-      'Identify which book of prime entry is used for a given transaction.',
-      'Complete a sales or purchases day book from invoices; post to ledger.',
+      'Never put cash sales in the Sales Journal (they go to the Cash Book).',
+      'Never put the sale of a Van in the Sales Journal (it goes to the General Journal).',
+      'Understand the flow: Document -> Day Book -> Ledger -> Trial Balance.',
     ],
+    questions: [
+      {
+        id: 'q1',
+        question: 'Which source document is sent by a supplier to a customer when goods are returned?',
+        answer: 'A Credit Note.'
+      },
+      {
+        id: 'q2',
+        question: 'In which book of prime entry are Credit Sales recorded?',
+        answer: 'The Sales Journal (or Sales Day Book).'
+      },
+      {
+        id: 'q3',
+        question: 'Where would the purchase of a new computer on credit be recorded?',
+        answer: 'The General Journal (because it is a Non-Current Asset, not inventory).'
+      },
+      {
+        id: 'q4',
+        question: 'Explain the difference between Trade Discount and Cash Discount.',
+        answer: 'Trade Discount is for bulk buying and is deduced on the invoice (not recorded). Cash Discount is for prompt payment and is recorded as an expense (Allowed) or income (Received).'
+      },
+      {
+        id: 'q5',
+        question: 'What is the purpose of a Petty Cash Voucher?',
+        answer: 'To authorize and record small cash payments (e.g., postage, cleaning) from the petty cash fund.'
+      }
+    ]
   },
 
   'Ledger and Double Entry': {
     topic: 'Ledger and Double Entry',
     subject: 'Principles of Accounting',
-    summary: 'Double entry means every transaction is recorded twice: one debit and one credit of equal amount.',
+    summary: 'The double-entry system is the basis of modern accounting. It relies on the principle that every transaction involves a giving and a receiving aspect, affecting two accounts. This topic explains the rules of debit and credit, the layout of ledger accounts, and how to record transactions and balance accounts.',
     audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Accounts/Untitled%20folder/Why_Every_Penny_Is_Tracked_Twice.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9BY2NvdW50cy9VbnRpdGxlZCBmb2xkZXIvV2h5X0V2ZXJ5X1Blbm55X0lzX1RyYWNrZWRfVHdpY2UubTRhIiwiaWF0IjoxNzcwMjcxMjc5LCJleHAiOjUyNzA3NjcyNzl9.4V86uu7Wd8fN_svM-w5Au71F0focSC0CWk0aCN9U00w',
     videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Accounts/The_Logic_of_the_Ledger.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9BY2NvdW50cy9UaGVfTG9naWNfb2ZfdGhlX0xlZGdlci5tcDQiLCJpYXQiOjE3NzAyNzE2ODYsImV4cCI6NTI3MDc2NzY4Nn0.S0ASgELRLvpT02-Un-SFI98DD9iVFQz5waI9MGv6hZI',
     sections: [
       {
-        title: 'Double-Entry Rule',
-        content: `**Rule** – For **every** transaction there are **two** ledger entries: one **Debit** and one **Credit**, and the **total debits = total credits**. This keeps the accounting equation in balance: **Assets = Capital + Liabilities**.
+        title: 'The Dual Aspect Concept',
+        content: `**Double Entry Rule**  
+For every transaction, there are two entries: a **Debit (Dr)** entry and a **Credit (Cr)** entry.  
+*   **Debit** the Receiver (or value coming IN).
+*   **Credit** the Giver (or value going OUT).
 
-**Debit and credit**  
-- **Debit (Dr)** = left side of account.  
-- **Credit (Cr)** = right side of account.  
-- **Assets** and **Expenses**: increase with **Debit**, decrease with **Credit**.  
-- **Liabilities**, **Capital**, and **Income**: increase with **Credit**, decrease with **Debit**.
+**The Layout of an Account (T-Account)**  
+An account is a record of transactions related to a specific item or person. It is "T" shaped.
+*   **Left side** = Debit side (Dr)
+*   **Right side** = Credit side (Cr)
 
-**Examples**  
-- **Buy goods for cash**: Debit Purchases, Credit Cash (asset down, expense up).  
-- **Sell goods on credit**: Debit Debtors (asset up), Credit Sales (income up).  
-- **Owner pays cash into business**: Debit Cash, Credit Capital.  
-- **Pay rent**: Debit Rent expense, Credit Cash.  
-- **Receive loan from bank**: Debit Cash, Credit Bank loan (liability).`,
+| Date | Details | Folio | Amount ($) | Date | Details | Folio | Amount ($) |
+|---|---|---|---|---|---|---|---|
+| Jan 1 | (Debit Entry) | | 100 | Jan 15 | (Credit Entry) | | 50 |
+
+**Rules for Asset, Liability, and Capital Accounts**  
+1.  **Assets** (e.g., Cash, Van, Debtors):
+    *   To Increase: **Debit**
+    *   To Decrease: **Credit**
+2.  **Liabilities** (e.g., Creditors, Loans):
+    *   To Increase: **Credit**
+    *   To Decrease: **Debit**
+3.  **Capital**:
+    *   To Increase (Profit/Introduction): **Credit**
+    *   To Decrease (Drawings/Loss): **Debit**`,
         diagrams: [],
         subsections: [],
       },
       {
-        title: 'Ledger Accounts',
-        content: `**Ledger** – A collection of **accounts** (T-accounts). Each account has a name (e.g. Cash, Sales, John (debtor), Purchases) and two sides: Debit and Credit.
+        title: 'Worked Example: Recording Transactions',
+        content: `Let's record the following transactions for a new business "Computer World":
 
-**Types of accounts**  
-- **Real accounts** – Assets (e.g. Premises, Equipment, Inventory, Cash, Bank, Debtors).  
-- **Personal accounts** – Individuals/firms (Debtors, Creditors).  
-- **Nominal accounts** – Income and expenses (Sales, Purchases, Rent, Wages, Discount allowed).
+**May 1**: Started business with $10,000 cash in the bank.
+*   Asset (Bank) increases -> **Dr Bank**
+*   Capital increases -> **Cr Capital**
 
-**Format**  
-- **Heading** – account name.  
-- **Date, Details, Folio, Amount** on each side.  
-- **Folio** – reference to the other book (e.g. CB = cash book, J = journal).  
-- Entries are **posted** from books of prime entry or journal.`,
+**Bank Account**
+| Date | Details | Amount ($) | Date | Details | Amount ($) |
+|---|---|---|---|---|---|
+| May 1 | Capital | 10,000 | | | |
+
+**Capital Account**
+| Date | Details | Amount ($) | Date | Details | Amount ($) |
+|---|---|---|---|---|---|
+| | | | May 1 | Bank | 10,000 |
+
+**May 2**: Bought a Computer for $2,000 paying by cheque.
+*   Asset (Computer) increases -> **Dr Computer Equipment**
+*   Asset (Bank) decreases -> **Cr Bank**
+
+**Computer Equipment Account**
+| Date | Details | Amount ($) | Date | Details | Amount ($) |
+|---|---|---|---|---|---|
+| May 2 | Bank | 2,000 | | | |
+
+**Bank Account** (Updated)
+| Date | Details | Amount ($) | Date | Details | Amount ($) |
+|---|---|---|---|---|---|
+| May 1 | Capital | 10,000 | May 2 | Computer Eq | 2,000 |
+
+**May 5**: Bought goods (Inventory) for $500 on credit from T. Tech.
+*   Asset (Purchases) increases -> **Dr Purchases**
+*   Liability (Creditor) increases -> **Cr T. Tech**
+
+**Purchases Account**
+| Date | Details | Amount ($) | Date | Details | Amount ($) |
+|---|---|---|---|---|---|
+| May 5 | T. Tech | 500 | | | |
+
+**T. Tech Account** (Creditor)
+| Date | Details | Amount ($) | Date | Details | Amount ($) |
+|---|---|---|---|---|---|
+| | | | May 5 | Purchases | 500 |
+
+**May 10**: Sold goods for $800 cash.
+*   Asset (Cash) increases -> **Dr Cash**
+*   Income (Sales) increases -> **Cr Sales**
+
+**Cash Account**
+| Date | Details | Amount ($) | Date | Details | Amount ($) |
+|---|---|---|---|---|---|
+| May 10 | Sales | 800 | | | |
+
+**Sales Account**
+| Date | Details | Amount ($) | Date | Details | Amount ($) |
+|---|---|---|---|---|---|
+| | | | May 10 | Cash | 800 |
+
+**May 15**: Paid T. Tech $200 by cheque.
+*   Liability (T. Tech) decreases -> **Dr T. Tech**
+*   Asset (Bank) decreases -> **Cr Bank**
+
+**T. Tech Account** (Updated)
+| Date | Details | Amount ($) | Date | Details | Amount ($) |
+|---|---|---|---|---|---|
+| May 15 | Bank | 200 | May 5 | Purchases | 500 |
+
+**Bank Account** (Updated)
+| Date | Details | Amount ($) | Date | Details | Amount ($) |
+|---|---|---|---|---|---|
+| May 1 | Capital | 10,000 | May 2 | Computer Eq | 2,000 |
+| | | | May 15 | T. Tech | 200 |`,
         diagrams: [],
         subsections: [],
       },
       {
         title: 'Balancing Ledger Accounts',
-        content: `**Balancing** – For each account, total the **larger** side and insert the **difference** on the **smaller** side so that **Total Dr = Total Cr**. This difference is the **balance** (balance c/d). Carry it down as **balance b/d** on the opposite side at the start of the next period.
+        content: `At the end of a period (e.g., month-end), accounts must be **balanced**. We do this to find the net amount remaining in the account.
 
-**Balance b/d**  
-- **Debit balance b/d** – asset or expense (e.g. Cash, Debtors, Purchases).  
-- **Credit balance b/d** – liability, capital, or income (e.g. Creditors, Capital, Sales).
+**Steps to Balance an Account:**
+1.  Add up the totals of the Debit and Credit columns.
+2.  Find the difference between the two totals.
+3.  Enter the difference on the **smaller** side as **"Balance c/d"** (carried down). This makes the totals equal.
+4.  Total both columns on the same line (double underline the totals).
+5.  Bring the balance down to the **opposite** side (the larger side) below the total as **"Balance b/d"** (brought down). This is the opening balance for the next period.
 
-**Trial balance** – List all ledger **balances**: Debit balances in the Dr column, Credit balances in the Cr column. **Total Dr = Total Cr** if double entry is correct. Errors that don’t affect this (e.g. omission, wrong account, compensation) may still exist.`,
+**Example: Balancing the Bank Account from above**
+*   Debit Total: $10,000
+    *   (May 1 Capital)
+*   Credit Total so far: $2,200
+    *   (May 2 Computer: 2,000 + May 15 T. Tech: 200)
+*   Difference: $7,800 ($10,000 - $2,200)
+*   Since Credit side is smaller, put "Balance c/d 7,800" on the Credit side.
+
+**Bank Account**
+| Date | Details | Amount ($) | Date | Details | Amount ($) |
+|---|---|---|---|---|---|
+| May 1 | Capital | 10,000 | May 2 | Computer Eq | 2,000 |
+| | | | May 15 | T. Tech | 200 |
+| | | | **May 31** | **Balance c/d** | **7,800** |
+| | | **10,000** | | | **10,000** |
+| **Jun 1** | **Balance b/d** | **7,800** | | | |
+
+**Explanation**: The "Balance b/d" of $7,800 on the Debit side tells us we have $7,800 **Asset** (Cash in Bank) at the start of June. A debit balance represents an Asset or Expense. A credit balance represents a Liability, Capital, or Income.`,
         diagrams: [],
         subsections: [],
       },
     ],
     key_points: [
-      'Every transaction has equal Debit and Credit entries.',
-      'Assets and expenses: Dr to increase; Liabilities, capital, income: Cr to increase.',
-      'Ledger accounts are balanced; balance c/d and b/d.',
-      'Trial balance lists all balances; total Dr = total Cr.',
+      'Debit the Receiver, Credit the Giver.',
+      'Assets/Expenses (PEA): Increase Dr, Decrease Cr.',
+      'Liabilities/Income/Capital (LIC): Increase Cr, Decrease Dr.',
+      'Balance c/d goes on the smaller side to make totals agree',
+      'Balance b/d is the true balance brought down to the larger side for the next period.',
     ],
     exam_tips: [
-      'Apply double entry to given transactions (identify Dr and Cr accounts).',
-      'Balance accounts and extract a trial balance.',
+      'Always ask: Which two accounts are affected? Is it an asset, liability, expense or income? Is it increasing or decreasing?',
+      'When balancing, the totals must be on the same horizontal line.',
+      'A Debit balance b/d means Asset/Expense (or Drawings). A Credit balance b/d means Liability/Income/Capital.',
+    ],
+    questions: [
+      {
+        id: 'q1',
+        question: 'State the double entry rule for Assets and Liabilities.',
+        answer: 'Assets: Debit to increase, Credit to decrease. Liabilities: Credit to increase, Debit to decrease.'
+      },
+      {
+        id: 'q2',
+        question: 'What is the double entry to record the purchase of a Motor Van for $5,000 paying by cheque?',
+        answer: 'Debit Motor Van $5,000; Credit Bank $5,000.'
+      },
+      {
+        id: 'q3',
+        question: 'What is the double entry to record goods sold for $200 on credit to J. Brown?',
+        answer: 'Debit J. Brown (Debtor) $200; Credit Sales $200.'
+      },
+      {
+        id: 'q4',
+        question: 'Explain what a "Debit balance b/d" on a Bank Account means.',
+        answer: 'It means the business has money in the bank (an Asset). It is a positive bank balance.'
+      },
+      {
+        id: 'q5',
+        question: 'When balancing an account, on which side do you write "Balance c/d"?',
+        answer: 'On the smaller side, to make the totals of the debit and credit columns equal.'
+      }
     ],
   },
 
   'Trial Balance': {
     topic: 'Trial Balance',
     subject: 'Principles of Accounting',
-    summary: 'The trial balance is a list of all ledger account balances (debits and credits) at a given date.',
+    summary: 'The main purpose of the Trial Balance is to check the arithmetical accuracy of the double-entry bookkeeping. It is a list of all ledger balances at a specific date.',
     audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Accounts/Untitled%20folder/Silent_Errors_Hiding_in_the_Trial_Balance.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9BY2NvdW50cy9VbnRpdGxlZCBmb2xkZXIvU2lsZW50X0Vycm9yc19IaWRpbmdfaW5fdGhlX1RyaWFsX0JhbGFuY2UubTRhIiwiaWF0IjoxNzcwMjcxMTY0LCJleHAiOjUyNzA3NjcxNjR9.9aXLSwGdzL2cUh3_cn1O0IpIh8FV_xjcXNwsA1mdt1c',
     videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Accounts/The_Trial_Balance.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9BY2NvdW50cy9UaGVfVHJpYWxfQmFsYW5jZS5tcDQiLCJpYXQiOjE3NzAyNzE3MDAsImV4cCI6NTI3MDc2NzcwMH0.G9uA0flFctOF1h3O57xykqv2UWw8NW0ZQw2iF_2mt-s',
     sections: [
       {
-        title: 'Purpose and Preparation',
-        content: `**Purpose**  
-- To **check** that for every debit there is an equal credit (arithmetic accuracy of double entry).  
-- To provide a **list of balances** that can be used to prepare the **income statement** and **statement of financial position**.  
-- It is **not** a financial statement; it is an internal check.
+        title: 'Extraction of a Trial Balance',
+        content: `**Process**
+1.  Balance all ledger accounts.
+2.  List every account with a Debit balance in the LEFT column.
+3.  List every account with a Credit balance in the RIGHT column.
+4.  Total both columns.
 
-**Preparation**  
-1. **Balance** all ledger accounts (balance c/d, balance b/d).  
-2. **List** every account that has a balance.  
-3. **Debit balances** → Debit column of trial balance.  
-4. **Credit balances** → Credit column of trial balance.  
-5. **Add** each column; **Total Dr should equal Total Cr**.
+**Rule**: **Total Debits must equal Total Credits.**
 
-**Format**  
-- Two columns: Debit | Credit.  
-- Account name (or number), then amount.  
-- Often prepared at the **end of a financial period** (e.g. year end) before adjustments and financial statements.`,
+| Account | Debit ($) | Credit ($) |
+|---|---|---|
+| Capital | | 10,000 |
+| Bank | 5,000 | |
+| Motor Vehicles | 8,000 | |
+| Sales | | 15,000 |
+| Purchases | 9,000 | |
+| Wages | 2,000 | |
+| Creditors | | 1,000 |
+| Debtors | 2,000 | |
+| **Totals** | **26,000** | **26,000** |
+
+This proves that for every debit entry, there has been a corresponding credit entry. However, it does not prove the accounts are 100% correct (see Errors).`,
         diagrams: [],
         subsections: [],
       },
       {
-        title: 'Errors Revealed by Trial Balance',
-        content: `If **Total Dr ≠ Total Cr**, there is an **error in double entry** (or in adding/balancing). Such errors **are revealed** by the trial balance:
+        title: 'Errors Revealed by a Trial Balance',
+        content: `If the Trial Balance totals do **not** agree, it means a mathematical error has occurred.
+*   **Single Entry**: Only recording one side of a transaction.
+*   **Incorrect Addition**: Adding up the ledger account or Trial Balance column incorrectly.
+*   **Different Amounts**: Entering Dr $50 and Cr $500.
+*   **Extraction Error**: Listing a debit balance as a credit (or vice versa).
 
-- **Single entry** – only one side of the transaction recorded.  
-- **Wrong amount** on one side (e.g. Dr 100, Cr 80).  
-- **Transposition** – digits swapped on one side (e.g. 540 vs 450).  
-- **Omission of one side** of the entry.  
-- **Balance** incorrectly calculated or carried to wrong column.
-
-**Correcting** – Find the difference; check recent entries and balances; prepare a **journal entry** to correct (e.g. debit or credit the understated/overstated account and the other side to Suspense or the correct account). Once corrected, the trial balance should agree.`,
+**Correction**: These are usually fixed by checking calculations or using a Suspense Account temporarily.`,
         diagrams: [],
         subsections: [],
       },
       {
-        title: 'Errors Not Revealed by Trial Balance',
-        content: `Some errors **do not** affect the trial balance (Dr still = Cr) but **do** affect the truth of the accounts:
+        title: 'Errors NOT Revealed by a Trial Balance',
+        content: `Even if the Trial Balance balances, these 6 errors might still exist (Use acronym **CROPPC** or **CORPPC**):
 
-- **Error of omission** – transaction not recorded at all (no Dr, no Cr).  
-- **Error of commission** – wrong account but right type (e.g. Dr Motor expenses instead of Rent).  
-- **Error of principle** – wrong type of account (e.g. treat purchase of machine as expense instead of asset).  
-- **Compensating errors** – two mistakes that cancel out (e.g. Dr 50 too much here, Cr 50 too much there).  
-- **Original entry** – wrong amount on **both** sides (e.g. 500 instead of 50).  
-- **Reversal of entries** – Dr and Cr correct but swapped (e.g. Dr Cash Cr Sales instead of Dr Debtors Cr Sales).
-
-These are **not** revealed by the trial balance and may only be found by **reconciliation**, **review**, or **audit**. Corrections are made by **journal entry** (e.g. correction of errors).`,
+1.  **Commission**: Wrong account, but correct class (e.g., Sold to J. Smith, debited J. Brown).
+2.  **Omission**: Transaction completely missed from books.
+3.  **Reversal**: Debit and Credit entries swapped (e.g., Dr Sales, Cr Debtors).
+4.  **Principle**: Wrong class of account (e.g., Bought Van, debited Motor Expenses instead of Motor Vehicles).
+5.  **Principle (Original Entry)**: Wrong figure used for both entries (e.g., Sale of $100 entered as $10).
+6.  **Compensating**: Two separate errors cancel each other out.`,
         diagrams: [],
         subsections: [],
       },
     ],
     key_points: [
-      'Trial balance lists all ledger balances; total Dr = total Cr if double entry is correct.',
-      'Disagreement reveals errors such as single entry, wrong amount, wrong balance.',
-      'Omission, wrong account, compensating errors, original entry error do not cause disagreement.',
+      'Trial Balance checks arithmetical accuracy: Total Dr = Total Cr.',
+      'Debit balances: Assets and Expenses.',
+      'Credit balances: Liabilities, Income, and Capital.',
+      'CROPPC errors (Commission, Reversal, Omission, Principle, Original Entry, Compensating) are NOT revealed.',
     ],
     exam_tips: [
-      'Prepare a trial balance from given ledger balances.',
-      'State which errors are, and which are not, revealed by the trial balance.',
+      'If the question asks for limitations of a Trial Balance, list the errors not revealed.',
+      'When preparing a Trial Balance, careful with the Bank Balance - it can be Dr (Asset) or Cr (Overdraft).',
     ],
+    questions: [
+      {
+        id: 'q1',
+        question: 'State the purpose of a Trial Balance.',
+        answer: 'To check the arithmetical accuracy of the double-entry records (Debits = Credits).'
+      },
+      {
+        id: 'q2',
+        question: 'List three types of accounts that typically have a Credit balance.',
+        answer: 'Sales (Income), Capital, Creditors (Liabilities), Bank Overdraft.'
+      },
+      {
+        id: 'q3',
+        question: 'If a Trial Balance agrees, does it mean there are no errors? Explain.',
+        answer: 'No. Errors of Omission, Commission, Principle, etc., do not affect the agreement of the Trial Balance totals.'
+      },
+      {
+        id: 'q4',
+        question: 'Define "Error of Principle".',
+        answer: 'When a transaction is entered in the wrong CLASS of account (e.g., treating a Capital Expenditure as Revenue Expenditure, like debiting Repairs instead of Van).'
+      },
+      {
+        id: 'q5',
+        question: 'How do you calculate the Suspense Account balance from a Trial Balance difference?',
+        answer: 'Insert the difference on the smaller side of the Trial Balance to make the totals agree. This amount is the opening balance of the Suspense Account.'
+      }
+    ]
   },
 
   'Correction of Errors': {
@@ -453,68 +715,142 @@ Use the **journal entries** to see whether each correction adds or subtracts fro
   'Financial Statements (Sole Trader)': {
     topic: 'Financial Statements (Sole Trader)',
     subject: 'Principles of Accounting',
-    summary: 'For a sole trader, the two main financial statements are the Income Statement (profit or loss) and the Statement of Financial Position (balance sheet). They are prepared from the trial balance and adjustments.',
+    summary: 'The final destination of the accounting process is the preparation of Financial Statements. For a sole trader, these are the Income Statement (showing financial performance) and the Statement of Financial Position (showing financial position at a specific date).',
     audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/Accounts/Untitled%20folder/The_Sole_Trader_Accounting_Scoreboard.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9BY2NvdW50cy9VbnRpdGxlZCBmb2xkZXIvVGhlX1NvbGVfVHJhZGVyX0FjY291bnRpbmdfU2NvcmVib2FyZC5tNGEiLCJpYXQiOjE3NzAyNzEyNDEsImV4cCI6NTI3MDc2NzI0MX0.MzVOCDjSJ9UWyKy19quIvTwkgUnCTfnmTo-KmX8r9WE',
     videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/Accounts/Financial_Statements.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9BY2NvdW50cy9GaW5hbmNpYWxfU3RhdGVtZW50cy5tcDQiLCJpYXQiOjE3NzAyNzE1NzQsImV4cCI6NTI3MDc2NzU3NH0.yQNLbETMxGwmcZfojTOcGGiVN8oGSSCENjOQ673Ud_0',
     sections: [
       {
-        title: 'Income Statement (Statement of Profit or Loss)',
-        content: `**Purpose** – Shows **profit or loss** for a period (e.g. year) by matching **income** (revenue) with **expenses**.
+        title: 'Income Statement',
+        content: `**Purpose**: To calculate the **Gross Profit** and **Net Profit** (or Loss) for the year.
+It has two parts:
+1.  **Trading Account**: Calculates Gross Profit (Revenue - Cost of Sales).
+2.  **Profit and Loss Section**: Calculates Net Profit (Gross Profit - Expenses).
 
-**Format (vertical)**  
-- **Revenue** (sales, less sales returns).  
-- **Cost of sales**: Opening inventory + Purchases − Purchases returns − Closing inventory.  
-- **Gross profit** = Revenue − Cost of sales.  
-- **Other income** (e.g. discount received, rent received).  
-- **Expenses**: Distribution costs, Administrative expenses (list: wages, rent, insurance, depreciation, etc.).  
-- **Profit before tax** (or **Net profit** for sole trader).  
-- **Interest** – add interest receivable; subtract interest payable if shown separately.  
-- **Profit for the period** (sole trader: this is the net profit).
+**Pro Forma Income Statement for the year ended 31 December 20XX**
+| | $ | $ | $ |
+|---|---|---|---|
+| **Revenue** (Sales) | | | 100,000 |
+| Less: Sales Returns | | | (2,000) |
+| **Net Revenue** | | | **98,000** |
+| | | | |
+| **Less: Cost of Sales** | | | |
+| Opening Inventory | | 15,000 | |
+| Purchases | 60,000 | | |
+| Add: Carriage Inwards | 1,000 | | |
+| Less: Purchase Returns | (3,000) | | |
+| | | 58,000 | |
+| Cost of Goods Available | | 73,000 | |
+| Less: Closing Inventory | | (18,000) | |
+| **Cost of Sales** | | | **(55,000)** |
+| **Gross Profit** | | | **43,000** |
+| | | | |
+| **Add: Other Income** | | | |
+| Rent Received | | 1,200 | |
+| Discount Received | | 500 | 1,700 |
+| | | | 44,700 |
+| **Less: Expenses** | | | |
+| Wages and Salaries | | 12,000 | |
+| Rent and Rates | | 5,000 | |
+| Lighting and Heating | | 1,500 | |
+| Motor Expenses | | 2,000 | |
+| Carriage Outwards | | 800 | |
+| Depreciation | | 3,000 | |
+| **Total Expenses** | | | **(24,300)** |
+| **Profit for the Year (Net Profit)** | | | **20,400** |
 
-**Discounts** – **Discount allowed** = expense. **Discount received** = other income.  
-**Inventory** – Only **closing** inventory appears in the income statement (as part of cost of sales). Opening inventory is already in the trial balance; closing inventory is **not** in the trial balance – it is **added** to the statement of financial position and **included** in cost of sales.`,
+**Note**:
+*   **Carriage Inwards**: Cost of bringing purchases IN (part of Cost of Sales).
+*   **Carriage Outwards**: Cost of sending sales OUT (an expense).
+*   **Closing Inventory**: Valued at lower of cost or NRV. Deducted here and added to Current Assets.`,
         diagrams: [],
         subsections: [],
       },
       {
         title: 'Statement of Financial Position (Balance Sheet)',
-        content: `**Purpose** – Shows **assets**, **liabilities**, and **equity** (capital) at a **specific date**. **Assets = Capital + Liabilities**.
+        content: `**Purpose**: To show the financial position of the business at a specific point in time (what it owns and what it owes).
+**Equation**: Assets = Capital + Liabilities.
 
-**Format (vertical)**  
-- **Non-current assets**: Property, plant, equipment (at net book value after depreciation), etc.  
-- **Current assets**: Inventory, Trade receivables (debtors), Prepayments, Cash and bank.  
-- **Total assets**.  
-- **Equity**: Capital (opening) + Profit − Drawings (or − Loss − Drawings).  
-- **Non-current liabilities**: Long-term loans.  
-- **Current liabilities**: Trade payables (creditors), Accruals, Bank overdraft, etc.  
-- **Total equity and liabilities** = Total assets.
+**Pro Forma Statement of Financial Position as at 31 December 20XX**
+| | Cost | Acc. Dep | NBV |
+|---|---|---|---|
+| **Non-Current Assets** | $ | $ | $ |
+| Land and Buildings | 100,000 | - | 100,000 |
+| Motor Vehicles | 30,000 | (10,000) | 20,000 |
+| Fixtures and Fittings | 8,000 | (3,000) | 5,000 |
+| **Total Non-Current Assets** | | | **125,000** |
+| | | | |
+| **Current Assets** | | | |
+| Inventory (Closing) | | 18,000 | |
+| Trade Receivables | | 12,000 | |
+| Less: Provision for Doubtful Debts| | (600) | 11,400 |
+| Bank | | 5,000 | |
+| Cash | | 200 | |
+| Prepayments | | 400 | |
+| **Total Current Assets** | | | **35,000** |
+| **Total Assets** | | | **160,000** |
+| | | | |
+| **Capital and Liabilities** | | | |
+| **Capital** | | | |
+| Opening Capital | | | 130,000 |
+| Add: Profit for the year | | | 20,400 |
+| Less: Drawings | | | (15,000) |
+| **Closing Capital** | | | **135,400** |
+| | | | |
+| **Non-Current Liabilities** | | | |
+| Bank Loan (repayable 2030) | | | 20,000 |
+| | | | |
+| **Current Liabilities** | | | |
+| Trade Payables | | 4,000 | |
+| Accruals | | 600 | |
+| **Total Current Liabilities** | | | **4,600** |
+| **Total Capital and Liabilities** | | | **160,000** |
 
-**Order** – Assets: least liquid first (non-current) then current. Liabilities: non-current then current. Equity (capital) before liabilities is common.  
-**Drawings** – Reduce capital; not an expense; not in income statement.  
-**Closing inventory** – Shown under current assets; also used in cost of sales.`,
-        diagrams: [],
-        subsections: [],
-      },
-      {
-        title: 'Relationship and Adjustments',
-        content: `**Relationship**  
-- **Income statement** → Net profit (or loss).  
-- **Capital** at end = Opening capital + Profit − Drawings (or − Loss − Drawings).  
-- **Statement of financial position** shows this closing capital and all assets and liabilities.
-
-**Adjustments** (covered in next topic) – Accruals, prepayments, depreciation, doubtful debts, and closing inventory must be **applied** before or when preparing the statements. They affect both profit and assets/liabilities (e.g. accrual: expense up, liability up; prepayment: expense down, asset up).`,
+**Key Checks**:
+*   Total Assets MUST equal Total Capital and Liabilities.
+*   **Working Capital** = Current Assets - Current Liabilities.
+*   **Capital Employed** = Owner's Capital + Non-Current Liabilities.`,
         diagrams: [],
         subsections: [],
       },
     ],
     key_points: [
-      'Income statement: Revenue − Cost of sales = Gross profit; minus expenses = Net profit.',
-      'Statement of financial position: Assets = Capital + Liabilities; include closing inventory.',
-      'Capital end = Opening capital + Profit − Drawings.',
+      'Gross Profit = Revenue - Cost of Sales.',
+      'Net Profit = Gross Profit + Other Income - Expenses.',
+      'Closing Inventory appears in TWO places: Cost of Sales (Trading A/c) and Current Assets (SFP).',
+      'Carriage Inwards increases Cost of Sales; Carriage Outwards is an Expense.',
+      'Assets must always equal Equity + Liabilities.',
     ],
     exam_tips: [
-      'Prepare income statement and statement of financial position from trial balance and adjustments.',
-      'Calculate cost of sales and gross profit; show closing inventory in both cost of sales and SFP.',
+      'Learn the pro-formas by heart. Marks are awarded for correct headings and layout.',
+      'Always start with Opening Inventory + Purchases - Closing Inventory for Cost of Sales.',
+      'Do not forget to deduct Drawings from the Profit to get the final Capital figure.',
+    ],
+    questions: [
+      {
+        id: 'q1',
+        question: 'Calculate Cost of Sales: Opening Stock $5,000, Purchases $20,000, Closing Stock $4,000.',
+        answer: 'Cost of Sales = $5,000 + $20,000 - $4,000 = $21,000.'
+      },
+      {
+        id: 'q2',
+        question: 'Where is "Carriage Inwards" shown in the Income Statement?',
+        answer: 'It is added to Purchases in the Trading Account section (Cost of Sales).'
+      },
+      {
+        id: 'q3',
+        question: 'Distinguish between Gross Profit and Net Profit.',
+        answer: 'Gross Profit is Revenue minus Cost of Sales. Net Profit is Gross Profit minus all other Expenses (overheads).'
+      },
+      {
+        id: 'q4',
+        question: 'In the Statement of Financial Position, under which heading is "Bank Overdraft" shown?',
+        answer: 'Current Liabilities.'
+      },
+      {
+        id: 'q5',
+        question: 'How is Closing Capital calculated?',
+        answer: 'Closing Capital = Opening Capital + Net Profit (or - Net Loss) - Drawings.'
+      }
     ],
   },
 

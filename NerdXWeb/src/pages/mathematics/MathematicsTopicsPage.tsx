@@ -1,3 +1,7 @@
+/**
+ * MathematicsTopicsPage - Premium Desktop Design
+ * Features gradient cards, glassmorphism, and advanced desktop layout
+ */
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -7,7 +11,8 @@ import {
   formatCreditCost,
   getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
-import { ArrowLeft, TrendingUp, Camera, MessageCircle } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Camera, MessageCircle, BookOpen, Calculator, FileText, Play } from 'lucide-react';
+import './Mathematics.css'; // Import the new premium styles
 
 const MATH_TOPICS_FALLBACK: Topic[] = [
   { id: 'num', name: 'Number Theory', subject: 'mathematics' },
@@ -84,10 +89,12 @@ export function MathematicsTopicsPage() {
     questionType: pendingTopic ? 'topical' : 'exam',
     isImageQuestion: mixImages,
   });
+
   const userCredits = user?.credits ?? 0;
   const hasEnoughCredits = userCredits >= minCredits;
 
   const handleStartQuiz = async () => {
+    // ... keeping existing handleStartQuiz logic ...
     if (!hasEnoughCredits) {
       setError(`You need at least ${formatCreditCost(minCredits)} to start. Please top up credits.`);
       return;
@@ -144,148 +151,177 @@ export function MathematicsTopicsPage() {
   };
 
   return (
-    <div className="math-topics-page">
-      <header className="math-topics-header">
-        <Link to="/app" className="back-link">
-          <ArrowLeft size={20} /> Back
-        </Link>
-        <h1 className="math-topics-title">O Level Mathematics</h1>
-        <p className="math-topics-subtitle">Build strong math foundations</p>
-      </header>
+    <div className="math-universe-page">
+      {/* Animated Space Background */}
+      <div className="math-universe-background">
+        <div className="math-grid-overlay"></div>
+        <div className="floating-shape shape-1"></div>
+        <div className="floating-shape shape-2"></div>
+      </div>
 
-      {/* Math Notes */}
-      <section className="math-notes-section">
-        <h2 className="math-section-title">Professional Math Notes</h2>
-        <p className="math-section-subtitle">O-Level Standard – tap to study</p>
-        <div className="math-notes-chips">
-          {topicNames.map((name, i) => (
-            <Link
-              key={i}
-              to={`/app/mathematics/notes/${encodeURIComponent(name.replace(/\s+/g, '-'))}`}
-              className="math-topic-chip"
-            >
-              {name}
-            </Link>
-          ))}
+      <Link to="/app" className="super-back-btn">
+        <ArrowLeft size={24} />
+      </Link>
+
+      {/* Hero Section */}
+      <div className="math-hero">
+        <div className="math-hero-content">
+          <div className="math-hero-badge">
+            <Calculator size={14} />
+            <span>O-LEVEL MASTERY</span>
+          </div>
+          <h1 className="math-hero-title">
+            Unlock the Universe<br />of Mathematics
+          </h1>
+          <p className="math-hero-subtitle">
+            Master every concept with AI-powered tutoring, real-time feedback,
+            and exam-grade practice questions from the future.
+          </p>
         </div>
-      </section>
 
-      {/* Feature cards */}
-      <section className="math-features-section">
-        <button
-          type="button"
-          className="math-feature-card"
-          onClick={() => navigate('/app/teacher', { state: { subject: 'O Level Mathematics', gradeLevel: 'Form 3-4 (O-Level)' } })}
-        >
-          <div className="math-feature-icon">
-            <MessageCircle size={28} />
-          </div>
-          <div className="math-feature-content">
-            <h3>AI Math Tutor</h3>
-            <p>Interactive Socratic tutoring with graphs</p>
-          </div>
-          <span className="math-feature-arrow">→</span>
-        </button>
+        {/* Visual Decoration (Right Side) */}
+        <div className="math-hero-visual">
+          {/* Decorative Only - Icons handled via CSS */}
+        </div>
+      </div>
 
-        <button
-          type="button"
-          className="math-feature-card"
-          onClick={() => navigate('/app/mathematics/graph-practice')}
-        >
-          <div className="math-feature-icon">
-            <TrendingUp size={28} />
-          </div>
-          <div className="math-feature-content">
-            <h3>Graph Practice</h3>
-            <p>Practice reading and analyzing graphs</p>
-          </div>
-          <span className="math-feature-arrow">→</span>
-        </button>
+      <div className="math-content-container">
+        {/* Left Column: Premium Feature Cards */}
+        <div className="math-features-col">
 
-        <button
-          type="button"
-          className="math-feature-card math-feature-scan"
-          onClick={() => navigate('/app/mathematics/scan-solve')}
-        >
-          <div className="math-feature-icon math-feature-icon-scan">
-            <Camera size={28} />
-          </div>
-          <div className="math-feature-content">
-            <div className="math-feature-badge-row">
-              <h3>Scan & Solve</h3>
-              <span className="math-badge-online">ONLINE</span>
+          {/* AI Math Tutor */}
+          <div
+            className="glass-card"
+            role="button"
+            onClick={() => navigate('/app/teacher', { state: { subject: 'O Level Mathematics', gradeLevel: 'Form 3-4 (O-Level)' } })}
+          >
+            <div className="feature-icon-wrapper" style={{ color: '#00E676', borderColor: 'rgba(0, 230, 118, 0.3)' }}>
+              <MessageCircle size={32} />
             </div>
-            <p>Upload a photo of any math problem – AI solves it</p>
+            <h3 className="feature-title">AI Math Tutor</h3>
+            <p className="feature-desc">Interactive Socratic tutoring. Ask any question and get instant, step-by-step guidance.</p>
           </div>
-          <span className="math-feature-arrow">→</span>
-        </button>
-      </section>
 
-      {/* Exam card - same flow as mobile (setup → session → review) */}
-      <section className="math-exam-section">
-        <button
-          type="button"
-          className="math-exam-card"
-          onClick={() =>
-            navigate('/app/exam/setup', {
-              state: { subject: 'mathematics', backTo: '/app/mathematics', subjectLabel: 'Mathematics' },
-            })
-          }
-        >
-          <div className="math-exam-icon">📝</div>
-          <div className="math-exam-content">
-            <h3>Start Exam</h3>
-            <p>Timed exam with mixed questions from all topics</p>
+          {/* Graph Practice */}
+          <div
+            className="glass-card"
+            role="button"
+            onClick={() => navigate('/app/mathematics/graph-practice')}
+          >
+            <div className="feature-icon-wrapper" style={{ color: '#FF9100', borderColor: 'rgba(255, 145, 0, 0.3)' }}>
+              <TrendingUp size={32} />
+            </div>
+            <h3 className="feature-title">Graph Practice</h3>
+            <p className="feature-desc">Master coordinate geometry. Practice reading, plotting, and analyzing graphs.</p>
           </div>
-          <span className="math-feature-arrow">→</span>
-        </button>
-      </section>
 
-      {/* Topics grid */}
-      <section className="math-topics-section">
-        <h2 className="math-section-title">Topics</h2>
-        {loading ? (
-          <div className="math-loading">Loading topics…</div>
-        ) : (
+          {/* Scan & Solve */}
+          <div
+            className="glass-card"
+            role="button"
+            onClick={() => navigate('/app/mathematics/scan-solve')}
+          >
+            <div className="feature-icon-wrapper" style={{ color: '#7C4DFF', borderColor: 'rgba(124, 77, 255, 0.3)' }}>
+              <Camera size={32} />
+            </div>
+            <div className="feature-badge-row" style={{ marginBottom: 8 }}>
+              <h3 className="feature-title" style={{ margin: 0 }}>Scan & Solve</h3>
+              <span className="online-badge">ONLINE</span>
+            </div>
+            <p className="feature-desc">Snap a photo of any math problem. Our AI solves it instantly with working.</p>
+          </div>
+
+          {/* Exam Mode - Featured */}
+          <div
+            className="glass-card exam-glass-card"
+            role="button"
+            onClick={() => navigate('/app/exam/setup', { state: { subject: 'mathematics', backTo: '/app/mathematics', subjectLabel: 'Mathematics' } })}
+          >
+            <div className="feature-icon-wrapper" style={{ background: 'linear-gradient(135deg, #7C4DFF, #651FFF)', border: 'none', color: '#fff' }}>
+              <FileText size={32} />
+            </div>
+            <h3 className="feature-title">Simulated Exam</h3>
+            <p className="feature-desc">Full timed exam conditions. Test your readiness with mixed past-paper style questions.</p>
+          </div>
+
+        </div>
+
+        {/* Right Column: Topics Grid */}
+        <div className="math-topics-col">
+          <div className="topics-section-title">
+            <Play size={24} color="#448AFF" fill="#448AFF" />
+            <span>Practice Topics</span>
+            <span className="topics-count-badge">{displayTopics.length} Topics</span>
+          </div>
+
           <div className="math-topics-grid">
             {displayTopics.map((topic) => (
               <button
                 key={topic.id}
                 type="button"
-                className="math-topic-card"
+                className="topic-glass-btn"
                 onClick={() => openStartQuiz(topic)}
               >
-                <span className="math-topic-name">{topic.name}</span>
+                <div className="topic-icon-box">
+                  {/* Map icons based on topic name keywords if desired, defaulting to calculator/generic */}
+                  {topic.name.includes("Geo") ? <TrendingUp size={20} /> :
+                    topic.name.includes("Stat") ? <TrendingUp size={20} /> :
+                      <Calculator size={20} />}
+                </div>
+                <span className="topic-name">{topic.name}</span>
               </button>
             ))}
           </div>
-        )}
-      </section>
 
-      {/* Start Quiz Modal */}
+          <div className="topics-section-title" style={{ marginTop: 40 }}>
+            <BookOpen size={24} color="#00E676" />
+            <span>Study Notes</span>
+          </div>
+          <div className="topic-chips-v2" style={{ marginTop: 16 }}>
+            {displayTopics.map((t, i) => (
+              <Link
+                key={i}
+                to={`/app/mathematics/notes/${encodeURIComponent(t.name.replace(/\s+/g, '-'))}`}
+                className="topic-chip-v2"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+              >
+                {t.name}
+              </Link>
+            ))}
+          </div>
+
+        </div>
+      </div>
+
+      {/* Reusing existing Modal Logic with new styling classes if possible, 
+          but the modal uses classes from index.css. 
+          To keep it consistent, we'll wrap it or override it in Mathematics.css if needed. 
+          For now, standard modal is fine, but let's check class names. 
+      */}
       {startQuizModalOpen && (
-        <div className="math-modal-overlay" onClick={() => !generating && setStartQuizModalOpen(false)}>
-          <div className="math-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="math-modal-title">
+        <div className="modal-overlay-v2" onClick={() => !generating && setStartQuizModalOpen(false)}>
+          <div className="modal-v2" onClick={(e) => e.stopPropagation()} style={{ background: '#131420', borderColor: '#2b2d42' }}>
+            <h3 className="modal-title">
               {pendingTopic ? `Practice: ${pendingTopic.name}` : 'Start Mathematics Exam'}
             </h3>
-            <div className="math-modal-options">
+            {/* ... keeping modal content same ... */}
+            <div className="modal-options">
               <button
                 type="button"
-                className={`math-modal-option ${quizMode === 'topical' ? 'active' : ''}`}
+                className={`modal-option ${quizMode === 'topical' ? 'active' : ''}`}
                 onClick={() => setQuizMode('topical')}
               >
                 Topical
               </button>
               <button
                 type="button"
-                className={`math-modal-option ${quizMode === 'exam' ? 'active' : ''}`}
+                className={`modal-option ${quizMode === 'exam' ? 'active' : ''}`}
                 onClick={() => setQuizMode('exam')}
               >
                 Exam
               </button>
             </div>
-            <label className="math-modal-toggle">
+            <label className="modal-toggle">
               <input
                 type="checkbox"
                 checked={mixImages}
@@ -293,14 +329,14 @@ export function MathematicsTopicsPage() {
               />
               <span>Visual learning (mix image questions)</span>
             </label>
-            <p className="math-modal-cost">
+            <p className="modal-cost">
               Cost: {formatCreditCost(creditCost)} per question
             </p>
-            {error && <p className="math-modal-error">{error}</p>}
-            <div className="math-modal-actions">
+            {error && <p className="modal-error">{error}</p>}
+            <div className="modal-actions">
               <button
                 type="button"
-                className="math-modal-cancel"
+                className="modal-cancel"
                 onClick={() => !generating && setStartQuizModalOpen(false)}
                 disabled={generating}
               >
@@ -308,7 +344,7 @@ export function MathematicsTopicsPage() {
               </button>
               <button
                 type="button"
-                className="math-modal-start"
+                className="modal-start"
                 onClick={handleStartQuiz}
                 disabled={generating || !hasEnoughCredits}
               >
@@ -321,3 +357,4 @@ export function MathematicsTopicsPage() {
     </div>
   );
 }
+

@@ -172,6 +172,27 @@ const SUBJECT_TOPICS: Record<string, string[]> = {
     'Markets and Marketing',
     'Operations Management',
   ],
+  History: [
+    'Conceptualisation of History',
+    'Origins of Humankind',
+    'Ancient Civilisations Egypt',
+    'Development of Zimbabwean Societies',
+    'Slavery and the Slave Trade',
+    'Early European Contacts',
+    'Colonisation',
+    'Colonial Administration',
+    'Nationalism',
+    'Armed Struggle',
+    'Post-Independence',
+    'Regional Cooperation',
+    'Sources of History',
+    'Zimbabwean Societies',
+    'European Contacts',
+    'World Wars',
+    'International Cooperation',
+    'Socialism and Communism',
+    'Constitution Democracy and Human Rights',
+  ],
 };
 
 // A-Level Topics by Subject
@@ -404,6 +425,7 @@ const SUBJECT_COLORS: Record<string, string> = {
   Commerce: '#B8860B',
   'Principles of Accounting': '#B8860B',
   'Business Enterprise and Skills': '#2E7D32',
+  History: '#5D4037',
 };
 
 const SUBJECT_ICONS: Record<string, string> = {
@@ -420,6 +442,7 @@ const SUBJECT_ICONS: Record<string, string> = {
   Commerce: '🏪',
   'Principles of Accounting': '📒',
   'Business Enterprise and Skills': '💼',
+  History: '📜',
 };
 
 const TeacherModeSetupScreen: React.FC = () => {
@@ -439,7 +462,7 @@ const TeacherModeSetupScreen: React.FC = () => {
   const [selectedGradeLevel, setSelectedGradeLevel] = useState<string>('Form 3-4 (O-Level)');
   const [selectedTopic, setSelectedTopic] = useState<string>(preselectedTopic || '');
 
-  const subjects = ['O Level Mathematics', 'Pure Mathematics', 'English', 'Biology', 'Chemistry', 'Physics', 'Computer Science', 'A-Level Computer Science', 'Geography', 'A-Level Geography', 'Principles of Accounting', 'Business Enterprise and Skills'];
+  const subjects = ['O Level Mathematics', 'Pure Mathematics', 'English', 'Biology', 'Chemistry', 'Physics', 'Computer Science', 'A-Level Computer Science', 'Geography', 'A-Level Geography', 'Principles of Accounting', 'Business Enterprise and Skills', 'Commerce', 'History'];
   const gradeLevels = ['Form 1-2', 'Form 3-4 (O-Level)', 'A-Level'];
 
   // Get topics for selected subject

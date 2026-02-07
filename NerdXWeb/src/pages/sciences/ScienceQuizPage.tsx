@@ -26,6 +26,7 @@ export function ScienceQuizPage() {
       parentSubject?: string;
       questionFormat?: 'mcq' | 'structured';
       mixImagesEnabled?: boolean;
+      backTo?: string;
     };
   };
   const navigate = useNavigate();
@@ -146,7 +147,11 @@ export function ScienceQuizPage() {
   };
 
   const handleBack = () => {
-    navigate('/app/sciences', { state: { activeTab: parentSubject } });
+    if (state?.backTo) {
+      navigate(state.backTo);
+    } else {
+      navigate('/app/sciences', { state: { activeTab: parentSubject } });
+    }
   };
 
   if (!question && !generating) {

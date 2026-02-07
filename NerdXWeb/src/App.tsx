@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
 import { AppLayout } from './components/AppLayout';
+import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
@@ -25,9 +26,11 @@ import { ScanSolvePage } from './pages/mathematics/ScanSolvePage';
 import { ExamSetupPage } from './pages/mathematics/ExamSetupPage';
 import { ExamSessionPage } from './pages/mathematics/ExamSessionPage';
 import { ExamReviewPage } from './pages/mathematics/ExamReviewPage';
-import { ScienceTopicsPage } from './pages/sciences/ScienceTopicsPage';
 import { ScienceQuizPage } from './pages/sciences/ScienceQuizPage';
 import { ScienceNotesPage } from './pages/sciences/ScienceNotesPage';
+import { BiologyTopicsPage } from './pages/biology/BiologyTopicsPage';
+import { ChemistryTopicsPage } from './pages/chemistry/ChemistryTopicsPage';
+import { PhysicsTopicsPage } from './pages/physics/PhysicsTopicsPage';
 import { EnglishTopicsPage } from './pages/english/EnglishTopicsPage';
 import { EnglishComprehensionPage } from './pages/english/EnglishComprehensionPage';
 import { EnglishEssayPage } from './pages/english/EnglishEssayPage';
@@ -53,7 +56,8 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<PublicRoute><LoginPage /></PublicRoute>} />
+            <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+            <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
             <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
             <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
             <Route path="/reset-password" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
@@ -95,9 +99,18 @@ function App() {
               <Route path="exam/setup" element={<ExamSetupPage />} />
               <Route path="exam/session" element={<ExamSessionPage />} />
               <Route path="exam/review" element={<ExamReviewPage />} />
-              <Route path="sciences" element={<ScienceTopicsPage />} />
+              {/* Individual Science Subjects */}
+              <Route path="biology" element={<BiologyTopicsPage />} />
+              <Route path="biology/notes/:topic" element={<ScienceNotesPage />} />
+              <Route path="chemistry" element={<ChemistryTopicsPage />} />
+              <Route path="chemistry/notes/:topic" element={<ScienceNotesPage />} />
+              <Route path="physics" element={<PhysicsTopicsPage />} />
+              <Route path="physics/notes/:topic" element={<ScienceNotesPage />} />
+              {/* Redirect old combined sciences route to biology for backwards compatibility */}
+              <Route path="sciences" element={<Navigate to="/app/biology" replace />} />
               <Route path="sciences/quiz" element={<ScienceQuizPage />} />
               <Route path="sciences/notes/:subject/:topic" element={<ScienceNotesPage />} />
+              <Route path="sciences/notes" element={<ScienceNotesPage />} />
               <Route path="sciences/tutor" element={<Navigate to="/app/teacher" state={{ subject: 'Biology' }} replace />} />
               <Route path="teacher" element={<TeacherSetupPage />} />
               <Route path="teacher/chat" element={<TeacherChatPage />} />

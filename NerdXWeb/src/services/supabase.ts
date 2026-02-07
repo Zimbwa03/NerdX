@@ -4,18 +4,31 @@ import { createClient } from '@supabase/supabase-js';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://lzteiewcvxoazqfxfjgg.supabase.co';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
+// Make Supabase optional - app can work without it
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error('Missing Supabase configuration. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
+  console.warn('⚠️ Missing Supabase configuration. Features requiring Supabase will be disabled.');
+  console.warn('Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env file to enable Supabase features.');
 }
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+// Create a stub client if config is missing to prevent crashes
+const stubClient: any = {
   auth: {
-    detectSessionInUrl: true,
-    persistSession: true,
-    autoRefreshToken: true,
-    storage: window.localStorage,
-  },
-});
+    getSession: async () => ({ data: null, error: new Error('Supabase not configured') }),
+    signInWithPassword: async () => ({ data: null, error: new Error('Supabase not configured') }),
+    signOut: async () => ({ error: new Error('Supabase not configured') }),
+  }
+};
+
+export const supabase = (SUPABASE_URL && SUPABASE_ANON_KEY)
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      detectSessionInUrl: true,
+      persistSession: true,
+      autoRefreshToken: true,
+      storage: window.localStorage,
+    },
+  })
+  : stubClient;
 
 export async function signInToSupabaseAuth(email: string, password: string): Promise<boolean> {
   try {

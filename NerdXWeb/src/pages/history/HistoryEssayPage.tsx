@@ -21,7 +21,7 @@ export function HistoryEssayPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const state = (location.state ?? {}) as LocationState;
-  const { user, updateUser } = useAuth();
+  const { updateUser } = useAuth();
 
   const [question, setQuestion] = useState<HistoryEssayQuestion | null>(state.question ?? null);
   const [generating, setGenerating] = useState(false);

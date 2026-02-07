@@ -1,3 +1,7 @@
+/**
+ * CommerceTopicsPage - Premium Desktop Design
+ * Features gradient cards, glassmorphism, and advanced desktop layout
+ */
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { quizApi, type Topic } from '../../services/api/quizApi';
@@ -6,7 +10,7 @@ import {
   formatCreditCost,
   getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
-import { ArrowLeft, BookOpen, MessageSquare, ClipboardList, TrendingUp } from 'lucide-react';
+import { ArrowLeft, BookOpen, MessageSquare, ClipboardList, TrendingUp, GraduationCap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 // 11 topics from ZIMSEC O-Level Principles of Commerce syllabus
@@ -134,131 +138,159 @@ export function CommerceTopicsPage() {
   };
 
   return (
-    <div className="commerce-topics-page">
-      <header className="commerce-topics-header">
-        <Link to="/app" className="back-link">
-          <ArrowLeft size={20} /> Back
+    <div className="subject-page-v2">
+      {/* Header */}
+      <header className="subject-header-v2">
+        <Link to="/app" className="back-btn-v2">
+          <ArrowLeft size={20} />
+          <span>Back</span>
         </Link>
-        <h1 className="commerce-topics-title">Commerce</h1>
-        <p className="commerce-topics-subtitle">ZIMSEC O Level – Business, Trade & Economics</p>
-      </header>
-
-      <section className="commerce-features-section">
-        <button
-          type="button"
-          className="commerce-feature-card commerce-feature-notes"
-          onClick={() => navigate('/app/commerce/notes')}
-        >
-          <div className="commerce-feature-icon commerce-feature-icon-notes">
-            <BookOpen size={28} />
-          </div>
-          <div className="commerce-feature-content">
-            <h3>Commerce Notes</h3>
-            <p>Comprehensive notes for all topics</p>
-          </div>
-          <span className="commerce-feature-arrow">→</span>
-        </button>
-
-        <button
-          type="button"
-          className="commerce-feature-card"
-          onClick={() => navigate('/app/teacher', { state: { subject: 'Commerce', gradeLevel: 'Form 3-4 (O-Level)' } })}
-        >
-          <div className="commerce-feature-icon">
-            <MessageSquare size={28} />
-          </div>
-          <div className="commerce-feature-content">
-            <h3>AI Tutor</h3>
-            <p>Interactive tutoring for Commerce topics</p>
-          </div>
-          <span className="commerce-feature-arrow">→</span>
-        </button>
-
-        <button type="button" className="commerce-feature-card commerce-feature-labs" onClick={() => {}} disabled>
-          <div className="commerce-feature-icon commerce-feature-icon-labs">
+        <div className="subject-header-content">
+          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #B8860B, #8B6914)' }}>
             <TrendingUp size={28} />
           </div>
-          <div className="commerce-feature-content">
-            <h3>Virtual Labs</h3>
-            <p>Coming soon – interactive business simulations</p>
+          <div>
+            <h1>Commerce</h1>
+            <p>ZIMSEC O Level – Business, Trade & Economics</p>
           </div>
-          <span className="commerce-feature-arrow">→</span>
-        </button>
-      </section>
+        </div>
+      </header>
 
-      <section className="commerce-exam-section">
-        <button
-          type="button"
-          className="commerce-exam-card"
-          onClick={() =>
-            navigate('/app/exam/setup', {
-              state: { subject: 'commerce', backTo: '/app/commerce', subjectLabel: 'Commerce' },
-            })
-          }
-        >
-          <div className="commerce-exam-icon">
-            <ClipboardList size={32} />
-          </div>
-          <div className="commerce-exam-content">
-            <h3>Start Exam</h3>
-            <p>Timed exam with mixed questions from all topics</p>
-          </div>
-          <span className="commerce-feature-arrow">→</span>
-        </button>
-      </section>
-
-      <section className="commerce-topics-section">
-        <h2 className="commerce-section-title">Topical Questions</h2>
-        <p className="commerce-section-subtitle">Choose a topic, then Paper 1 (MCQ) or Paper 2 (Essay)</p>
-        {loading ? (
-          <div className="commerce-loading">Loading topics…</div>
-        ) : (
-          <div className="commerce-topics-grid">
-            {displayTopics.map((topic) => (
+      {/* Main content grid - desktop optimized */}
+      <div className="subject-content-grid">
+        {/* Left column - Features */}
+        <div className="subject-features-col">
+          {/* Commerce Features */}
+          <section className="subject-section-v2">
+            <h2>Commerce Skills</h2>
+            <div className="feature-cards-v2">
               <button
-                key={topic.id}
                 type="button"
-                className="commerce-topic-card"
-                onClick={() => openStartQuiz(topic)}
+                className="feature-card-v2"
+                onClick={() => navigate('/app/commerce/notes')}
               >
-                <span className="commerce-topic-name">{topic.name}</span>
+                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #D4AF37, #B8860B)' }}>
+                  <BookOpen size={24} />
+                </div>
+                <div className="feature-card-text">
+                  <h3>Commerce Notes</h3>
+                  <p>Comprehensive notes for all topics</p>
+                </div>
+                <span className="feature-arrow">→</span>
               </button>
-            ))}
-          </div>
-        )}
-      </section>
 
+              <button
+                type="button"
+                className="feature-card-v2"
+                onClick={() => navigate('/app/teacher', { state: { subject: 'Commerce', gradeLevel: 'Form 3-4 (O-Level)' } })}
+              >
+                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #7C4DFF, #651FFF)' }}>
+                  <MessageSquare size={24} />
+                </div>
+                <div className="feature-card-text">
+                  <h3>AI Tutor</h3>
+                  <p>Interactive tutoring for Commerce topics</p>
+                </div>
+                <span className="feature-arrow">→</span>
+              </button>
+
+              <button type="button" className="feature-card-v2" onClick={() => { }} disabled>
+                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #FF6D00, #DD2C00)', opacity: 0.5 }}>
+                  <TrendingUp size={24} />
+                </div>
+                <div className="feature-card-text">
+                  <h3>Virtual Labs</h3>
+                  <p>Coming soon – interactive business simulations</p>
+                </div>
+                <span className="feature-arrow">→</span>
+              </button>
+            </div>
+          </section>
+
+          {/* Exam Mode */}
+          <section className="subject-section-v2">
+            <h2>Exam Practice</h2>
+            <button
+              type="button"
+              className="exam-card-v2"
+              onClick={() =>
+                navigate('/app/exam/setup', {
+                  state: { subject: 'commerce', backTo: '/app/commerce', subjectLabel: 'Commerce' },
+                })
+              }
+            >
+              <div className="exam-card-icon" style={{ background: 'linear-gradient(135deg, #D4AF37, #B8860B)' }}>
+                <ClipboardList size={28} />
+              </div>
+              <div className="exam-card-text">
+                <h3>Start Exam</h3>
+                <p>Timed exam with mixed questions from all topics</p>
+              </div>
+              <span className="feature-arrow">→</span>
+            </button>
+          </section>
+        </div>
+
+        {/* Right column - Topics Grid */}
+        <div className="subject-topics-col">
+          <section className="subject-section-v2">
+            <h2>Topical Questions</h2>
+            <p className="section-subtitle">Choose a topic, then Paper 1 (MCQ) or Paper 2 (Essay)</p>
+            {loading ? (
+              <div className="loading-state">Loading topics…</div>
+            ) : (
+              <div className="topics-grid-v2">
+                {displayTopics.map((topic) => (
+                  <button
+                    key={topic.id}
+                    type="button"
+                    className="topic-card-v2"
+                    onClick={() => openStartQuiz(topic)}
+                  >
+                    <div className="topic-card-icon" style={{ background: 'linear-gradient(135deg, #D4AF37, #B8860B)' }}>
+                      <GraduationCap size={18} />
+                    </div>
+                    <span className="topic-card-name">{topic.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
+
+      {/* Start Quiz Modal */}
       {startQuizModalOpen && (
-        <div className="commerce-modal-overlay" onClick={() => !generating && setStartQuizModalOpen(false)}>
-          <div className="commerce-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="commerce-modal-title">
+        <div className="modal-overlay-v2" onClick={() => !generating && setStartQuizModalOpen(false)}>
+          <div className="modal-v2" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-title">
               {pendingTopic ? pendingTopic.name : 'Commerce Quiz'}
             </h3>
-            <p className="commerce-modal-subtitle">Choose Paper 1 (MCQ) or Paper 2 (Essay)</p>
-            <div className="commerce-modal-options commerce-modal-options-format">
+            <p className="modal-subtitle">Choose Paper 1 (MCQ) or Paper 2 (Essay)</p>
+            <div className="modal-options">
               <button
                 type="button"
-                className={`commerce-modal-option ${questionFormat === 'mcq' ? 'active' : ''}`}
+                className={`modal-option ${questionFormat === 'mcq' ? 'active' : ''}`}
                 onClick={() => setQuestionFormat('mcq')}
               >
                 Paper 1 (MCQ)
               </button>
               <button
                 type="button"
-                className={`commerce-modal-option ${questionFormat === 'essay' ? 'active' : ''}`}
+                className={`modal-option ${questionFormat === 'essay' ? 'active' : ''}`}
                 onClick={() => setQuestionFormat('essay')}
               >
                 Paper 2 (Essay)
               </button>
             </div>
-            <p className="commerce-modal-cost">
+            <p className="modal-cost">
               Cost: {formatCreditCost(creditCost)} per question
             </p>
-            {error && <p className="commerce-modal-error">{error}</p>}
-            <div className="commerce-modal-actions">
+            {error && <p className="modal-error">{error}</p>}
+            <div className="modal-actions">
               <button
                 type="button"
-                className="commerce-modal-cancel"
+                className="modal-cancel"
                 onClick={() => !generating && setStartQuizModalOpen(false)}
                 disabled={generating}
               >
@@ -266,7 +298,7 @@ export function CommerceTopicsPage() {
               </button>
               <button
                 type="button"
-                className="commerce-modal-start"
+                className="modal-start"
                 onClick={handleStartQuiz}
                 disabled={generating || !hasEnoughCredits}
               >

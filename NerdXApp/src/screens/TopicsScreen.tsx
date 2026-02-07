@@ -602,6 +602,7 @@ const TopicsScreen: React.FC = () => {
     if (subject.id === 'accounting') return ['#B8860B', Colors.secondary.dark];
     if (subject.id === 'business_enterprise_skills') return ['#2E7D32', Colors.secondary.dark];
     if (subject.id === 'commerce') return ['#B8860B', Colors.secondary.dark];
+    if (subject.id === 'history') return ['#5D4037', Colors.secondary.dark];
     return Colors.gradients.primary;
   };
 
@@ -1127,9 +1128,9 @@ const TopicsScreen: React.FC = () => {
                 variant="elevated"
                 onPress={() => navigation.navigate('MathSolver' as never)}
                 style={[
-                  styles.featureCard, 
-                  { 
-                    borderLeftColor: '#4CAF50', 
+                  styles.featureCard,
+                  {
+                    borderLeftColor: '#4CAF50',
                     borderLeftWidth: 4,
                     borderWidth: 2,
                     borderColor: '#4CAF50',
@@ -1500,6 +1501,41 @@ const TopicsScreen: React.FC = () => {
             </>
           )}
 
+          {/* History Features - Notes, Teacher Mode */}
+          {subject.id === 'history' && !currentParentSubject && (
+            <>
+              <Card variant="elevated" onPress={() => navigation.navigate('HistoryNotes' as never)} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="book-outline" size={28} color="#5D4037" />}
+                    size={56}
+                    backgroundColor="rgba(93, 64, 55, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>History Notes</Text>
+                    <Text style={styles.featureSubtitle}>Comprehensive ZIMSEC O-Level History notes</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+
+              <Card variant="elevated" onPress={() => navigation.navigate('TeacherModeSetup' as never, { preselectedSubject: 'History' } as never)} style={styles.featureCard}>
+                <View style={styles.featureContent}>
+                  <IconCircle
+                    icon={<Ionicons name="school-outline" size={28} color="#5D4037" />}
+                    size={56}
+                    backgroundColor="rgba(93, 64, 55, 0.15)"
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>History Teacher Mode</Text>
+                    <Text style={styles.featureSubtitle}>AI tutor for History topics</Text>
+                  </View>
+                  {Icons.arrowRight(24, Colors.text.secondary)}
+                </View>
+              </Card>
+            </>
+          )}
+
           {/* Business Enterprise and Skills Features - Notes, Virtual Labs, Teacher Mode */}
           {subject.id === 'business_enterprise_skills' && !currentParentSubject && (
             <>
@@ -1574,6 +1610,8 @@ const TopicsScreen: React.FC = () => {
                   setExamSetupModalVisible(true);
                 } else if (subject.id === 'commerce') {
                   setExamSetupModalVisible(true);
+                } else if (subject.id === 'history') {
+                  setExamSetupModalVisible(true);
                 } else {
                   openStartQuizModal();
                 }
@@ -1587,8 +1625,8 @@ const TopicsScreen: React.FC = () => {
                   backgroundColor="rgba(255, 255, 255, 0.2)"
                 />
                 <View style={styles.examInfo}>
-                  <Text style={styles.examTitle}>Start {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : subject.id === 'accounting' ? 'Principles of Accounting' : subject.id === 'business_enterprise_skills' ? 'Business Enterprise and Skills' : subject.id === 'commerce' ? 'Commerce' : ''} Exam</Text>
-                  <Text style={styles.examSubtitle}>Mixed questions from all {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : subject.id === 'accounting' ? 'Principles of Accounting' : subject.id === 'business_enterprise_skills' ? 'Business Enterprise and Skills' : subject.id === 'commerce' ? 'Commerce' : ''} topics</Text>
+                  <Text style={styles.examTitle}>Start {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : subject.id === 'accounting' ? 'Principles of Accounting' : subject.id === 'business_enterprise_skills' ? 'Business Enterprise and Skills' : subject.id === 'commerce' ? 'Commerce' : subject.id === 'history' ? 'History' : ''} Exam</Text>
+                  <Text style={styles.examSubtitle}>Mixed questions from all {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : subject.id === 'accounting' ? 'Principles of Accounting' : subject.id === 'business_enterprise_skills' ? 'Business Enterprise and Skills' : subject.id === 'commerce' ? 'Commerce' : subject.id === 'history' ? 'History' : ''} topics</Text>
                 </View>
               </View>
             </Card>

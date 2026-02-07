@@ -54,10 +54,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const parsedUser = JSON.parse(userData) as User;
         setUser(parsedUser);
 
-        const { supabase } = await import('../services/supabase');
-        const { data } = await supabase.auth.getSession();
-        if (data?.session?.user) {
-          setIsSupabaseAuthReady(true);
+        // Try to restore Supabase session with a timeout to prevent infinite loading
+        try {
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Supabase session check timeout')), 5000)
+          );
+
+          const supabasePromise = (async () => {
+            const { supabase } = await import('../services/supabase');
+            const { data } = await supabase.auth.getSession();
+            if (data?.session?.user) {
+              setIsSupabaseAuthReady(true);
+            }
+          })();
+
+          await Promise.race([supabasePromise, timeoutPromise]);
+        } catch (supabaseError) {
+          console.warn('Supabase session restoration failed or timed out:', supabaseError);
+          // Continue anyway - user can still use the app, just won't have Supabase features
         }
       }
     } catch (error) {

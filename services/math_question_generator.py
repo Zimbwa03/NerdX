@@ -70,12 +70,39 @@ class MathQuestionGenerator:
 
     # LaTeX formatting rules for all generated math (aligned with Teacher Mode / mathematics_teacher_service)
     MATH_LATEX_GUIDELINES = """
-**CRITICAL: LaTeX Formatting for Mathematical Expressions**
-ALL mathematical expressions, equations, formulas, and notation MUST be in LaTeX:
-- Inline math: $x + 2 = 5$, $x^2 + 3x - 4$, $\\frac{a}{b}$, $\\sqrt{16}$, $\\sin(\\theta)$, $\\alpha$, $\\pi$
-- Display math (centered): $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
-- Rules: Wrap ALL math in $ for inline or $$ for display. Use \\frac{num}{den}, \\sqrt{}, ^ for powers, _ for subscripts. Never plain text (e.g. write $x^2$ not x squared).
+**CRITICAL: Professional LaTeX Formatting for ALL Mathematical Expressions**
+
+⚠️ EVERY mathematical expression, equation, formula, number, and notation MUST be in LaTeX format.
+
+📝 **INLINE MATH** (use single $...$ for math within text):
+   - Variables: $x$, $y$, $a$, $b$, $n$, $\\theta$, $\\alpha$, $\\pi$
+   - Expressions: $x + 2 = 5$, $3x - 7$, $x^2 + 3x - 4$
+   - Fractions: $\\frac{a}{b}$, $\\frac{3x + 2}{5}$, $\\frac{1}{2}$
+   - Roots: $\\sqrt{16}$, $\\sqrt{x^2 + y^2}$, $\\sqrt[3]{27}$
+   - Powers: $x^2$, $a^{n+1}$, $10^{-3}$, $2^{10}$
+   - Subscripts: $a_n$, $x_1$, $T_{n-1}$
+   - Trigonometry: $\\sin(\\theta)$, $\\cos(x)$, $\\tan(45°)$
+   - Inequalities: $x > 5$, $y \\leq 10$, $3 < x < 7$
+   - Sets: $A \\cup B$, $A \\cap B$, $x \\in A$, $A'$, $\\emptyset$
+   - Vectors: $\\vec{a}$, $\\overrightarrow{AB}$, $\\begin{pmatrix} 3 \\\\ 4 \\end{pmatrix}$
+   - Matrices: $\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$
+   - Greek letters: $\\alpha$, $\\beta$, $\\gamma$, $\\theta$, $\\pi$, $\\lambda$
+   - Proportionality: $y \\propto x$, $y \\propto \\frac{1}{x}$
+
+📐 **DISPLAY MATH** (use $$...$$ for centered, standalone equations):
+   $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
+   $$A = P\\left(1 + \\frac{r}{100}\\right)^n$$
+   $$\\sin^2(\\theta) + \\cos^2(\\theta) = 1$$
+
+🚫 **NEVER use plain text for math:**
+   - ❌ "x squared" → ✅ $x^2$
+   - ❌ "a/b" → ✅ $\\frac{a}{b}$
+   - ❌ "square root of 16" → ✅ $\\sqrt{16}$
+   - ❌ "2x + 3 = 7" → ✅ $2x + 3 = 7$
+   - ❌ "angle theta" → ✅ $\\theta$
+   - ❌ "vector AB" → ✅ $\\overrightarrow{AB}$
 """
+
     
     # Comprehensive learning objectives for all 14 O-Level Mathematics topics
     learning_objectives = {
@@ -536,25 +563,67 @@ ALL mathematical expressions, equations, formulas, and notation MUST be in LaTeX
         template_solution: str,
     ) -> Optional[Dict]:
         """
-        Generate a graph practice question using Vertex AI, guided by the template structure.
+        Generate a graph practice question using DeepSeek AI, guided by the template structure.
         The template tells the AI what kind of question to generate (structure, parts (a)(b)(c), style).
-        Returns {"question": str, "solution": str} or None if Vertex AI fails.
+        Returns {"question": str, "solution": str} or None if DeepSeek fails.
         """
         prompt = self._create_template_guided_graph_prompt(
             equation_display, graph_type, level, template_question, template_solution
         )
         context = f"graph_template_{graph_type}_{level}"
-        logger.info("Generating graph question from template (Vertex AI) for equation: %s", equation_display[:50])
-        vertex_response = try_vertex_json(prompt, logger=logger, context=context)
-        if not vertex_response or not isinstance(vertex_response, dict):
+        logger.info("Generating graph question from template (DeepSeek AI) for equation: %s", equation_display[:50])
+        
+        # Use DeepSeek AI for question generation
+        try:
+            from utils.deepseek import call_deepseek_chat, get_deepseek_chat_model
+            
+            response_text = call_deepseek_chat(
+                model=get_deepseek_chat_model(),
+                system_prompt="You are a ZIMSEC/Cambridge mathematics examiner. Generate exam-style questions in valid JSON format only.",
+                user_prompt=prompt,
+                temperature=0.7,
+                max_tokens=1500,
+                timeout=45,
+                retries=2
+            )
+            
+            if not response_text:
+                logger.warning("DeepSeek returned empty response for graph question (%s)", context)
+                return None
+            
+            # Parse JSON from response
+            json_start = response_text.find('{')
+            json_end = response_text.rfind('}') + 1
+            
+            if json_start >= 0 and json_end > json_start:
+                json_str = response_text[json_start:json_end]
+                try:
+                    deepseek_response = json.loads(json_str)
+                except json.JSONDecodeError as e:
+                    logger.warning("DeepSeek JSON parse error for graph question (%s): %s", context, e)
+                    return None
+            else:
+                logger.warning("No JSON object found in DeepSeek response for graph question (%s)", context)
+                return None
+            
+            if not deepseek_response or not isinstance(deepseek_response, dict):
+                return None
+            
+            question = (deepseek_response.get("question") or "").strip()
+            solution = (deepseek_response.get("solution") or "").strip()
+            
+            if not question:
+                logger.warning("DeepSeek returned empty question for graph template (%s)", context)
+                return None
+            if not solution:
+                solution = template_solution
+            
+            logger.info("DeepSeek AI generated graph question for %s (%s)", equation_display[:30], context)
+            return {"question": question, "solution": solution, "source": "deepseek_ai_template"}
+            
+        except Exception as e:
+            logger.warning("DeepSeek graph question generation failed (%s): %s", context, e)
             return None
-        question = (vertex_response.get("question") or "").strip()
-        solution = (vertex_response.get("solution") or "").strip()
-        if not question:
-            return None
-        if not solution:
-            solution = template_solution
-        return {"question": question, "solution": solution, "source": "vertex_ai_template"}
 
     def _create_template_guided_graph_prompt(
         self,
@@ -786,18 +855,125 @@ EXPERT EXAMINER GUIDELINES - PROFESSIONAL EXAM STANDARDS:
 - Reference ZIMSEC past papers and exam patterns
 - Highlight common learner errors in distractors (for MCQs) or mark allocation (for structured)
 
-FRESHNESS REQUIREMENTS - CREATE UNIQUE QUESTIONS:
-- Use unique scenarios NOT commonly found in typical textbook questions
-- Vary contexts: Zimbabwean school/community situations, everyday life, practical applications
-- Vary numbers and approaches to test the same concept
-- Ensure question feels professionally crafted like a real ZIMSEC exam question
-- Vary **subtopic** and **question type** across generations (e.g. indices, factorisation, algebraic fractions, sequences, equations). Do NOT repeatedly use the same question style (e.g. "length in between" or perimeter/area word problems).
+
+MANDATORY FORMAT DIRECTIVE - READ THIS CAREFULLY:
+⚠️ You MUST generate the EXACT type of question described in the **Specific Instructions** section below.
+⚠️ The structured prompt below specifies EXACTLY what question format to use - FOLLOW IT PRECISELY.
+⚠️ DO NOT default to "rectangular plot" or "perimeter/area word problems" unless the prompt explicitly asks for mensuration.
+
+🚫 BANNED FORMATS (unless the subtopic explicitly requires them):
+- "A rectangular plot of land..." word problems
+- "The length of a rectangle is (ax + b)..." problems  
+- Finding perimeter/area of rectangles with algebraic dimensions
+- Generic "solve for x" without the specific context from the structured prompt
+
+✅ REQUIRED: Generate the EXACT question type specified in the Specific Instructions below.
+
+📐 **ALGEBRA:**
+   - "Identifying Algebraic Terms" → Ask about coefficients, constants, terms in an expression
+   - "Collecting Like Terms" → Give an expression with like terms to simplify
+   - "Expanding Brackets" → Give single/double brackets to expand
+   - "Factorising" → Give expression to factorise (common factor, difference of squares, quadratic)
+   - "Linear Equations" → Give equation to solve (one/two step, with brackets)
+   - "Indices/Powers" → Test index laws: $a^m \times a^n$, $\frac{a^m}{a^n}$, $(a^m)^n$
+   - "Algebraic Fractions" → Give fractions to simplify/add/subtract/multiply
+   - "Simultaneous Equations" → Give two equations to solve (elimination/substitution)
+   - "Quadratic Equations" → Give quadratic to solve (factorisation/formula)
+   - "Sequences" → Ask about nth term, common difference/ratio, next terms
+   - "Functions" → Ask about function notation $f(x)$, inverse, composite
+   - "Inequalities" → Give inequalities to solve and represent on number line
+
+📊 **REAL NUMBERS:**
+   - "Place Value/Rounding" → Round numbers to d.p., s.f., or nearest unit
+   - "Standard Form" → Convert to/from standard form $a \times 10^n$
+   - "Fractions" → Add/subtract/multiply/divide fractions
+   - "Decimals" → Operations with decimals, recurring decimals
+   - "Surds" → Simplify surds like $\sqrt{48}$, rationalise denominators
+   - "Bounds" → Find upper/lower bounds, use in calculations
+
+📊 **SETS:**
+   - "Set Notation" → Use symbols: $\in$, $\notin$, $\subset$, $\cup$, $\cap$, $A'$
+   - "Venn Diagrams" → Draw/interpret 2 or 3 set Venn diagrams
+   - "Set Operations" → Find $A \cup B$, $A \cap B$, $A'$, $n(A)$
+   - "Survey Problems" → Use Venn diagrams for survey/counting problems
+
+💰 **FINANCIAL MATHEMATICS:**
+   - "Percentages" → Calculate increase/decrease, reverse percentage
+   - "Profit and Loss" → Calculate profit, loss, selling price, cost price
+   - "Simple Interest" → Use $I = \frac{PRT}{100}$
+   - "Compound Interest" → Use $A = P(1 + \frac{r}{100})^n$
+   - "Exchange Rates" → Convert between currencies
+   - "Hire Purchase" → Calculate deposit, instalments, total cost
+
+📏 **MEASURES AND MENSURATION:**
+   - "Perimeter" → Find perimeter of 2D shapes
+   - "Area" → Find area of triangles, rectangles, circles, composite shapes
+   - "Volume" → Find volume of prisms, cylinders, cones, spheres
+   - "Surface Area" → Find surface area of 3D solids
+   - "Unit Conversion" → Convert between units (cm to m, etc.)
+
+📈 **GRAPHS:**
+   - "Coordinates" → Plot points, find midpoint, distance
+   - "Linear Graphs" → Draw/interpret $y = mx + c$, find gradient and intercept
+   - "Gradient" → Calculate gradient from two points or graph
+   - "Graph Interpretation" → Read values from distance-time, speed-time graphs
+
+⚖️ **VARIATION:**
+   - "Direct Variation" → $y \propto x$, find constant, calculate values
+   - "Inverse Variation" → $y \propto \frac{1}{x}$, find constant, calculate values
+   - "Joint Variation" → $y \propto xz$, combined relationships
+
+📐 **GEOMETRY:**
+   - "Angles" → Calculate angles in triangles, polygons, parallel lines
+   - "Pythagoras" → Use $a^2 + b^2 = c^2$ to find sides
+   - "Circle Theorems" → Apply circle angle theorems
+   - "Bearings" → Calculate 3-figure bearings
+   - "Similarity/Congruence" → Use properties of similar/congruent shapes
+
+📊 **STATISTICS:**
+   - "Mean/Median/Mode" → Calculate averages from data or frequency tables
+   - "Range" → Find range of data sets
+   - "Frequency Tables" → Complete and interpret grouped frequency tables
+   - "Charts/Graphs" → Draw/interpret bar charts, pie charts, histograms
+
+📐 **TRIGONOMETRY:**
+   - "SOHCAHTOA" → Use $\sin$, $\cos$, $\tan$ to find sides/angles
+   - "Elevation/Depression" → Solve angle of elevation/depression problems
+   - "Bearings + Trig" → Combine bearings with trigonometry
+   - "3D Trigonometry" → Find angles/lengths in 3D shapes (if applicable)
+
+➡️ **VECTORS:**
+   - "Vector Notation" → Write vectors in column form $\begin{pmatrix} a \\ b \end{pmatrix}$
+   - "Vector Operations" → Add, subtract, scalar multiply vectors
+   - "Magnitude" → Find magnitude $|\vec{a}| = \sqrt{a^2 + b^2}$
+   - "Position Vectors" → Use position vectors to find points
+
+🔢 **MATRICES:**
+   - "Matrix Operations" → Add, subtract, scalar multiply matrices
+   - "Matrix Multiplication" → Multiply $2 \times 2$ matrices
+   - "Determinant" → Find determinant $ad - bc$
+   - "Inverse Matrix" → Find inverse of $2 \times 2$ matrix
+
+🔄 **TRANSFORMATION:**
+   - "Translation" → Describe/perform translation by vector
+   - "Reflection" → Reflect shapes in lines (y=x, x-axis, y-axis)
+   - "Rotation" → Rotate about a point through given angle
+   - "Enlargement" → Enlarge by scale factor from centre
+
+🎲 **PROBABILITY:**
+   - "Simple Probability" → Calculate $P(A) = \frac{n(A)}{n(S)}$
+   - "Combined Events" → Use AND/OR rules, $P(A \cup B)$, $P(A \cap B)$
+   - "Tree Diagrams" → Draw and use tree diagrams
+   - "Mutually Exclusive/Independent" → Apply probability rules
+
+The question format is ALREADY DECIDED by the subtopic - just follow the instructions!
+
 
 CRITICAL MATH FORMATTING - STANDARD LaTeX (same as Teacher Mode):
 {self.MATH_LATEX_GUIDELINES}
 - Multi-part layout: Put each part on its own line. Use a blank line before (a), (b), (c)... and a new line before (i), (ii), (iii)... so the question reads like an exam paper, not one paragraph.
 
-**Specific Instructions:**
+**Specific Instructions (FOLLOW THESE EXACTLY):**
 {structured_prompt}
 
 STUDENT LEVEL: ZIMSEC O-Level Forms 1-4 (ages 15-17 in Zimbabwe). Keep content age-appropriate.
@@ -820,6 +996,7 @@ JSON schema (required fields):
 }}
 
 Generate the question now:"""
+
         else:
             # Default prompt when structured prompts not available
             prompt = f"""You are Dr. Muzenda, a SENIOR ZIMSEC O-LEVEL MATHEMATICS TEACHER with over 15 years of classroom and examination experience. You have deep mastery of the ZIMSEC Ordinary Level Mathematics syllabus, examiner-level understanding of what is tested, how marks are allocated, and common learner errors. You have full awareness of Paper structures, topic weightings, and recurring exam patterns.

@@ -878,7 +878,7 @@ const GraphPracticeScreen: React.FC = () => {
             <Text style={[styles.questionLabel, { color: themedColors.text.primary }]}>Question:</Text>
             {(() => {
               const questionText = (graphData.question && String(graphData.question).trim()) || 'Describe what you observe from the graph. Use intercepts, gradient, and shape.';
-              return /\\\(|\\\[|\$/.test(questionText) ? (
+              return /\(|\[|\$/.test(questionText) ? (
                 <MathRenderer
                   content={formatQuestionParts(questionText)}
                   fontSize={16}
