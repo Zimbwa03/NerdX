@@ -19,8 +19,6 @@ import {
   Video,
   Volume2,
   Lock,
-  Unlock,
-  PlayCircle
 } from 'lucide-react';
 import './ScienceUniverse.css'; // Import the new premium science styles
 

@@ -124,6 +124,13 @@ export const TEACHER_SUBJECTS = [
 
 export const GRADE_LEVELS = ['Form 1-2', 'Form 3-4 (O-Level)', 'A-Level'] as const;
 
+export const DEFAULT_QUICK_QUESTIONS: string[] = [
+  'Explain this topic step-by-step',
+  'Give me 5 exam-style questions',
+  'Create 10 flashcards for this topic',
+  'Mark my work and correct mistakes',
+];
+
 export const QUICK_QUESTIONS: Record<string, string[]> = {
   Biology: ['Explain Photosynthesis', 'What is a Cell?', 'Define Osmosis', 'Functions of the Heart'],
   Chemistry: ['Periodic Table trends', 'What is a Mole?', 'Acids and Bases', 'Bonding types'],

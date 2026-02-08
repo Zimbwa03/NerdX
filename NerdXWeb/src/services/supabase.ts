@@ -13,10 +13,19 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 // Create a stub client if config is missing to prevent crashes
 const stubClient: any = {
   auth: {
-    getSession: async () => ({ data: null, error: new Error('Supabase not configured') }),
+    getSession: async () => ({ data: { session: null }, error: null }),
+    getUser: async () => ({ data: { user: null }, error: null }),
     signInWithPassword: async () => ({ data: null, error: new Error('Supabase not configured') }),
-    signOut: async () => ({ error: new Error('Supabase not configured') }),
-  }
+    signOut: async () => ({ error: null }),
+  },
+  from: () => ({
+    select: () => ({ eq: () => ({ is: async () => ({ data: null, error: new Error('Supabase not configured') }) }) }),
+  }),
+  channel: () => ({
+    on: function () { return this; },
+    subscribe: function () { return this; },
+  }),
+  removeChannel: () => { /* no-op */ },
 };
 
 export const supabase = (SUPABASE_URL && SUPABASE_ANON_KEY)
@@ -55,5 +64,23 @@ export async function signOutFromSupabaseAuth(): Promise<void> {
     await supabase.auth.signOut();
   } catch (err) {
     console.warn('[Supabase Auth] Sign-out error', err);
+  }
+}
+
+export async function isSupabaseAuthSignedIn(): Promise<boolean> {
+  try {
+    const { data } = await supabase.auth.getSession();
+    return !!data?.session?.user;
+  } catch {
+    return false;
+  }
+}
+
+export async function getSupabaseAuthUserId(): Promise<string | null> {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user?.id || null;
+  } catch {
+    return null;
   }
 }

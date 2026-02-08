@@ -5,7 +5,7 @@ import { teacherApi } from '../../services/api/teacherApi';
 import { attachmentsApi } from '../../services/api/attachmentsApi';
 import { API_BASE_URL } from '../../services/api/config';
 import { MathRenderer } from '../../components/MathRenderer';
-import { QUICK_QUESTIONS, SUBJECT_ICONS } from '../../data/teacherConstants';
+import { DEFAULT_QUICK_QUESTIONS, QUICK_QUESTIONS, SUBJECT_ICONS } from '../../data/teacherConstants';
 import {
   Send,
   Plus,
@@ -58,8 +58,14 @@ function fileToDataUrl(file: File): Promise<string> {
 export function TeacherChatPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const state = (location.state || {}) as { subject?: string; gradeLevel?: string; topic?: string };
-  const { subject, gradeLevel, topic } = state;
+  const state = (location.state || {}) as {
+    subject?: string;
+    gradeLevel?: string;
+    topic?: string;
+    initialMessage?: string;
+    prefillMessage?: string;
+  };
+  const { subject, gradeLevel, topic, initialMessage, prefillMessage } = state;
   const { user, updateUser } = useAuth();
 
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -77,14 +83,25 @@ export function TeacherChatPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const initialMessageSentRef = useRef(false);
+  const prefillAppliedRef = useRef(false);
 
-  const quickQuestions = subject ? (QUICK_QUESTIONS[subject] ?? QUICK_QUESTIONS['Combined Science']) : QUICK_QUESTIONS['Combined Science'];
+  const quickQuestions = subject ? (QUICK_QUESTIONS[subject] ?? DEFAULT_QUICK_QUESTIONS) : DEFAULT_QUICK_QUESTIONS;
 
   useEffect(() => {
     if (!subject || !gradeLevel) {
       navigate('/app/teacher', { replace: true });
       return;
     }
+    initialMessageSentRef.current = false;
+    prefillAppliedRef.current = false;
+    setSessionId(null);
+    setMessages([]);
+    setInput('');
+    setSelectedFiles([]);
+    setShowQuickAsk(true);
+    setShowAddMenu(false);
+    setSessionEnded(null);
     let cancelled = false;
     (async () => {
       setStarting(true);
@@ -126,8 +143,8 @@ export function TeacherChatPage() {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = async () => {
-    const query = input.trim();
+  const handleSend = async (overrideText?: string) => {
+    const query = (overrideText ?? input).trim();
     const hasImages = selectedFiles.length > 0;
     if ((!query && !hasImages) || !sessionId || sending) return;
     const credits = user?.credits ?? 0;
@@ -187,6 +204,27 @@ export function TeacherChatPage() {
       setSending(false);
     }
   };
+
+  useEffect(() => {
+    if (!sessionId || starting || sending) return;
+    const msg = (initialMessage || '').trim();
+    if (!msg || initialMessageSentRef.current) return;
+
+    initialMessageSentRef.current = true;
+    // Avoid blocking the render cycle; Teacher Mode handles errors via `error` and `sessionEnded`.
+    void handleSend(msg);
+  }, [handleSend, initialMessage, sending, sessionId, starting]);
+
+  useEffect(() => {
+    if (!sessionId || starting) return;
+    if ((initialMessage || '').trim()) return;
+    const msg = (prefillMessage || '').trim();
+    if (!msg || prefillAppliedRef.current) return;
+
+    prefillAppliedRef.current = true;
+    setInput(msg);
+    setShowQuickAsk(false);
+  }, [initialMessage, prefillMessage, sessionId, starting]);
 
   const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -399,7 +437,7 @@ export function TeacherChatPage() {
 
         {error && <div className="teacher-chat-error">{error}</div>}
 
-        {showQuickAsk && (
+        {showQuickAsk && quickQuestions.length > 0 && (
           <div className="teacher-quick-ask">
             {quickQuestions.map((q, i) => (
               <button
@@ -483,7 +521,7 @@ export function TeacherChatPage() {
             <button
               type="button"
               className="teacher-chat-send-btn"
-              onClick={handleSend}
+              onClick={() => handleSend()}
               disabled={sending || (!input.trim() && selectedFiles.length === 0)}
               aria-label="Send"
             >

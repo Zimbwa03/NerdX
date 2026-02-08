@@ -33,6 +33,7 @@ import { useThemedColors } from '../theme/useThemedStyles';
 import LoadingProgress from '../components/LoadingProgress';
 import { getSubjectLoadingSteps } from '../utils/loadingProgress';
 import MathText from '../components/MathText';
+import MathRenderer from '../components/MathRenderer';
 import VoiceMathInput from '../components/VoiceMathInput';
 import { formatQuestionParts } from '../utils/formatQuestionText';
 
@@ -1517,7 +1518,11 @@ const QuizScreen: React.FC = () => {
                   />
                   <Text style={styles.questionLabel}>Question</Text>
                 </View>
-                <MathText style={styles.questionTextContainer} fontSize={16}>{formatQuestionParts(question.question_text)}</MathText>
+                {isMathSubject ? (
+                  <MathRenderer content={formatQuestionParts(question.question_text)} fontSize={16} style={styles.questionTextContainer} minHeight={24} />
+                ) : (
+                  <MathText style={styles.questionTextContainer} fontSize={16}>{formatQuestionParts(question.question_text)}</MathText>
+                )}
 
                 {/* Question Image */}
                 {question.question_image_url && (
@@ -1569,14 +1574,18 @@ const QuizScreen: React.FC = () => {
                               {optionLabel}
                             </Text>
                           </View>
-                          <Text style={[
-                            styles.optionText,
-                            isSelected && styles.optionTextSelected,
-                            isCorrect && styles.optionTextCorrect,
-                            isWrong && styles.optionTextWrong,
-                          ]}>
-                            {option}
-                          </Text>
+                          {isMathSubject ? (
+                            <MathRenderer content={option} fontSize={15} style={[styles.optionText, isSelected && styles.optionTextSelected, isCorrect && styles.optionTextCorrect, isWrong && styles.optionTextWrong]} minHeight={20} />
+                          ) : (
+                            <Text style={[
+                              styles.optionText,
+                              isSelected && styles.optionTextSelected,
+                              isCorrect && styles.optionTextCorrect,
+                              isWrong && styles.optionTextWrong,
+                            ]}>
+                              {option}
+                            </Text>
+                          )}
                           {(isCorrect || isWrong) && (
                             <View style={styles.optionIcon}>
                               {isCorrect ? Icons.check(24, Colors.success.main) : Icons.close(24, Colors.error.main)}
@@ -1608,7 +1617,11 @@ const QuizScreen: React.FC = () => {
                         <Text style={styles.structuredPartLabel}>{part.label}</Text>
                         <Text style={styles.structuredPartMarks}>[{part.marks}]</Text>
                       </View>
-                      <MathText style={styles.structuredPartQuestion} fontSize={15}>{formatQuestionParts(part.question)}</MathText>
+                      {isMathSubject ? (
+                        <MathRenderer content={formatQuestionParts(part.question)} fontSize={15} style={styles.structuredPartQuestion} minHeight={20} />
+                      ) : (
+                        <MathText style={styles.structuredPartQuestion} fontSize={15}>{formatQuestionParts(part.question)}</MathText>
+                      )}
 
                       {!result ? (
                         <View style={styles.structuredInputBlock}>
@@ -1919,19 +1932,31 @@ const QuizScreen: React.FC = () => {
                   {result.solution && (
                     <View style={styles.solutionContainer}>
                       <Text style={styles.solutionTitle}>ðŸ"š Detailed Solution:</Text>
-                      <MathText style={styles.solutionText}>{formatSolutionText(result.solution)}</MathText>
+                      {isMathSubject ? (
+                        <MathRenderer content={formatSolutionText(result.solution)} fontSize={15} style={styles.solutionText} minHeight={20} />
+                      ) : (
+                        <MathText style={styles.solutionText}>{formatSolutionText(result.solution)}</MathText>
+                      )}
                     </View>
                   )}
                   {result.hint && !result.correct && (
                     <View style={styles.hintContainer}>
                       <Text style={styles.hintTitle}>ðŸ’¡ Additional Hint:</Text>
-                      <MathText style={styles.hintText}>{normalizeRichText(result.hint)}</MathText>
+                      {isMathSubject ? (
+                        <MathRenderer content={normalizeRichText(result.hint)} fontSize={14} style={styles.hintText} minHeight={18} />
+                      ) : (
+                        <MathText style={styles.hintText}>{normalizeRichText(result.hint)}</MathText>
+                      )}
                     </View>
                   )}
                   {question.explanation && (
                     <View style={styles.explanationContainer}>
                       <Text style={styles.explanationTitle}>ðŸ“– Teaching Explanation:</Text>
-                      <MathText style={styles.explanationText}>{normalizeRichText(question.explanation)}</MathText>
+                      {isMathSubject ? (
+                        <MathRenderer content={normalizeRichText(question.explanation)} fontSize={14} style={styles.explanationText} minHeight={18} />
+                      ) : (
+                        <MathText style={styles.explanationText}>{normalizeRichText(question.explanation)}</MathText>
+                      )}
                     </View>
                   )}
                 </Card>

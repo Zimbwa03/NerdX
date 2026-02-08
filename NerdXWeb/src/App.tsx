@@ -49,6 +49,8 @@ import { HistoryTopicsPage } from './pages/history/HistoryTopicsPage';
 import { HistoryNotesPage } from './pages/history/HistoryNotesPage';
 import { HistoryNoteDetailPage } from './pages/history/HistoryNoteDetailPage';
 import { HistoryEssayPage } from './pages/history/HistoryEssayPage';
+import { AgentHubPage } from './pages/agents/AgentHubPage';
+import { AgentBuilderPage } from './pages/agents/AgentBuilderPage';
 
 function App() {
   return (
@@ -68,6 +70,8 @@ function App() {
               <Route path="credits" element={<CreditsPage />} />
               <Route path="account" element={<AccountPage />} />
               <Route path="progress" element={<ProgressPage />} />
+              <Route path="agents" element={<AgentHubPage />} />
+              <Route path="agents/builder" element={<AgentBuilderPage />} />
               <Route path="mathematics" element={<MathematicsTopicsPage />} />
               <Route path="mathematics/quiz" element={<QuizPage />} />
               <Route path="quiz" element={<QuizPage />} />

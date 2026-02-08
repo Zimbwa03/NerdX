@@ -44,7 +44,6 @@ export function MathematicsTopicsPage() {
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
   const [topics, setTopics] = useState<Topic[]>([]);
-  const [loading, setLoading] = useState(true);
   const [startQuizModalOpen, setStartQuizModalOpen] = useState(false);
   const [pendingTopic, setPendingTopic] = useState<Topic | null>(null);
   const [quizMode, setQuizMode] = useState<'topical' | 'exam'>('topical');
@@ -61,15 +60,12 @@ export function MathematicsTopicsPage() {
         else if (!cancelled) setTopics(MATH_TOPICS_FALLBACK);
       } catch {
         if (!cancelled) setTopics(MATH_TOPICS_FALLBACK);
-      } finally {
-        if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
   }, []);
 
   const displayTopics = topics.length ? topics : MATH_TOPICS_FALLBACK;
-  const topicNames = displayTopics.map((t) => t.name);
 
   const openStartQuiz = (topic: Topic | null) => {
     setPendingTopic(topic);

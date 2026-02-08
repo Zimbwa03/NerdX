@@ -3,9 +3,9 @@
  * Ports the mobile flashcard functionality to the web
  */
 import React, { useState, useCallback } from 'react';
-import { Layers, Zap, Info, Play, X, RotateCcw, Check } from 'lucide-react';
+import { Layers, Zap, Info, X } from 'lucide-react';
 import { flashcardApi, type Flashcard } from '../services/api/flashcardApi';
-import type { TopicNotes } from '../../data/scienceNotes/types';
+import type { TopicNotes } from '../data/scienceNotes/types';
 import '../pages/sciences/ScienceUniverse.css'; // Reusing science styles for consistency
 
 interface FlashcardSectionProps {

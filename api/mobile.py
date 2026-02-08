@@ -2455,8 +2455,17 @@ def generate_question():
             'teaching_explanation': question_data.get('teaching_explanation', '') or question_data.get('real_world_application', '')
         }
         
-        # Convert LaTeX to readable text and normalize spacing for mathematics, A-Level Pure Math, and science
-        if subject in ('mathematics', 'a_level_pure_math', 'combined_science'):
+        # Normalize spacing for mathematics/Pure Math; keep LaTeX intact so web and app can render it (MathRenderer/KaTeX)
+        if subject in ('mathematics', 'a_level_pure_math'):
+            try:
+                spacing_keys = ('solution', 'explanation', 'teaching_explanation', 'concept_explanation')
+                for key in ('question_text', 'solution', 'explanation', 'teaching_explanation', 'concept_explanation', 'hint', 'hint_level_1', 'hint_level_2', 'hint_level_3'):
+                    if question.get(key) and isinstance(question[key], str) and key in spacing_keys:
+                        question[key] = LaTeXConverter.normalize_explanation_spacing(question[key])
+            except Exception as e:
+                logger.warning(f"Spacing normalization in quiz payload failed (non-blocking): {e}")
+        # Combined science: convert LaTeX to readable for compatibility where clients may not render LaTeX
+        elif subject == 'combined_science':
             try:
                 lc = LaTeXConverter()
                 spacing_keys = ('solution', 'explanation', 'teaching_explanation', 'concept_explanation')
@@ -2466,7 +2475,6 @@ def generate_question():
                         if key in spacing_keys:
                             s = LaTeXConverter.normalize_explanation_spacing(s)
                         question[key] = s
-                # structured_question stem/parts are converted later, after it is attached to question
             except Exception as e:
                 logger.warning(f"LaTeX conversion in quiz payload failed (non-blocking): {e}")
         
@@ -2699,8 +2707,8 @@ def generate_question():
             if bes_essay_solution_parts:
                 question['solution'] = '\n'.join(bes_essay_solution_parts)
 
-        # Convert LaTeX in structured_question (stem/parts) when it was added in blocks above
-        if subject in ('mathematics', 'a_level_pure_math', 'combined_science') and question.get('structured_question'):
+        # For combined_science only: convert LaTeX in structured_question to readable text. Mathematics/Pure Math keep LaTeX for client rendering.
+        if subject == 'combined_science' and question.get('structured_question'):
             try:
                 lc = LaTeXConverter()
                 sq = question['structured_question']

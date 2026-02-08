@@ -13,7 +13,8 @@ import { MathRenderer } from '../../components/MathRenderer';
 import { ArrowLeft, Upload, Check, X } from 'lucide-react';
 
 function hasLatex(text: string): boolean {
-  return /\\\(|\\\[|\$|\\frac|\\sqrt|\\sum|\\int/.test(text);
+  if (!text || typeof text !== 'string') return false;
+  return /\\\(|\\\[|\$|\\frac|\\sqrt|\\sum|\\int|\\overrightarrow|\\vec|\\cap|\\cup|\\in|\\subseteq|\\mid|\\text|\\begin|\\theta|\\alpha|\\beta|\\pi/.test(text);
 }
 
 interface Subject {
@@ -241,8 +242,8 @@ export function QuizPage() {
       <main className="quiz-main">
         <div className="quiz-question-card">
           <h2 className="quiz-question-label">Question</h2>
-          {hasLatex(formattedQuestion) ? (
-            <MathRenderer content={formattedQuestion} fontSize={16} />
+          {(isMathSubject || hasLatex(formattedQuestion)) ? (
+            <MathRenderer content={formattedQuestion} fontSize={16} className="quiz-question-math" />
           ) : (
             <p className="quiz-question-text">{formattedQuestion}</p>
           )}
@@ -273,8 +274,8 @@ export function QuizPage() {
                       <span className="quiz-struct-label">{part.label}</span>
                       <span className="quiz-struct-marks">[{part.marks}]</span>
                     </div>
-                    {hasLatex(part.question) ? (
-                      <MathRenderer content={formatQuestionParts(part.question)} fontSize={15} />
+                    {(isMathSubject || hasLatex(part.question)) ? (
+                      <MathRenderer content={formatQuestionParts(part.question)} fontSize={15} className="quiz-struct-math" />
                     ) : (
                       <p className="quiz-struct-question">{formatQuestionParts(part.question)}</p>
                     )}
@@ -344,8 +345,8 @@ export function QuizPage() {
                   disabled={!!result}
                 >
                   <span className="quiz-option-label">{label}</span>
-                  {hasLatex(opt) ? (
-                    <MathRenderer content={opt} fontSize={15} />
+                  {(isMathSubject || hasLatex(opt)) ? (
+                    <MathRenderer content={opt} fontSize={15} className="quiz-option-math" />
                   ) : (
                     <span>{opt}</span>
                   )}
@@ -425,8 +426,8 @@ export function QuizPage() {
             )}
             <div className="quiz-solution-block">
               <h3>Solution</h3>
-              {hasLatex(result.solution) ? (
-                <MathRenderer content={result.solution} fontSize={15} />
+              {(isMathSubject || hasLatex(result.solution)) ? (
+                <MathRenderer content={result.solution} fontSize={15} className="quiz-solution-math" />
               ) : (
                 <p>{result.solution}</p>
               )}

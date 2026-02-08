@@ -7,11 +7,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { quizApi, type Topic } from '../../services/api/quizApi';
 import {
-    calculateQuizCreditCost,
     formatCreditCost,
     getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
-import { ArrowLeft, TrendingUp, BookOpen, Atom, Microscope, FlaskConical, Play, Dna, Info, X, Check, FileText } from 'lucide-react';
+import { ArrowLeft, BookOpen, Microscope, FlaskConical, Play, Dna, Info, X, FileText } from 'lucide-react';
 import '../sciences/ScienceUniverse.css'; // Shared premium styles
 
 const BIO_TOPICS_FALLBACK: Topic[] = [
@@ -44,7 +43,6 @@ export const BiologyTopicsPage = () => {
     const navigate = useNavigate();
     const { user, updateUser } = useAuth();
     const [topics, setTopics] = useState<Topic[]>([]);
-    const [loading, setLoading] = useState(true);
 
     // Quiz Generation State
     const [startQuizModalOpen, setStartQuizModalOpen] = useState(false);
@@ -63,8 +61,6 @@ export const BiologyTopicsPage = () => {
                 else if (!cancelled) setTopics(BIO_TOPICS_FALLBACK);
             } catch {
                 if (!cancelled) setTopics(BIO_TOPICS_FALLBACK);
-            } finally {
-                if (!cancelled) setLoading(false);
             }
         })();
         return () => { cancelled = true; };

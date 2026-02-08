@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatCreditBalance } from '../utils/creditCalculator';
 import { FloatingParticles } from '../components/FloatingParticles';
 import { SubjectCard } from '../components/SubjectCard';
-import { LogOut, Calculator, FlaskConical, BookOpen, Monitor, Globe, Receipt, Briefcase, Clock, GraduationCap, MessageCircle, Beaker, TrendingUp, Coins, Wifi, Mic, Atom, Brain, Map } from 'lucide-react';
+import { LogOut, Calculator, FlaskConical, BookOpen, Monitor, Globe, Receipt, Briefcase, Clock, GraduationCap, MessageCircle, Beaker, TrendingUp, Coins, Wifi, Mic, Atom, Brain, Map, Sparkles } from 'lucide-react';
 
 // O Level subjects with gradient colors and icons
 const O_LEVEL_SUBJECTS = [
@@ -37,6 +37,7 @@ const A_LEVEL_SUBJECTS = [
 
 // Feature cards (no images, just gradients and icons)
 const FEATURE_CARDS = [
+  { id: 'agents', title: 'Agent Hub', subtitle: 'Multi-agent tutoring & coaching', icon: Sparkles, from: '#7C4DFF', to: '#00E676' },
   { id: 'teacher', title: 'Teacher Mode', subtitle: 'Interactive AI Teaching', icon: MessageCircle, from: '#00E676', to: '#00C853' },
   { id: 'virtual_labs', title: 'Virtual Labs', subtitle: 'Interactive Simulations', icon: FlaskConical, from: '#FF6D00', to: '#E65100' },
 ];
@@ -63,6 +64,7 @@ export function DashboardPage() {
     const routeMap: Record<string, string> = {
       credits: '/app/credits',
       progress: '/app/progress',
+      agents: '/app/agents',
       mathematics: '/app/mathematics',
       biology: '/app/biology',
       chemistry: '/app/chemistry',
