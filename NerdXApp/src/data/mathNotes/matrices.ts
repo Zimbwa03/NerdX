@@ -5,18 +5,19 @@ export const matricesNotes: Record<string, MathTopicNotes> = {
         topic: 'Matrices',
         subject: 'Mathematics',
         grade_level: 'O-Level',
-        summary: 'A matrix is a rectangular array of numbers. Matrices are used to solve systems of equations and describe transformations. Key concepts include matrix operations, determinants, and inverses.',
+        summary: 'A matrix is a rectangular array of numbers arranged in rows and columns. This chapter covers: notation and order ($m \\times n$); types (row, column, square, zero, identity); equality and element notation $a_{ij}$; addition, subtraction and scalar multiplication (same order required); matrix multiplication (row-by-column rule, when $AB$ is defined); the determinant of a $2 \\times 2$ matrix and singular matrices; the inverse of a $2 \\times 2$ matrix and the formula using the determinant; using matrices to solve simultaneous linear equations ($AX = B$ $\\Rightarrow$ $X = A^{-1}B$). Matrices are used in transformations and in solving systems of equations.',
         sections: [
             {
-                title: 'Introduction to Matrices',
-                content: `**Order of a Matrix**: Described as $r \\times c$ (rows $\\times$ columns).
-- Row matrix: $1 \\times c$ e.g., $\\begin{pmatrix} 1 & 2 \\end{pmatrix}$
-- Column matrix: $r \\times 1$ e.g., $\\begin{pmatrix} 1 \\\\ 2 \\end{pmatrix}$
-- Square matrix: $n \\times n$ e.g., $\\begin{pmatrix} 1 & 2 \\\\ 3 & 4 \\end{pmatrix}$
+                title: '1. Introduction to Matrices',
+                content: `**Matrix**: A rectangular array of numbers (or expressions) arranged in **rows** (horizontal) and **columns** (vertical). We write them in brackets (round or square).
 
-**Elements**: $a_{ij}$ refers to the element in row $i$, column $j$.
+**Order (size)**: An $m \\times n$ matrix has $m$ rows and $n$ columns. Always state order as (rows) $\\times$ (columns).
 
-**Equality**: Two matrices are equal if they have the same order and corresponding elements are equal.`,
+**Types**: **Row matrix** $1 \\times n$ (one row); **column matrix** $m \\times 1$ (one column); **square matrix** $n \\times n$ (same number of rows and columns). **Zero matrix** $O$ has every element 0.
+
+**Element notation**: $a_{ij}$ or $(A)_{ij}$ is the entry in **row $i$**, **column $j$** (row first, then column).
+
+**Equality**: Two matrices are equal **only if** they have the **same order** and **every corresponding element** is equal. So $A = B$ means $a_{ij} = b_{ij}$ for all $i$, $j$.`,
                 worked_examples: [
                     {
                         question: 'State the order of the matrix $A = \\begin{pmatrix} 2 & -1 & 5 \\\\ 0 & 3 & 8 \\end{pmatrix}$.',
@@ -35,18 +36,26 @@ export const matricesNotes: Record<string, MathTopicNotes> = {
                             'Bottom-right: $y = 7$.'
                         ],
                         final_answer: '$x = 4, y = 7$'
+                    },
+                    {
+                        question: 'Write down the $2 \\times 2$ identity matrix $I$ and the $2 \\times 2$ zero matrix $O$.',
+                        steps: [
+                            'Identity: 1 on the main diagonal (top-left to bottom-right), 0 elsewhere: $I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$.',
+                            'Zero matrix: every element 0: $O = \\begin{pmatrix} 0 & 0 \\\\ 0 & 0 \\end{pmatrix}$.'
+                        ],
+                        final_answer: '$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$, $O = \\begin{pmatrix} 0 & 0 \\\\ 0 & 0 \\end{pmatrix}$'
                     }
                 ]
             },
             {
-                title: 'Matrix Operations',
-                content: `**Addition and Subtraction**:
-Only possible if matrices have the **same order**. Add/subtract corresponding elements.
-$$ \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} \\pm \\begin{pmatrix} e & f \\\\ g & h \\end{pmatrix} = \\begin{pmatrix} a\\pm e & b\\pm f \\\\ c\\pm g & d\\pm h \\end{pmatrix} $$
+                title: '2. Addition, Subtraction and Scalar Multiplication',
+                content: `**Addition and subtraction**: Defined **only when** the two matrices have the **same order**. Add (or subtract) **corresponding elements**.
+$$ \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} + \\begin{pmatrix} e & f \\\\ g & h \\end{pmatrix} = \\begin{pmatrix} a+e & b+f \\\\ c+g & d+h \\end{pmatrix} $$
 
-**Scalar Multiplication**:
-Multiply **every** element by the scalar $k$.
-$$ k \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} = \\begin{pmatrix} ka & kb \\\\ kc & kd \\end{pmatrix} $$`,
+**Scalar multiplication**: Multiply **every** element by the scalar $k$. The order of the matrix does not change.
+$$ k \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} = \\begin{pmatrix} ka & kb \\\\ kc & kd \\end{pmatrix} $$
+
+**Properties**: $A + B = B + A$ (commutative); $(A+B)+C = A+(B+C)$; $k(A+B) = kA + kB$.`,
                 worked_examples: [
                     {
                         question: 'Given $A = \\begin{pmatrix} 2 & 5 \\\\ -1 & 3 \\end{pmatrix}$ and $B = \\begin{pmatrix} 4 & -2 \\\\ 0 & 1 \\end{pmatrix}$, find $2A - B$.',
@@ -57,20 +66,26 @@ $$ k \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} = \\begin{pmatrix} ka & kb
                             'Bottom-left: $-2 - 0 = -2$. Bottom-right: $6 - 1 = 5$.'
                         ],
                         final_answer: '$\\begin{pmatrix} 0 & 12 \\\\ -2 & 5 \\end{pmatrix}$'
+                    },
+                    {
+                        question: 'If $A = \\begin{pmatrix} 1 & 0 \\\\ -2 & 3 \\end{pmatrix}$ and $B = \\begin{pmatrix} 2 & 1 \\\\ 0 & 4 \\end{pmatrix}$, find $A + B$ and $3A$.',
+                        steps: [
+                            '$A + B = \\begin{pmatrix} 1+2 & 0+1 \\\\ -2+0 & 3+4 \\end{pmatrix} = \\begin{pmatrix} 3 & 1 \\\\ -2 & 7 \\end{pmatrix}$.',
+                            '$3A = \\begin{pmatrix} 3(1) & 3(0) \\\\ 3(-2) & 3(3) \\end{pmatrix} = \\begin{pmatrix} 3 & 0 \\\\ -6 & 9 \\end{pmatrix}$.'
+                        ],
+                        final_answer: '$A+B = \\begin{pmatrix} 3 & 1 \\\\ -2 & 7 \\end{pmatrix}$, $3A = \\begin{pmatrix} 3 & 0 \\\\ -6 & 9 \\end{pmatrix}$'
                     }
                 ]
             },
             {
-                title: 'Matrix Multiplication',
-                content: `To multiply matrix $A$ ($m \\times n$) by $B$ ($n \\times p$), the number of **columns in A** must equal the number of **rows in B**. The result is $m \\times p$.
+                title: '3. Matrix Multiplication',
+                content: `**When is $AB$ defined?** For $A$ of order $m \\times n$ and $B$ of order $n \\times p$: the **number of columns of $A$** must equal the **number of rows of $B$**. The product $AB$ then has order **$m \\times p$**.
 
-**Row-by-Column Method**:
-Multiply elements of the row in the first matrix by elements of the column in the second matrix and sum them.
-$$ \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} \\begin{pmatrix} x \\\\ y \\end{pmatrix} = \\begin{pmatrix} ax + by \\\\ cx + dy \\end{pmatrix} $$
+**Row-by-column rule**: The $(i,j)$ entry of $AB$ = (row $i$ of $A$) $\\cdot$ (column $j$ of $B$) = sum of products of corresponding elements.
 
-**Identity Matrix $I$**:
-$I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$ for $2 \\times 2$.
-$AI = IA = A$.`,
+**Important**: Matrix multiplication is **not commutative** in general: $AB \\neq BA$. Also $AB = 0$ does not imply $A = 0$ or $B = 0$.
+
+**Identity matrix** $I$: Square matrix with 1 on the main diagonal and 0 elsewhere. For $2 \\times 2$: $I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$. For any compatible $A$, $AI = IA = A$.`,
                 worked_examples: [
                     {
                         question: 'Calculate $\\begin{pmatrix} 2 & 3 \\\\ 1 & 4 \\end{pmatrix} \\begin{pmatrix} 5 \\\\ -2 \\end{pmatrix}$.',
@@ -89,19 +104,31 @@ $AI = IA = A$.`,
                             'Bottom-right: $(3)(0) + (4)(5) = 0 + 20 = 20$.'
                         ],
                         final_answer: '$\\begin{pmatrix} 4 & 10 \\\\ 10 & 20 \\end{pmatrix}$'
+                    },
+                    {
+                        question: 'Verify that $AB \\neq BA$ for $A = \\begin{pmatrix} 1 & 2 \\\\ 0 & 1 \\end{pmatrix}$ and $B = \\begin{pmatrix} 2 & 1 \\\\ 1 & 0 \\end{pmatrix}$.',
+                        steps: [
+                            '$AB = \\begin{pmatrix} 1 & 2 \\\\ 0 & 1 \\end{pmatrix} \\begin{pmatrix} 2 & 1 \\\\ 1 & 0 \\end{pmatrix} = \\begin{pmatrix} 4 & 1 \\\\ 1 & 0 \\end{pmatrix}$.',
+                            '$BA = \\begin{pmatrix} 2 & 1 \\\\ 1 & 0 \\end{pmatrix} \\begin{pmatrix} 1 & 2 \\\\ 0 & 1 \\end{pmatrix} = \\begin{pmatrix} 2 & 5 \\\\ 1 & 2 \\end{pmatrix}$.',
+                            'So $AB \\neq BA$.'
+                        ],
+                        final_answer: '$AB = \\begin{pmatrix} 4 & 1 \\\\ 1 & 0 \\end{pmatrix}$, $BA = \\begin{pmatrix} 2 & 5 \\\\ 1 & 2 \\end{pmatrix}$; they differ'
                     }
                 ]
             },
             {
-                title: 'Determinant and Inverse',
-                content: `For a matrix $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:
+                title: '4. Determinant and Inverse of a $2 \\times 2$ Matrix',
+                content: `For $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$:
 
-**Determinant**: $|A| = ad - bc$.
-- If $|A| = 0$, the matrix has **no inverse** (singular matrix).
+**Determinant** (a scalar): $|A| = ad - bc$. Think: (top-left $\\times$ bottom-right) $-$ (top-right $\\times$ bottom-left).
 
-**Inverse Matrix** ($A^{-1}$):
-$$ A^{-1} = \\frac{1}{|A|} \\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix} $$
-$$ A A^{-1} = I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix} $$`,
+**Singular matrix**: If $|A| = 0$, $A$ has **no inverse**. Non-singular (invertible) when $|A| \\neq 0$.
+
+**Inverse** $A^{-1}$ (only when $|A| \\neq 0$):
+$$ A^{-1} = \\frac{1}{ad-bc} \\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix} $$
+So: swap $a$ and $d$, change the sign of $b$ and $c$, then divide every element by $|A|$.
+
+**Check**: $A A^{-1} = A^{-1} A = I$.`,
                 worked_examples: [
                     {
                         question: 'Find the inverse of $A = \\begin{pmatrix} 4 & 2 \\\\ 3 & 2 \\end{pmatrix}$.',
@@ -123,17 +150,28 @@ $$ A A^{-1} = I = \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix} $$`,
                             '$2k - 12 = 0 \\Rightarrow 2k = 12 \\Rightarrow k = 6$.'
                         ],
                         final_answer: '$k = 6$'
+                    },
+                    {
+                        question: 'Show that $A = \\begin{pmatrix} 2 & 4 \\\\ 1 & 2 \\end{pmatrix}$ has no inverse.',
+                        steps: [
+                            '$|A| = (2)(2) - (4)(1) = 4 - 4 = 0$.',
+                            'Since the determinant is zero, $A$ is singular and does not have an inverse.'
+                        ],
+                        final_answer: '$|A| = 0$, so $A$ has no inverse'
                     }
                 ]
             },
             {
-                title: 'Solving Simultaneous Equations',
-                content: `To solve $\\begin{cases} ax + by = e \\\\ cx + dy = f \\end{cases}$:
-
-1. Write as matrix equation:
+                title: '5. Solving Simultaneous Equations Using Matrices',
+                content: `A pair of linear equations $ax + by = e$, $cx + dy = f$ can be written as a **matrix equation**:
 $$ \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} \\begin{pmatrix} x \\\\ y \\end{pmatrix} = \\begin{pmatrix} e \\\\ f \\end{pmatrix} $$
-2. Let $A = \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$, $X = \\begin{pmatrix} x \\\\ y \\end{pmatrix}$, $B = \\begin{pmatrix} e \\\\ f \\end{pmatrix}$.
-3. Solution is $X = A^{-1}B$.`,
+i.e. $AX = B$, where $A$ is the coefficient matrix, $X = \\begin{pmatrix} x \\\\ y \\end{pmatrix}$ is the unknown column, and $B$ is the constants column.
+
+**If $A$ is invertible** ($|A| \\neq 0$): multiply both sides (on the left) by $A^{-1}$:
+$$ A^{-1}(AX) = A^{-1}B \\Rightarrow IX = A^{-1}B \\Rightarrow X = A^{-1}B $$
+So find $A^{-1}$, then compute $A^{-1}B$; the first entry of the result is $x$, the second is $y$.
+
+**Order matters**: It must be $X = A^{-1}B$, not $BA^{-1}$ (and $B$ is a column, so $A^{-1}B$ is defined).`,
                 worked_examples: [
                     {
                         question: 'Solve using matrices: $3x + 2y = 11$, $4x - y = 7$.',
@@ -164,19 +202,24 @@ $$ \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} \\begin{pmatrix} x \\\\ y \\
             }
         ],
         key_points: [
-            'Matrix multiplication is **not** commutative ($AB \\neq BA$).',
-            'Determinant $|A| = ad - bc$. If zero, matrix is singular.',
-            'Inverse $A^{-1} = \\frac{1}{ad-bc}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$.',
-            'To multiply, columns of 1st must equal rows of 2nd.'
+            'Order $m \\times n$ = $m$ rows, $n$ columns. Addition/subtraction only for same order.',
+            'Multiplication: $A_{m \\times n} B_{n \\times p} = (AB)_{m \\times p}$. Row of first $\\times$ column of second.',
+            'Matrix multiplication is **not** commutative: $AB \\neq BA$ in general.',
+            'Determinant $|A| = ad - bc$ for $\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$. Singular if $|A| = 0$.',
+            'Inverse: $A^{-1} = \\frac{1}{|A|}\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$ when $|A| \\neq 0$.',
+            'Simultaneous equations $AX = B$ $\\Rightarrow$ $X = A^{-1}B$ (when $A$ is invertible).'
         ],
         exam_tips: [
-            'Check orders before multiplying.',
-            'For inverse, don\'t forget to multiply by $\\frac{1}{\\text{determinant}}$.',
-            'When solving equations, order matters: $X = A^{-1}B$, not $BA^{-1}$.'
+            'Always state the order of a matrix when asked. Check that $AB$ is defined (columns of $A$ = rows of $B$) before multiplying.',
+            'For the inverse, write the matrix $\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$ first, then multiply by $1/|A|$ — don\'t forget the $1/|A|$.',
+            'When solving $AX = B$, use $X = A^{-1}B$ (multiply $A^{-1}$ on the left of $B$).',
+            'If the determinant is 0, state that the matrix is singular and has no inverse; the system may have no unique solution.',
+            'Use the app\'s 1000+ practice questions on matrices.'
         ],
         visual_descriptions: [
-            'Diagram showing row-column multiplication pattern.',
-            'Flowchart for finding matrix inverse.'
+            'Grid showing row $i$ and column $j$ and the $(i,j)$ entry in a matrix.',
+            'Diagram: row of first matrix dotted with column of second to get one entry of the product.',
+            'Flowchart: form $A$, $X$, $B$ $\\to$ find $|A|$ $\\to$ if $|A| \\neq 0$, find $A^{-1}$ $\\to$ $X = A^{-1}B$.'
         ]
     }
 };

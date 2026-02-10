@@ -70,12 +70,17 @@ export interface ExamResults {
     marks_total: number;
     correct_count: number;
     total_questions: number;
+    answered_count?: number;
+    unanswered_count?: number;
     percentage: number;
     grade: string;
   };
-  time?: { used_formatted: string };
+  time?: { used_formatted: string; allowed_seconds?: number; used_seconds?: number };
   encouragement?: string;
   revision_suggestions?: string[];
+  weak_areas?: string[];
+  topic_breakdown?: Record<string, { correct: number; total: number }>;
+  performance_signals?: Record<string, unknown>;
 }
 
 export const QUESTION_COUNTS = [5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 100] as const;

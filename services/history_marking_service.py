@@ -113,9 +113,12 @@ Mark the student's answer and return ONLY the JSON object as specified (part_a_s
         if not result or not result.get("success") or not result.get("text"):
             return _fallback_marking(question, answers)
 
-        text = result["text"].strip()
+        text = (result.get("text") or "").strip()
+        if not text:
+            return _fallback_marking(question, answers)
         data = _parse_marking_response(text)
         if data:
+            data = _normalize_marking_result(data)
             total = data.get("part_a_score", 0) + data.get("part_b_score", 0) + data.get("part_c_score", 0)
             data["total"] = total
             data["success"] = True
@@ -146,6 +149,25 @@ def _parse_marking_response(text: str) -> Optional[Dict[str, Any]]:
         return None
 
 
+def _normalize_marking_result(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Ensure scores are ints and breakdown has expected keys for the frontend."""
+    out = dict(data)
+    for key in ("part_a_score", "part_b_score", "part_c_score", "total"):
+        val = out.get(key)
+        try:
+            out[key] = int(val) if val is not None else 0
+        except (TypeError, ValueError):
+            out[key] = 0
+    breakdown = out.get("breakdown")
+    if not isinstance(breakdown, dict):
+        breakdown = {}
+    for k in ("part_a_analysis", "part_b_analysis", "part_c_analysis"):
+        if k not in breakdown or not isinstance(breakdown[k], str):
+            breakdown[k] = breakdown.get(k) or ""
+    out["breakdown"] = breakdown
+    return out
+
+
 def _fallback_marking(question: Dict[str, Any], answers: Dict[str, str]) -> Dict[str, Any]:
     """Return a safe fallback when AI is unavailable."""
     part_a = (answers.get("part_a") or "").strip()
@@ -165,5 +187,9 @@ def _fallback_marking(question: Dict[str, Any], answers: Dict[str, str]) -> Dict
         "part_b_feedback": "Automatic marking only. Submit again when AI marking is available for full feedback.",
         "part_c_feedback": "Automatic marking only. Submit again when AI marking is available for full feedback.",
         "constructive_feedback": "AI marking is temporarily unavailable. Your response was saved; try again later for detailed ZIMSEC-style feedback.",
-        "breakdown": {},
+        "breakdown": {
+            "part_a_analysis": "",
+            "part_b_analysis": "",
+            "part_c_analysis": "",
+        },
     }

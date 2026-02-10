@@ -2,11 +2,13 @@
  * FlashcardSection - Web Version
  * Ports the mobile flashcard functionality to the web
  */
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Layers, Zap, Info, X } from 'lucide-react';
 import { flashcardApi, type Flashcard } from '../services/api/flashcardApi';
 import type { TopicNotes } from '../data/scienceNotes/types';
 import '../pages/sciences/ScienceUniverse.css'; // Reusing science styles for consistency
+import { useAuth } from '../context/AuthContext';
 
 interface FlashcardSectionProps {
     subject: string;
@@ -22,6 +24,8 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
     notes,
     accentColor = '#10B981',
 }) => {
+    const navigate = useNavigate();
+    const { updateUser } = useAuth();
     const [cardCount, setCardCount] = useState(20);
     const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -48,15 +52,19 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
             const notesContent = getNotesContent();
             // For web, we currently default to batch generation for simplicity 
             // (Streaming can be added later if needed)
-            const cards = await flashcardApi.generateFlashcards(
+            const result = await flashcardApi.generateFlashcards(
                 subject,
                 topic,
                 cardCount,
                 notesContent
             );
 
-            if (cards.length > 0) {
-                setFlashcards(cards);
+            if (result.creditsRemaining !== undefined) {
+                updateUser({ credits: result.creditsRemaining });
+            }
+
+            if (result.flashcards.length > 0) {
+                setFlashcards(result.flashcards);
                 setShowPlayer(true);
                 setCurrentIndex(0);
                 setIsFlipped(false);
@@ -65,6 +73,12 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
             }
         } catch (error) {
             console.error('Flashcard generation error:', error);
+            const status = (error as { response?: { status?: number } })?.response?.status;
+            if (status === 402) {
+                alert('Insufficient credits. Please top up to generate flashcards.');
+                navigate('/app/credits');
+                return;
+            }
             alert('Error generating flashcards. Please check your connection.');
         } finally {
             setIsGenerating(false);

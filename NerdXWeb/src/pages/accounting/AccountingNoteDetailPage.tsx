@@ -1,28 +1,73 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Info, Lightbulb, Lock, Video, Volume2 } from 'lucide-react';
 import { MathRenderer } from '../../components/MathRenderer';
-import { accountingNotes } from '../../data/accounting/notes';
+import { FlashcardSection } from '../../components/FlashcardSection';
 import { getTopicById } from '../../data/accounting/topics';
 import { useAuth } from '../../context/AuthContext';
+import type { TopicNotes } from '../../data/scienceNotes/types';
 
 export function AccountingNoteDetailPage() {
   const { topicId } = useParams<{ topicId: string }>();
   const { user } = useAuth();
 
   const topic = useMemo(() => (topicId ? getTopicById(topicId) : undefined), [topicId]);
-  const notes = useMemo(() => (topic ? accountingNotes[topic.name] : null), [topic]);
+  const [notesMap, setNotesMap] = useState<Record<string, TopicNotes> | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const mod = await import('../../data/accounting/notes');
+        if (!active) return;
+        setNotesMap(mod.accountingNotes);
+      } catch {
+        if (!active) return;
+        setNotesMap({});
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const notes = useMemo(() => {
+    if (!topic || !notesMap) return null;
+    return notesMap[topic.name] ?? null;
+  }, [topic, notesMap]);
 
   const isMediaLocked = useMemo(() => {
     const hasPaidCredits = (user?.credit_breakdown?.purchased_credits ?? 0) > 0;
     return !hasPaidCredits;
   }, [user]);
 
-  if (!topicId || !topic || !notes) {
+  if (!topicId || !topic) {
     return (
       <div className="accounting-notes-page accounting-note-detail-page">
         <Link to="/app/accounting/notes" className="back-link">
           <ArrowLeft size={20} /> Back
+        </Link>
+        <p className="accounting-notes-not-found">Notes for this topic are not available.</p>
+      </div>
+    );
+  }
+
+  if (!notesMap) {
+    return (
+      <div className="accounting-notes-page accounting-note-detail-page">
+        <Link to="/app/accounting/notes" className="back-link">
+          <ArrowLeft size={20} /> Back to topics
+        </Link>
+        <p className="accounting-notes-not-found">Loading notes...</p>
+      </div>
+    );
+  }
+
+  if (!notes) {
+    return (
+      <div className="accounting-notes-page accounting-note-detail-page">
+        <Link to="/app/accounting/notes" className="back-link">
+          <ArrowLeft size={20} /> Back to topics
         </Link>
         <p className="accounting-notes-not-found">Notes for this topic are not available.</p>
       </div>
@@ -133,8 +178,9 @@ export function AccountingNoteDetailPage() {
             </ul>
           </div>
         )}
+
+        <FlashcardSection subject="accounting" topic={notes.topic} notes={notes} accentColor="#B8860B" />
       </div>
     </div>
   );
 }
-

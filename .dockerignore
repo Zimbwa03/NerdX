@@ -38,6 +38,11 @@ env/
 *.swo
 *~
 
+# Node
+node_modules/
+NerdXWeb/node_modules/
+NerdXApp/node_modules/
+
 # OS
 .DS_Store
 .DS_Store?

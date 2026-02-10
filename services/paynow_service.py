@@ -18,6 +18,9 @@ logger = logging.getLogger(__name__)
 # Debug log path - works on both local Windows and Render Linux
 def get_debug_log_path():
     """Get debug log path that works on both Windows and Linux"""
+    # Disable file debug logging unless explicitly enabled.
+    if os.environ.get('PAYNOW_DEBUG_LOG', 'false').lower() != 'true':
+        return os.devnull
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     log_dir = os.path.join(base_dir, '.cursor')
     os.makedirs(log_dir, exist_ok=True)
@@ -33,7 +36,7 @@ class PaynowService:
     - Test mode support with simulation numbers
     """
     
-    MERCHANT_EMAIL = "neezykidngoni@gmail.com"
+    MERCHANT_EMAIL = os.environ.get('PAYNOW_MERCHANT_EMAIL', "neezykidngoni@gmail.com")
 
     def __init__(self):
         """Initialize Paynow service with credentials"""
@@ -59,7 +62,7 @@ class PaynowService:
         logger.info(f"   Return URL (user redirect): {self.return_url}")
         
         # Test mode configuration
-        self.test_mode = os.environ.get('PAYNOW_TEST_MODE', 'true').lower() == 'true'
+        self.test_mode = os.environ.get('PAYNOW_TEST_MODE', 'false').lower() == 'true'
         if self.test_mode:
             logger.info(f"🧪 PAYNOW TEST MODE ACTIVE - Using Merchant Email: {self.MERCHANT_EMAIL}")
         

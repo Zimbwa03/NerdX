@@ -1,14 +1,13 @@
 /**
  * MathRenderer Component
  * Renders Markdown-ish text with LaTeX math using KaTeX (WebView).
- *
- * Why: The A-Level notes content includes real LaTeX (e.g. \mathbb{R}, \frac{a}{b}).
- * The previous implementation stripped unknown LaTeX commands, causing broken output.
+ * Normalizes naked LaTeX (e.g. \frac{1}{2}, \cap) so it renders as standard math symbols.
  */
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useTheme } from '../context/ThemeContext';
+import { normalizeLatexForRender } from '../utils/latexForMathRenderer';
 
 interface MathRendererProps {
     content: string;
@@ -43,13 +42,16 @@ const MathRenderer: React.FC<MathRendererProps> = ({
     const htmlContent = useMemo(() => {
         if (!content) return '';
 
+        // Wrap naked LaTeX in $ $ so KaTeX can render (e.g. \frac{1}{2}, P \cap Q)
+        const normalized = normalizeLatexForRender(content);
+
         // Protect LaTeX math delimiters before HTML escaping
         const MATH_PLACEHOLDER = {
             display: '___MATH_DISPLAY___',
             inline: '___MATH_INLINE___'
         };
         const mathBlocks: string[] = [];
-        let processed = content;
+        let processed = normalized;
 
         // Extract display math (\[...\] or $$...$$)
         processed = processed.replace(/\\\[([\s\S]*?)\\\]/g, (match, math) => {
@@ -99,6 +101,10 @@ const MathRenderer: React.FC<MathRendererProps> = ({
             .replace(/`([^`]+)`/g, '<code>$1</code>')
             .replace(/\n\n/g, '</p><p>')
             .replace(/\n/g, '<br/>');
+        // Make list-like lines (starting with - or •) display clearly
+        processed = processed
+            .replace(/<br\/>- /g, '<br/><span class="list-bullet">•</span> ')
+            .replace(/<br\/>• /g, '<br/><span class="list-bullet">•</span> ');
 
         return `
 <!DOCTYPE html>
@@ -130,6 +136,7 @@ const MathRenderer: React.FC<MathRendererProps> = ({
             font-family: 'Courier New', monospace;
             font-size: 0.9em;
         }
+        .list-bullet { color: ${accentColor}; margin-right: 6px; }
 
         /* KaTeX tuning */
         .katex { color: ${accentColor}; }

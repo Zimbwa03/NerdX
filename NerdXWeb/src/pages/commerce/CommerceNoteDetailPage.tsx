@@ -2,19 +2,24 @@ import { useParams, Link } from 'react-router-dom';
 import { getTopicNotesBySlug } from '../../data/commerceNotes/notes';
 import { ArrowLeft, Info, CheckCircle, Lightbulb } from 'lucide-react';
 
-/** Renders content string with **bold** and newlines */
+/** Renders content string with **bold**, single newlines as <br>, and double newlines as paragraphs */
 function ContentBlock({ content }: { content: string }) {
   return (
     <div className="commerce-notes-detail-body">
       {content.split(/\n\n+/).map((para, i) => (
         <p key={i} className="commerce-notes-detail-para">
-          {para.split(/(\*\*.*?\*\*)/g).map((bit, j) =>
-            bit.startsWith('**') && bit.endsWith('**') ? (
-              <strong key={j}>{bit.slice(2, -2)}</strong>
-            ) : (
-              bit
-            )
-          )}
+          {para.split(/\n/).map((line, lineIdx) => (
+            <span key={lineIdx}>
+              {lineIdx > 0 && <br />}
+              {line.split(/(\*\*[^*]+\*\*)/g).map((bit, j) =>
+                bit.startsWith('**') && bit.endsWith('**') ? (
+                  <strong key={j}>{bit.slice(2, -2)}</strong>
+                ) : (
+                  bit
+                )
+              )}
+            </span>
+          ))}
         </p>
       ))}
     </div>

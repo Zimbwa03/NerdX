@@ -166,7 +166,9 @@ const MathNotesDetailScreen: React.FC = () => {
                     {notes.key_points.map((point, i) => (
                         <View key={i} style={styles.pointRow}>
                             <Text style={{ color: Colors.success.main, marginRight: 10 }}>•</Text>
-                            <Text style={[styles.pointText, { color: themedColors.text.primary }]}>{point}</Text>
+                            <View style={styles.pointContent}>
+                                <MathRenderer content={point} fontSize={15} minHeight={24} />
+                            </View>
                         </View>
                     ))}
                 </View>
@@ -180,7 +182,9 @@ const MathNotesDetailScreen: React.FC = () => {
                     {notes.exam_tips.map((tip, i) => (
                         <View key={i} style={styles.pointRow}>
                             <Ionicons name="star" size={12} color={Colors.warning.main} style={{ marginTop: 4, marginRight: 8 }} />
-                            <Text style={[styles.pointText, { color: themedColors.text.primary }]}>{tip}</Text>
+                            <View style={styles.pointContent}>
+                                <MathRenderer content={tip} fontSize={15} minHeight={24} />
+                            </View>
                         </View>
                     ))}
                 </View>
@@ -216,8 +220,8 @@ const styles = StyleSheet.create({
     stepContent: { flex: 1 },
     answerBox: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)', flexDirection: 'row', alignItems: 'center' },
     answerLabel: { fontWeight: 'bold', marginRight: 8, fontSize: 14 },
-    pointRow: { flexDirection: 'row', marginBottom: 8, paddingLeft: 10 },
-    pointText: { fontSize: 15, flex: 1 },
+    pointRow: { flexDirection: 'row', marginBottom: 8, paddingLeft: 10, alignItems: 'flex-start' },
+    pointContent: { flex: 1 },
 });
 
 export default MathNotesDetailScreen;

@@ -1,39 +1,174 @@
-import { type ElementType } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Atom, Beaker, BookOpen, Brain, Calculator, Code, Database, Globe, Leaf, Zap } from 'lucide-react';
+import { type ElementType, useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Atom, Beaker, BookOpen, Brain, Calculator, Code, Database, Globe, Leaf, Lock, Zap } from 'lucide-react';
 import { FloatingParticles } from '../../components/FloatingParticles';
 import { useAuth } from '../../context/AuthContext';
+import type { SimulationMetadata, Subject } from '../../data/virtualLab';
 
-type FeaturedLab = {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: ElementType;
-  from: string;
-  to: string;
-};
+type FilterOption = 'all' | 'science' | Subject;
 
-const FEATURED_LABS: FeaturedLab[] = [
-  { id: 'cell-explorer', title: 'Cell Explorer', subtitle: 'Biology simulation', icon: Leaf, from: '#10B981', to: '#059669' },
-  { id: 'osmosis-adventure', title: 'Osmosis Adventure', subtitle: 'Biology interactive lab', icon: Brain, from: '#22C55E', to: '#16A34A' },
-  { id: 'atom-builder', title: 'Atom Builder', subtitle: 'Build atoms and isotopes', icon: Atom, from: '#00BCD4', to: '#0097A7' },
-  { id: 'equation-balancer', title: 'Equation Balancer', subtitle: 'Balance reactions', icon: Beaker, from: '#F59E0B', to: '#D97706' },
-  { id: 'circuit-builder', title: 'Circuit Builder', subtitle: 'Series and parallel circuits', icon: Zap, from: '#3B82F6', to: '#2563EB' },
-  { id: 'projectile-motion', title: 'Projectile Motion', subtitle: 'Physics graphs and motion', icon: BookOpen, from: '#6366F1', to: '#4F46E5' },
-  { id: 'quadratic-explorer', title: 'Quadratic Explorer', subtitle: 'Functions and graphs', icon: Calculator, from: '#7C4DFF', to: '#651FFF' },
-  { id: 'geo-maps', title: 'Geo Maps', subtitle: 'Map layers and exploration', icon: Globe, from: '#2E7D32', to: '#1B5E20' },
-  { id: 'programming-editor', title: 'Programming Lab', subtitle: 'Code editor and tasks', icon: Code, from: '#111827', to: '#374151' },
-  { id: 'database-editor', title: 'Database Lab', subtitle: 'SQL practice editor', icon: Database, from: '#0F766E', to: '#14B8A6' },
+const FILTERS: Array<{ key: FilterOption; label: string }> = [
+  { key: 'all', label: 'All' },
+  { key: 'science', label: 'Science' },
+  { key: 'biology', label: 'Biology' },
+  { key: 'chemistry', label: 'Chemistry' },
+  { key: 'physics', label: 'Physics' },
+  { key: 'mathematics', label: 'Math' },
+  { key: 'english', label: 'English' },
+  { key: 'computer_science', label: 'Computer Science' },
+  { key: 'geography', label: 'Geography' },
+  { key: 'accounting', label: 'Accounting' },
+  { key: 'business_enterprise_skills', label: 'BES/Life Skills' },
+  { key: 'history', label: 'History' },
 ];
+
+const SUBJECT_KEYS: Subject[] = [
+  'biology',
+  'chemistry',
+  'physics',
+  'mathematics',
+  'english',
+  'computer_science',
+  'geography',
+  'accounting',
+  'business_enterprise_skills',
+  'history',
+];
+
+function isSubjectKey(value: string): value is Subject {
+  return (SUBJECT_KEYS as string[]).includes(value);
+}
+
+function subjectIcon(subject: Subject): ElementType {
+  if (subject === 'biology') return Leaf;
+  if (subject === 'chemistry') return Beaker;
+  if (subject === 'physics') return Atom;
+  if (subject === 'mathematics') return Calculator;
+  if (subject === 'english') return BookOpen;
+  if (subject === 'computer_science') return Code;
+  if (subject === 'geography') return Globe;
+  if (subject === 'accounting') return Database;
+  if (subject === 'business_enterprise_skills') return Brain;
+  return BookOpen;
+}
 
 export function VirtualLabHubPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const hasPaidCredits = (user?.credit_breakdown?.purchased_credits ?? 0) > 0;
+  const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<FilterOption>('all');
+  const [allSimulations, setAllSimulations] = useState<SimulationMetadata[]>([]);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const setFilter = (filter: FilterOption) => {
+    setActiveFilter(filter);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (filter === 'all') next.delete('subject');
+        else next.set('subject', filter);
+        return next;
+      },
+      { replace: true }
+    );
+  };
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    window.setTimeout(() => setToast(null), 2400);
+  };
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      setLoading(true);
+      try {
+        const mod = await import('../../data/virtualLab/simulationsData');
+        if (!active) return;
+        setAllSimulations(mod.getAllSimulations());
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const availableSubjects = useMemo(() => new Set(allSimulations.map((s) => s.subject)), [allSimulations]);
+
+  const visibleFilters = useMemo(
+    () =>
+      FILTERS.filter((f) => {
+        if (f.key === 'all' || f.key === 'science') return true;
+        return availableSubjects.has(f.key);
+      }),
+    [availableSubjects]
+  );
+
+  useEffect(() => {
+    const rawSubject = searchParams.get('subject');
+    if (!rawSubject) return;
+    const normalized = rawSubject.trim().toLowerCase();
+
+    if (normalized === 'all') {
+      setActiveFilter('all');
+      return;
+    }
+
+    if (normalized === 'science') {
+      setActiveFilter('science');
+      return;
+    }
+
+    if (isSubjectKey(normalized)) {
+      if (availableSubjects.size > 0 && !availableSubjects.has(normalized)) {
+        setActiveFilter('all');
+        return;
+      }
+      setActiveFilter(normalized);
+    }
+  }, [availableSubjects, searchParams]);
+
+  const filteredSimulations = useMemo(() => {
+    if (activeFilter === 'all') return allSimulations;
+    if (activeFilter === 'science') {
+      return allSimulations.filter((s) => s.subject === 'biology' || s.subject === 'chemistry' || s.subject === 'physics');
+    }
+    return allSimulations.filter((s) => s.subject === activeFilter);
+  }, [activeFilter, allSimulations]);
+
+  const isSimulationLocked = (sim: SimulationMetadata): boolean => {
+    if (hasPaidCredits) return false;
+    const subjectSims = allSimulations.filter((s) => s.subject === sim.subject);
+    const subjectIndex = subjectSims.findIndex((s) => s.id === sim.id);
+    return subjectIndex >= 3;
+  };
+
+  const openSimulation = (sim: SimulationMetadata) => {
+    if (isSimulationLocked(sim)) {
+      const ok = window.confirm('This simulation is locked. Purchase credits to unlock all simulations?');
+      if (ok) {
+        navigate('/app/credits');
+      } else {
+        showToast('Locked simulation');
+      }
+      return;
+    }
+    navigate(`/app/virtual-lab/${sim.id}`);
+  };
 
   return (
     <div className="subject-page-v2 virtual-lab-page">
       <FloatingParticles count={14} />
+
+      {toast && (
+        <div className="notifications-toast" role="status">
+          {toast}
+        </div>
+      )}
 
       <header className="subject-header-v2">
         <Link to="/app" className="back-btn-v2">
@@ -68,7 +203,7 @@ export function VirtualLabHubPage() {
                   <h3>Ask AI Which Lab</h3>
                   <p>Get a recommended lab based on your weak areas</p>
                 </div>
-                <span className="feature-arrow">â†’</span>
+                <span className="feature-arrow">&rarr;</span>
               </button>
 
               <button
@@ -83,7 +218,7 @@ export function VirtualLabHubPage() {
                   <h3>Unlock Labs</h3>
                   <p>{hasPaidCredits ? 'All labs unlocked (paid credits detected)' : 'Some labs may be locked - purchase credits to unlock all'}</p>
                 </div>
-                <span className="feature-arrow">â†’</span>
+                <span className="feature-arrow">&rarr;</span>
               </button>
 
               <button
@@ -98,7 +233,7 @@ export function VirtualLabHubPage() {
                   <h3>Agent Hub</h3>
                   <p>Use specialist agents to practice after a lab</p>
                 </div>
-                <span className="feature-arrow">â†’</span>
+                <span className="feature-arrow">&rarr;</span>
               </button>
             </div>
           </section>
@@ -114,7 +249,7 @@ export function VirtualLabHubPage() {
                   <h3>Science</h3>
                   <p>Biology, Chemistry, Physics simulations</p>
                 </div>
-                <span className="feature-arrow">â†’</span>
+                <span className="feature-arrow">&rarr;</span>
               </button>
               <button type="button" className="feature-card-v2" onClick={() => navigate('/app/virtual-lab?subject=mathematics')}>
                 <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #2979FF, #7C4DFF)' }}>
@@ -124,7 +259,7 @@ export function VirtualLabHubPage() {
                   <h3>Mathematics</h3>
                   <p>Graphs, calculus, probability, vectors</p>
                 </div>
-                <span className="feature-arrow">â†’</span>
+                <span className="feature-arrow">&rarr;</span>
               </button>
               <button type="button" className="feature-card-v2" onClick={() => navigate('/app/virtual-lab?subject=geography')}>
                 <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #2E7D32, #1B5E20)' }}>
@@ -134,9 +269,9 @@ export function VirtualLabHubPage() {
                   <h3>Geography</h3>
                   <p>Map work, bearings, scale and distance</p>
                 </div>
-                <span className="feature-arrow">â†’</span>
+                <span className="feature-arrow">&rarr;</span>
               </button>
-              <button type="button" className="feature-card-v2" onClick={() => navigate('/app/virtual-lab?subject=programming')}>
+              <button type="button" className="feature-card-v2" onClick={() => navigate('/app/virtual-lab?subject=computer_science')}>
                 <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #111827, #374151)' }}>
                   <Code size={24} />
                 </div>
@@ -144,7 +279,7 @@ export function VirtualLabHubPage() {
                   <h3>Programming and IT</h3>
                   <p>Code, web design, databases</p>
                 </div>
-                <span className="feature-arrow">â†’</span>
+                <span className="feature-arrow">&rarr;</span>
               </button>
             </div>
           </section>
@@ -152,23 +287,58 @@ export function VirtualLabHubPage() {
 
         <div className="subject-topics-col">
           <section className="subject-section-v2">
-            <h2>Featured Labs</h2>
-            <p className="section-subtitle">Batch 2 will port every lab screen; these routes are ready now</p>
-            <div className="topics-grid-v2">
-              {FEATURED_LABS.map((lab) => (
+            <h2>Browse Simulations</h2>
+            <p className="section-subtitle">Filter by subject, then open a simulation to start.</p>
+
+            <div className="vl-filter-row">
+              {visibleFilters.map((f) => (
                 <button
-                  key={lab.id}
+                  key={f.key}
                   type="button"
-                  className="topic-card-v2"
-                  onClick={() => navigate(`/app/virtual-lab/${lab.id}`)}
+                  className={`vl-filter-chip ${activeFilter === f.key ? 'active' : ''}`}
+                  onClick={() => setFilter(f.key)}
                 >
-                  <div className="topic-card-icon" style={{ background: `linear-gradient(135deg, ${lab.from}, ${lab.to})` }}>
-                    <lab.icon size={18} />
-                  </div>
-                  <span className="topic-card-name">{lab.title}</span>
+                  {f.label}
                 </button>
               ))}
             </div>
+
+            {loading ? (
+              <div className="vl-card">Loading simulations...</div>
+            ) : (
+              <div className="feature-cards-v2">
+                {filteredSimulations.map((sim) => {
+                  const locked = isSimulationLocked(sim);
+                  const Icon = subjectIcon(sim.subject);
+                  return (
+                    <button
+                      key={sim.id}
+                      type="button"
+                      className={`feature-card-v2 vl-sim-card ${locked ? 'vl-sim-locked' : ''}`}
+                      onClick={() => openSimulation(sim)}
+                    >
+                      <div className="feature-card-icon" style={{ background: `linear-gradient(135deg, ${sim.color}, #7C4DFF)` }}>
+                        <Icon size={24} />
+                      </div>
+                      <div className="feature-card-text">
+                        <div className="feature-badge-row">
+                          <h3>{sim.title}</h3>
+                          {locked && (
+                            <span className="vl-lock-pill">
+                              <Lock size={14} /> Locked
+                            </span>
+                          )}
+                        </div>
+                        <p>
+                          {sim.topic} &bull; {sim.estimatedTime} &bull; {sim.xpReward} XP
+                        </p>
+                      </div>
+                      <span className="feature-arrow">&rarr;</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </section>
         </div>
       </div>

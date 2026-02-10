@@ -5,19 +5,19 @@ export const geometryNotes: Record<string, MathTopicNotes> = {
         topic: 'Angles and Polygons',
         subject: 'Mathematics',
         grade_level: 'O-Level',
-        summary: 'This topic covers the properties of angles formed by lines and within polygons. Understanding these relationships is essential for geometric reasoning and proofs.',
+        summary: 'Angles and polygons form the foundation of plane geometry. This chapter covers: types of angles (acute, right, obtuse, straight, reflex); angle relationships — complementary and supplementary angles, vertically opposite angles (equal), angles at a point (sum $360°$); parallel lines and transversals — corresponding, alternate, and co-interior angles; interior and exterior angles of polygons — sum of interior angles $(n-2)\\times 180°$, sum of exterior angles $360°$, and formulae for regular polygons. These facts are used in proofs and in solving for unknown angles.',
         sections: [
             {
-                title: 'Types of Angles',
-                content: `**Acute Angle**: $0° < \\theta < 90°$
+                title: '1. Types of Angles',
+                content: `Angles are measured in **degrees** ($°$) from $0°$ to $360°$ (or from a reference direction). **Right angle** = $90°$ (quarter turn).
 
-**Right Angle**: $\\theta = 90°$
+**Acute**: $0° < \\theta < 90°$ (less than a right angle).
+**Right**: $\\theta = 90°$.
+**Obtuse**: $90° < \\theta < 180°$ (between right and straight).
+**Straight**: $\\theta = 180°$ (half turn; a straight line).
+**Reflex**: $180° < \\theta < 360°$ (more than a straight angle).
 
-**Obtuse Angle**: $90° < \\theta < 180°$
-
-**Straight Angle**: $\\theta = 180°$
-
-**Reflex Angle**: $180° < \\theta < 360°$`,
+Two angles that add to $90°$ are **complementary**; two that add to $180°$ are **supplementary** (e.g. angles on a straight line).`,
                 worked_examples: [
                     {
                         question: 'Classify the following angles: $47°$, $90°$, $135°$, $200°$',
@@ -32,14 +32,14 @@ export const geometryNotes: Record<string, MathTopicNotes> = {
                 ]
             },
             {
-                title: 'Angle Relationships',
-                content: `**Complementary Angles**: Sum to $90°$.
+                title: '2. Angle Relationships',
+                content: `**Complementary angles**: Two angles that add to $90°$. If one is $\\theta$, the other is $90° - \\theta$.
 
-**Supplementary Angles**: Sum to $180°$ (angles on a straight line).
+**Supplementary angles**: Two angles that add to $180°$. **Angles on a straight line** are supplementary. If one is $\\theta$, the other is $180° - \\theta$.
 
-**Vertically Opposite Angles**: Equal. When two lines intersect, opposite angles are equal.
+**Vertically opposite angles**: When two straight lines intersect, the two pairs of opposite angles are **equal**. (Each is the supplement of the adjacent angle.)
 
-**Angles at a Point**: Sum to $360°$.`,
+**Angles at a point**: The sum of all angles around a point is **$360°$**.`,
                 worked_examples: [
                     {
                         question: 'Two angles are supplementary. One is $35°$ more than the other. Find them.',
@@ -72,14 +72,16 @@ export const geometryNotes: Record<string, MathTopicNotes> = {
                 ]
             },
             {
-                title: 'Parallel Lines and Transversals',
-                content: `When a **transversal** crosses two parallel lines:
+                title: '3. Parallel Lines and Transversals',
+                content: `A **transversal** is a line that crosses two or more other lines. When it crosses **two parallel lines**, special angle pairs are formed:
 
-**Corresponding Angles** (F-shape): Equal.
+**Corresponding angles** (in the same relative position at each intersection): **equal**. They form an "F" shape.
 
-**Alternate Angles** (Z-shape): Equal.
+**Alternate angles** (on opposite sides of the transversal, between the parallel lines): **equal**. They form a "Z" shape. (Alternate interior.)
 
-**Co-interior (Allied) Angles** (C-shape): Sum to $180°$.`,
+**Co-interior (allied) angles** (on the same side of the transversal, between the parallel lines): **sum to $180°$**. They form a "C" shape.
+
+If corresponding or alternate angles are equal (or co-interior sum to $180°$), the lines are **parallel**.`,
                 worked_examples: [
                     {
                         question: 'In the diagram, lines $AB$ and $CD$ are parallel. Angle $APQ = 65°$. Find angle $PQC$.',
@@ -112,19 +114,16 @@ export const geometryNotes: Record<string, MathTopicNotes> = {
                 ]
             },
             {
-                title: 'Polygon Angle Properties',
-                content: `For a polygon with $n$ sides:
+                title: '4. Polygon Angle Properties',
+                content: `A **polygon** is a closed shape with straight sides. For a polygon with **$n$ sides**:
 
-**Sum of Interior Angles**:
-$$\\text{Sum} = (n - 2) \\times 180°$$
+**Sum of interior angles** = $(n-2) \\times 180°$. (Divide the polygon into $(n-2)$ triangles by drawing diagonals from one vertex.)
 
-**Each Interior Angle (Regular Polygon)**:
-$$\\text{Each angle} = \\frac{(n-2) \\times 180°}{n}$$
+**Regular polygon**: All sides and all angles equal. **Each interior angle** = $\\frac{(n-2) \\times 180°}{n}$.
 
-**Sum of Exterior Angles**: Always $360°$ (for any convex polygon).
+**Exterior angle** at a vertex = angle between one side and the extension of the adjacent side. **Sum of exterior angles** (one at each vertex, taken in the same sense) = **$360°$** for any convex polygon.
 
-**Each Exterior Angle (Regular Polygon)**:
-$$\\text{Each angle} = \\frac{360°}{n}$$`,
+**Each exterior angle** of a regular polygon = $\\frac{360°}{n}$. So interior + exterior (at same vertex) = $180°$.`,
                 worked_examples: [
                     {
                         question: 'Find the sum of interior angles and each interior angle of a regular hexagon.',
@@ -165,33 +164,31 @@ $$\\text{Each angle} = \\frac{360°}{n}$$`,
             'Sum of exterior angles = $360°$.'
         ],
         exam_tips: [
-            'Draw parallel lines and mark equal/supplementary angles clearly.',
-            'For polygon problems, first identify the number of sides.',
-            'State the angle property you are using in each step.'
+            'Draw diagrams and mark equal or supplementary angles with the same symbols.',
+            'For polygon problems, write $n$ (number of sides) and use the correct formula.',
+            'State the theorem or property (e.g. "alternate angles", "angles on a straight line") in your working.',
+            'Use the app\'s 1000+ practice questions on angles and polygons.'
         ],
         visual_descriptions: [
-            'Diagram of parallel lines cut by a transversal showing corresponding, alternate, and co-interior angles.',
-            'Regular hexagon with interior and exterior angles marked.'
+            'Diagram of parallel lines cut by a transversal with corresponding, alternate, and co-interior angles labelled.',
+            'Regular hexagon with one interior and one exterior angle marked.'
         ]
     },
     'Pythagoras Theorem': {
         topic: 'Pythagoras Theorem',
         subject: 'Mathematics',
         grade_level: 'O-Level',
-        summary: 'The Pythagorean Theorem relates the sides of a right-angled triangle: $a^2 + b^2 = c^2$ where $c$ is the hypotenuse.',
+        summary: 'In a right-angled triangle, the square of the hypotenuse equals the sum of the squares of the other two sides: $a^2 + b^2 = c^2$ (where $c$ is the hypotenuse). This chapter covers: the theorem and its use to find a missing side; the converse (to test if a triangle is right-angled, obtuse, or acute); Pythagorean triples; applications (diagonals, distances, 3D cuboids); and solving word problems by identifying the right angle and labelling sides.',
         sections: [
             {
-                title: 'The Theorem',
-                content: `In a **right-angled triangle**, the square of the hypotenuse equals the sum of the squares of the other two sides.
+                title: '1. The Theorem',
+                content: `In a **right-angled triangle**, the side opposite the right angle is the **hypotenuse** (longest side). **Pythagoras' Theorem** states:
 
-$$c^2 = a^2 + b^2$$
+$$c^2 = a^2 + b^2 \\quad \\text{(where } c \\text{ is the hypotenuse)}$$
 
-Or equivalently:
-$$c = \\sqrt{a^2 + b^2}$$
-$$a = \\sqrt{c^2 - b^2}$$
+Rearranged: $c = \\sqrt{a^2 + b^2}$, or $a = \\sqrt{c^2 - b^2}$, $b = \\sqrt{c^2 - a^2}$.
 
-**Pythagorean Triples**: Integer solutions. Examples:
-$(3, 4, 5)$, $(5, 12, 13)$, $(8, 15, 17)$, $(7, 24, 25)$`,
+**Pythagorean triples**: Positive integers $(a, b, c)$ with $a^2 + b^2 = c^2$. Common triples: $(3, 4, 5)$, $(5, 12, 13)$, $(8, 15, 17)$, $(7, 24, 25)$. Multiples of these (e.g. $6, 8, 10$) also work.`,
                 worked_examples: [
                     {
                         question: 'Find the hypotenuse of a right triangle with legs $6$ cm and $8$ cm.',
@@ -230,12 +227,13 @@ $(3, 4, 5)$, $(5, 12, 13)$, $(8, 15, 17)$, $(7, 24, 25)$`,
                 ]
             },
             {
-                title: 'Converse of Pythagoras',
-                content: `**To check if a triangle is right-angled**:
+                title: '2. Converse of Pythagoras',
+                content: `**Converse**: If the sides of a triangle satisfy $a^2 + b^2 = c^2$ (with $c$ the longest side), then the triangle is **right-angled** (right angle opposite $c$).
 
-If $a^2 + b^2 = c^2$ (where $c$ is largest), the triangle is right-angled.
-If $a^2 + b^2 < c^2$, the triangle is obtuse.
-If $a^2 + b^2 > c^2$, the triangle is acute.`,
+**Obtuse**: If $a^2 + b^2 < c^2$, the angle opposite $c$ is **greater than $90°$**.
+**Acute**: If $a^2 + b^2 > c^2$, all angles are **less than $90°$**.
+
+Always use the **longest** side as $c$ when testing.`,
                 worked_examples: [
                     {
                         question: 'Is a triangle with sides $7$, $10$, and $12$ right-angled?',
@@ -250,11 +248,12 @@ If $a^2 + b^2 > c^2$, the triangle is acute.`,
                 ]
             },
             {
-                title: '3D Applications',
-                content: `**Diagonal of a Cuboid**:
+                title: '3. 3D Applications',
+                content: `In a **cuboid** with dimensions $l$, $w$, $h$, the **space diagonal** (from one vertex to the opposite vertex through the inside) has length:
+
 $$d = \\sqrt{l^2 + w^2 + h^2}$$
 
-**Space Diagonal**: Apply Pythagoras twice.`,
+This follows by applying Pythagoras twice: first to a face diagonal (e.g. $\\sqrt{l^2 + w^2}$), then to the right triangle formed by that diagonal and the height $h$.`,
                 worked_examples: [
                     {
                         question: 'Find the length of the space diagonal of a box with dimensions $3$ cm, $4$ cm, and $12$ cm.',
@@ -269,38 +268,36 @@ $$d = \\sqrt{l^2 + w^2 + h^2}$$
             }
         ],
         key_points: [
-            '$c^2 = a^2 + b^2$ where $c$ is the hypotenuse.',
-            'The hypotenuse is opposite the right angle.',
-            'Pythagorean triples: $(3,4,5)$, $(5,12,13)$, etc.',
-            'For 3D, apply Pythagoras twice or use $d = \\sqrt{l^2 + w^2 + h^2}$.'
+            'Pythagoras: $c^2 = a^2 + b^2$ with $c$ the hypotenuse.',
+            'Hypotenuse = side opposite the right angle (longest side).',
+            'Pythagorean triples: $(3,4,5)$, $(5,12,13)$; multiples work too.',
+            'Converse: $a^2+b^2=c^2$ ⇒ right-angled; $< c^2$ ⇒ obtuse; $> c^2$ ⇒ acute.',
+            'Cuboid space diagonal: $d = \\sqrt{l^2 + w^2 + h^2}$.'
         ],
         exam_tips: [
-            'Always identify the hypotenuse (longest side, opposite 90°).',
-            'Draw and label the triangle.',
-            'Leave answers in surd form if exact answer is required.'
+            'Label the triangle and identify the hypotenuse before substituting.',
+            'Draw a sketch for word problems (ladder, distance, diagonal).',
+            'Give exact answers in surd form when asked (e.g. $\\sqrt{52}$).',
+            'Use the app\'s 1000+ practice questions on Pythagoras.'
         ],
         visual_descriptions: [
-            'Right-angled triangle with sides labeled $a$, $b$, $c$ and right angle marked.',
-            'Cuboid showing space diagonal.'
+            'Right-angled triangle with sides $a$, $b$, $c$ and right angle marked.',
+            'Cuboid with space diagonal from one vertex to the opposite vertex.'
         ]
     },
     'Trigonometry': {
         topic: 'Trigonometry',
         subject: 'Mathematics',
         grade_level: 'O-Level',
-        summary: 'Trigonometry deals with the relationships between angles and sides of triangles. The primary ratios are sine, cosine, and tangent.',
+        summary: 'Trigonometry links angles of right-angled triangles to ratios of sides. The three main ratios are sine, cosine, and tangent (SOH CAH TOA). This chapter covers: finding sides and angles in right-angled triangles; angles of elevation and depression; the Sine Rule and Cosine Rule for non-right triangles; area of a triangle as $\\frac{1}{2}ab\\sin C$; and when to use each rule (AAS/ASA vs SAS/SSS).',
         sections: [
             {
-                title: 'Trigonometric Ratios',
-                content: `In a right-angled triangle with angle $\\theta$:
+                title: '1. Trigonometric Ratios (SOH CAH TOA)',
+                content: `In a **right-angled triangle**, for angle $\\theta$ (not the right angle): **Opposite** = side opposite $\\theta$; **Adjacent** = side next to $\\theta$; **Hypotenuse** = side opposite the right angle.
 
-$$\\sin\\theta = \\frac{\\text{Opposite}}{\\text{Hypotenuse}} = \\frac{O}{H}$$
+$$\\sin\\theta = \\frac{\\text{Opposite}}{\\text{Hypotenuse}} \\quad \\cos\\theta = \\frac{\\text{Adjacent}}{\\text{Hypotenuse}} \\quad \\tan\\theta = \\frac{\\text{Opposite}}{\\text{Adjacent}}$$
 
-$$\\cos\\theta = \\frac{\\text{Adjacent}}{\\text{Hypotenuse}} = \\frac{A}{H}$$
-
-$$\\tan\\theta = \\frac{\\text{Opposite}}{\\text{Adjacent}} = \\frac{O}{A}$$
-
-**Memory Aid**: **SOH CAH TOA**`,
+**SOH CAH TOA** helps remember which ratio uses which sides. **Exact values**: $\\sin 30° = \\cos 60° = \\frac{1}{2}$; $\\cos 30° = \\sin 60° = \\frac{\\sqrt{3}}{2}$; $\\tan 45° = 1$.`,
                 worked_examples: [
                     {
                         question: 'In a right triangle, $\\theta = 30°$ and the hypotenuse is $10$ cm. Find the opposite side.',
@@ -330,11 +327,13 @@ $$\\tan\\theta = \\frac{\\text{Opposite}}{\\text{Adjacent}} = \\frac{O}{A}$$
                 ]
             },
             {
-                title: 'Finding Angles and Sides',
-                content: `**Finding a Side**: Use the appropriate ratio based on given information.
+                title: '2. Finding Angles and Sides',
+                content: `**Finding a side**: Choose the ratio that involves the unknown side and one known side (e.g. if you have hypotenuse and want opposite, use $\\sin$).
 
-**Finding an Angle**: Use inverse functions.
-$$\\theta = \\sin^{-1}\\left(\\frac{O}{H}\\right), \\quad \\theta = \\cos^{-1}\\left(\\frac{A}{H}\\right), \\quad \\theta = \\tan^{-1}\\left(\\frac{O}{A}\\right)$$`,
+**Finding an angle**: Use the **inverse** trig functions (on calculator: $\\sin^{-1}$, $\\cos^{-1}$, $\\tan^{-1}$):
+$$\\theta = \\sin^{-1}\\left(\\frac{O}{H}\\right), \\quad \\theta = \\cos^{-1}\\left(\\frac{A}{H}\\right), \\quad \\theta = \\tan^{-1}\\left(\\frac{O}{A}\\right)$$
+
+Ensure your calculator is in **degree** mode for angles in degrees.`,
                 worked_examples: [
                     {
                         question: 'Find angle $\\theta$ if the opposite side is $7$ and adjacent side is $10$.',
@@ -357,12 +356,12 @@ $$\\theta = \\sin^{-1}\\left(\\frac{O}{H}\\right), \\quad \\theta = \\cos^{-1}\\
                 ]
             },
             {
-                title: 'Angles of Elevation and Depression',
-                content: `**Angle of Elevation**: Angle measured upward from the horizontal.
+                title: '3. Angles of Elevation and Depression',
+                content: `**Angle of elevation**: The angle from the horizontal **up** to a line of sight (e.g. from ground to top of a tower).
 
-**Angle of Depression**: Angle measured downward from the horizontal.
+**Angle of depression**: The angle from the horizontal **down** to a line of sight (e.g. from top of tower to ground).
 
-These angles are often equal (alternate angles with a horizontal line).`,
+For a horizontal line through the observer, the angle of depression from the observer to a point equals the **angle of elevation** from that point to the observer (alternate angles). So we often use the same angle in a right-angled triangle.`,
                 worked_examples: [
                     {
                         question: 'From the top of a $50$ m tower, the angle of depression to a car is $32°$. How far is the car from the base of the tower?',
@@ -377,21 +376,14 @@ These angles are often equal (alternate angles with a horizontal line).`,
                 ]
             },
             {
-                title: 'Non-Right Triangles: Sine and Cosine Rules',
-                content: `**Sine Rule** (for any triangle):
-$$\\frac{a}{\\sin A} = \\frac{b}{\\sin B} = \\frac{c}{\\sin C}$$
+                title: '4. Non-Right Triangles: Sine and Cosine Rules',
+                content: `For any triangle with sides $a$, $b$, $c$ opposite angles $A$, $B$, $C$:
 
-Use when you have: Angle-Angle-Side (AAS) or Angle-Side-Angle (ASA).
+**Sine Rule**: $\\frac{a}{\\sin A} = \\frac{b}{\\sin B} = \\frac{c}{\\sin C}$. Use when you know **two angles and a side** (AAS/ASA) or **two sides and a non-included angle** (ambiguous case: may give one or two triangles).
 
-**Cosine Rule**:
-$$c^2 = a^2 + b^2 - 2ab\\cos C$$
-or
-$$\\cos C = \\frac{a^2 + b^2 - c^2}{2ab}$$
+**Cosine Rule**: $c^2 = a^2 + b^2 - 2ab\\cos C$, or $\\cos C = \\frac{a^2 + b^2 - c^2}{2ab}$. Use when you know **two sides and the included angle** (SAS) or **three sides** (SSS) to find an angle.
 
-Use when you have: Side-Angle-Side (SAS) or Side-Side-Side (SSS).
-
-**Area of a Triangle**:
-$$\\text{Area} = \\frac{1}{2}ab\\sin C$$`,
+**Area**: $\\text{Area} = \\frac{1}{2}ab\\sin C$ (two sides and included angle).`,
                 worked_examples: [
                     {
                         question: 'In triangle $ABC$, $a = 8$, $b = 6$, $C = 60°$. Find side $c$.',
@@ -416,18 +408,19 @@ $$\\text{Area} = \\frac{1}{2}ab\\sin C$$`,
             }
         ],
         key_points: [
-            'SOH CAH TOA for right triangles.',
+            'SOH CAH TOA: $\\sin=\\frac{O}{H}$, $\\cos=\\frac{A}{H}$, $\\tan=\\frac{O}{A}$.',
             'Sine Rule: $\\frac{a}{\\sin A} = \\frac{b}{\\sin B} = \\frac{c}{\\sin C}$.',
-            'Cosine Rule: $c^2 = a^2 + b^2 - 2ab\\cos C$.',
-            'Area = $\\frac{1}{2}ab\\sin C$.'
+            'Cosine Rule: $c^2 = a^2 + b^2 - 2ab\\cos C$; $\\cos C = \\frac{a^2+b^2-c^2}{2ab}$.',
+            'Area of triangle: $\\frac{1}{2}ab\\sin C$.'
         ],
         exam_tips: [
-            'Always draw and label the triangle.',
-            'Choose Sine Rule for AAS/ASA, Cosine Rule for SAS/SSS.',
-            'Use exact values for common angles: $\\sin 30° = 0.5$, $\\cos 60° = 0.5$, etc.'
+            'Draw the triangle and label sides and angles consistently.',
+            'Use Sine Rule for AAS/ASA (and sometimes SSA); Cosine Rule for SAS/SSS.',
+            'Check calculator is in degree mode; use exact values ($\\sin 30°$, etc.) when possible.',
+            'Use the app\'s 1000+ practice questions on trigonometry.'
         ],
         visual_descriptions: [
-            'Right triangle labeled with Opposite, Adjacent, Hypotenuse relative to angle $\\theta$.',
+            'Right triangle with Opposite, Adjacent, Hypotenuse marked for angle $\\theta$.',
             'General triangle with sides $a$, $b$, $c$ opposite angles $A$, $B$, $C$.'
         ]
     },
@@ -435,24 +428,23 @@ $$\\text{Area} = \\frac{1}{2}ab\\sin C$$`,
         topic: 'Circle Theorems',
         subject: 'Mathematics',
         grade_level: 'O-Level',
-        summary: 'Circle theorems describe the relationships between angles, chords, tangents, and other elements of a circle. These are essential for geometric proofs.',
+        summary: 'Circle theorems link angles and lengths in circles. Key results: angle at centre = 2 × angle at circumference (same arc); angles in the same segment are equal; angle in a semicircle = 90°; opposite angles of a cyclic quadrilateral sum to 180°; tangent perpendicular to radius; tangents from an external point are equal; alternate segment theorem. Chords: perpendicular from centre bisects a chord; intersecting chords satisfy $AP\\times PB = CP\\times PD$. These are used for proofs and finding unknown angles and lengths.',
         sections: [
             {
-                title: 'Key Circle Theorems',
-                content: `**1. Angle at Centre**: The angle at the centre is **twice** the angle at the circumference (same arc).
-$$\\text{Angle at centre} = 2 \\times \\text{Angle at circumference}$$
+                title: '1. Key Circle Theorems',
+                content: `**Angle at centre**: The angle subtended by an arc at the **centre** is **twice** the angle subtended at the **circumference** (by the same arc). So angle at centre = $2 \\times$ angle at circumference.
 
-**2. Angles in the Same Segment**: Angles subtended by the same arc at the circumference are **equal**.
+**Angles in the same segment**: Angles subtended by the **same arc** at the circumference are **equal**.
 
-**3. Angle in a Semicircle**: An angle inscribed in a semicircle is a **right angle** ($90°$).
+**Angle in a semicircle**: If $AB$ is a **diameter**, then any angle $\\angle ACB$ at the circumference is a **right angle** ($90°$).
 
-**4. Cyclic Quadrilateral**: Opposite angles sum to $180°$.
+**Cyclic quadrilateral**: A quadrilateral whose vertices lie on a circle. **Opposite angles sum to $180°$**.
 
-**5. Tangent-Radius**: A tangent to a circle is **perpendicular** to the radius at the point of contact.
+**Tangent and radius**: The **tangent** at a point is **perpendicular** to the **radius** at that point.
 
-**6. Two Tangents from External Point**: Equal in length.
+**Two tangents from an external point**: The two tangents from a point outside the circle are **equal in length**.
 
-**7. Alternate Segment Theorem**: The angle between a tangent and a chord equals the angle in the alternate segment.`,
+**Alternate segment theorem**: The angle between a **tangent** and a **chord** (at the point of contact) equals the angle in the **alternate** (opposite) segment.`,
                 worked_examples: [
                     {
                         question: 'The angle at the centre subtended by arc $AB$ is $140°$. Find the angle at the circumference subtended by the same arc.',
@@ -490,14 +482,12 @@ $$\\text{Angle at centre} = 2 \\times \\text{Angle at circumference}$$
                 ]
             },
             {
-                title: 'Chords and Tangents',
-                content: `**Perpendicular from Centre to a Chord**: Bisects the chord.
+                title: '2. Chords and Tangents',
+                content: `**Perpendicular from centre to a chord**: The line from the centre of a circle **perpendicular** to a chord **bisects** the chord (and conversely, the perpendicular bisector of a chord passes through the centre). Use this with Pythagoras to find chord length or radius.
 
-**Tangent from External Point**: Two tangents from the same external point are equal.
+**Tangents from an external point**: The two tangent segments from a point outside the circle are **equal**. The line from the centre to the external point bisects the angle between the tangents.
 
-**Intersecting Chords Theorem**:
-If two chords intersect inside a circle at point $P$:
-$$AP \\times PB = CP \\times PD$$`,
+**Intersecting chords**: If two chords $AB$ and $CD$ intersect at $P$ **inside** the circle, then $AP \\times PB = CP \\times PD$. (For secants from an external point, a similar product rule holds.)`,
                 worked_examples: [
                     {
                         question: 'A chord is $6$ cm from the centre of a circle with radius $10$ cm. Find the length of the chord.',
@@ -531,20 +521,21 @@ $$AP \\times PB = CP \\times PD$$`,
             }
         ],
         key_points: [
-            'Angle at centre = $2 \\times$ Angle at circumference.',
+            'Angle at centre = $2 \\times$ angle at circumference (same arc).',
             'Angle in a semicircle = $90°$.',
-            'Opposite angles of a cyclic quadrilateral = $180°$.',
-            'Tangent ⊥ Radius at point of contact.',
-            'Tangents from external point are equal.'
+            'Cyclic quadrilateral: opposite angles sum to $180°$.',
+            'Tangent $\\perp$ radius at point of contact; two tangents from external point are equal.',
+            'Perpendicular from centre to chord bisects chord; intersecting chords: $AP\\cdot PB = CP\\cdot PD$.'
         ],
         exam_tips: [
-            'Always state the theorem you are using.',
-            'Draw clear diagrams and mark equal angles/lengths.',
-            'Look for isosceles triangles formed by radii.'
+            'Name the theorem at each step (e.g. "angle at centre", "cyclic quad").',
+            'Mark equal angles and equal lengths on the diagram.',
+            'Spot isosceles triangles (two radii) and right angles (tangent-radius, semicircle).',
+            'Use the app\'s 1000+ practice questions on circle theorems.'
         ],
         visual_descriptions: [
-            'Circle with angle at centre and angle at circumference marked.',
-            'Cyclic quadrilateral with opposite angles labeled.'
+            'Circle with angle at centre and angle at circumference subtended by same arc.',
+            'Cyclic quadrilateral with opposite angles marked; diagram for alternate segment theorem.'
         ]
     }
 };

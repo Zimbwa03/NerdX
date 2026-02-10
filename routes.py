@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 from flask import request, jsonify, send_from_directory, abort
 from app import app
 from api.webhook import webhook_bp
@@ -51,8 +52,9 @@ def serve_pdf_file(filename):
     except FileNotFoundError:
         return jsonify({'error': 'PDF file not found'}), 404
 
-# User app (React SPA) - serve from NerdXWeb/dist when built
-USER_APP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'NerdXWeb', 'dist')
+# User app (React SPA) - serve from NerdXWeb/dist when built.
+# `routes.py` lives at the repo root in this project, so `Path(__file__).parent` is the app root.
+USER_APP_DIR = str((Path(__file__).resolve().parent / 'NerdXWeb' / 'dist'))
 
 
 def _serve_user_app(path=''):

@@ -1,6 +1,13 @@
 # NerdX Backend - Docker Image for Render
 # Includes system dependencies for Manim (ffmpeg, latex) and Pix2Text (ML models)
 
+FROM node:20-alpine AS web_build
+WORKDIR /web
+COPY NerdXWeb/package.json NerdXWeb/package-lock.json ./NerdXWeb/
+RUN cd NerdXWeb && npm ci
+COPY NerdXWeb ./NerdXWeb
+RUN cd NerdXWeb && npm run build
+
 FROM python:3.11-slim
 
 # Set environment variables
@@ -41,6 +48,9 @@ RUN pip install --upgrade pip setuptools wheel && \
 
 # Copy application code
 COPY . .
+
+# Copy NerdXWeb build output into the expected location for `routes.py`.
+COPY --from=web_build /web/NerdXWeb/dist /app/NerdXWeb/dist
 
 # Create directories for media output
 RUN mkdir -p static/media temp

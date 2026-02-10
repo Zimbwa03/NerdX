@@ -1,19 +1,24 @@
 /**
  * MathRenderer - Renders Markdown-ish text with LaTeX math using KaTeX.
  * Matches mobile MathRenderer behavior for O-Level Mathematics notes.
+ * Normalizes naked LaTeX (e.g. \frac{1}{2}, \cap) so it renders as math.
  */
 import { useEffect, useRef, useMemo } from 'react';
 import 'katex/dist/katex.min.css';
 import renderMathInElement from 'katex/dist/contrib/auto-render.mjs';
+import { normalizeLatexForRender } from '../utils/latexForMathRenderer';
 
 const MATH_PLACEHOLDER = '__MATH__';
 
 function processContent(content: string): string {
   if (!content) return '';
 
+  // Wrap naked LaTeX in $ $ so KaTeX can render it (e.g. \frac{1}{2}, P \cap Q)
+  const normalized = normalizeLatexForRender(content);
+
   const mathBlocks: string[] = [];
 
-  let processed = content;
+  let processed = normalized;
 
   // Extract display math ($$...$$ or \[...\])
   processed = processed.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) => {

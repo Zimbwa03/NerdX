@@ -31,9 +31,53 @@ export function calculateQuizCreditCost(params: CreditCostParams): number {
   if (subjectKey === 'a_level_biology') return 1;
 
   const fmt = (questionFormat || bioQuestionType || 'mcq').toLowerCase();
-  if (subjectKey === 'computer_science' || subjectKey === 'a_level_computer_science' || subjectKey === 'a_level_geography' || subjectKey === 'geography' || subjectKey === 'commerce' || subjectKey === 'business_enterprise_skills') {
+
+  // Computer Science (O-Level) - MCQ 0.3, Structured 0.5, Essay 1
+  if (subjectKey === 'computer_science') {
     if (fmt === 'structured') return 0.5;
     if (fmt === 'essay') return 1;
+    return 0.3;
+  }
+
+  // A-Level Computer Science - same pricing
+  if (subjectKey === 'a_level_computer_science') {
+    if (fmt === 'structured') return 0.5;
+    if (fmt === 'essay') return 1;
+    return 0.3;
+  }
+
+  // A-Level Geography - MCQ 0.3, Structured 0.5, Essay 1
+  if (subjectKey === 'a_level_geography') {
+    if (fmt === 'structured') return 0.5;
+    if (fmt === 'essay') return 1;
+    return 0.3;
+  }
+
+  // Commerce - MCQ 0.3, Essay 1
+  if (subjectKey === 'commerce') {
+    if (fmt === 'essay') return 1;
+    return 0.3;
+  }
+
+  // Accounting - MCQ 0.3, Essay 1 (Structured treated as MCQ pricing, matching mobile)
+  if (subjectKey === 'accounting') {
+    if (fmt === 'essay') return 1;
+    return 0.3;
+  }
+
+  // Business Enterprise Skills (BES) - MCQ 0.3, Essay 1
+  if (subjectKey === 'business_enterprise_skills') {
+    if (fmt === 'essay') return 1;
+    return 0.3;
+  }
+
+  // History - Essay only
+  if (subjectKey === 'history') {
+    return 1;
+  }
+
+  // Geography (O-Level) - MCQ pricing (mobile uses MCQ pricing as default)
+  if (subjectKey === 'geography') {
     return 0.3;
   }
 

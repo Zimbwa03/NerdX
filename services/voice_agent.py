@@ -36,8 +36,15 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.external_db import get_user_credits, deduct_credits, get_user_stats
 from config import Config
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+try:
+    from aiortc import RTCPeerConnection, RTCSessionDescription
+except Exception:  # pragma: no cover
+    RTCPeerConnection = None
+    RTCSessionDescription = None
 
 try:
     from dotenv import load_dotenv
@@ -554,6 +561,76 @@ def convert_m4a_to_pcm(m4a_base64: str) -> Optional[tuple[str, int]]:
         return None  # Don't send invalid audio to Gemini
 
 
+def _normalize_audio_format(mime_type: Optional[str]) -> str:
+    """
+    Map an HTTP mime-type into a pydub/ffmpeg format hint.
+
+    Default is "m4a" for backward compatibility with existing mobile clients.
+    """
+    if not mime_type:
+        return "m4a"
+
+    raw = str(mime_type).strip().lower()
+    base = raw.split(";")[0].strip()
+
+    if base in ("audio/mp4", "video/mp4", "audio/m4a", "audio/x-m4a"):
+        return "m4a"
+    if base in ("audio/webm", "video/webm"):
+        return "webm"
+    if base in ("audio/ogg", "application/ogg"):
+        return "ogg"
+    if base in ("audio/wav", "audio/x-wav", "audio/wave"):
+        return "wav"
+    if base in ("audio/mpeg", "audio/mp3"):
+        return "mp3"
+    if base in ("audio/aac",):
+        return "aac"
+
+    return "m4a"
+
+
+def convert_audio_to_pcm(audio_base64: str, mime_type: Optional[str] = None) -> Optional[tuple[str, int]]:
+    """
+    Convert common audio formats to raw PCM for Gemini Live API.
+    Returns base64-encoded 16-bit little-endian PCM at 16kHz mono.
+
+    Supported inputs (best-effort): m4a/mp4, webm, ogg, wav, mp3, aac.
+    """
+    if not mime_type:
+        # Preserve existing behavior for mobile clients that send m4a without mimeType.
+        return convert_m4a_to_pcm(audio_base64)
+
+    fmt = _normalize_audio_format(mime_type)
+    if fmt == "m4a":
+        return convert_m4a_to_pcm(audio_base64)
+
+    try:
+        from pydub import AudioSegment
+
+        # Set ffmpeg path from imageio-ffmpeg if available
+        try:
+            import imageio_ffmpeg
+            ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
+            AudioSegment.converter = ffmpeg_path
+        except ImportError:
+            pass
+        except Exception:
+            pass
+
+        logger.debug(f"Converting audio to PCM: fmt={fmt}, mime={mime_type}, chars={len(audio_base64)}")
+        audio_bytes = base64.b64decode(audio_base64)
+        audio = AudioSegment.from_file(io.BytesIO(audio_bytes), format=fmt)
+        audio = audio.set_frame_rate(16000).set_channels(1).set_sample_width(2)
+
+        pcm_bytes = audio.raw_data
+        pcm_base64 = base64.b64encode(pcm_bytes).decode('utf-8')
+        return pcm_base64, len(pcm_bytes)
+
+    except Exception as e:
+        logger.error(f"Audio conversion failed (fmt={fmt}): {e}", exc_info=True)
+        return None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan handler"""
@@ -581,6 +658,22 @@ async def lifespan(app: FastAPI):
         logger.warning("⚠️ No Gemini API key (fallback unavailable)")
     
     yield
+
+    # Best-effort close any active WebRTC peer connections.
+    try:
+        peers = list(_RTC_PEERS)
+    except Exception:
+        peers = []
+    for pc in peers:
+        try:
+            await pc.close()
+        except Exception:
+            pass
+    try:
+        _RTC_PEERS.clear()
+    except Exception:
+        pass
+
     logger.info("👋 NerdX Live shutting down...")
 
 
@@ -1010,7 +1103,7 @@ class TransparentGeminiPipe:
             logger.error(f"❌ Gemini API connection error: {type(e).__name__}: {e}")
             return False
     
-    async def forward_audio_to_gemini(self, audio_base64: str, billing: Optional[BillingManager] = None):
+    async def forward_audio_to_gemini(self, audio_base64: str, billing: Optional[BillingManager] = None, mime_type: Optional[str] = None):
         """
         Forward audio to Gemini IMMEDIATELY - no buffering.
         Only converts format, then sends right away.
@@ -1021,8 +1114,7 @@ class TransparentGeminiPipe:
             
         try:
             logger.info(f"🔄 Converting audio: {len(audio_base64)} chars base64")
-            # Convert M4A to PCM (boundary conversion)
-            pcm_result = convert_m4a_to_pcm(audio_base64)
+            pcm_result = convert_audio_to_pcm(audio_base64, mime_type=mime_type)
             if not pcm_result:
                 logger.error("❌ Audio conversion returned empty - cannot send to Gemini")
                 # Notify client of conversion failure
@@ -1533,13 +1625,13 @@ This is REAL-TIME video - you can see them writing, erasing, and working. Use th
         except Exception as e:
             logger.error(f"Video forward error: {e}")
     
-    async def forward_audio_to_gemini(self, audio_base64: str, billing: Optional[BillingManager] = None):
+    async def forward_audio_to_gemini(self, audio_base64: str, billing: Optional[BillingManager] = None, mime_type: Optional[str] = None):
         """Forward audio to Gemini IMMEDIATELY"""
         if not self.gemini_ws or not self.is_active:
             return
             
         try:
-            pcm_result = convert_m4a_to_pcm(audio_base64)
+            pcm_result = convert_audio_to_pcm(audio_base64, mime_type=mime_type)
             if not pcm_result:
                 return
             pcm_base64, pcm_bytes_len = pcm_result
@@ -1655,6 +1747,264 @@ This is REAL-TIME video - you can see them writing, erasing, and working. Use th
         logger.info("👋 Video session closed")
 
 
+# ============================================================================
+# WEBRTC (DataChannel) SIGNALLING - NerdX Live
+# ============================================================================
+
+_RTC_PEERS = set()
+
+
+async def _wait_for_ice_gathering_complete(pc, timeout_seconds: float = 4.0) -> None:
+    """
+    Best-effort wait until ICE gathering is complete so SDP includes candidates.
+    This keeps signalling simple (non-trickle ICE).
+    """
+    try:
+        if getattr(pc, "iceGatheringState", None) == "complete":
+            return
+
+        loop = asyncio.get_running_loop()
+        done = loop.create_future()
+
+        def _check_state() -> None:
+            if getattr(pc, "iceGatheringState", None) == "complete" and not done.done():
+                done.set_result(True)
+
+        pc.on("icegatheringstatechange", _check_state)
+        _check_state()
+        await asyncio.wait_for(done, timeout=timeout_seconds)
+    except Exception:
+        # Non-fatal: some networks take longer; we can still return an answer.
+        return
+
+
+class NerdXLiveRtcOffer(BaseModel):
+    sdp: str
+    type: str
+    user_id: str | None = None
+    session_handle: str | None = None
+
+
+class _RtcJsonClient:
+    """
+    Minimal adapter to look like a FastAPI WebSocket for TransparentGeminiPipe.
+    Uses a WebRTC DataChannel to send JSON payloads.
+    """
+
+    def __init__(self, channel, close_callback):
+        self._channel = channel
+        self._close_callback = close_callback
+        self._send_lock = asyncio.Lock()
+
+    async def send_json(self, payload: dict) -> None:
+        try:
+            data = json.dumps(payload, ensure_ascii=False)
+        except Exception:
+            return
+
+        async with self._send_lock:
+            try:
+                if getattr(self._channel, "readyState", None) != "open":
+                    return
+                self._channel.send(data)
+            except Exception:
+                return
+
+    async def close(self) -> None:
+        try:
+            if getattr(self._channel, "readyState", None) == "open":
+                self._channel.close()
+        except Exception:
+            pass
+
+        if self._close_callback:
+            try:
+                await self._close_callback()
+            except Exception:
+                pass
+
+
+class _NerdXLiveRtcSession:
+    def __init__(self, pc, *, user_id: str, session_handle: Optional[str], billing: BillingManager):
+        self.pc = pc
+        self.user_id = user_id
+        self.session_handle = session_handle
+        self.billing = billing
+
+        self.channel = None
+        self.client: Optional[_RtcJsonClient] = None
+        self.pipe: Optional[TransparentGeminiPipe] = None
+        self.receive_task: Optional[asyncio.Task] = None
+        self._start_lock = asyncio.Lock()
+        self._is_closed = False
+
+    def attach_channel(self, channel) -> None:
+        # Ignore unexpected or duplicate channels.
+        if self.channel is not None:
+            try:
+                channel.close()
+            except Exception:
+                pass
+            return
+
+        self.channel = channel
+        logger.info(f"🌐 WebRTC DataChannel connected: {self.user_id} (label={getattr(channel, 'label', '')})")
+
+        channel.on("message", lambda message: asyncio.create_task(self._handle_message(message)))
+        channel.on("close", lambda: asyncio.create_task(self.close()))
+
+        asyncio.create_task(self._start_pipe())
+
+    async def _start_pipe(self) -> None:
+        if not self.channel:
+            return
+
+        async with self._start_lock:
+            if self.pipe is not None or self._is_closed:
+                return
+
+            self.client = _RtcJsonClient(self.channel, self.close)
+            self.pipe = TransparentGeminiPipe(self.client, session_handle=self.session_handle)
+
+            if not await self.pipe.connect_to_gemini():
+                await self.client.send_json({
+                    "type": "error",
+                    "message": self.pipe.last_error or "Failed to connect to AI",
+                })
+                await self.close()
+                return
+
+            await self.client.send_json({
+                "type": "ready",
+                "message": "Connected to NerdX Live!",
+                "playSound": "connected",
+            })
+
+            self.receive_task = asyncio.create_task(self.pipe.receive_and_forward())
+
+    async def _handle_message(self, message: object) -> None:
+        if self._is_closed:
+            return
+
+        # aiortc may deliver str/bytes
+        if isinstance(message, (bytes, bytearray)):
+            try:
+                message = message.decode("utf-8", errors="ignore")
+            except Exception:
+                return
+
+        if not isinstance(message, str) or not message:
+            return
+
+        try:
+            data = json.loads(message)
+        except Exception:
+            return
+
+        msg_type = (data.get("type") or "").strip()
+        if not msg_type:
+            return
+
+        # Ensure the Gemini pipe is started (lazy) before handling payloads.
+        if self.pipe is None:
+            await self._start_pipe()
+            if self.pipe is None:
+                return
+
+        if msg_type == "audio":
+            audio_data = data.get("data") or ""
+            mime_type = data.get("mimeType") or data.get("mime_type")
+            if audio_data:
+                await self.pipe.forward_audio_to_gemini(audio_data, billing=self.billing, mime_type=mime_type)
+            return
+
+        if msg_type == "interrupt":
+            try:
+                if self.client:
+                    await self.client.send_json({"type": "interrupted"})
+                if self.pipe and hasattr(self.pipe, "_clear_audio_buffer"):
+                    await self.pipe._clear_audio_buffer()
+            except Exception:
+                pass
+            return
+
+        if msg_type == "end":
+            await self.close()
+            return
+
+    async def close(self) -> None:
+        if self._is_closed:
+            return
+        self._is_closed = True
+
+        try:
+            if self.receive_task:
+                self.receive_task.cancel()
+        except Exception:
+            pass
+
+        try:
+            if self.pipe:
+                await self.pipe.close()
+        except Exception:
+            pass
+
+        try:
+            await self.pc.close()
+        except Exception:
+            pass
+
+        try:
+            _RTC_PEERS.discard(self.pc)
+        except Exception:
+            pass
+
+
+@app.post("/rtc/nerdx-live/offer")
+async def nerdx_live_rtc_offer(offer: NerdXLiveRtcOffer):
+    """
+    WebRTC signalling endpoint for NerdX Live (DataChannel transport).
+    Uses non-trickle ICE to keep client implementation simple.
+    """
+    if RTCPeerConnection is None or RTCSessionDescription is None:
+        raise HTTPException(status_code=503, detail="WebRTC is not available on this server (aiortc not installed).")
+
+    user_id = (offer.user_id or "guest_voice").strip() or "guest_voice"
+    session_handle = offer.session_handle.strip() if offer.session_handle else None
+
+    billing = BillingManager(user_id, mode="voice")
+    if not await billing.verify_balance():
+        raise HTTPException(status_code=402, detail="Insufficient credits to start voice session.")
+
+    pc = RTCPeerConnection()
+    _RTC_PEERS.add(pc)
+    session = _NerdXLiveRtcSession(pc, user_id=user_id, session_handle=session_handle, billing=billing)
+
+    @pc.on("datachannel")
+    def _on_datachannel(channel):  # pragma: no cover
+        # Expect a single channel from the browser named "nerdx".
+        if getattr(channel, "label", "") != "nerdx":
+            try:
+                channel.close()
+            except Exception:
+                pass
+            return
+        session.attach_channel(channel)
+
+    @pc.on("connectionstatechange")
+    async def _on_state_change():  # pragma: no cover
+        state = getattr(pc, "connectionState", None)
+        if state in {"failed", "closed", "disconnected"}:
+            await session.close()
+
+    await pc.setRemoteDescription(RTCSessionDescription(sdp=offer.sdp, type=offer.type))
+    await pc.setLocalDescription(await pc.createAnswer())
+    await _wait_for_ice_gathering_complete(pc)
+
+    local = pc.localDescription
+    return {"sdp": local.sdp, "type": local.type}
+
+
 @app.websocket("/ws/nerdx-live-video")
 async def websocket_nerdx_live_video(websocket: WebSocket, user_id: str = "guest_video"):
     """
@@ -1718,10 +2068,11 @@ async def websocket_nerdx_live(
             
             if msg_type == "audio":
                 audio_data = data.get("data", "")
+                mime_type = data.get("mimeType") or data.get("mime_type")
                 if audio_data:
                     logger.info(f"📥 Received audio from client: {len(audio_data)} chars base64")
                     # Forward immediately
-                    await pipe.forward_audio_to_gemini(audio_data, billing=billing)
+                    await pipe.forward_audio_to_gemini(audio_data, billing=billing, mime_type=mime_type)
                 else:
                     logger.warning("⚠️ Received audio message with empty data")
             

@@ -28,6 +28,7 @@ import { ExamSessionPage } from './pages/mathematics/ExamSessionPage';
 import { ExamReviewPage } from './pages/mathematics/ExamReviewPage';
 import { ScienceQuizPage } from './pages/sciences/ScienceQuizPage';
 import { ScienceNotesPage } from './pages/sciences/ScienceNotesPage';
+import { ScienceTopicsPage } from './pages/sciences/ScienceTopicsPage';
 import { BiologyTopicsPage } from './pages/biology/BiologyTopicsPage';
 import { ChemistryTopicsPage } from './pages/chemistry/ChemistryTopicsPage';
 import { PhysicsTopicsPage } from './pages/physics/PhysicsTopicsPage';
@@ -51,6 +52,25 @@ import { HistoryNoteDetailPage } from './pages/history/HistoryNoteDetailPage';
 import { HistoryEssayPage } from './pages/history/HistoryEssayPage';
 import { AgentHubPage } from './pages/agents/AgentHubPage';
 import { AgentBuilderPage } from './pages/agents/AgentBuilderPage';
+import { VirtualLabHubPage } from './pages/virtual-lab/VirtualLabHubPage';
+import { VirtualLabSimulationPage } from './pages/virtual-lab/VirtualLabSimulationPage';
+import { ALevelPlaceholderPage } from './pages/a-level/ALevelPlaceholderPage';
+import { FormulaSheetPage } from './pages/tools/FormulaSheetPage';
+import { PastPapersPage } from './pages/tools/PastPapersPage';
+import { AccountingPage } from './pages/accounting/AccountingPage';
+import { AccountingNotesPage } from './pages/accounting/AccountingNotesPage';
+import { AccountingNoteDetailPage } from './pages/accounting/AccountingNoteDetailPage';
+import { AccountingTopicsPage } from './pages/accounting/AccountingTopicsPage';
+import { NotificationsPage } from './pages/notifications/NotificationsPage';
+import { NotificationDetailPage } from './pages/notifications/NotificationDetailPage';
+import { ReferralHubPage } from './pages/account/ReferralHubPage';
+import { BillingHistoryPage } from './pages/account/BillingHistoryPage';
+import { SecurityCenterPage } from './pages/account/SecurityCenterPage';
+import { LearningPreferencesPage } from './pages/account/LearningPreferencesPage';
+import { ProjectAssistantHubPage } from './pages/project-assistant/ProjectAssistantHubPage';
+import { ProjectAssistantChatPage } from './pages/project-assistant/ProjectAssistantChatPage';
+import { NerdXLivePage } from './pages/nerdx-live/NerdXLivePage';
+import { OfflineChatPage } from './pages/tools/OfflineChatPage';
 
 function App() {
   return (
@@ -69,9 +89,34 @@ function App() {
               <Route index element={<DashboardPage />} />
               <Route path="credits" element={<CreditsPage />} />
               <Route path="account" element={<AccountPage />} />
+              <Route path="referral" element={<ReferralHubPage />} />
+              <Route path="billing" element={<BillingHistoryPage />} />
+              <Route path="security" element={<SecurityCenterPage />} />
+              <Route path="preferences" element={<LearningPreferencesPage />} />
               <Route path="progress" element={<ProgressPage />} />
+              <Route path="ai-insights" element={<ProgressPage />} />
               <Route path="agents" element={<AgentHubPage />} />
               <Route path="agents/builder" element={<AgentBuilderPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
+              <Route path="notifications/:id" element={<NotificationDetailPage />} />
+              <Route path="virtual-lab" element={<VirtualLabHubPage />} />
+              <Route path="virtual-lab/:labId" element={<VirtualLabSimulationPage />} />
+              <Route path="pure-math" element={<ALevelPlaceholderPage title="A-Level Pure Mathematics" fallbackPath="/app/mathematics" />} />
+              <Route path="a-level-chemistry" element={<ALevelPlaceholderPage title="A-Level Chemistry" fallbackPath="/app/chemistry" />} />
+              <Route path="a-level-physics" element={<ALevelPlaceholderPage title="A-Level Physics" fallbackPath="/app/physics" />} />
+              <Route path="a-level-biology" element={<ALevelPlaceholderPage title="A-Level Biology" fallbackPath="/app/biology" />} />
+              <Route path="a-level-computer-science" element={<ALevelPlaceholderPage title="A-Level Computer Science" fallbackPath="/app/computer-science" />} />
+              <Route path="a-level-geography" element={<ALevelPlaceholderPage title="A-Level Geography" fallbackPath="/app/geography" />} />
+              <Route path="project-assistant" element={<ProjectAssistantHubPage />} />
+              <Route path="project-assistant/:projectId" element={<ProjectAssistantChatPage />} />
+              <Route path="nerdx-live" element={<NerdXLivePage />} />
+              <Route path="offline" element={<OfflineChatPage />} />
+              <Route path="formula-sheet" element={<FormulaSheetPage />} />
+              <Route path="past-papers" element={<PastPapersPage />} />
+              <Route path="accounting" element={<AccountingPage />} />
+              <Route path="accounting/topics" element={<AccountingTopicsPage />} />
+              <Route path="accounting/notes" element={<AccountingNotesPage />} />
+              <Route path="accounting/notes/:topicId" element={<AccountingNoteDetailPage />} />
               <Route path="mathematics" element={<MathematicsTopicsPage />} />
               <Route path="mathematics/quiz" element={<QuizPage />} />
               <Route path="quiz" element={<QuizPage />} />
@@ -110,8 +155,7 @@ function App() {
               <Route path="chemistry/notes/:topic" element={<ScienceNotesPage />} />
               <Route path="physics" element={<PhysicsTopicsPage />} />
               <Route path="physics/notes/:topic" element={<ScienceNotesPage />} />
-              {/* Redirect old combined sciences route to biology for backwards compatibility */}
-              <Route path="sciences" element={<Navigate to="/app/biology" replace />} />
+              <Route path="sciences" element={<ScienceTopicsPage />} />
               <Route path="sciences/quiz" element={<ScienceQuizPage />} />
               <Route path="sciences/notes/:subject/:topic" element={<ScienceNotesPage />} />
               <Route path="sciences/notes" element={<ScienceNotesPage />} />

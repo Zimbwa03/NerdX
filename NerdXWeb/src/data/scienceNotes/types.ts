@@ -17,4 +17,9 @@ export interface TopicNotes {
     sections: NotesSection[];
     key_points: string[];
     exam_tips: string[];
+    questions?: Array<{
+        id: string;
+        question: string;
+        answer: string;
+    }>;
 }

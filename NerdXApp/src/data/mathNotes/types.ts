@@ -1,5 +1,8 @@
 /**
  * Mathematics Notes Types
+ * O-Level notes follow this structure for consistent, book-standard display.
+ * Use LaTeX inside $...$ for math (e.g. $\\frac{1}{2}$, $x^2$); section content
+ * and key_points/exam_tips are rendered with MathRenderer so math displays correctly.
  */
 
 export interface MathWorkedExample {

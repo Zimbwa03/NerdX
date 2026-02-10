@@ -17,6 +17,7 @@ from services.quality_monitor import quality_monitor
 from services.user_service import UserService
 from services.question_service import QuestionService
 from services.payment_service import PaymentService
+from services.paynow_service import get_debug_log_path
 from services.image_service import ImageService
 from services.graph_service import GraphService
 from services.english_service import EnglishService
@@ -5294,7 +5295,7 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
                 user_id=user_id,
                 package_id=package_id,
                 phone_number=local_phone,
-                email="neezykidngoni@gmail.com"  # Paynow account email
+                email=os.environ.get("PAYNOW_MERCHANT_EMAIL", "neezykidngoni@gmail.com")  # Paynow account email (configurable)
             )
             
             # #region agent log
@@ -5308,7 +5309,7 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
             if not payment_creation.get('success'):
                 # #region agent log
                 try:
-                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                         f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"webhook.py:5305","message":"Payment creation FAILED - about to raise exception","data":{"error":payment_creation.get('error'),"message":payment_creation.get('message')},"timestamp":int(__import__('time').time()*1000)})+'\n')
                 except: pass
                 # #endregion
@@ -5318,7 +5319,7 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
             redirect_url = payment_creation.get('poll_url')
             # #region agent log
             try:
-                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                     f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"webhook.py:5310","message":"Payment creation SUCCESS - checking redirect_url","data":{"has_redirect_url":bool(redirect_url),"redirect_url":str(redirect_url) if redirect_url else None},"timestamp":int(__import__('time').time()*1000)})+'\n')
             except: pass
             # #endregion
@@ -5328,7 +5329,7 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
                 message_text = payment_creation.get('message', '')
                 # #region agent log
                 try:
-                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                         f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"webhook.py:5312","message":"BEFORE sending success message to user","data":{"has_message_text":bool(message_text),"message_length":len(message_text) if message_text else 0},"timestamp":int(__import__('time').time()*1000)})+'\n')
                 except: pass
                 # #endregion
@@ -5337,14 +5338,14 @@ def handle_paynow_phone_collection(user_id: str, phone_number: str):
                         whatsapp_service.send_message(user_id, message_text)
                         # #region agent log
                         try:
-                            with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                            with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                                 f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"webhook.py:5316","message":"AFTER sending success message - SUCCESS","data":{},"timestamp":int(__import__('time').time()*1000)})+'\n')
                         except: pass
                         # #endregion
                     except Exception as send_error:
                         # #region agent log
                         try:
-                            with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                            with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                                 f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"G","location":"webhook.py:5320","message":"FAILED to send message to user","data":{"exception_type":type(send_error).__name__,"exception_message":str(send_error)},"timestamp":int(__import__('time').time()*1000)})+'\n')
                         except: pass
                         # #endregion
@@ -5385,7 +5386,7 @@ Click the link below to complete your EcoCash payment:
             error_message = str(payment_error)
             # #region agent log
             try:
-                with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                     f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"webhook.py:5345","message":"EXCEPTION caught in payment flow","data":{"exception_type":type(payment_error).__name__,"error_message":error_message},"timestamp":int(__import__('time').time()*1000)})+'\n')
             except: pass
             # #endregion
@@ -5394,7 +5395,7 @@ Click the link below to complete your EcoCash payment:
             if "Invalid phone number" in error_message:
                 # #region agent log
                 try:
-                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                         f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"webhook.py:5350","message":"Sending Invalid Phone Number error to user","data":{},"timestamp":int(__import__('time').time()*1000)})+'\n')
                 except: pass
                 # #endregion
@@ -5412,7 +5413,7 @@ Click the link below to complete your EcoCash payment:
             else:
                 # #region agent log
                 try:
-                    with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                         f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"webhook.py:5362","message":"Sending generic Payment System Error to user","data":{"error_message":error_message},"timestamp":int(__import__('time').time()*1000)})+'\n')
                 except: pass
                 # #endregion
@@ -5424,14 +5425,14 @@ Click the link below to complete your EcoCash payment:
                         "Let's use manual payment instead.")
                     # #region agent log
                     try:
-                        with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                        with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                             f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"G","location":"webhook.py:5370","message":"Error message sent to user successfully","data":{},"timestamp":int(__import__('time').time()*1000)})+'\n')
                     except: pass
                     # #endregion
                 except Exception as send_err:
                     # #region agent log
                     try:
-                        with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                        with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                             f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"G","location":"webhook.py:5375","message":"FAILED to send error message to user","data":{"exception_type":type(send_err).__name__,"exception_message":str(send_err)},"timestamp":int(__import__('time').time()*1000)})+'\n')
                     except: pass
                     # #endregion

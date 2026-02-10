@@ -60,6 +60,14 @@ function getExamCreditCost(
       const essay = questionCount - mcq;
       return mcq * 0.3 + essay * 1;
     }
+  } else if (subj === 'accounting') {
+    // Accounting: Paper 1 MCQ = 0.3, Paper 2 Structured = 1 credit (safer for web gating)
+    perQ = questionMode === 'MCQ_ONLY' ? 0.3 : 1;
+    if (questionMode === 'MIXED') {
+      const mcq = Math.floor(questionCount / 2);
+      const structured = questionCount - mcq;
+      return mcq * 0.3 + structured * 1;
+    }
   } else if (subj === 'business_enterprise_skills') {
     perQ = questionMode === 'MCQ_ONLY' ? 0.3 : 1;  // Paper 2 Essay = 1 credit (same as commerce)
     if (questionMode === 'MIXED') {

@@ -27,6 +27,17 @@ export function AccountingPage() {
           <section className="subject-section-v2">
             <h2>Accounting Tools</h2>
             <div className="feature-cards-v2">
+              <button type="button" className="feature-card-v2" onClick={() => navigate('/app/accounting/topics')}>
+                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #D4AF37, #B8860B)' }}>
+                  <ClipboardList size={24} />
+                </div>
+                <div className="feature-card-text">
+                  <h3>Topical Questions</h3>
+                  <p>Paper 1 (MCQ) &amp; Paper 2 (Structured)</p>
+                </div>
+                <span className="feature-arrow">&rarr;</span>
+              </button>
+
               <button type="button" className="feature-card-v2" onClick={() => navigate('/app/accounting/notes')}>
                 <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #D4AF37, #B8860B)' }}>
                   <BookOpen size={24} />
@@ -35,7 +46,7 @@ export function AccountingPage() {
                   <h3>Accounting Notes</h3>
                   <p>Full notes for all 15 syllabus topics</p>
                 </div>
-                <span className="feature-arrow">â†’</span>
+                <span className="feature-arrow">&rarr;</span>
               </button>
 
               <button
@@ -50,7 +61,7 @@ export function AccountingPage() {
                   <h3>AI Tutor</h3>
                   <p>Ask questions, get marking and feedback</p>
                 </div>
-                <span className="feature-arrow">â†’</span>
+                <span className="feature-arrow">&rarr;</span>
               </button>
 
               <button type="button" className="feature-card-v2" onClick={() => navigate('/app/virtual-lab?subject=accounting')}>
@@ -61,7 +72,7 @@ export function AccountingPage() {
                   <h3>Accounting Labs</h3>
                   <p>Balance sheet, income statement, cash flow (porting)</p>
                 </div>
-                <span className="feature-arrow">â†’</span>
+                <span className="feature-arrow">&rarr;</span>
               </button>
             </div>
           </section>
@@ -86,7 +97,7 @@ export function AccountingPage() {
                 <h3>Start Exam</h3>
                 <p>Timed exam practice (topic packs may be limited on web)</p>
               </div>
-              <span className="feature-arrow">â†’</span>
+              <span className="feature-arrow">&rarr;</span>
             </button>
           </section>
         </div>
@@ -94,4 +105,3 @@ export function AccountingPage() {
     </div>
   );
 }
-

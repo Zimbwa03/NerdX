@@ -625,6 +625,9 @@ def get_user_credits(user_id: str, check_expiry: bool = True) -> int:
     try:
         reg = get_user_registration(user_id)
         creds_id = str((reg.get("chat_id") or user_id)) if (reg and isinstance(reg, dict)) else str(user_id or "")
+        # Run expiry check first so we never return a balance that is then immediately expired (avoids "credits appear then disappear")
+        if check_expiry:
+            check_and_expire_user_credits(user_id)
         result = make_supabase_request(
             "GET", "users_registration",
             select="credits,purchased_credits,user_type,subscription_expires_at,daily_credits_reset_at,daily_credits_used",
@@ -637,8 +640,6 @@ def get_user_credits(user_id: str, check_expiry: bool = True) -> int:
         row = result[0]
         if (row.get("user_type") or "").strip() == "school_student":
             return _school_student_effective_credits(creds_id, row)
-        if check_expiry:
-            check_and_expire_user_credits(user_id)
         free_credits = int(row.get("credits", 0) or 0)
         purchased_credits = int(row.get("purchased_credits", 0) or 0)
         return free_credits + purchased_credits
@@ -677,12 +678,16 @@ def check_and_expire_user_credits(user_id: str) -> bool:
         from dateutil import parser
         try:
             expiry_date = parser.parse(expiry_str)
-        except:
+        except Exception:
             logger.warning(f"Could not parse expiry date: {expiry_str}")
             return False
-        
+        # Use UTC for comparison when naive to avoid timezone-related early expiry (e.g. server local vs DB UTC)
+        from datetime import timezone
+        now_utc = datetime.now(timezone.utc)
+        if expiry_date.tzinfo is None:
+            expiry_date = expiry_date.replace(tzinfo=timezone.utc)
         # Check if expired
-        if expiry_date < datetime.now():
+        if expiry_date < now_utc:
             # Expire purchased credits
             update_data = {
                 "purchased_credits": 0,
@@ -702,14 +707,17 @@ def check_and_expire_user_credits(user_id: str) -> bool:
 def get_subscription_status(user_id: str) -> Dict:
     """
     Get user's subscription status including expiry date and days remaining.
+    Resolves user_id (email/phone) to chat_id so email logins see the correct row.
     
     Returns:
         Dict with keys: is_active, expires_at, days_remaining, purchased_credits
     """
     try:
-        result = make_supabase_request("GET", "users_registration", 
-                                     select="subscription_expires_at,purchased_credits", 
-                                     filters={"chat_id": f"eq.{user_id}"})
+        creds_id = _resolve_credits_user_id(user_id)
+        result = make_supabase_request("GET", "users_registration",
+                                     select="subscription_expires_at,purchased_credits",
+                                     filters={"chat_id": f"eq.{creds_id}"},
+                                     use_service_role=True)
         
         if not result or len(result) == 0:
             return {
@@ -938,7 +946,7 @@ def add_credits(user_id, amount, transaction_type="purchase", description="Credi
     Add credit units to user account with monthly subscription support.
     
     Args:
-        user_id: User ID
+        user_id: User ID (may be chat_id, email, or whatsapp_number; resolved to chat_id for DB)
         amount: Credit units to add
         transaction_type: Type of transaction (default: "purchase")
         description: Transaction description
@@ -951,12 +959,18 @@ def add_credits(user_id, amount, transaction_type="purchase", description="Credi
     """
     from datetime import timedelta
     
-    current_result = make_supabase_request("GET", "users_registration", 
-                                         select="credits,purchased_credits", 
-                                         filters={"chat_id": f"eq.{user_id}"})
+    # Resolve user_id to canonical chat_id (supports email/phone login; users_registration uses chat_id)
+    reg = get_user_registration(user_id)
+    credits_id = str(reg["chat_id"]) if (reg and isinstance(reg, dict) and reg.get("chat_id")) else str(user_id or "")
+    
+    # Use service role so payment approval and other server flows can always read/update
+    current_result = make_supabase_request("GET", "users_registration",
+                                         select="credits,purchased_credits",
+                                         filters={"chat_id": f"eq.{credits_id}"},
+                                         use_service_role=True)
     
     if not current_result or len(current_result) == 0:
-        logger.warning(f"User {user_id} not found for credit addition")
+        logger.warning(f"User {user_id} (resolved to {credits_id}) not found for credit addition (users_registration.chat_id)")
         return False
     
     current_data = current_result[0]
@@ -994,26 +1008,29 @@ def add_credits(user_id, amount, transaction_type="purchase", description="Credi
         }
     
     # Update user credits in the correct table (users_registration)
-    success = make_supabase_request("PATCH", "users_registration", update_data, 
-                                   filters={"chat_id": f"eq.{user_id}"}, use_service_role=True)
+    success = make_supabase_request("PATCH", "users_registration", update_data,
+                                   filters={"chat_id": f"eq.{credits_id}"}, use_service_role=True)
 
     if success:
-        # Also update user_stats table for consistency
+        # Also update user_stats table for consistency (try credits_id first, then original user_id)
         try:
             stats_update = {
                 "credits": new_free,
                 "purchased_credits": new_purchased
             }
-            make_supabase_request("PATCH", "user_stats", stats_update, 
-                                filters={"user_id": f"eq.{user_id}"}, use_service_role=True)
-            logger.info(f"✅ Credits synced to user_stats for {user_id}")
+            patch_result = make_supabase_request("PATCH", "user_stats", stats_update,
+                                filters={"user_id": f"eq.{credits_id}"}, use_service_role=True)
+            if not patch_result or (isinstance(patch_result, list) and len(patch_result) == 0):
+                make_supabase_request("PATCH", "user_stats", stats_update,
+                                    filters={"user_id": f"eq.{user_id}"}, use_service_role=True)
+            logger.info(f"✅ Credits synced to user_stats for {credits_id}")
         except Exception as stats_error:
             logger.warning(f"Failed to sync credits to user_stats: {stats_error}")
         
-        # Log credit transaction
+        # Log credit transaction (use canonical credits_id for audit)
         try:
             transaction = {
-                "user_id": user_id,
+                "user_id": credits_id,
                 "action": transaction_type,
                 "transaction_type": transaction_type,
                 "credits_change": amount,
@@ -1036,9 +1053,9 @@ def add_credits(user_id, amount, transaction_type="purchase", description="Credi
             make_supabase_request("POST", "credit_transactions", transaction, use_service_role=True)
             
             if is_monthly_subscription:
-                logger.info(f"✅ Monthly subscription added for {user_id}: {amount} credits, expires {subscription_end.strftime('%Y-%m-%d')}")
+                logger.info(f"✅ Monthly subscription added for {credits_id}: {amount} credits, expires {subscription_end.strftime('%Y-%m-%d')}")
             else:
-                logger.info(f"✅ Transaction recorded for {user_id}: +{amount} credits (free/bonus)")
+                logger.info(f"✅ Transaction recorded for {credits_id}: +{amount} credits (free/bonus)")
         except Exception as tx_error:
             logger.warning(f"⚠️ Credit addition successful but transaction logging failed: {tx_error}")
         
@@ -1108,11 +1125,13 @@ WELCOME_BONUS_CREDITS = Config.REGISTRATION_BONUS
 
 def get_credit_breakdown(user_id: str) -> dict:
     """Get detailed credit breakdown for a user. Returns values in units.
+    Resolves user_id (email/phone) to chat_id so email logins see the correct balance.
     For school_student: effective daily 100 credits (1000 units), reset at 06:00 Africa/Harare."""
     try:
+        creds_id = _resolve_credits_user_id(user_id)
         result = make_supabase_request("GET", "users_registration",
                                       select="credits,purchased_credits,welcome_bonus_claimed,user_type",
-                                      filters={"chat_id": f"eq.{user_id}"},
+                                      filters={"chat_id": f"eq.{creds_id}"},
                                       use_service_role=True)
         
         if result and len(result) > 0:

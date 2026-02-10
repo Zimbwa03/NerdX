@@ -5,22 +5,20 @@ export const statisticsNotes: Record<string, MathTopicNotes> = {
         topic: 'Statistics',
         subject: 'Mathematics',
         grade_level: 'O-Level',
-        summary: 'Statistics is the collection, organization, analysis, and interpretation of data. This topic covers measures of central tendency, dispersion, and data representation.',
+        summary: 'Statistics covers collecting, organising, and interpreting data. **Central tendency**: mean (average), median (middle value), mode (most frequent). **Dispersion**: range, interquartile range (IQR), variance, and standard deviation. **Grouped data**: use class midpoints for mean; cumulative frequency and ogives for median and quartiles; box plots for the five-number summary. **Representation**: bar charts, histograms (frequency density), pie charts, stem-and-leaf, scatter diagrams and correlation. You need to calculate and interpret these measures and read from graphs.',
         sections: [
             {
-                title: 'Measures of Central Tendency',
-                content: `**Mean (Average)**:
-$$\\text{Mean} = \\bar{x} = \\frac{\\sum x}{n} = \\frac{\\text{Sum of all values}}{\\text{Number of values}}$$
+                title: '1. Measures of Central Tendency',
+                content: `**Mean (average)**: $\\bar{x} = \\frac{\\sum x}{n} = \\frac{\\text{Sum of values}}{\\text{Number of values}}$. The mean is affected by every value and by **outliers**.
 
-**For Grouped Data**:
+**Grouped data**: Use the **midpoint** of each class as $x$ and frequency as $f$:
 $$\\text{Mean} = \\frac{\\sum fx}{\\sum f}$$
-where $f$ = frequency, $x$ = midpoint of class.
 
-**Median**: The middle value when data is ordered.
-- Odd $n$: Median = $\\left(\\frac{n+1}{2}\\right)^{\\text{th}}$ value.
-- Even $n$: Median = Mean of $\\frac{n}{2}^{\\text{th}}$ and $\\left(\\frac{n}{2}+1\\right)^{\\text{th}}$ values.
+**Median**: The **middle** value when data is arranged in order. Resistant to outliers.
+- Odd $n$: median = $\\left(\\frac{n+1}{2}\\right)^{\\text{th}}$ value.
+- Even $n$: median = average of $\\frac{n}{2}^{\\text{th}}$ and $\\left(\\frac{n}{2}+1\\right)^{\\text{th}}$ values.
 
-**Mode**: The most frequently occurring value.`,
+**Mode**: The value that appears **most often**. There can be no mode, one mode, or several. For grouped data, the **modal class** is the class with highest frequency.`,
                 worked_examples: [
                     {
                         question: 'Find the mean, median, and mode of: $3, 7, 5, 9, 5, 8, 5, 10$',
@@ -54,18 +52,15 @@ where $f$ = frequency, $x$ = midpoint of class.
                 ]
             },
             {
-                title: 'Measures of Dispersion',
-                content: `**Range**: Largest value – Smallest value.
+                title: '2. Measures of Dispersion',
+                content: `**Range** = Maximum $-$ Minimum. Simple but affected by outliers.
 
-**Interquartile Range (IQR)**:
-$$\\text{IQR} = Q_3 - Q_1$$
-where $Q_1$ = Lower Quartile (25th percentile), $Q_3$ = Upper Quartile (75th percentile).
+**Quartiles**: $Q_1$ (lower quartile) = 25th percentile; $Q_2$ = median (50th); $Q_3$ (upper quartile) = 75th. **Interquartile range** $\\text{IQR} = Q_3 - Q_1$ measures spread of the middle 50% and is resistant to outliers.
 
-**Variance** ($\\sigma^2$):
+**Variance** (mean squared deviation from the mean):
 $$\\sigma^2 = \\frac{\\sum (x - \\bar{x})^2}{n} = \\frac{\\sum x^2}{n} - \\bar{x}^2$$
 
-**Standard Deviation** ($\\sigma$):
-$$\\sigma = \\sqrt{\\text{Variance}} = \\sqrt{\\frac{\\sum (x - \\bar{x})^2}{n}}$$`,
+**Standard deviation** $\\sigma = \\sqrt{\\text{Variance}}$ has the same units as the data and measures typical deviation from the mean.`,
                 worked_examples: [
                     {
                         question: 'Find the standard deviation of: $2, 4, 4, 4, 5, 5, 7, 9$',
@@ -89,15 +84,12 @@ $$\\sigma = \\sqrt{\\text{Variance}} = \\sqrt{\\frac{\\sum (x - \\bar{x})^2}{n}}
                 ]
             },
             {
-                title: 'Cumulative Frequency and Quartiles',
-                content: `**Cumulative Frequency**: Running total of frequencies up to each class.
+                title: '3. Cumulative Frequency and Quartiles',
+                content: `**Cumulative frequency** at a value = sum of all frequencies up to and including that class. Plot upper class boundary vs cumulative frequency to get an **ogive** (S-shaped curve).
 
-**From a Cumulative Frequency Curve (Ogive)**:
-- **Median**: Value at $\\frac{n}{2}$ on the frequency axis.
-- **$Q_1$**: Value at $\\frac{n}{4}$.
-- **$Q_3$**: Value at $\\frac{3n}{4}$.
+**From the ogive**: Read off the variable (x-axis) at cumulative frequency $\\frac{n}{2}$ for **median**, at $\\frac{n}{4}$ for **$Q_1$**, at $\\frac{3n}{4}$ for **$Q_3$**. Then IQR = $Q_3 - Q_1$.
 
-**Box-and-Whisker Plot**: Shows minimum, $Q_1$, median, $Q_3$, maximum.`,
+**Box-and-whisker plot** (box plot): Five-number summary — minimum, $Q_1$, median, $Q_3$, maximum. The box shows IQR; whiskers extend to min and max (or to adjacent values if outliers are excluded).`,
                 worked_examples: [
                     {
                         question: 'From a cumulative frequency graph with $n = 80$ students, estimate the median and IQR.',
@@ -121,19 +113,16 @@ $$\\sigma = \\sqrt{\\text{Variance}} = \\sqrt{\\frac{\\sum (x - \\bar{x})^2}{n}}
                 ]
             },
             {
-                title: 'Data Representation',
-                content: `**Bar Chart**: For categorical/discrete data. Bars do not touch.
+                title: '4. Data Representation',
+                content: `**Bar chart**: For **categorical** or discrete data. Bars are separate; height = frequency (or value).
 
-**Histogram**: For continuous data. Bars touch. Area ∝ Frequency.
+**Histogram**: For **continuous** data. Bars touch; **area** of each bar ∝ frequency. If class widths differ, use **frequency density** = $\\frac{\\text{frequency}}{\\text{class width}}$ so that bar height = frequency density.
 
-**Pie Chart**: Shows proportions. Each sector angle = $\\frac{\\text{value}}{\\text{total}} \\times 360°$.
+**Pie chart**: Shows parts of a whole. Sector angle = $\\frac{\\text{value}}{\\text{total}} \\times 360°$.
 
-**Stem-and-Leaf Diagram**: Shows distribution while preserving original data.
+**Stem-and-leaf**: Keeps raw data visible; stem = leading digit(s), leaf = trailing digit(s). Good for small data sets.
 
-**Scatter Diagram**: Shows correlation between two variables.
-- Positive correlation: Points trend upward.
-- Negative correlation: Points trend downward.
-- No correlation: Points scattered randomly.`,
+**Scatter diagram**: Two variables; each point = one pair. **Positive correlation**: upward trend; **negative correlation**: downward trend; **no correlation**: no clear trend. Line of best fit can be drawn by eye.`,
                 worked_examples: [
                     {
                         question: 'In a pie chart representing 60 students, 15 students chose "Blue". Calculate the sector angle.',
@@ -164,38 +153,38 @@ $$\\sigma = \\sqrt{\\text{Variance}} = \\sqrt{\\frac{\\sum (x - \\bar{x})^2}{n}}
             }
         ],
         key_points: [
-            'Mean = $\\frac{\\sum x}{n}$, affected by outliers.',
-            'Median is the middle value, resistant to outliers.',
-            'Mode is most frequent, can have multiple or none.',
-            'Standard deviation measures spread around the mean.'
+            'Mean $\\bar{x} = \\frac{\\sum x}{n}$; grouped mean = $\\frac{\\sum fx}{\\sum f}$ (use midpoints).',
+            'Median = middle value (order first); resistant to outliers.',
+            'Mode = most frequent; IQR = $Q_3 - Q_1$; $\\sigma = \\sqrt{\\text{variance}}$.',
+            'Ogive: median at $\\frac{n}{2}$, $Q_1$ at $\\frac{n}{4}$, $Q_3$ at $\\frac{3n}{4}$.',
+            'Histogram: area ∝ frequency; use frequency density if class widths differ.'
         ],
         exam_tips: [
-            'Show your working in mean calculations.',
-            'Always order data before finding the median.',
-            'For grouped data, use class midpoints.',
-            'In cumulative frequency, read values carefully from the curve.'
+            'Order data before finding median and quartiles.',
+            'For grouped data, always use class midpoints for the mean.',
+            'When reading from an ogive, use the correct axis (cumulative frequency vs value).',
+            'Use the app\'s 1000+ practice questions on statistics.'
         ],
         visual_descriptions: [
-            'Cumulative frequency curve (ogive) with quartiles marked.',
-            'Box-and-whisker plot showing five-number summary.'
+            'Cumulative frequency curve (ogive) with median and quartiles marked.',
+            'Box-and-whisker plot with five-number summary; histogram with equal/unequal class widths.'
         ]
     },
     'Probability': {
         topic: 'Probability',
         subject: 'Mathematics',
         grade_level: 'O-Level',
-        summary: 'Probability measures the likelihood of an event occurring. It ranges from $0$ (impossible) to $1$ (certain).',
+        summary: 'Probability measures how likely an event is, from $0$ (impossible) to $1$ (certain). **Basic rule**: $P(A) = \\frac{\\text{favorable outcomes}}{\\text{total outcomes}}$ when outcomes are equally likely. **Complement**: $P(A') = 1 - P(A)$. **Combined events**: independent (multiply probabilities); mutually exclusive (add probabilities). **Tree diagrams** and **Venn diagrams** help with two-stage and overlapping events. Always consider **with** vs **without replacement** when drawing more than one item.',
         sections: [
             {
-                title: 'Basic Probability',
-                content: `**Probability Formula**:
-$$P(\\text{Event}) = \\frac{\\text{Number of favorable outcomes}}{\\text{Total number of possible outcomes}}$$
+                title: '1. Basic Probability',
+                content: `**Definition** (equally likely outcomes): $P(A) = \\frac{\\text{Number of outcomes in } A}{\\text{Total number of possible outcomes}}$.
 
-**Properties**:
-- $0 \\leq P(A) \\leq 1$
-- $P(\\text{certain event}) = 1$
-- $P(\\text{impossible event}) = 0$
-- $P(A') = 1 - P(A)$ where $A'$ is the complement of $A$.`,
+**Rules**: $0 \\leq P(A) \\leq 1$; $P(\\text{certain}) = 1$; $P(\\text{impossible}) = 0$.
+
+**Complement**: $A'$ = "not A". $P(A') = 1 - P(A)$. So $P(A) + P(A') = 1$.
+
+When listing outcomes, use a systematic list or a sample space diagram (e.g. two dice) to avoid missing or double-counting.`,
                 worked_examples: [
                     {
                         question: 'A bag contains $5$ red, $3$ blue, and $2$ green balls. Find the probability of picking (a) a red ball (b) not a blue ball.',
@@ -218,16 +207,16 @@ $$P(\\text{Event}) = \\frac{\\text{Number of favorable outcomes}}{\\text{Total n
                 ]
             },
             {
-                title: 'Combined Events',
-                content: `**Independent Events**: Outcome of one doesn't affect the other.
+                title: '2. Combined Events',
+                content: `**Independent events**: One occurring does not change the probability of the other (e.g. two dice, coin and die). **Multiply** for "and":
 $$P(A \\text{ and } B) = P(A) \\times P(B)$$
 
-**Mutually Exclusive Events**: Cannot happen together.
-$$P(A \\text{ and } B) = 0$$
-$$P(A \\text{ or } B) = P(A) + P(B)$$
+**Mutually exclusive events**: They cannot both happen (e.g. "even" and "odd" on one die). **Add** for "or":
+$$P(A \\text{ or } B) = P(A) + P(B) \\quad (\\text{when } P(A \\cap B) = 0)$$
 
-**General Addition Rule**:
-$$P(A \\text{ or } B) = P(A) + P(B) - P(A \\text{ and } B)$$`,
+**General addition rule** (for any two events):
+$$P(A \\cup B) = P(A) + P(B) - P(A \\cap B)$$
+Use this when events can both happen (e.g. "Maths" and "Science" in a survey).`,
                 worked_examples: [
                     {
                         question: 'A coin is tossed and a die is rolled. Find $P$(Head and 6).',
@@ -249,15 +238,12 @@ $$P(A \\text{ or } B) = P(A) + P(B) - P(A \\text{ and } B)$$`,
                 ]
             },
             {
-                title: 'Tree Diagrams',
-                content: `**Tree Diagrams**: Visualize sequences of events.
-- Each branch shows an outcome and its probability.
-- Multiply along branches for "AND".
-- Add across branches for "OR".
+                title: '3. Tree Diagrams',
+                content: `**Tree diagrams** show a sequence of events (e.g. first draw, then second draw). Each **branch** is labelled with the outcome and its **probability**. **Multiply** along branches for "A then B" (and). **Add** the probabilities of the branches that satisfy "OR" (e.g. both red OR both blue).
 
-**With and Without Replacement**:
-- **With replacement**: Probabilities stay the same.
-- **Without replacement**: Total decreases, probabilities change.`,
+**With replacement**: The object is put back; probabilities on the second stage stay the same as the first.
+
+**Without replacement**: The object is not put back; the total and the number of "success" items change, so **update probabilities** on the second set of branches (e.g. after one red is drawn, fewer reds remain).`,
                 worked_examples: [
                     {
                         question: 'A bag has $3$ red and $2$ blue balls. Two balls are drawn without replacement. Find $P$(both red).',
@@ -281,16 +267,12 @@ $$P(A \\text{ or } B) = P(A) + P(B) - P(A \\text{ and } B)$$`,
                 ]
             },
             {
-                title: 'Venn Diagrams in Probability',
-                content: `**Venn Diagrams**: Show relationships between sets/events.
+                title: '4. Venn Diagrams in Probability',
+                content: `**Venn diagrams** show how two (or more) events overlap. **Intersection** $A \\cap B$ = "both A and B". **Union** $A \\cup B$ = "A or B or both". **Complement** $A'$ = "not A".
 
-**Key Regions**:
-- $A \\cap B$: Intersection (both A and B).
-- $A \\cup B$: Union (either A or B or both).
-- $A'$: Complement (not A).
+Fill in the overlap first if known, then work out the rest so that each set sums to its given probability and the total is $1$.
 
-**Formula**:
-$$P(A \\cup B) = P(A) + P(B) - P(A \\cap B)$$`,
+**Addition rule**: $P(A \\cup B) = P(A) + P(B) - P(A \\cap B)$. So $P(A \\cap B) = P(A) + P(B) - P(A \\cup B)$ if you know the union.`,
                 worked_examples: [
                     {
                         question: 'In a class, $P(\\text{Maths}) = 0.6$, $P(\\text{Science}) = 0.5$, $P(\\text{Both}) = 0.3$. Find $P$(Maths or Science).',
@@ -314,20 +296,20 @@ $$P(A \\cup B) = P(A) + P(B) - P(A \\cap B)$$`,
             }
         ],
         key_points: [
-            '$P(A\') = 1 - P(A)$.',
-            'Independent events: Multiply probabilities.',
-            'Mutually exclusive events: Add probabilities.',
-            'Without replacement: Adjust probabilities after each draw.'
+            '$P(A) \\in [0,1]$; $P(A\') = 1 - P(A)$.',
+            'Independent: $P(A \\cap B) = P(A) \\times P(B)$. Mutually exclusive: $P(A \\cup B) = P(A) + P(B)$.',
+            'General: $P(A \\cup B) = P(A) + P(B) - P(A \\cap B)$.',
+            'Tree: multiply along branches (and); add branches for (or). Without replacement: change probabilities on second stage.'
         ],
         exam_tips: [
-            'Always simplify fractions.',
-            'Draw tree diagrams for multi-step problems.',
-            'Check that all probabilities sum to 1.',
-            'Label Venn diagrams clearly.'
+            'Simplify probabilities to lowest terms unless asked for decimals.',
+            'Draw tree diagrams for two (or more) stage experiments; label all branches.',
+            'Without replacement: reduce the total and the "success" count on the next branch.',
+            'Use the app\'s 1000+ practice questions on probability.'
         ],
         visual_descriptions: [
-            'Tree diagram showing two-stage selection.',
-            'Venn diagram with two overlapping sets.'
+            'Tree diagram for two draws (with/without replacement) with probabilities on branches.',
+            'Venn diagram with two overlapping circles and regions $A \\cap B$, $A$ only, $B$ only.'
         ]
     }
 };
@@ -337,30 +319,19 @@ export const mensurationNotes: Record<string, MathTopicNotes> = {
         topic: 'Mensuration',
         subject: 'Mathematics',
         grade_level: 'O-Level',
-        summary: 'Mensuration deals with the measurement of geometric shapes—lengths, areas, and volumes. Mastery of formulas and their applications is crucial.',
+        summary: 'Mensuration is the measurement of lengths, areas, and volumes. **2D**: perimeter and area of rectangles, squares, triangles (including Heron\'s formula), parallelograms, trapezia, circles; arcs and sectors. **3D**: surface area and volume of cuboids, cubes, cylinders, cones, spheres, and pyramids. **Similar shapes**: length scale $k$, area scale $k^2$, volume scale $k^3$. You need to apply the correct formula, work with composite shapes, and give units (cm, cm², cm³).',
         sections: [
             {
-                title: '2D Shapes - Perimeter and Area',
-                content: `**Rectangle**: 
-Perimeter = $2(l + w)$, Area = $lw$
+                title: '1. 2D Shapes — Perimeter and Area',
+                content: `**Rectangle**: Perimeter = $2(l+w)$, Area = $lw$. **Square**: Perimeter = $4s$, Area = $s^2$.
 
-**Square**: 
-Perimeter = $4s$, Area = $s^2$
+**Triangle**: Perimeter = $a+b+c$. Area = $\\frac{1}{2} \\times \\text{base} \\times \\text{height}$ (height perpendicular to base). **Heron's formula** (when only sides are known): $s = \\frac{a+b+c}{2}$, then Area = $\\sqrt{s(s-a)(s-b)(s-c)}$.
 
-**Triangle**: 
-Perimeter = $a + b + c$
-Area = $\\frac{1}{2} \\times \\text{base} \\times \\text{height}$
-Area (using sides) = $\\sqrt{s(s-a)(s-b)(s-c)}$ where $s = \\frac{a+b+c}{2}$ (Heron's formula).
+**Parallelogram**: Area = base $\\times$ perpendicular height (not the slant side).
 
-**Parallelogram**: 
-Area = $\\text{base} \\times \\text{height}$
+**Trapezium**: Area = $\\frac{1}{2}(a+b) \\times h$, where $a$ and $b$ are the **parallel** sides and $h$ is the perpendicular distance between them.
 
-**Trapezium**: 
-Area = $\\frac{1}{2}(a + b) \\times h$ where $a$ and $b$ are parallel sides.
-
-**Circle**: 
-Circumference = $2\\pi r = \\pi d$
-Area = $\\pi r^2$`,
+**Circle**: Circumference = $2\\pi r = \\pi d$; Area = $\\pi r^2$.`,
                 worked_examples: [
                     {
                         question: 'Find the area of a trapezium with parallel sides $8$ cm and $12$ cm, and height $5$ cm.',
@@ -392,17 +363,14 @@ Area = $\\pi r^2$`,
                 ]
             },
             {
-                title: 'Sectors and Arcs',
-                content: `For a sector with angle $\\theta$ (in degrees) and radius $r$:
+                title: '2. Sectors and Arcs',
+                content: `A **sector** is a "slice" of a circle with angle $\\theta$ (in degrees) at the centre and radius $r$.
 
-**Arc Length**:
-$$\\text{Arc} = \\frac{\\theta}{360} \\times 2\\pi r$$
+**Arc length** (curved part of boundary): $\\frac{\\theta}{360} \\times 2\\pi r = \\frac{\\theta}{360} \\times \\pi d$.
 
-**Sector Area**:
-$$\\text{Area} = \\frac{\\theta}{360} \\times \\pi r^2$$
+**Sector area**: $\\frac{\\theta}{360} \\times \\pi r^2$ (same fraction of the circle's area).
 
-**Segment Area** (region between chord and arc):
-$$\\text{Segment Area} = \\text{Sector Area} - \\text{Triangle Area}$$`,
+**Segment**: The region between a **chord** and the arc. Segment area = Sector area $-$ Area of triangle formed by the two radii and the chord. If $\\theta$ is in radians, arc = $r\\theta$ and sector area = $\\frac{1}{2}r^2\\theta$.`,
                 worked_examples: [
                     {
                         question: 'Find the area of a sector with radius $7$ cm and angle $60°$. (Use $\\pi = \\frac{22}{7}$)',
@@ -435,31 +403,18 @@ $$\\text{Segment Area} = \\text{Sector Area} - \\text{Triangle Area}$$`,
                 ]
             },
             {
-                title: '3D Shapes - Surface Area and Volume',
-                content: `**Cuboid**:
-Surface Area = $2(lw + wh + lh)$
-Volume = $lwh$
+                title: '3. 3D Shapes — Surface Area and Volume',
+                content: `**Cuboid**: Volume = $lwh$. Total surface area = $2(lw + wh + lh)$ (six faces).
 
-**Cube**:
-Surface Area = $6s^2$
-Volume = $s^3$
+**Cube**: Volume = $s^3$, surface area = $6s^2$.
 
-**Cylinder**:
-Curved Surface Area = $2\\pi rh$
-Total Surface Area = $2\\pi r(r + h)$
-Volume = $\\pi r^2 h$
+**Cylinder** (radius $r$, height $h$): Volume = $\\pi r^2 h$. Curved surface = $2\\pi rh$; total (including both circular ends) = $2\\pi r^2 + 2\\pi rh = 2\\pi r(r+h)$.
 
-**Cone**:
-Curved Surface Area = $\\pi rl$ where $l$ = slant height
-Total Surface Area = $\\pi r(r + l)$
-Volume = $\\frac{1}{3}\\pi r^2 h$
+**Cone** (radius $r$, height $h$, slant height $l$): $l^2 = r^2 + h^2$. Volume = $\\frac{1}{3}\\pi r^2 h$. Curved surface = $\\pi rl$; total (with base) = $\\pi r(r+l)$.
 
-**Sphere**:
-Surface Area = $4\\pi r^2$
-Volume = $\\frac{4}{3}\\pi r^3$
+**Sphere** (radius $r$): Surface area = $4\\pi r^2$, Volume = $\\frac{4}{3}\\pi r^3$.
 
-**Pyramid**:
-Volume = $\\frac{1}{3} \\times \\text{Base Area} \\times h$`,
+**Pyramid**: Volume = $\\frac{1}{3} \\times \\text{base area} \\times$ perpendicular height. (Cone is a "circular pyramid".)`,
                 worked_examples: [
                     {
                         question: 'Find the volume and surface area of a cylinder with radius $3$ cm and height $10$ cm.',
@@ -490,16 +445,14 @@ Volume = $\\frac{1}{3} \\times \\text{Base Area} \\times h$`,
                 ]
             },
             {
-                title: 'Similar Shapes',
-                content: `For two similar shapes with scale factor $k$:
+                title: '4. Similar Shapes',
+                content: `Two shapes are **similar** if one is an enlargement of the other (same shape, possibly different size). Corresponding angles are equal; corresponding lengths are in the same ratio, called the **scale factor** $k$.
 
-**Length ratio**: $k$
-**Area ratio**: $k^2$
-**Volume ratio**: $k^3$
+**Lengths** (sides, perimeters, circumferences): ratio = $k$.
+**Areas**: ratio = $k^2$ (e.g. if length doubles, area is 4 times).
+**Volumes**: ratio = $k^3$ (e.g. if length doubles, volume is 8 times).
 
-If corresponding lengths are in ratio $a : b$, then:
-- Areas are in ratio $a^2 : b^2$
-- Volumes are in ratio $a^3 : b^3$`,
+So if two similar solids have volumes $V_1$ and $V_2$, then $\\frac{V_2}{V_1} = k^3$, so $k = \\sqrt[3]{\\frac{V_2}{V_1}}$. Use this to find an unknown length from a known volume ratio.`,
                 worked_examples: [
                     {
                         question: 'Two similar cones have heights in the ratio $2:5$. If the volume of the smaller cone is $40$ cm³, find the volume of the larger cone.',
@@ -524,20 +477,20 @@ If corresponding lengths are in ratio $a : b$, then:
             }
         ],
         key_points: [
-            'Area of circle = $\\pi r^2$, Circumference = $2\\pi r$.',
-            'Volume of cylinder = $\\pi r^2 h$, Volume of cone = $\\frac{1}{3}\\pi r^2 h$.',
-            'Volume of sphere = $\\frac{4}{3}\\pi r^3$.',
-            'Similar shapes: Areas scale by $k^2$, Volumes by $k^3$.'
+            'Circle: circumference $2\\pi r$, area $\\pi r^2$. Sector: arc = $\\frac{\\theta}{360}\\times 2\\pi r$, area = $\\frac{\\theta}{360}\\times \\pi r^2$.',
+            'Cylinder: $V=\\pi r^2 h$, cone: $V=\\frac{1}{3}\\pi r^2 h$, sphere: $V=\\frac{4}{3}\\pi r^3$.',
+            'Trapezium: area = $\\frac{1}{2}(a+b)h$; triangle: $\\frac{1}{2}$ base $\\times$ height or Heron.',
+            'Similar: length $k$, area $k^2$, volume $k^3$.'
         ],
         exam_tips: [
-            'Learn all formulas by heart.',
-            'State units clearly (cm, cm², cm³).',
-            'For composite shapes, break into simpler parts.',
-            'Leave answers in terms of $\\pi$ unless told otherwise.'
+            'Identify the shape and use the correct formula; for cone, distinguish height $h$ and slant height $l$.',
+            'Give units (cm, m, cm², cm³) and leave in terms of $\\pi$ unless asked for a decimal.',
+            'Composite shapes: split into rectangles, triangles, sectors, etc., and add or subtract areas/volumes.',
+            'Use the app\'s 1000+ practice questions on mensuration.'
         ],
         visual_descriptions: [
-            '3D diagrams of cylinder, cone, sphere with dimensions labeled.',
-            'Sector of a circle with arc and angle marked.'
+            'Cylinder, cone, and sphere with radius, height, and slant height labelled.',
+            'Sector of a circle with radius $r$ and angle $\\theta$; arc and sector area marked.'
         ]
     }
 };

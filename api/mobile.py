@@ -884,6 +884,89 @@ def analyze_attachments():
         logger.error("Analyze attachments error: %s", str(e), exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
+
+@mobile_bp.route('/app/version-check', methods=['GET'])
+def app_version_check():
+    """
+    Check whether the client should update.
+    Reads settings from `app_versions` (managed in the admin dashboard).
+
+    Query params:
+      - platform: android | ios | web (default: web)
+      - version: optional semantic version string (e.g. 1.2.3)
+    """
+    try:
+        platform = (request.args.get('platform') or 'web').strip().lower()
+        current_version = (request.args.get('version') or '').strip()
+
+        def parse_version(v: str):
+            parts = re.split(r'[^0-9]+', (v or '').strip())
+            nums = [int(p) for p in parts if p.isdigit()]
+            while len(nums) < 3:
+                nums.append(0)
+            return tuple(nums[:3])
+
+        def compare_versions(a: str, b: str) -> int:
+            aa = parse_version(a)
+            bb = parse_version(b)
+            if aa < bb:
+                return -1
+            if aa > bb:
+                return 1
+            return 0
+
+        rows = make_supabase_request(
+            'GET',
+            'app_versions',
+            filters={'platform': f"eq.{platform}"},
+            use_service_role=True,
+        )
+        row = rows[0] if rows else None
+
+        if not row:
+            return jsonify({
+                'success': True,
+                'data': {
+                    'platform': platform,
+                    'current_version': current_version or None,
+                    'min_supported_version': None,
+                    'latest_version': None,
+                    'update_required': False,
+                    'soft_update': False,
+                    'update_message': None,
+                    'update_url': None,
+                },
+            }), 200
+
+        min_supported = (row.get('min_supported_version') or '').strip()
+        latest = (row.get('latest_version') or '').strip()
+        update_required = bool(row.get('update_required', False))
+        soft_update = bool(row.get('soft_update', False))
+
+        if current_version and min_supported and compare_versions(current_version, min_supported) < 0:
+            update_required = True
+
+        if current_version and latest and compare_versions(current_version, latest) < 0 and not update_required:
+            # If admin enabled soft_update, or client is behind latest, suggest update.
+            soft_update = True
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'platform': platform,
+                'current_version': current_version or None,
+                'min_supported_version': min_supported or None,
+                'latest_version': latest or None,
+                'update_required': update_required,
+                'soft_update': soft_update,
+                'update_message': row.get('update_message') or None,
+                'update_url': row.get('update_url') or None,
+            },
+        }), 200
+    except Exception as e:
+        logger.exception("app_version_check failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 def generate_nerdx_id() -> str:
     """Generate unique NerdX ID"""
     return f"NX{secrets.token_hex(4).upper()}"
@@ -3485,6 +3568,43 @@ def programming_lab_ai_endpoint():
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 
+@mobile_bp.route('/virtual-database-lab/execute', methods=['POST'])
+@require_auth
+def virtual_database_lab_execute():
+    """
+    Execute SQL in the Database Lab sandbox (in-memory SQLite). Returns columns/rows for SELECT
+    or message/rowsAffected for other statements. No credits deducted (practice lab).
+    """
+    try:
+        data = request.get_json() or {}
+        sql = (data.get('sql') or '').strip()
+        if not sql:
+            return jsonify({
+                'success': False,
+                'message': 'No SQL provided.',
+                'data': {'error': 'No SQL provided.'}
+            }), 400
+        result = database_lab_execution_service.execute(sql)
+        if 'error' in result:
+            return jsonify({
+                'success': True,
+                'data': result
+            }), 200
+        return jsonify({'success': True, 'data': result}), 200
+    except ValueError as e:
+        return jsonify({
+            'success': True,
+            'data': {'error': str(e)}
+        }), 200
+    except Exception as e:
+        logger.error(f"Database Lab execute error: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'message': 'Database Lab error',
+            'data': {'error': str(e) if str(e) else 'Data not loading. Please try again.'}
+        }), 500
+
+
 @mobile_bp.route('/virtual-lab/balance-sheet-question', methods=['POST'])
 @require_auth
 def get_balance_sheet_question():
@@ -3966,7 +4086,14 @@ def get_credit_transactions():
         
         # Add payment transactions
         for tx in payment_txs:
-            credits_units = int(tx.get('credits', 0) or 0)
+            tx_status = str(tx.get('status') or '').lower()
+            credits_added_units = int(tx.get('credits_added') or 0)
+
+            # Skip provider-only "paid" rows where credits haven't been applied yet.
+            if tx_status == 'paid' and credits_added_units <= 0:
+                continue
+
+            credits_units = credits_added_units if credits_added_units > 0 else int(tx.get('credits', 0) or 0)
             transactions.append({
                 'id': tx.get('id', str(uuid.uuid4())),
                 'transaction_type': 'purchase',
@@ -4128,6 +4255,13 @@ def initiate_credit_purchase():
         user_data = get_user_registration(g.current_user_id)
         if not user_data:
             return jsonify({'success': False, 'message': 'User not found'}), 404
+
+        # School-student accounts use daily school credits and should not purchase packages in-app.
+        if (user_data.get('user_type') or '').strip() == 'school_student':
+            return jsonify({
+                'success': False,
+                'message': 'School accounts cannot purchase credit packages. Your plan includes daily credits — please contact your school administrator if you need more.'
+            }), 403
         
         email = data.get('email', user_data.get('email', ''))
         
@@ -4186,6 +4320,13 @@ def initiate_credit_purchase():
                  phone_number=phone_number,
                  email=email
             )
+
+            # Mobile app expects instant Paynow flow; manual fallback would break polling/UX.
+            if payment_result.get('success') and payment_result.get('payment_type') != 'paynow':
+                return jsonify({
+                    'success': False,
+                    'message': 'Instant EcoCash payments are temporarily unavailable. Please try again later.'
+                }), 503
             # Reference is generated inside create_paynow_payment
             reference = payment_result.get('reference_code')
             
@@ -4342,9 +4483,15 @@ def check_payment_status(reference):
             return jsonify({'success': False, 'message': 'Payment not found'}), 404
 
         transaction = result[0]
-        status = transaction.get('status', 'pending')
-        credits_units = transaction.get('credits', 0) or 0
+        status = str(transaction.get('status') or 'pending').lower()
+        credits_added_units = int(transaction.get('credits_added') or 0)
+        credits_units = credits_added_units if credits_added_units > 0 else int(transaction.get('credits', 0) or 0)
         display_credits = _credits_display(credits_units)
+
+        # "paid" in the mobile API means credits have been applied to the student's account.
+        credits_applied = credits_added_units > 0 or status in ['approved', 'completed']
+        if credits_applied and status not in ['approved', 'completed']:
+            status = 'approved'
 
         return jsonify({
             'success': True,
@@ -4353,7 +4500,7 @@ def check_payment_status(reference):
                 'status': status,  # 'pending', 'approved', 'failed', 'cancelled'
                 'amount': transaction.get('amount', 0),
                 'credits': display_credits,
-                'paid': status in ['approved', 'completed', 'paid']
+                'paid': credits_applied
             }
         }), 200
     except Exception as e:
@@ -4374,7 +4521,7 @@ def get_latest_payment():
             filters={
                 'user_id': f"eq.{g.current_user_id}",
                 'payment_method': 'eq.paynow_ecocash',
-                'status': 'in.(initiated,pending)',
+                'status': 'in.(initiated,pending,approving)',
                 'order': 'created_at.desc'
             },
             limit=1,

@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatCreditBalance } from '../utils/creditCalculator';
 import { FloatingParticles } from '../components/FloatingParticles';
 import { SubjectCard } from '../components/SubjectCard';
-import { LogOut, Calculator, FlaskConical, BookOpen, Monitor, Globe, Receipt, Briefcase, Clock, GraduationCap, MessageCircle, Beaker, TrendingUp, Coins, Wifi, Mic, Atom, Brain, Map, Sparkles } from 'lucide-react';
+import { LogOut, Calculator, FlaskConical, BookOpen, Monitor, Globe, Receipt, Briefcase, Clock, GraduationCap, MessageCircle, Beaker, TrendingUp, Coins, Wifi, Mic, Atom, Brain, Map, Sparkles, Bell, Sigma, FileText, Wallet } from 'lucide-react';
 
 // O Level subjects with gradient colors and icons
 const O_LEVEL_SUBJECTS = [
@@ -16,9 +16,11 @@ const O_LEVEL_SUBJECTS = [
   { id: 'biology', title: 'Biology', subtitle: 'Life Sciences & Organisms', icon: Brain, from: '#00E676', to: '#00C853' },
   { id: 'chemistry', title: 'Chemistry', subtitle: 'Matter & Reactions', icon: Beaker, from: '#00BCD4', to: '#0097A7' },
   { id: 'physics', title: 'Physics', subtitle: 'Forces & Energy', icon: Atom, from: '#5C6BC0', to: '#3949AB' },
+  { id: 'sciences', title: 'Combined Science', subtitle: 'Biology • Chemistry • Physics', icon: FlaskConical, from: '#06B6D4', to: '#00E676' },
   { id: 'english', title: 'English', subtitle: 'Read, Write & Communicate', icon: BookOpen, from: '#FF9100', to: '#FF6D00' },
   { id: 'computer_science', title: 'Computer Science', subtitle: 'ZimSec & Cambridge O Level', icon: Monitor, from: '#0288D1', to: '#01579B' },
   { id: 'geography', title: 'Geography', subtitle: 'Explore Our World', icon: Globe, from: '#2E7D32', to: '#1B5E20' },
+  { id: 'accounting', title: 'Accounting', subtitle: 'Principles of Accounting', icon: Wallet, from: '#D4AF37', to: '#B8860B' },
   { id: 'commerce', title: 'Commerce', subtitle: 'Business, Trade & Finance', icon: Receipt, from: '#FF9800', to: '#EF6C00' },
   { id: 'business_enterprise_skills', title: 'Business Enterprise', subtitle: 'Leadership & Skills', icon: Briefcase, from: '#14B8A6', to: '#0D9488' },
   { id: 'history', title: 'History', subtitle: 'Explore Past Events', icon: Clock, from: '#5D4037', to: '#4E342E' },
@@ -43,6 +45,10 @@ const FEATURE_CARDS = [
 ];
 
 const MORE_TOOLS = [
+  { id: 'formula_sheet', title: 'Formula Sheet', subtitle: 'Quick Revision Formulas', icon: Sigma, from: '#2979FF', to: '#7C4DFF' },
+  { id: 'past_papers', title: 'Past Papers', subtitle: 'Real Exam Practice', icon: FileText, from: '#FF9100', to: '#FF6D00' },
+  { id: 'ai_insights', title: 'AI Insights', subtitle: 'Personal Learning Analytics', icon: TrendingUp, from: '#7C4DFF', to: '#00E676' },
+  { id: 'notifications', title: 'Notifications', subtitle: 'Updates and Messages', icon: Bell, from: '#6C63FF', to: '#5A52E0' },
   { id: 'offline', title: 'Offline Chat', subtitle: 'Free • Works Offline', icon: Wifi, from: '#10B981', to: '#059669' },
   { id: 'nerdx_live', title: 'NerdX Live', subtitle: 'Real-time Speech Conversations', icon: Mic, from: '#6C63FF', to: '#5A52E0' },
   { id: 'progress', title: 'My Progress', subtitle: 'Track Your Learning', icon: TrendingUp, from: '#a18cd1', to: '#8B7FD1' },
@@ -64,18 +70,32 @@ export function DashboardPage() {
     const routeMap: Record<string, string> = {
       credits: '/app/credits',
       progress: '/app/progress',
+      ai_insights: '/app/ai-insights',
+      notifications: '/app/notifications',
       agents: '/app/agents',
+      referral: '/app/referral',
+      billing: '/app/billing',
+      security: '/app/security',
+      preferences: '/app/preferences',
       mathematics: '/app/mathematics',
       biology: '/app/biology',
       chemistry: '/app/chemistry',
       physics: '/app/physics',
+      sciences: '/app/sciences',
       english: '/app/english',
       computer_science: '/app/computer-science',
       geography: '/app/geography',
+      accounting: '/app/accounting',
       commerce: '/app/commerce',
       business_enterprise_skills: '/app/business-enterprise-skills',
       history: '/app/history',
       teacher: '/app/teacher',
+      virtual_labs: '/app/virtual-lab',
+      formula_sheet: '/app/formula-sheet',
+      past_papers: '/app/past-papers',
+      project_assistant: '/app/project-assistant',
+      nerdx_live: '/app/nerdx-live',
+      offline: '/app/offline',
     };
 
     if (routeMap[id]) {

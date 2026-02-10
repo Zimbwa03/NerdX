@@ -1,3 +1,2 @@
 export * from './topics';
-export * from './notes';
-
+export { accountingNotes } from './notes';

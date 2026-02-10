@@ -6,6 +6,11 @@ export interface Flashcard {
     answer: string;
 }
 
+export interface GenerateFlashcardsResult {
+    flashcards: Flashcard[];
+    creditsRemaining?: number;
+}
+
 export const flashcardApi = {
     /**
      * Generate a batch of flashcards for a topic
@@ -15,7 +20,7 @@ export const flashcardApi = {
         topic: string,
         count: number,
         notesContent: string = ''
-    ): Promise<Flashcard[]> => {
+    ): Promise<GenerateFlashcardsResult> => {
         try {
             // Use the axios instance which handles auth tokens automatically
             const response = await api.post('/api/mobile/flashcards/generate', {
@@ -25,12 +30,19 @@ export const flashcardApi = {
                 notes_content: notesContent,
             });
 
-            if (response.data.success && response.data.data?.flashcards) {
-                return response.data.data.flashcards;
+            const flashcards = response.data?.data?.flashcards ?? response.data?.flashcards ?? [];
+            const creditsRemaining =
+                response.data?.data?.credits_remaining ??
+                response.data?.data?.creditsRemaining ??
+                response.data?.credits_remaining ??
+                response.data?.creditsRemaining;
+
+            if (Array.isArray(flashcards) && flashcards.length > 0) {
+                return { flashcards, creditsRemaining };
             }
 
             console.error('Flashcard generation failed:', response.data?.message);
-            return [];
+            return { flashcards: [], creditsRemaining };
         } catch (error) {
             console.error('Flashcard generation error:', error);
             throw error;

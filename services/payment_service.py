@@ -3,7 +3,7 @@ import uuid
 import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
-from database.external_db import make_supabase_request, add_credits, check_and_expire_user_credits
+from database.external_db import make_supabase_request, add_credits, check_and_expire_user_credits, get_user_registration
 from utils.credit_units import credits_to_units, format_credits, units_to_credits
 from services.paynow_service import paynow_service, get_debug_log_path
 
@@ -115,9 +115,13 @@ class PaymentService:
     
     def generate_payment_reference(self, user_id: str, package_id: str) -> str:
         """Generate unique payment reference code"""
-        timestamp = datetime.now().strftime("%m%d%H%M")
-        user_suffix = user_id[-4:] if len(user_id) >= 4 else user_id
-        return f"NX{timestamp}{user_suffix}{package_id.upper()[:2]}"
+        # Include seconds + random suffix to avoid collisions when users retry quickly.
+        timestamp = datetime.utcnow().strftime("%m%d%H%M%S")
+        user_id_str = str(user_id or "")
+        user_suffix = user_id_str[-4:] if len(user_id_str) >= 4 else user_id_str
+        package_prefix = (str(package_id or "").upper()[:2] or "XX")
+        rand_suffix = uuid.uuid4().hex[:2].upper()
+        return f"NX{timestamp}{user_suffix}{package_prefix}{rand_suffix}"
     
     def get_payment_instructions_message(self, user_id: str, package_id: str) -> Dict:
         """Get EcoCash payment instructions"""
@@ -314,11 +318,12 @@ class PaymentService:
     def approve_payment(self, reference_code: str) -> Dict:
         """Approve a pending payment and add credits to user"""
         try:
-            # Get pending payment details from payment_transactions table
+            # Get pending payment details (use_service_role so admin/webhook can always see the row)
             result = make_supabase_request(
-                "GET", 
-                "payment_transactions", 
-                filters={"reference_code": f"eq.{reference_code}"}
+                "GET",
+                "payment_transactions",
+                filters={"reference_code": f"eq.{reference_code}"},
+                use_service_role=True
             )
             
             if not result or len(result) == 0:
@@ -326,8 +331,81 @@ class PaymentService:
             
             payment = result[0]
             user_id = payment['user_id']
-            credits = int(payment['credits'])  # Stored units
-            package = self.get_package_by_id(payment.get('package_id', 'unknown'))  # Updated field name
+            current_status = str(payment.get('status') or '').lower()
+            credits_added = int(payment.get('credits_added') or 0)
+
+            # Idempotency guard: avoid double-adding credits if an admin retries.
+            if credits_added > 0 or current_status in ['approved', 'completed']:
+                package_id = payment.get('package_id', 'unknown')
+                package = self.get_package_by_id(package_id)
+                return {
+                    'success': True,
+                    'message': 'Payment already approved',
+                    'user_id': user_id,
+                    'credits': credits_added or int(payment.get('credits', 0) or 0),
+                    'package': package,
+                }
+
+            if current_status == 'approving':
+                return {
+                    'success': True,
+                    'message': 'Payment approval in progress',
+                    'user_id': user_id,
+                    'credits': int(payment.get('credits', 0) or 0),
+                }
+
+            # Credits stored in units; if 0 or missing, derive from package
+            credits_raw = payment.get('credits')
+            credits = int(credits_raw) if credits_raw is not None and credits_raw != '' else 0
+            package_id = payment.get('package_id', 'unknown')
+            package = self.get_package_by_id(package_id)
+            if credits <= 0 and package:
+                credits = int(credits_to_units(package['credits']))
+                logger.info(f"approve_payment: credits were 0/missing for {reference_code}, using package {package_id} -> {credits} units")
+            if credits <= 0:
+                return {'success': False, 'message': 'Payment has no credits and package could not be determined'}
+
+            original_status = current_status or 'pending'
+
+            # Claim this payment for approval (race-safe with webhook/polling flows).
+            claim = make_supabase_request(
+                "PATCH",
+                "payment_transactions",
+                {"status": "approving"},
+                filters={
+                    "reference_code": f"eq.{reference_code}",
+                    "credits_added": "eq.0",
+                    "status": "not.in.(approved,completed,approving)",
+                },
+                use_service_role=True,
+            )
+            if not claim:
+                latest = make_supabase_request(
+                    "GET",
+                    "payment_transactions",
+                    filters={"reference_code": f"eq.{reference_code}"},
+                    use_service_role=True,
+                )
+                if latest and len(latest) > 0:
+                    latest_row = latest[0]
+                    latest_status = str(latest_row.get("status") or "").lower()
+                    latest_added = int(latest_row.get("credits_added") or 0)
+                    if latest_added > 0 or latest_status in ["approved", "completed"]:
+                        return {
+                            "success": True,
+                            "message": "Payment already approved",
+                            "user_id": latest_row.get("user_id") or user_id,
+                            "credits": latest_added or credits,
+                            "package": package,
+                        }
+                    return {
+                        "success": True,
+                        "message": "Payment is being processed",
+                        "user_id": latest_row.get("user_id") or user_id,
+                        "credits": latest_row.get("credits") or credits,
+                        "package": package,
+                    }
+                return {"success": False, "message": "Unable to claim payment for approval"}
             
             # Add credits to user account as monthly subscription
             # Monthly subscriptions expire 30 days from purchase
@@ -340,24 +418,27 @@ class PaymentService:
             )
             
             if add_success:
-                # Update payment status to approved
+                # Resolve to canonical chat_id for consistency (e.g. payment stored with email, user row has chat_id)
+                reg = get_user_registration(user_id)
+                credits_id = str(reg["chat_id"]) if (reg and isinstance(reg, dict) and reg.get("chat_id")) else str(user_id)
+                # Update payment status to approved; optionally normalize user_id to chat_id
                 update_data = {
                     'status': 'approved',
                     'approved_at': datetime.now().isoformat(),
                     'credits_added': credits
                 }
-                
-                # Update status in payment_transactions table
+                if credits_id != user_id:
+                    update_data['user_id'] = credits_id
                 make_supabase_request(
-                    "PATCH", 
-                    "payment_transactions", 
+                    "PATCH",
+                    "payment_transactions",
                     update_data,
-                    filters={"reference_code": f"eq.{reference_code}"}
+                    filters={"reference_code": f"eq.{reference_code}", "status": "eq.approving", "credits_added": "eq.0"},
+                    use_service_role=True
                 )
-                
-                # Add to completed payments table for dashboard analytics
+                # Add to completed payments table for dashboard analytics (use canonical id)
                 completed_payment = {
-                    'user_id': user_id,
+                    'user_id': credits_id,
                     'amount_paid': payment.get('amount', 0),  # Updated field name
                     'credits_added': credits,
                     'transaction_reference': reference_code,
@@ -367,18 +448,27 @@ class PaymentService:
                     'completed_at': datetime.now().isoformat()
                 }
                 make_supabase_request("POST", "payments", completed_payment)
-                
-                # Send WhatsApp notification to user
-                self.send_payment_approval_notification(user_id, reference_code, package, credits)
-                
+                # Send WhatsApp notification (use canonical chat_id so message reaches the right user)
+                self.send_payment_approval_notification(credits_id, reference_code, package, credits)
                 return {
                     'success': True,
-                    'user_id': user_id,
+                    'user_id': credits_id,
                     'credits': credits,
                     'package': package,
                     'message': self.get_payment_approved_message(reference_code)
                 }
             else:
+                # Release the claim so approval can be retried.
+                try:
+                    make_supabase_request(
+                        "PATCH",
+                        "payment_transactions",
+                        {"status": original_status},
+                        filters={"reference_code": f"eq.{reference_code}", "status": "eq.approving", "credits_added": "eq.0"},
+                        use_service_role=True,
+                    )
+                except Exception as release_error:
+                    logger.warning(f"Failed to release approval lock for {reference_code}: {release_error}")
                 return {'success': False, 'message': 'Error adding credits'}
                 
         except Exception as e:
@@ -644,7 +734,7 @@ class PaymentService:
                           f"⏰ **Status will be updated automatically once payment is confirmed.**"
 
                 # Add Test Mode Information if active
-                if os.environ.get('PAYNOW_TEST_MODE', 'true').lower() == 'true':
+                if getattr(paynow_service, 'test_mode', False):
                      message += "\n\n🧪 **TEST MODE ACTIVE**\n" \
                                "Use these numbers to simulate results:\n" \
                                "✅ Success: 0771111111\n" \
@@ -686,18 +776,21 @@ class PaymentService:
             Dict with payment status
         """
         try:
-            # Get payment from database first
+            # Get payment from database first (use_service_role so webhook/return URL without JWT can see the row)
             result = make_supabase_request(
-                "GET", 
-                "payment_transactions", 
-                filters={"reference_code": f"eq.{reference_code}"}
+                "GET",
+                "payment_transactions",
+                filters={"reference_code": f"eq.{reference_code}"},
+                use_service_role=True
             )
             
             if not result or len(result) == 0:
                 return {'success': False, 'message': 'Payment not found'}
             
             payment = result[0]
-            current_status = payment.get('status', 'unknown')
+            current_status_raw = payment.get('status', 'unknown')
+            current_status = str(current_status_raw or 'unknown').lower()
+            credits_added = int(payment.get('credits_added') or 0)
             
             # Extract poll_url from payment record
             poll_url = payment.get('poll_url')  # Use poll_url (paynow_poll_url doesn't exist in schema)
@@ -709,14 +802,26 @@ class PaymentService:
                     if match:
                         poll_url = match.group(1).strip()
             
-            # If already completed, return current status
-            if current_status in ['approved', 'paid', 'completed']:
+            # If credits were already applied, return immediately.
+            if credits_added > 0 or current_status in ['approved', 'completed']:
                 return {
                     'success': True,
                     'status': current_status,
+                    # "paid" here means credits have been applied (safe for UX / retry logic).
                     'paid': True,
                     'amount': payment.get('amount', 0),
-                    'credits': payment.get('credits', 0)
+                    'credits': credits_added or payment.get('credits', 0),
+                }
+
+            # If another worker/thread is currently applying credits, don't overwrite status.
+            if current_status == 'approving':
+                return {
+                    'success': True,
+                    'status': current_status,
+                    'paid': False,
+                    'amount': payment.get('amount', 0),
+                    'credits': payment.get('credits', 0),
+                    'message': 'Payment is being finalized. Please wait.',
                 }
             
             # Check with Paynow if poll_url exists
@@ -739,18 +844,17 @@ class PaymentService:
                 # #endregion
                 
                 if paynow_status['success']:
-                    # Update database if status changed
-                    if paynow_status['paid'] and current_status != 'approved':
-                        # Payment confirmed - approve automatically
+                    # If Paynow says it's paid, attempt to apply credits.
+                    if paynow_status.get('paid') and current_status not in ['approved', 'completed']:
                         approval_result = self.approve_paynow_payment(reference_code)
-                        if approval_result['success']:
+                        if approval_result.get('success') and (approval_result.get('credits_added') or 0) > 0:
                             return {
                                 'success': True,
                                 'status': 'approved',
                                 'paid': True,
                                 'amount': payment.get('amount', 0),
-                                'credits': payment.get('credits', 0),
-                                'message': 'Payment confirmed and credits added!'
+                                'credits': approval_result.get('credits_added') or payment.get('credits', 0),
+                                'message': 'Payment confirmed and credits added!',
                             }
                     
                     # CRITICAL FIX: Don't overwrite "initiated" status with "cancelled" too quickly
@@ -796,13 +900,14 @@ class PaymentService:
                     
                     # Update status in database (only if not cancelled too early)
                     update_data = {
-                        'status': 'paid' if paynow_status['paid'] else paynow_returned_status if paynow_returned_status else 'pending',
-                        'paynow_reference': paynow_status.get('paynow_reference')
+                        # Store provider status; credits are not considered applied until status becomes 'approved'.
+                        'status': 'paid' if paynow_status.get('paid') else paynow_returned_status if paynow_returned_status else 'pending',
+                        'paynow_reference': paynow_status.get('paynow_reference'),
                     }
                     
                     # #region agent log
                     try:
-                        with open(r'c:\Users\GWENJE\Desktop\Nerdx 1\NerdX\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                        with open(get_debug_log_path(), 'a', encoding='utf-8') as f:
                             f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"F","location":"payment_service.py:770","message":"UPDATING payment status in database","data":{"reference_code":reference_code,"new_status":update_data.get('status')},"timestamp":int(__import__('time').time()*1000)})+'\n')
                     except: pass
                     # #endregion
@@ -811,16 +916,24 @@ class PaymentService:
                         "PATCH", 
                         "payment_transactions", 
                         update_data,
-                        filters={"reference_code": f"eq.{reference_code}"}
+                        filters={"reference_code": f"eq.{reference_code}", "status": "not.eq.approving", "credits_added": "eq.0"}
                     )
                     
-                    return paynow_status
+                    return {
+                        'success': True,
+                        'status': update_data.get('status', current_status),
+                        'paid': False,
+                        'amount': payment.get('amount', 0),
+                        'credits': payment.get('credits', 0),
+                        'provider_status': paynow_status.get('status'),
+                        'provider_paid': bool(paynow_status.get('paid')),
+                    }
             
             # Return current status from database
             return {
                 'success': True,
                 'status': current_status,
-                'paid': current_status == 'approved',
+                'paid': False,
                 'amount': payment.get('amount', 0),
                 'credits': payment.get('credits', 0)
             }
@@ -840,11 +953,12 @@ class PaymentService:
             Dict with approval results
         """
         try:
-            # Get payment details
+            # Get payment details (use_service_role so webhook/poll can always see the row)
             result = make_supabase_request(
-                "GET", 
-                "payment_transactions", 
-                filters={"reference_code": f"eq.{reference_code}"}
+                "GET",
+                "payment_transactions",
+                filters={"reference_code": f"eq.{reference_code}"},
+                use_service_role=True
             )
             
             if not result or len(result) == 0:
@@ -852,14 +966,19 @@ class PaymentService:
             
             payment = result[0]
             user_id = payment['user_id']
-            credits = payment['credits']
             package_id = payment.get('package_id', 'unknown')
-            current_status = (payment.get('status') or '').lower()
+            package = self.get_package_by_id(package_id)
+            # Credits stored in units; if 0 or missing, derive from package
+            credits_raw = payment.get('credits')
+            credits = int(credits_raw) if credits_raw is not None and credits_raw != '' else 0
+            if credits <= 0 and package:
+                credits = int(credits_to_units(package['credits']))
+                logger.info(f"approve_paynow_payment: credits were 0/missing for {reference_code}, using package {package_id} -> {credits} units")
+            current_status = str(payment.get('status') or '').lower()
             credits_added = int(payment.get('credits_added') or 0)
 
             # Idempotency guard: avoid double-adding credits
-            if current_status in ['approved', 'completed', 'paid'] or credits_added > 0:
-                package = self.get_package_by_id(package_id)
+            if credits_added > 0 or current_status in ['approved', 'completed']:
                 package_name = package['name'] if package else 'Package'
                 return {
                     'success': True,
@@ -868,41 +987,108 @@ class PaymentService:
                     'package_name': package_name,
                     'user_id': user_id
                 }
-            
+
+            # Another worker may be finalizing this payment.
+            if current_status == 'approving':
+                package_name = package['name'] if package else 'Package'
+                return {
+                    'success': True,
+                    'message': 'Payment approval in progress',
+                    'credits_added': credits_added,
+                    'package_name': package_name,
+                    'user_id': user_id,
+                }
+             
+            if credits <= 0:
+                return {'success': False, 'message': 'Payment has no credits and package could not be determined'}
+
+            original_status = current_status or 'pending'
+
+            # Claim this payment for approval to prevent double-crediting if webhook + polling race.
+            claim = make_supabase_request(
+                "PATCH",
+                "payment_transactions",
+                {"status": "approving"},
+                filters={
+                    "reference_code": f"eq.{reference_code}",
+                    "credits_added": "eq.0",
+                    "status": "not.in.(approved,completed,approving)",
+                },
+                use_service_role=True,
+            )
+            if not claim:
+                # Someone else likely claimed/approved it; re-check and return a safe response.
+                latest = make_supabase_request(
+                    "GET",
+                    "payment_transactions",
+                    filters={"reference_code": f"eq.{reference_code}"},
+                    use_service_role=True,
+                )
+                if latest and len(latest) > 0:
+                    latest_row = latest[0]
+                    latest_status = str(latest_row.get("status") or "").lower()
+                    latest_added = int(latest_row.get("credits_added") or 0)
+                    package_name = package['name'] if package else 'Package'
+                    if latest_added > 0 or latest_status in ["approved", "completed"]:
+                        return {
+                            "success": True,
+                            "message": "Payment already approved",
+                            "credits_added": latest_added or credits,
+                            "package_name": package_name,
+                            "user_id": latest_row.get("user_id") or user_id,
+                        }
+                    return {
+                        "success": True,
+                        "message": "Payment is being processed",
+                        "credits_added": latest_added,
+                        "package_name": package_name,
+                        "user_id": latest_row.get("user_id") or user_id,
+                    }
+                return {"success": False, "message": "Unable to claim payment for approval"}
+             
             # Add credits to user account
             credit_result = add_credits(user_id, credits)
-            
             if credit_result:
-                # Update payment status to approved
+                # Resolve to canonical chat_id for consistency (e.g. payment stored with email)
+                reg = get_user_registration(user_id)
+                credits_id = str(reg["chat_id"]) if (reg and isinstance(reg, dict) and reg.get("chat_id")) else str(user_id)
                 update_data = {
                     'status': 'approved',
                     'approved_at': datetime.now().isoformat(),
                     'credits_added': credits
                 }
-                
+                if credits_id != user_id:
+                    update_data['user_id'] = credits_id
                 make_supabase_request(
-                    "PATCH", 
-                    "payment_transactions", 
+                    "PATCH",
+                    "payment_transactions",
                     update_data,
-                    filters={"reference_code": f"eq.{reference_code}"}
+                    filters={"reference_code": f"eq.{reference_code}", "status": "eq.approving", "credits_added": "eq.0"},
+                    use_service_role=True
                 )
-                
-                logger.info(f"Paynow payment approved: {reference_code} - {credits} credits added to {user_id}")
-                
-                package = self.get_package_by_id(package_id)
+                logger.info(f"Paynow payment approved: {reference_code} - {credits} credits added to {credits_id}")
                 package_name = package['name'] if package else 'Package'
-                
-                # 🚨 CRITICAL: Send WhatsApp confirmation message
-                self.send_paynow_confirmation_message(user_id, credits, reference_code, package_name)
-                
+                # Send WhatsApp confirmation (use canonical chat_id)
+                self.send_paynow_confirmation_message(credits_id, credits, reference_code, package_name)
                 return {
                     'success': True,
                     'message': f'Payment approved! {credits} credits added to your account.',
                     'credits_added': credits,
                     'package_name': package_name,
-                    'user_id': user_id
+                    'user_id': credits_id
                 }
             else:
+                # Release the claim so the system can retry approval later.
+                try:
+                    make_supabase_request(
+                        "PATCH",
+                        "payment_transactions",
+                        {"status": original_status},
+                        filters={"reference_code": f"eq.{reference_code}", "status": "eq.approving", "credits_added": "eq.0"},
+                        use_service_role=True,
+                    )
+                except Exception as release_error:
+                    logger.warning(f"Failed to release approval lock for {reference_code}: {release_error}")
                 return {'success': False, 'message': 'Failed to add credits'}
                 
         except Exception as e:
@@ -968,7 +1154,7 @@ class PaymentService:
                         "PATCH", 
                         "payment_transactions", 
                         update_data,
-                        filters={"reference_code": f"eq.{reference_code}"},
+                        filters={"reference_code": f"eq.{reference_code}", "status": "not.eq.approving", "credits_added": "eq.0"},
                         use_service_role=True
                     )
                     

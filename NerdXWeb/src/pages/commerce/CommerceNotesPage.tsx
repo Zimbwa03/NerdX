@@ -48,8 +48,7 @@ export function CommerceNotesPage() {
             <BookOpen size={40} />
           </div>
           <p>
-            Notes for each topic are aligned with the ZIMSEC O-Level Commerce syllabus. Use the Quiz and Exam features to practice.
-            Full interactive notes with examples are available in the NerdX mobile app.
+            Full book-standard notes for each topic, aligned with the ZIMSEC O-Level Principles of Commerce syllabus. Choose a topic below to read summaries, sections, key points, and exam tips. Use the Quiz and Exam features from the Commerce page to practice.
           </p>
         </div>
 

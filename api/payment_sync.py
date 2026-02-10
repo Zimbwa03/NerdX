@@ -53,9 +53,10 @@ def sync_payment(reference_code):
         
         payment = payment_result[0]
         current_status = payment.get('status', 'pending')
+        credits_added = int(payment.get('credits_added') or 0)
         
         # If already approved, return current status
-        if current_status in ['approved', 'paid', 'completed']:
+        if credits_added > 0 or current_status in ['approved', 'completed']:
             return jsonify({
                 'success': True,
                 'message': 'Payment already approved',

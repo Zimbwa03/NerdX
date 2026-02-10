@@ -1,7 +1,7 @@
 // API configuration for NerdX Web App
 import axios from 'axios';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nerdx.onrender.com';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 const AUTH_TOKEN_KEY = '@auth_token';
 

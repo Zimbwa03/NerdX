@@ -12,6 +12,7 @@ gunicorn>=22.0.0
 fastapi>=0.115.0
 uvicorn>=0.32.0
 websockets>=12.0
+aiortc>=1.9.0  # WebRTC signalling (DataChannel) for NerdX Live
 
 # Build tools (required for Python 3.13)
 setuptools>=68.0.0

@@ -119,6 +119,9 @@ export function HistoryEssayPage() {
 
   if (result) {
     const totalMarks = question?.total_marks ?? 32;
+    const breakdown = result.breakdown ?? {};
+    const hasDetailedExplanation =
+      breakdown.part_a_analysis || breakdown.part_b_analysis || breakdown.part_c_analysis;
     return (
       <div className="commerce-topics-page history-essay-page history-essay-result">
         <header className="commerce-topics-header" style={{ borderLeftColor: SUBJECT_COLOR }}>
@@ -132,10 +135,10 @@ export function HistoryEssayPage() {
           <div className="commerce-notes-detail-card commerce-notes-detail-summary">
             <h2 className="commerce-notes-detail-card-title">Scores</h2>
             <div className="commerce-notes-detail-body" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
-              <span><strong>Part [a]:</strong> {result.part_a_score}/5</span>
-              <span><strong>Part [b]:</strong> {result.part_b_score}/12</span>
-              <span><strong>Part [c]:</strong> {result.part_c_score}/15</span>
-              <span><strong>Total:</strong> {result.total}/{totalMarks}</span>
+              <span><strong>Part [a]:</strong> {result.part_a_score ?? 0}/5</span>
+              <span><strong>Part [b]:</strong> {result.part_b_score ?? 0}/12</span>
+              <span><strong>Part [c]:</strong> {result.part_c_score ?? 0}/15</span>
+              <span><strong>Total:</strong> {result.total ?? 0}/{totalMarks}</span>
             </div>
             {result.part_a_feedback && (
               <p><strong>Part [a] feedback:</strong> {result.part_a_feedback}</p>
@@ -153,6 +156,33 @@ export function HistoryEssayPage() {
               </div>
             )}
           </div>
+
+          {hasDetailedExplanation && (
+            <div className="commerce-notes-detail-card" style={{ marginTop: '1rem' }}>
+              <h2 className="commerce-notes-detail-card-title">Detailed explanation</h2>
+              <div className="commerce-notes-detail-body">
+                {breakdown.part_a_analysis && (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <h3 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>Part [a] – What was marked</h3>
+                    <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{breakdown.part_a_analysis}</p>
+                  </div>
+                )}
+                {breakdown.part_b_analysis && (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <h3 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>Part [b] – What was marked</h3>
+                    <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{breakdown.part_b_analysis}</p>
+                  </div>
+                )}
+                {breakdown.part_c_analysis && (
+                  <div style={{ marginBottom: '0.5rem' }}>
+                    <h3 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>Part [c] – What was marked</h3>
+                    <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{breakdown.part_c_analysis}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="commerce-modal-actions" style={{ marginTop: '1rem' }}>
             <button type="button" className="commerce-modal-cancel" onClick={handleNewQuestion}>
               Choose another topic

@@ -127,6 +127,9 @@ const HistoryEssayScreen: React.FC = () => {
 
   if (result) {
     const totalMarks = question?.total_marks ?? 32;
+    const breakdown = result.breakdown ?? {};
+    const hasDetailedExplanation =
+      breakdown.part_a_analysis || breakdown.part_b_analysis || breakdown.part_c_analysis;
     return (
       <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
         <LinearGradient colors={[HISTORY_COLOR, '#3E2723']} style={styles.header}>
@@ -140,10 +143,10 @@ const HistoryEssayScreen: React.FC = () => {
           <View style={[styles.card, { backgroundColor: themedColors.background.paper }]}>
             <Text style={[styles.cardTitle, { color: themedColors.text.primary }]}>Scores</Text>
             <View style={styles.scoresRow}>
-              <Text style={[styles.scoreText, { color: themedColors.text.primary }]}>Part [a]: {result.part_a_score}/5</Text>
-              <Text style={[styles.scoreText, { color: themedColors.text.primary }]}>Part [b]: {result.part_b_score}/12</Text>
-              <Text style={[styles.scoreText, { color: themedColors.text.primary }]}>Part [c]: {result.part_c_score}/15</Text>
-              <Text style={[styles.scoreText, { color: themedColors.primary.main, fontWeight: 'bold' }]}>Total: {result.total}/{totalMarks}</Text>
+              <Text style={[styles.scoreText, { color: themedColors.text.primary }]}>Part [a]: {result.part_a_score ?? 0}/5</Text>
+              <Text style={[styles.scoreText, { color: themedColors.text.primary }]}>Part [b]: {result.part_b_score ?? 0}/12</Text>
+              <Text style={[styles.scoreText, { color: themedColors.text.primary }]}>Part [c]: {result.part_c_score ?? 0}/15</Text>
+              <Text style={[styles.scoreText, { color: themedColors.primary.main, fontWeight: 'bold' }]}>Total: {result.total ?? 0}/{totalMarks}</Text>
             </View>
             {result.part_a_feedback ? <Text style={[styles.feedbackText, { color: themedColors.text.secondary }]}><Text style={{ fontWeight: '600' }}>Part [a]:</Text> {result.part_a_feedback}</Text> : null}
             {result.part_b_feedback ? <Text style={[styles.feedbackText, { color: themedColors.text.secondary }]}><Text style={{ fontWeight: '600' }}>Part [b]:</Text> {result.part_b_feedback}</Text> : null}
@@ -154,6 +157,31 @@ const HistoryEssayScreen: React.FC = () => {
                 <Text style={[styles.feedbackText, { color: themedColors.text.secondary }]}>{result.constructive_feedback}</Text>
               </View>
             ) : null}
+
+            {hasDetailedExplanation ? (
+              <View style={styles.constructiveBlock}>
+                <Text style={[styles.cardTitle, { color: themedColors.text.primary, marginBottom: 8 }]}>Detailed explanation</Text>
+                {breakdown.part_a_analysis ? (
+                  <View style={{ marginBottom: 12 }}>
+                    <Text style={[styles.partLabel, { color: themedColors.primary.main }]}>Part [a] – What was marked</Text>
+                    <Text style={[styles.feedbackText, { color: themedColors.text.secondary }]}>{breakdown.part_a_analysis}</Text>
+                  </View>
+                ) : null}
+                {breakdown.part_b_analysis ? (
+                  <View style={{ marginBottom: 12 }}>
+                    <Text style={[styles.partLabel, { color: themedColors.primary.main }]}>Part [b] – What was marked</Text>
+                    <Text style={[styles.feedbackText, { color: themedColors.text.secondary }]}>{breakdown.part_b_analysis}</Text>
+                  </View>
+                ) : null}
+                {breakdown.part_c_analysis ? (
+                  <View style={{ marginBottom: 8 }}>
+                    <Text style={[styles.partLabel, { color: themedColors.primary.main }]}>Part [c] – What was marked</Text>
+                    <Text style={[styles.feedbackText, { color: themedColors.text.secondary }]}>{breakdown.part_c_analysis}</Text>
+                  </View>
+                ) : null}
+              </View>
+            ) : null}
+
             <TouchableOpacity style={[styles.submitButton, { backgroundColor: HISTORY_COLOR }]} onPress={handleNewQuestion}>
               <Text style={styles.submitButtonText}>Choose another topic</Text>
             </TouchableOpacity>
