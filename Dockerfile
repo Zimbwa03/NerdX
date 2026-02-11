@@ -6,6 +6,11 @@ WORKDIR /web
 COPY NerdXWeb/package.json NerdXWeb/package-lock.json ./NerdXWeb/
 RUN cd NerdXWeb && npm ci
 COPY NerdXWeb ./NerdXWeb
+
+# Set API Base URL for production build
+ARG VITE_API_BASE_URL=https://nerdx.onrender.com
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 RUN cd NerdXWeb && npm run build
 
 FROM python:3.11-slim
