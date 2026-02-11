@@ -55,17 +55,31 @@ def payments():
         logger.error(f"Payments error: {e}")
         return f"Payments error: {e}", 500
 
+def _default_stats(source='whatsapp'):
+    """Return default stats when database is unavailable (so dashboard still loads)."""
+    return {
+        'total_users': 0,
+        'active_users_today': 0,
+        'total_questions_answered': 0,
+        'total_revenue': 0.0,
+        'new_registrations_week': 0,
+        'arpu': 0.0,
+        'database_status': 'disconnected',
+        'source': source,
+    }
+
+
 @dashboard_bp.route('/api/stats')
 @login_required
 def get_dashboard_stats():
     """Get dashboard statistics with real Supabase data"""
+    source = request.args.get('source', 'whatsapp')
     try:
-        # Get source filter (whatsapp or mobile)
-        source = request.args.get('source', 'whatsapp')
-        
-        # Database connection test
+        # Database connection test first
         db_status = test_connection()
-        
+        if not db_status:
+            return jsonify({**_default_stats(source), 'database_status': 'disconnected', 'error': 'Database unavailable'})
+
         # Get total users filtered by source (use service role for admin dashboard reads)
         filters = {"registration_source": f"eq.{source}"}
         users_data = make_supabase_request(
@@ -153,10 +167,11 @@ def get_dashboard_stats():
             'source': source,
         }
         return jsonify(stats)
-        
+
     except Exception as e:
-        logger.error(f"Error getting dashboard stats: {e}")
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Error getting dashboard stats: {e}", exc_info=True)
+        # Return 200 with zeros so the dashboard still loads and shows "Disconnected" instead of "Error"
+        return jsonify({**_default_stats(source), 'error': str(e)})
 
 @dashboard_bp.route('/api/users')
 def get_users():
@@ -690,10 +705,15 @@ def get_user_engagement():
 @dashboard_bp.route('/api/system/health')
 @login_required
 def system_health():
-    """Get system health status"""
+    """Get system health status. Always returns 200 so the dashboard can update indicators."""
     try:
+        db_ok = False
+        try:
+            db_ok = test_connection()
+        except Exception as e:
+            logger.warning(f"Database health check failed: {e}")
         health = {
-            'database': test_connection(),
+            'database': db_ok,
             'whatsapp_api': True,  # Would test actual WhatsApp API
             'ai_services': {
                 'deepseek': bool(os.getenv('DEEPSEEK_API_KEY')),
@@ -702,12 +722,16 @@ def system_health():
             'payment_gateway': bool(os.getenv('ECOCASH_API_KEY')),
             'uptime': '0 days, 0 hours, 0 minutes'  # Would calculate actual uptime
         }
-        
         return jsonify(health)
-        
     except Exception as e:
         logger.error(f"Error getting system health: {e}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'database': False,
+            'whatsapp_api': False,
+            'ai_services': {'deepseek': False, 'gemini': False},
+            'payment_gateway': False,
+            'error': str(e)
+        })
 
 @dashboard_bp.route('/api/export/users')
 def export_users():
