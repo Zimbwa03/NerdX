@@ -1066,7 +1066,7 @@ class PaymentService:
                     filters={"reference_code": f"eq.{reference_code}", "status": "eq.approving", "credits_added": "eq.0"},
                     use_service_role=True
                 )
-                logger.info(f"Paynow payment approved: {reference_code} - {credits} credits added to {credits_id}")
+                logger.info(f"Paynow payment approved: {reference_code} - {format_credits(credits)} credits added to {credits_id}")
                 package_name = package['name'] if package else 'Package'
                 # Send WhatsApp confirmation (use canonical chat_id)
                 self.send_paynow_confirmation_message(credits_id, credits, reference_code, package_name)

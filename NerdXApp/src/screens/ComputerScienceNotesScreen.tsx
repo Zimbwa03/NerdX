@@ -21,6 +21,7 @@ import { useTheme } from '../context/ThemeContext';
 import { Colors } from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { computerScienceTopics } from '../data/computerScienceNotes';
 
 const { width } = Dimensions.get('window');
 const CS_BOARD_STORAGE_KEY = '@nerdx_cs_board';
@@ -50,9 +51,27 @@ const ComputerScienceNotesScreen: React.FC = () => {
         try {
             setLoading(true);
             const topicsList = await quizApi.getTopics('computer_science', undefined, csBoard);
-            setTopics(topicsList);
+            // Use local O-Level Computer Science topics if API returns none (e.g. offline or backend not configured)
+            if (topicsList && topicsList.length > 0) {
+                setTopics(topicsList);
+            } else {
+                setTopics(
+                    computerScienceTopics.map((name, index) => ({
+                        id: `cs-local-${index}`,
+                        name,
+                        subject: 'Computer Science',
+                    }))
+                );
+            }
         } catch (error: any) {
-            Alert.alert('Error', 'Failed to load topics');
+            // Fallback to local notes when API fails (e.g. offline)
+            setTopics(
+                computerScienceTopics.map((name, index) => ({
+                    id: `cs-local-${index}`,
+                    name,
+                    subject: 'Computer Science',
+                }))
+            );
         } finally {
             setLoading(false);
         }

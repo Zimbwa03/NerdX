@@ -174,7 +174,7 @@ $$\\sigma^2 = \\frac{\\sum (x - \\bar{x})^2}{n} = \\frac{\\sum x^2}{n} - \\bar{x
         topic: 'Probability',
         subject: 'Mathematics',
         grade_level: 'O-Level',
-        summary: 'Probability measures how likely an event is, from $0$ (impossible) to $1$ (certain). **Basic rule**: $P(A) = \\frac{\\text{favorable outcomes}}{\\text{total outcomes}}$ when outcomes are equally likely. **Complement**: $P(A') = 1 - P(A)$. **Combined events**: independent (multiply probabilities); mutually exclusive (add probabilities). **Tree diagrams** and **Venn diagrams** help with two-stage and overlapping events. Always consider **with** vs **without replacement** when drawing more than one item.',
+        summary: 'Probability measures how likely an event is, from $0$ (impossible) to $1$ (certain). **Basic rule**: $P(A) = \\frac{\\text{favorable outcomes}}{\\text{total outcomes}}$ when outcomes are equally likely. **Complement**: $P(A\') = 1 - P(A)$. **Combined events**: independent (multiply probabilities); mutually exclusive (add probabilities). **Tree diagrams** and **Venn diagrams** help with two-stage and overlapping events. Always consider **with** vs **without replacement** when drawing more than one item.',
         sections: [
             {
                 title: '1. Basic Probability',

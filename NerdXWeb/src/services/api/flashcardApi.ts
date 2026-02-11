@@ -4,6 +4,14 @@ import api from './config';
 export interface Flashcard {
     question: string;
     answer: string;
+    /** easy | medium | difficult - from API when available */
+    difficulty?: 'easy' | 'medium' | 'difficult';
+    /** Section of the topic - from API when available */
+    category?: string;
+    /** Optional hint - from API when available */
+    hint?: string | null;
+    /** Optional id - API may not return; we use index as fallback */
+    id?: number;
 }
 
 export interface GenerateFlashcardsResult {

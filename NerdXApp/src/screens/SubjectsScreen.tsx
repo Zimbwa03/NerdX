@@ -19,6 +19,8 @@ import { Modal, ModalOptionCard } from '../components/Modal';
 import { Colors } from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
 
+type HistoryFormLevel = 'Form 1' | 'Form 2' | 'Form 3' | 'Form 4';
+
 const SubjectsScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
@@ -26,6 +28,9 @@ const SubjectsScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [mathModalVisible, setMathModalVisible] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [historyFormModalVisible, setHistoryFormModalVisible] = useState(false);
+  const [historyAction, setHistoryAction] = useState<'notes' | 'practice'>('notes');
+  const [selectedHistoryForm, setSelectedHistoryForm] = useState<HistoryFormLevel>('Form 1');
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -82,6 +87,26 @@ const SubjectsScreen: React.FC = () => {
     if (selectedSubject) {
       navigation.navigate('Topics' as never, { subject: selectedSubject } as never);
     }
+  };
+
+  const openHistoryFormSelector = (action: 'notes' | 'practice') => {
+    setMathModalVisible(false);
+    setHistoryAction(action);
+    setSelectedHistoryForm('Form 1');
+    setHistoryFormModalVisible(true);
+  };
+
+  const handleHistoryFormContinue = () => {
+    setHistoryFormModalVisible(false);
+    if (!selectedSubject || selectedSubject.id !== 'history') return;
+    if (historyAction === 'notes') {
+      navigation.navigate('HistoryNotes' as never, { formLevel: selectedHistoryForm } as never);
+      return;
+    }
+    navigation.navigate('Topics' as never, {
+      subject: selectedSubject,
+      historyForm: selectedHistoryForm,
+    } as never);
   };
 
   // Dynamic styles based on theme
@@ -267,10 +292,7 @@ const SubjectsScreen: React.FC = () => {
               icon="📚"
               title="History Notes"
               description="Comprehensive study notes for ZIMSEC O-Level History"
-              onPress={() => {
-                setMathModalVisible(false);
-                navigation.navigate('HistoryNotes' as never);
-              }}
+              onPress={() => openHistoryFormSelector('notes')}
               color="#5D4037"
             />
             <ModalOptionCard
@@ -294,7 +316,7 @@ const SubjectsScreen: React.FC = () => {
               icon="📝"
               title="Practice Mode"
               description="Paper 1 Essays (3-part ZIMSEC format) by topic"
-              onPress={handlePracticeMode}
+              onPress={() => openHistoryFormSelector('practice')}
               color={Colors.primary.main}
             />
           </>
@@ -463,6 +485,37 @@ const SubjectsScreen: React.FC = () => {
             />
           </>
         )}
+      </Modal>
+
+      <Modal
+        visible={historyFormModalVisible}
+        onClose={() => setHistoryFormModalVisible(false)}
+        title="Select History Form"
+      >
+        <Text style={styles.modalDescription}>
+          Choose class level before opening History {historyAction === 'notes' ? 'Notes' : 'Practice'}.
+        </Text>
+        {(['Form 1', 'Form 2', 'Form 3', 'Form 4'] as HistoryFormLevel[]).map((form) => (
+          <ModalOptionCard
+            key={form}
+            icon={selectedHistoryForm === form ? '✅' : '📘'}
+            title={form}
+            description={
+              form === 'Form 1'
+                ? 'Active now: syllabus-aligned topics and essay generation'
+                : 'Planned next: form-specific topic streams'
+            }
+            onPress={() => setSelectedHistoryForm(form)}
+            color={selectedHistoryForm === form ? '#5D4037' : '#8D6E63'}
+          />
+        ))}
+        <ModalOptionCard
+          icon="🚀"
+          title={`Continue with ${selectedHistoryForm}`}
+          description={`Open History ${historyAction === 'notes' ? 'Notes' : 'Practice'} for ${selectedHistoryForm}`}
+          onPress={handleHistoryFormContinue}
+          color={Colors.primary.main}
+        />
       </Modal>
     </View>
   );

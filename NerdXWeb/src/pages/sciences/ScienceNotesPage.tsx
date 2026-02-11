@@ -168,6 +168,9 @@ export function ScienceNotesPage() {
         </div>
       </div>
 
+      {/* Page title for clarity and accessibility */}
+      <h1 className="science-notes-page-title">{notes.topic}</h1>
+
       <div className="science-notes-content-container">
 
         {/* Media Section */}

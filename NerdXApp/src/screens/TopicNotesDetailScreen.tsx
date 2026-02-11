@@ -12,10 +12,12 @@ import {
     Dimensions,
     Platform,
     Image,
+    Linking,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { WebView } from 'react-native-webview';
 import { scienceNotesApi, TopicNotes } from '../services/api/scienceNotesApi';
 import { aLevelChemistryNotesApi } from '../services/api/aLevelChemistryNotesApi';
 import { aLevelPhysicsNotesApi } from '../services/api/aLevelPhysicsNotesApi';
@@ -41,8 +43,11 @@ import { useThemedColors } from '../theme/useThemedStyles';
 import AudioStreamPlayer from '../components/AudioStreamPlayer';
 import VideoStreamPlayer from '../components/VideoStreamPlayer';
 import FlashcardSection from '../components/FlashcardSection';
+import ZoomableImageModal from '../components/ZoomableImageModal';
 
 const { width } = Dimensions.get('window');
+const HISTORY_TOPIC1_INFOGRAPHIC_URL = 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Infographics/Topic%201.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0luZm9ncmFwaGljcy9Ub3BpYyAxLnBuZyIsImlhdCI6MTc3MDgyODk1NywiZXhwIjo1MjcxMzI0OTU3fQ.eoO-e4gKM56_EXrEVnAMNfugQwukfgyF8VFWB5XbzQo';
+const HISTORY_TOPIC1_PDF_URL = 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Slides/History_Foundations_Form_1.pdf?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L1NsaWRlcy9IaXN0b3J5X0ZvdW5kYXRpb25zX0Zvcm1fMS5wZGYiLCJpYXQiOjE3NzA4Mjg4ODgsImV4cCI6NTI3MTMyNDg4OH0.39KxawsFJgkUNFuOLkIxVv85FcyctZo8jSLv8IvSRT0';
 
 const TopicNotesDetailScreen: React.FC = () => {
     const route = useRoute();
@@ -114,7 +119,26 @@ const TopicNotesDetailScreen: React.FC = () => {
     }, [subject, topic, isALevel]);
 
     const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set([0])); // First section expanded by default
+    const [infographicZoomVisible, setInfographicZoomVisible] = useState(false);
     const loading = notes === null; // Loading is false if notes exist (instant)
+    const isHistoryForm1Topic1 = subject === 'History' && !isALevel && topic === 'Introduction to History';
+    const historyTopic1PdfViewerUrl = useMemo(
+        () => `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(HISTORY_TOPIC1_PDF_URL)}`,
+        []
+    );
+
+    const openHistoryTopic1Pdf = async () => {
+        try {
+            const canOpen = await Linking.canOpenURL(HISTORY_TOPIC1_PDF_URL);
+            if (canOpen) {
+                await Linking.openURL(HISTORY_TOPIC1_PDF_URL);
+            } else {
+                Alert.alert('Cannot open PDF', 'Your device could not open the PDF. Try opening the link in a browser.');
+            }
+        } catch {
+            Alert.alert('Error', 'Could not open the PDF. Please try again.');
+        }
+    };
 
     // Handle missing notes
     useEffect(() => {
@@ -536,6 +560,82 @@ const TopicNotesDetailScreen: React.FC = () => {
                         </View>
                     )}
 
+                    {isHistoryForm1Topic1 && (
+                        <View style={styles.historyMediaBlock}>
+                            <View
+                                style={[
+                                    styles.historyMediaCard,
+                                    {
+                                        backgroundColor: themedColors.background.default || '#FFFFFF',
+                                        borderColor: themedColors.border.light || 'rgba(0,0,0,0.12)',
+                                    },
+                                ]}
+                            >
+                                <Text style={[styles.historyMediaTitle, { color: themedColors.text.primary }]}>
+                                    Infographics Image for the Student
+                                </Text>
+                                <TouchableOpacity
+                                    activeOpacity={1}
+                                    onPress={() => setInfographicZoomVisible(true)}
+                                >
+                                    <Image
+                                        source={{ uri: HISTORY_TOPIC1_INFOGRAPHIC_URL }}
+                                        style={styles.historyInfographicImage}
+                                        resizeMode="contain"
+                                    />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.infographicZoomButton, { backgroundColor: getSubjectColor() }]}
+                                    onPress={() => setInfographicZoomVisible(true)}
+                                >
+                                    <Ionicons name="expand" size={20} color="#FFF" />
+                                    <Text style={styles.infographicZoomButtonText}>Zoom</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            <View
+                                style={[
+                                    styles.historyMediaCard,
+                                    {
+                                        backgroundColor: themedColors.background.default || '#FFFFFF',
+                                        borderColor: themedColors.border.light || 'rgba(0,0,0,0.12)',
+                                    },
+                                ]}
+                            >
+                                <Text style={[styles.historyMediaTitle, { color: themedColors.text.primary }]}>
+                                    History Foundations (Form 1) – PDF
+                                </Text>
+                                <View style={styles.historyPdfContainer}>
+                                    <WebView
+                                        source={{ uri: historyTopic1PdfViewerUrl }}
+                                        style={styles.historyPdfWebView}
+                                        originWhitelist={['*']}
+                                        javaScriptEnabled
+                                        domStorageEnabled
+                                        mixedContentMode="always"
+                                        thirdPartyCookiesEnabled
+                                        setSupportMultipleWindows={false}
+                                        startInLoadingState
+                                        renderLoading={() => (
+                                            <View style={styles.historyPdfLoading}>
+                                                <ActivityIndicator size="large" color={getSubjectColor()} />
+                                                <Text style={[styles.historyPdfLoadingText, { color: themedColors.text.secondary }]}>Loading PDF…</Text>
+                                            </View>
+                                        )}
+                                        scalesPageToFit
+                                    />
+                                </View>
+                                <TouchableOpacity
+                                    style={[styles.historyPdfOpenButton, { backgroundColor: 'transparent', borderWidth: 1, borderColor: getSubjectColor() }]}
+                                    onPress={openHistoryTopic1Pdf}
+                                >
+                                    <Ionicons name="open-outline" size={20} color={getSubjectColor()} />
+                                    <Text style={[styles.historyPdfOpenButtonText, { color: getSubjectColor() }]}>Open in browser</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
+
                     {/* AI Flashcards Section - Science, Geography, Accounting, Commerce, BES, History, Computer Science (O & A-Level) */}
                     {(
                         (subject === 'Biology' || subject === 'Chemistry' || subject === 'Physics') ||
@@ -556,6 +656,15 @@ const TopicNotesDetailScreen: React.FC = () => {
                         )}
                 </ScrollView>
             </LinearGradient>
+
+            {/* Zoom modal for History Topic 1 infographic */}
+            {isHistoryForm1Topic1 && (
+                <ZoomableImageModal
+                    visible={infographicZoomVisible}
+                    imageUrl={HISTORY_TOPIC1_INFOGRAPHIC_URL}
+                    onClose={() => setInfographicZoomVisible(false)}
+                />
+            )}
         </View>
     );
 };
@@ -873,6 +982,83 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: Colors.text.primary,
         lineHeight: 22,
+    },
+    historyMediaBlock: {
+        marginBottom: 16,
+    },
+    historyMediaCard: {
+        borderRadius: 16,
+        borderWidth: 1,
+        padding: 12,
+        marginBottom: 12,
+    },
+    historyMediaTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+        marginBottom: 10,
+    },
+    historyInfographicImage: {
+        width: '100%',
+        height: 260,
+        borderRadius: 12,
+        backgroundColor: '#FFFFFF',
+    },
+    infographicZoomButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 10,
+        marginTop: 10,
+        alignSelf: 'flex-start',
+    },
+    infographicZoomButtonText: {
+        color: '#FFF',
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    historyPdfContainer: {
+        width: '100%',
+        height: 420,
+        borderRadius: 12,
+        overflow: 'hidden',
+        backgroundColor: '#f5f5f5',
+        marginBottom: 12,
+    },
+    historyPdfWebView: {
+        flex: 1,
+        backgroundColor: 'transparent',
+    },
+    historyPdfLoading: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
+        gap: 12,
+    },
+    historyPdfLoadingText: {
+        fontSize: 14,
+    },
+    historyPdfOpenButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        borderRadius: 12,
+        alignSelf: 'flex-start',
+    },
+    historyPdfOpenButtonText: {
+        color: '#FFF',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
 

@@ -44,7 +44,14 @@ Return ONLY valid JSON (no markdown fences) with this exact structure:
   "part_a_feedback": "Brief comment on Part [a]",
   "part_b_feedback": "Brief comment on Part [b] with band",
   "part_c_feedback": "Brief comment on Part [c] with band",
+  "teacher_feedback": "Direct teacher-style advice on how to improve next time",
   "constructive_feedback": "Overall strengths and areas for improvement",
+  "part_a_expected_points": ["point 1", "point 2"],
+  "part_b_expected_points": ["point 1", "point 2", "point 3"],
+  "part_c_expected_points": ["point 1", "point 2", "point 3"],
+  "part_a_model_answer": "Short model answer for [a] format",
+  "part_b_model_answer": "Model two-paragraph answer for [b]",
+  "part_c_model_answer": "Model intro-body-conclusion answer for [c]",
   "breakdown": {
     "part_a_analysis": "What was correct/incorrect in [a]",
     "part_b_analysis": "What was done well / could improve in [b]",
@@ -57,6 +64,7 @@ def mark_history_essay(
     question: Dict[str, Any],
     answers: Dict[str, str],
     user_id: Optional[str] = None,
+    form_level: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Mark a 3-part ZIMSEC History essay using Vertex AI.
@@ -83,11 +91,13 @@ def mark_history_essay(
         }
 
     question_text = question.get("question_text") or ""
+    effective_form_level = form_level or question.get("form_level") or "Form 1"
     stem = "\n".join([f"{p.get('label', '')} {p.get('question_text', '')} [{p.get('marks', 0)} marks]" for p in parts])
 
     prompt = f"""{ZIMSEC_EXAMINER_SYSTEM}
 
 QUESTION BEING ASSESSED:
+Form level: {effective_form_level}
 {question_text}
 {stem}
 
@@ -102,7 +112,7 @@ Part [b] Answer:
 Part [c] Answer:
 {part_c or '(No answer provided)'}
 
-Mark the student's answer and return ONLY the JSON object as specified (part_a_score, part_b_score, part_c_score, total, part_a_feedback, part_b_feedback, part_c_feedback, constructive_feedback, breakdown)."""
+Mark the student's answer and return ONLY the JSON object as specified."""
 
     if not vertex_service.is_available():
         logger.warning("Vertex AI not available for history marking")
@@ -165,6 +175,25 @@ def _normalize_marking_result(data: Dict[str, Any]) -> Dict[str, Any]:
         if k not in breakdown or not isinstance(breakdown[k], str):
             breakdown[k] = breakdown.get(k) or ""
     out["breakdown"] = breakdown
+    for key in (
+        "part_a_feedback",
+        "part_b_feedback",
+        "part_c_feedback",
+        "constructive_feedback",
+        "teacher_feedback",
+        "part_a_model_answer",
+        "part_b_model_answer",
+        "part_c_model_answer",
+    ):
+        val = out.get(key)
+        out[key] = val if isinstance(val, str) else ""
+
+    for key in ("part_a_expected_points", "part_b_expected_points", "part_c_expected_points"):
+        points = out.get(key)
+        if isinstance(points, list):
+            out[key] = [str(p).strip() for p in points if str(p).strip()]
+        else:
+            out[key] = []
     return out
 
 
@@ -186,7 +215,14 @@ def _fallback_marking(question: Dict[str, Any], answers: Dict[str, str]) -> Dict
         "part_a_feedback": "Automatic marking only. Submit again when AI marking is available for full feedback.",
         "part_b_feedback": "Automatic marking only. Submit again when AI marking is available for full feedback.",
         "part_c_feedback": "Automatic marking only. Submit again when AI marking is available for full feedback.",
+        "teacher_feedback": "Improve structure, use specific evidence, and balance your argument in Part [c].",
         "constructive_feedback": "AI marking is temporarily unavailable. Your response was saved; try again later for detailed ZIMSEC-style feedback.",
+        "part_a_expected_points": [],
+        "part_b_expected_points": [],
+        "part_c_expected_points": [],
+        "part_a_model_answer": "",
+        "part_b_model_answer": "",
+        "part_c_model_answer": "",
         "breakdown": {
             "part_a_analysis": "",
             "part_b_analysis": "",

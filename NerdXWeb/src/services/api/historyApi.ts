@@ -28,10 +28,22 @@ export interface HistoryMarkingResult {
   part_b_feedback?: string;
   part_c_feedback?: string;
   constructive_feedback?: string;
+  teacher_feedback?: string;
+  part_a_expected_points?: string[];
+  part_b_expected_points?: string[];
+  part_c_expected_points?: string[];
+  part_a_model_answer?: string;
+  part_b_model_answer?: string;
+  part_c_model_answer?: string;
   breakdown?: Record<string, string>;
   credits_remaining?: number;
   credits_deducted?: number;
   error?: string;
+}
+
+export interface HistoryImageInput {
+  base64: string;
+  mime_type?: string;
 }
 
 export const historyApi = {
@@ -51,6 +63,29 @@ export const historyApi = {
     const response = await api.post<{ success: boolean; data?: HistoryMarkingResult; message?: string }>(
       '/api/mobile/history/essay/submit',
       { question, answers }
+    );
+    return response.data;
+  },
+
+  extractEssayFromImages: async (
+    images: HistoryImageInput[]
+  ): Promise<{ success: boolean; data?: { extracted_text: string }; message?: string }> => {
+    const response = await api.post<{ success: boolean; data?: { extracted_text: string }; message?: string }>(
+      '/api/mobile/english/essay/extract-from-images',
+      { images }
+    );
+    return response.data;
+  },
+
+  transcribeAudio: async (
+    audioFile: File
+  ): Promise<{ success: boolean; text?: string; language?: string; message?: string }> => {
+    const formData = new FormData();
+    formData.append('audio', audioFile);
+    const response = await api.post<{ success: boolean; text?: string; language?: string; message?: string }>(
+      '/api/mobile/voice/transcribe',
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
     );
     return response.data;
   },

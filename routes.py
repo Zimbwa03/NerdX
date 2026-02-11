@@ -56,11 +56,19 @@ def serve_pdf_file(filename):
 # `routes.py` lives at the repo root in this project, so `Path(__file__).parent` is the app root.
 USER_APP_DIR = str((Path(__file__).resolve().parent / 'NerdXWeb' / 'dist'))
 
+# Log student app availability at startup (helps debug deployment)
+_index_path = os.path.join(USER_APP_DIR, 'index.html')
+if os.path.isfile(_index_path):
+    logger.info(f"NerdXWeb (student app) ready at {USER_APP_DIR}")
+else:
+    logger.warning(f"NerdXWeb (student app) NOT FOUND at {USER_APP_DIR} - root (/) will redirect to admin. Students should use /app path.")
+
 
 def _serve_user_app(path=''):
     """Serve the React user app - index.html for SPA routes, static files for assets."""
     if not os.path.isdir(USER_APP_DIR) or not os.path.exists(os.path.join(USER_APP_DIR, 'index.html')):
         from flask import redirect
+        logger.warning(f"Student app not available at {USER_APP_DIR} - redirecting to admin login")
         return redirect('/admin/login')
     # Serve static assets (js, css, images) if they exist
     if path:

@@ -10,6 +10,7 @@ export interface HistoryEssayPart {
 export interface HistoryEssayQuestion {
   id: string;
   topic: string;
+  form_level?: string;
   question_text: string;
   parts: HistoryEssayPart[];
   total_marks: number;
@@ -37,27 +38,29 @@ export interface HistoryMarkingResult {
 export const historyApi = {
   generateQuestion: async (
     topic: string | { id: string; name: string },
-    difficulty = 'medium'
+    difficulty = 'medium',
+    formLevel: 'Form 1' | 'Form 2' | 'Form 3' | 'Form 4' = 'Form 1'
   ): Promise<{ success: boolean; data?: HistoryEssayQuestion; credits_remaining?: number; message?: string }> => {
-    const topicParam = typeof topic === 'string' ? topic : topic?.name ?? topic?.id ?? '';
+    const topicParam = typeof topic === 'string' ? topic : topic?.id ?? topic?.name ?? '';
     const response = await api.post<{
       success: boolean;
       data?: HistoryEssayQuestion;
       credits_remaining?: number;
       message?: string;
-    }>('/api/mobile/history/essay/generate', { topic: topicParam, difficulty });
+    }>('/api/mobile/history/essay/generate', { topic: topicParam, difficulty, form_level: formLevel });
     return response.data;
   },
 
   submitEssay: async (
     question: HistoryEssayQuestion,
-    answers: { part_a: string; part_b: string; part_c: string }
+    answers: { part_a: string; part_b: string; part_c: string },
+    formLevel: 'Form 1' | 'Form 2' | 'Form 3' | 'Form 4' = 'Form 1'
   ): Promise<{ success: boolean; data?: HistoryMarkingResult; message?: string }> => {
     const response = await api.post<{
       success: boolean;
       data?: HistoryMarkingResult;
       message?: string;
-    }>('/api/mobile/history/essay/submit', { question, answers });
+    }>('/api/mobile/history/essay/submit', { question, answers, form_level: formLevel });
     return response.data;
   },
 };

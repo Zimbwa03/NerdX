@@ -18,22 +18,22 @@ The object and image are **congruent** and have the same orientation. To find th
                     {
                         question: 'Translate point $A(2, 3)$ by vector $\\begin{pmatrix} 4 \\\\ -1 \\end{pmatrix}$.',
                         steps: [
-                            'Add vector to coordinates: $x' = 2+4 = 6$, $y' = 3+(-1) = 2$.',
-                            'Image: $A'(6, 2)$.'
+                            'Add vector to coordinates: $x\' = 2+4 = 6$, $y\' = 3+(-1) = 2$.',
+                            'Image: $A\'(6, 2)$.'
                         ],
                         final_answer: "$A'(6, 2)$"
                     },
                     {
-                        question: 'Triangle $ABC$ has vertices $A(1,2)$, $B(4,2)$, $C(2,5)$. Under translation by $\\begin{pmatrix} -3 \\\\ 2 \\end{pmatrix}$, find the image $A'B'C'$.',
+                        question: 'Triangle $ABC$ has vertices $A(1,2)$, $B(4,2)$, $C(2,5)$. Under translation by $\\begin{pmatrix} -3 \\\\ 2 \\end{pmatrix}$, find the image $A\'B\'C\'$.',
                         steps: [
-                            '$A'(1-3, 2+2) = (-2, 4)$.',
-                            '$B'(4-3, 2+2) = (1, 4)$.',
-                            '$C'(2-3, 5+2) = (-1, 7)$.'
+                            '$A\'(1-3, 2+2) = (-2, 4)$.',
+                            '$B\'(4-3, 2+2) = (1, 4)$.',
+                            '$C\'(2-3, 5+2) = (-1, 7)$.'
                         ],
                         final_answer: "$A'(-2,4)$, $B'(1,4)$, $C'(-1,7)$"
                     },
                     {
-                        question: 'A point $P(2,5)$ is mapped to $P'(7,1)$. Find the translation vector.',
+                        question: 'A point $P(2,5)$ is mapped to $P\'(7,1)$. Find the translation vector.',
                         steps: [
                             'Vector = $(7-2, 1-5) = (5, -4)$.',
                             'Column vector: $\\begin{pmatrix} 5 \\\\ -4 \\end{pmatrix}$.'
@@ -99,7 +99,7 @@ For a centre other than the origin, subtract the centre, rotate, then add the ce
                         final_answer: "$B'(1, -3)$"
                     },
                     {
-                        question: 'Describe the transformation that maps $P(4,2)$ to $P'(2,-4)$.',
+                        question: 'Describe the transformation that maps $P(4,2)$ to $P\'(2,-4)$.',
                         steps: [
                             'Check: $90°$ anticlockwise about origin gives $(-y,x) = (-2,4)$ — not that.',
                             '$90°$ clockwise gives $(y,-x) = (2,-4)$. So **rotation $90°$ clockwise, centre $(0,0)$**.'
@@ -122,21 +122,21 @@ For a centre other than the origin, subtract the centre, rotate, then add the ce
                     {
                         question: 'Enlarge triangle with vertex $A(1,1)$ by scale factor $2$, centre $(0,0)$.',
                         steps: [
-                            'Multiply coordinates by $2$: $A'(2,2)$. (Do same for all vertices.)'
+                            'Multiply coordinates by $2$: $A\'(2,2)$. (Do same for all vertices.)'
                         ],
                         final_answer: "e.g. $A'(2,2)$"
                     },
                     {
                         question: 'Enlarge $P(4, 6)$ with scale factor $\\frac{1}{2}$, centre $(0,0)$.',
                         steps: [
-                            '$P'(4 \\times \\frac{1}{2}, 6 \\times \\frac{1}{2}) = (2, 3)$.'
+                            '$P\'(4 \\times \\frac{1}{2}, 6 \\times \\frac{1}{2}) = (2, 3)$.'
                         ],
                         final_answer: "$P'(2, 3)$"
                     },
                     {
                         question: 'Enlarge $A(2,4)$ with scale factor $-2$, centre $(0,0)$.',
                         steps: [
-                            'Negative: image on opposite side of centre. $A'(2\\times(-2), 4\\times(-2)) = (-4, -8)$.'
+                            'Negative: image on opposite side of centre. $A\'(2\\times(-2), 4\\times(-2)) = (-4, -8)$.'
                         ],
                         final_answer: "$A'(-4, -8)$"
                     }
@@ -151,10 +151,10 @@ For a centre other than the origin, subtract the centre, rotate, then add the ce
 **Invariant points**: Points that do not move. Reflection: points on the mirror line. Rotation: only the centre (unless $360°$). Enlargement: only the centre (unless $k=1$).`,
                 worked_examples: [
                     {
-                        question: 'Triangle $T$ is reflected in the y-axis to give $T'$, then $T'$ is translated by $\\begin{pmatrix} -4 \\\\ 0 \\end{pmatrix}$ to give $T''$. Point $A(3,2)$ is on $T$. Find the coordinates of its image $A''$.',
+                        question: 'Triangle $T$ is reflected in the y-axis to give $T\'$, then $T\'$ is translated by $\\begin{pmatrix} -4 \\\\ 0 \\end{pmatrix}$ to give $T\'\'$. Point $A(3,2)$ is on $T$. Find the coordinates of its image $A\'\'$.',
                         steps: [
-                            'Reflect in y-axis: $A(3,2) \\to A'(-3, 2)$.',
-                            'Translate by $\\begin{pmatrix} -4 \\\\ 0 \\end{pmatrix}$: $A'(-3,2) \\to A''(-3-4, 2) = (-7, 2)$.'
+                            'Reflect in y-axis: $A(3,2) \\to A\'(-3, 2)$.',
+                            'Translate by $\\begin{pmatrix} -4 \\\\ 0 \\end{pmatrix}$: $A\'(-3,2) \\to A\'\'(-3-4, 2) = (-7, 2)$.'
                         ],
                         final_answer: "$A''(-7, 2)$"
                     }

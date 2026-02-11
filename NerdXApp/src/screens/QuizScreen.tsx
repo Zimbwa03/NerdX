@@ -259,7 +259,10 @@ const QuizScreen: React.FC = () => {
     if (subject?.id === 'mathematics') return [Colors.subjects.mathematics, Colors.primary.dark];
     if (subject?.id === 'combined_science') return [Colors.subjects.science, Colors.secondary.dark];
     if (subject?.id === 'english') return [Colors.subjects.english, Colors.warning.dark];
-    return Colors.gradients.primary;
+    const gradient = Colors.gradients?.primary;
+    return (Array.isArray(gradient) && gradient.length >= 2 && gradient.every(Boolean))
+      ? gradient as [string, string]
+      : ['#7C4DFF', '#3F1DCB'];
   };
 
   const handleAnswerSelect = (answer: string) => {
@@ -1487,7 +1490,7 @@ const QuizScreen: React.FC = () => {
         >
         {/* Professional Header */}
         <LinearGradient
-          colors={getHeaderGradient()}
+          colors={getHeaderGradient() ?? ['#7C4DFF', '#3F1DCB']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}

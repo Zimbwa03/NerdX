@@ -25,13 +25,13 @@ export const setsNotes: Record<string, MathTopicNotes> = {
 - $A'$ or $A^c$: **Complement** of $A$ — elements in $\\xi$ that are **not** in $A$. So $A \\cup A' = \\xi$ and $A \\cap A' = \\emptyset$.`,
                 worked_examples: [
                     {
-                        question: 'Given $\\xi = \\{1, 2, 3, 4, 5, 6\\}$, $A = \\{2, 4, 6\\}$, $B = \\{1, 2, 3\\}$. Find $A'$ and $n(B)$.',
+                        question: 'Given $\\xi = \\{1, 2, 3, 4, 5, 6\\}$, $A = \\{2, 4, 6\\}$, $B = \\{1, 2, 3\\}$. Find $A\'$ and $n(B)$.',
                         steps: [
-                            '$A'$ = elements in $\\xi$ that are not in $A$.',
-                            'So $A' = \\{1, 3, 5\\}$.',
+                            '$A\'$ = elements in $\\xi$ that are not in $A$.',
+                            'So $A\' = \\{1, 3, 5\\}$.',
                             '$n(B)$ = number of elements in $B$ = 3.'
                         ],
-                        final_answer: '$A' = \\{1, 3, 5\\}$, $n(B) = 3$'
+                        final_answer: '$A\' = \\{1, 3, 5\\}$, $n(B) = 3$'
                     },
                     {
                         question: 'List the elements of $P = \\{x : x \\in \\mathbb{Z}, \\, -2 \\leq x < 2\\}$.',
@@ -43,12 +43,12 @@ export const setsNotes: Record<string, MathTopicNotes> = {
                         final_answer: '$P = \\{-2, -1, 0, 1\\}$'
                     },
                     {
-                        question: 'If $\\xi = \\{1,2,3,4,5\\}$ and $A = \\{1,3,5\\}$, find $n(A')$.',
+                        question: 'If $\\xi = \\{1,2,3,4,5\\}$ and $A = \\{1,3,5\\}$, find $n(A\')$.',
                         steps: [
-                            '$A' = \\{2, 4\\}$ (elements of $\\xi$ not in $A$).',
-                            '$n(A') = 2$.'
+                            '$A\' = \\{2, 4\\}$ (elements of $\\xi$ not in $A$).',
+                            '$n(A\') = 2$.'
                         ],
-                        final_answer: '$n(A') = 2$'
+                        final_answer: '$n(A\') = 2$'
                     }
                 ]
             },
@@ -134,9 +134,9 @@ export const setsNotes: Record<string, MathTopicNotes> = {
         ],
         key_points: [
             '$\\cap$ = intersection (AND, elements in both). $\\cup$ = union (OR, elements in either or both).',
-            '$A'$ = complement (elements in $\\xi$ not in $A$). $n(\\emptyset) = 0$.',
+            '$A\'$ = complement (elements in $\\xi$ not in $A$). $n(\\emptyset) = 0$.',
             'Inclusion–exclusion: $n(A \\cup B) = n(A) + n(B) - n(A \\cap B)$.',
-            'De Morgan: $(A \\cup B)' = A' \\cap B'$ and $(A \\cap B)' = A' \\cup B'$.',
+            'De Morgan: $(A \\cup B)\' = A\' \\cap B\'$ and $(A \\cap B)\' = A\' \\cup B\'$.',
             'In Venn word problems, fill the "both" region first, then work out "only A" and "only B".'
         ],
         exam_tips: [
@@ -148,7 +148,7 @@ export const setsNotes: Record<string, MathTopicNotes> = {
         ],
         visual_descriptions: [
             'Venn diagram: rectangle (universal set) with two overlapping circles (A and B); region where they overlap is $A \\cap B$.',
-            'Venn diagram with region for $A'$ shaded (everything outside circle A but inside the rectangle).',
+            'Venn diagram with region for $A\'$ shaded (everything outside circle A but inside the rectangle).',
             'Venn diagram with three overlapping circles for sets A, B, C and the eight regions.'
         ]
     }

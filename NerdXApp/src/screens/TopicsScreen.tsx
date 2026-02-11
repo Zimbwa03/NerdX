@@ -35,7 +35,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { accountingTopics as accountingTopicsList } from '../data/accounting';
 import { businessEnterpriseSkillsTopics as besTopicsList } from '../data/businessEnterpriseSkills';
 import { commerceTopics as commerceTopicsList } from '../data/commerce';
-import { historyTopicsForQuiz } from '../data/history';
+import {
+  historyFormLevels,
+  getHistoryTopicsForQuizByForm,
+  type HistoryFormLevel,
+} from '../data/history';
 
 const { width } = Dimensions.get('window');
 
@@ -50,7 +54,11 @@ const TopicsScreen: React.FC = () => {
   const themedColors = useThemedColors();
   const { showSuccess, showError, showWarning, showInfo } = useNotification();
   const insets = useSafeAreaInsets();
-  const { subject, parentSubject } = route.params as { subject: Subject; parentSubject?: string };
+  const { subject, parentSubject, historyForm } = route.params as {
+    subject: Subject;
+    parentSubject?: string;
+    historyForm?: HistoryFormLevel;
+  };
   const subjectDisplayName = getSubjectDisplayName(subject.id, subject.name);
   const subjectSteps = getSubjectLoadingSteps(subject.id);
   const overlayMessage = streamingStatus ?? `Preparing your ${subjectDisplayName} question...`;
@@ -62,6 +70,7 @@ const TopicsScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const [currentParentSubject, setCurrentParentSubject] = useState<string | undefined>(parentSubject);
+  const [selectedHistoryForm, setSelectedHistoryForm] = useState<HistoryFormLevel>(historyForm || 'Form 1');
   const [pharmaModalVisible, setPharmaModalVisible] = useState(false);
   const [selectedPharmaTopic, setSelectedPharmaTopic] = useState<Topic | null>(null);
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
@@ -134,11 +143,16 @@ const TopicsScreen: React.FC = () => {
     } else {
       loadTopics(currentParentSubject);
     }
-  }, [currentParentSubject, activeTab, subject.id, csBoard, aLevelCsBoard]);
+  }, [currentParentSubject, activeTab, subject.id, csBoard, aLevelCsBoard, selectedHistoryForm]);
 
   const loadTopics = async (parent?: string) => {
     try {
       setLoading(true);
+      if (subject.id === 'history') {
+        setTopics(getHistoryTopicsForQuizByForm(selectedHistoryForm));
+        setLoading(false);
+        return;
+      }
       // If it's Combined Science, we always want to fetch topics for the specific sub-subject (Biology/Chemistry/Physics)
       const targetParent = subject.id === 'combined_science' ? parent : currentParentSubject;
 
@@ -165,8 +179,6 @@ const TopicsScreen: React.FC = () => {
           subject: 'commerce',
         }));
         setTopics(commerceTopicList);
-      } else if (subject.id === 'history' && (!data || data.length === 0)) {
-        setTopics(historyTopicsForQuiz);
       } else if (subject.id === 'mathematics' && (!data || data.length === 0)) {
         const mathTopics: Topic[] = [
           { id: 'num', name: 'Number Theory', subject: 'mathematics' },
@@ -230,6 +242,8 @@ const TopicsScreen: React.FC = () => {
           { id: 'loci', name: 'Loci & Construction', subject: 'mathematics' },
         ];
         setTopics(mathTopics);
+      } else if (subject.id === 'history') {
+        setTopics(getHistoryTopicsForQuizByForm(selectedHistoryForm));
       } else {
         Alert.alert('Error', 'Failed to load topics. Please try again.');
       }
@@ -294,7 +308,7 @@ const TopicsScreen: React.FC = () => {
       setCommerceQuestionTypeModalVisible(true);
     } else if (subject.id === 'history') {
       // History: Paper 1 Essays only (3-part ZIMSEC format) – go to History Essay screen
-      navigation.navigate('HistoryEssay' as never, { topic, subject } as never);
+      navigation.navigate('HistoryEssay' as never, { topic, subject, formLevel: selectedHistoryForm } as never);
     } else {
       // Start quiz modal with visual learning toggle
       openStartQuizModal(topic);
@@ -603,7 +617,10 @@ const TopicsScreen: React.FC = () => {
     if (subject.id === 'business_enterprise_skills') return ['#2E7D32', Colors.secondary.dark];
     if (subject.id === 'commerce') return ['#B8860B', Colors.secondary.dark];
     if (subject.id === 'history') return ['#5D4037', Colors.secondary.dark];
-    return Colors.gradients.primary;
+    const gradient = Colors.gradients?.primary;
+    return (Array.isArray(gradient) && gradient.length >= 2 && gradient.every(Boolean))
+      ? gradient as [string, string]
+      : ['#7C4DFF', '#3F1DCB'];
   };
 
   // Dynamic styles based on theme
@@ -687,6 +704,41 @@ const TopicsScreen: React.FC = () => {
       backgroundColor: themedColors.background.paper,
       borderColor: themedColors.border.light,
       borderWidth: 1,
+    },
+    historyFormSelectorContainer: {
+      marginBottom: 12,
+      backgroundColor: themedColors.background.paper,
+      borderColor: themedColors.border.light,
+      borderWidth: 1,
+      borderRadius: 12,
+      padding: 12,
+    },
+    historyFormSelectorLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: themedColors.text.secondary,
+      marginBottom: 8,
+    },
+    historyFormChip: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 18,
+      marginRight: 8,
+      borderWidth: 1,
+      borderColor: 'rgba(93, 64, 55, 0.3)',
+      backgroundColor: 'rgba(93, 64, 55, 0.06)',
+    },
+    historyFormChipActive: {
+      borderColor: '#5D4037',
+      backgroundColor: '#5D4037',
+    },
+    historyFormChipText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: '#5D4037',
+    },
+    historyFormChipTextActive: {
+      color: '#FFFFFF',
     },
     featureContent: {
       flexDirection: 'row',
@@ -960,7 +1012,7 @@ const TopicsScreen: React.FC = () => {
 
       {/* Professional Header */}
       <LinearGradient
-        colors={getHeaderGradient()}
+        colors={getHeaderGradient() ?? ['#7C4DFF', '#3F1DCB']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -1504,7 +1556,31 @@ const TopicsScreen: React.FC = () => {
           {/* History Features - Notes, Teacher Mode */}
           {subject.id === 'history' && !currentParentSubject && (
             <>
-              <Card variant="elevated" onPress={() => navigation.navigate('HistoryNotes' as never)} style={styles.featureCard}>
+              <View style={styles.historyFormSelectorContainer}>
+                <Text style={styles.historyFormSelectorLabel}>Select History Form</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {historyFormLevels.map((form) => {
+                    const isActive = form === selectedHistoryForm;
+                    return (
+                      <TouchableOpacity
+                        key={form}
+                        style={[styles.historyFormChip, isActive && styles.historyFormChipActive]}
+                        onPress={() => setSelectedHistoryForm(form)}
+                      >
+                        <Text style={[styles.historyFormChipText, isActive && styles.historyFormChipTextActive]}>
+                          {form}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+
+              <Card
+                variant="elevated"
+                onPress={() => navigation.navigate('HistoryNotes' as never, { formLevel: selectedHistoryForm } as never)}
+                style={styles.featureCard}
+              >
                 <View style={styles.featureContent}>
                   <IconCircle
                     icon={<Ionicons name="book-outline" size={28} color="#5D4037" />}
@@ -1513,7 +1589,7 @@ const TopicsScreen: React.FC = () => {
                   />
                   <View style={styles.featureInfo}>
                     <Text style={styles.featureTitle}>History Notes</Text>
-                    <Text style={styles.featureSubtitle}>Comprehensive ZIMSEC O-Level History notes</Text>
+                    <Text style={styles.featureSubtitle}>{selectedHistoryForm} history notes and summaries</Text>
                   </View>
                   {Icons.arrowRight(24, Colors.text.secondary)}
                 </View>
@@ -1625,8 +1701,8 @@ const TopicsScreen: React.FC = () => {
                   backgroundColor="rgba(255, 255, 255, 0.2)"
                 />
                 <View style={styles.examInfo}>
-                  <Text style={styles.examTitle}>Start {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : subject.id === 'accounting' ? 'Principles of Accounting' : subject.id === 'business_enterprise_skills' ? 'Business Enterprise and Skills' : subject.id === 'commerce' ? 'Commerce' : subject.id === 'history' ? 'History' : ''} Exam</Text>
-                  <Text style={styles.examSubtitle}>Mixed questions from all {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : subject.id === 'accounting' ? 'Principles of Accounting' : subject.id === 'business_enterprise_skills' ? 'Business Enterprise and Skills' : subject.id === 'commerce' ? 'Commerce' : subject.id === 'history' ? 'History' : ''} topics</Text>
+                  <Text style={styles.examTitle}>Start {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : subject.id === 'accounting' ? 'Principles of Accounting' : subject.id === 'business_enterprise_skills' ? 'Business Enterprise and Skills' : subject.id === 'commerce' ? 'Commerce' : subject.id === 'history' ? `${selectedHistoryForm} History` : ''} Exam</Text>
+                  <Text style={styles.examSubtitle}>Mixed questions from all {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : subject.id === 'accounting' ? 'Principles of Accounting' : subject.id === 'business_enterprise_skills' ? 'Business Enterprise and Skills' : subject.id === 'commerce' ? 'Commerce' : subject.id === 'history' ? `${selectedHistoryForm} History` : ''} topics</Text>
                 </View>
               </View>
             </Card>
@@ -1636,7 +1712,11 @@ const TopicsScreen: React.FC = () => {
         {/* Topics List */}
         <View style={styles.topicsContainer}>
           <Text style={styles.sectionTitle}>
-            {currentParentSubject ? 'Subtopics' : 'Topics'}
+            {currentParentSubject
+              ? 'Subtopics'
+              : subject.id === 'history'
+                ? `${selectedHistoryForm} Topics`
+                : 'Topics'}
           </Text>
 
           {loading ? (
@@ -1646,7 +1726,11 @@ const TopicsScreen: React.FC = () => {
           ) : (
             <>
               {topics.length === 0 && (
-                <Text style={styles.noTopicsText}>No topics available for {activeTab}</Text>
+                <Text style={styles.noTopicsText}>
+                  {subject.id === 'history'
+                    ? `No topics available for ${selectedHistoryForm} yet.`
+                    : `No topics available for ${activeTab}`}
+                </Text>
               )}
               {topics
                 .filter((topic) => {

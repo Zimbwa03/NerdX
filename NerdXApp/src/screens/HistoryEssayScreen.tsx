@@ -29,6 +29,7 @@ const HISTORY_COLOR = '#5D4037';
 type RouteParams = {
   topic: { id: string; name: string };
   subject: { id: string; name: string; color?: string };
+  formLevel?: 'Form 1' | 'Form 2' | 'Form 3' | 'Form 4';
 };
 
 const HistoryEssayScreen: React.FC = () => {
@@ -37,7 +38,7 @@ const HistoryEssayScreen: React.FC = () => {
   const { user, updateUser } = useAuth();
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
-  const { topic, subject } = (route.params ?? {}) as RouteParams;
+  const { topic, subject, formLevel = 'Form 1' } = (route.params ?? {}) as RouteParams;
 
   const [question, setQuestion] = useState<HistoryEssayQuestion | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -55,7 +56,7 @@ const HistoryEssayScreen: React.FC = () => {
       setGenerating(true);
       setError(null);
       try {
-        const res = await historyApi.generateQuestion(topic);
+        const res = await historyApi.generateQuestion(topic, 'medium', formLevel);
         if (cancelled) return;
         if (res.success && res.data) {
           setQuestion(res.data);
@@ -70,7 +71,7 @@ const HistoryEssayScreen: React.FC = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [topic, question, updateUser]);
+  }, [topic, question, updateUser, formLevel]);
 
   const handleSubmit = async () => {
     if (!question) return;
@@ -81,7 +82,7 @@ const HistoryEssayScreen: React.FC = () => {
         part_a: partA.trim(),
         part_b: partB.trim(),
         part_c: partC.trim(),
-      });
+      }, formLevel);
       if (res.success && res.data) {
         setResult(res.data);
         if (res.data.credits_remaining !== undefined) updateUser({ credits: res.data.credits_remaining });
@@ -96,7 +97,12 @@ const HistoryEssayScreen: React.FC = () => {
   };
 
   const handleNewQuestion = () => {
-    navigation.goBack();
+    setPartA('');
+    setPartB('');
+    setPartC('');
+    setResult(null);
+    setError(null);
+    setQuestion(null);
   };
 
   if (!topic) {
@@ -183,7 +189,7 @@ const HistoryEssayScreen: React.FC = () => {
             ) : null}
 
             <TouchableOpacity style={[styles.submitButton, { backgroundColor: HISTORY_COLOR }]} onPress={handleNewQuestion}>
-              <Text style={styles.submitButtonText}>Choose another topic</Text>
+              <Text style={styles.submitButtonText}>Next question from this topic</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -205,7 +211,7 @@ const HistoryEssayScreen: React.FC = () => {
           <Ionicons name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>History Essay</Text>
-        <Text style={styles.headerSubtitle}>Topic: {question.topic}</Text>
+        <Text style={styles.headerSubtitle}>{formLevel} • Topic: {question.topic}</Text>
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

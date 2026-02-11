@@ -4321,14 +4321,39 @@ def initiate_credit_purchase():
                  email=email
             )
 
-            # Mobile app expects instant Paynow flow; manual fallback would break polling/UX.
-            if payment_result.get('success') and payment_result.get('payment_type') != 'paynow':
-                return jsonify({
-                    'success': False,
-                    'message': 'Instant EcoCash payments are temporarily unavailable. Please try again later.'
-                }), 503
             # Reference is generated inside create_paynow_payment
             reference = payment_result.get('reference_code')
+
+            # Manual fallback: Paynow unavailable; create payment_transactions row so status API returns "pending"
+            if payment_result.get('success') and not payment_result.get('poll_url'):
+                from utils.credit_units import credits_to_units
+                manual_transaction = {
+                    'user_id': g.current_user_id,
+                    'reference_code': reference,
+                    'package_id': package_id,
+                    'amount': package['price'],
+                    'credits': int(credits_to_units(package['credits'])),
+                    'payment_method': 'paynow_ecocash',
+                    'status': 'pending',
+                    'phone_number': phone_number,
+                    'email': email,
+                    'created_at': datetime.utcnow().isoformat()
+                }
+                try:
+                    make_supabase_request('POST', 'payment_transactions', manual_transaction, use_service_role=True)
+                    logger.info(f"Manual fallback: created payment_transactions row for {reference}")
+                except Exception as e:
+                    logger.warning(f"Manual fallback: failed to create payment_transactions for {reference}: {e}")
+                # Return 200 with empty poll_url so app shows instructions and does not poll
+                response_data = {
+                    'reference': reference,
+                    'poll_url': '',
+                    'instructions': payment_result.get('message', 'Complete payment per instructions and wait for manual confirmation.'),
+                    'amount': package['price'],
+                    'credits': package['credits'],
+                    'payment_method': payment_method
+                }
+                return jsonify({'success': True, 'data': response_data}), 200
             
         else:
             # Visa/Mastercard web checkout (keep existing manual flow for now)
@@ -4415,43 +4440,28 @@ def initiate_credit_purchase():
 @mobile_bp.route('/payment/initiate', methods=['POST'])
 @require_auth
 def initiate_payment():
-    """Initiate payment"""
+    """Deprecated: Use POST /api/mobile/credits/purchase instead.
+    Validates package_id against PaymentService packages and returns a clear migration message."""
     try:
-        data = request.get_json()
+        from services.payment_service import PaymentService
+        data = request.get_json() or {}
         package_id = data.get('package_id')
-        payment_method = data.get('payment_method', 'paynow')
-        
-        # Similar to credit purchase
-        packages = {
-            '1': {'credits': 50, 'price': 1.0},
-            '2': {'credits': 120, 'price': 2.0},
-            '3': {'credits': 350, 'price': 5.0},
-            '4': {'credits': 750, 'price': 10.0}
-        }
-        
-        package = packages.get(package_id)
+        payment_service_instance = PaymentService()
+        packages = payment_service_instance.get_credit_packages()
+        packages_dict = {p['id']: p for p in packages}
+        package = packages_dict.get(package_id) if package_id else None
+        valid_ids = ', '.join(packages_dict.keys())
         if not package:
-            return jsonify({'success': False, 'message': 'Invalid package'}), 400
-        
-        paynow_service = PaynowService()
-        reference = f"MOBILE_{uuid.uuid4().hex[:8].upper()}"
-        
-        payment_result = paynow_service.initiate_payment(
-            user_id=g.current_user_id,
-            amount=package['price'],
-            credits=package['credits'],
-            reference=reference
-        )
-        
+            return jsonify({
+                'success': False,
+                'message': f'Invalid package. Use POST /api/mobile/credits/purchase with package_id one of: {valid_ids}. This endpoint is deprecated.'
+            }), 400
         return jsonify({
-            'success': True,
-            'data': {
-                'reference': reference,
-                'payment_url': payment_result.get('payment_url'),
-                'instructions': payment_result.get('instructions')
-            }
-        }), 200
-        
+            'success': False,
+            'message': 'This endpoint is deprecated. Use POST /api/mobile/credits/purchase with package_id, payment_method (ecocash or visa_mastercard), and for EcoCash: phone_number, email.',
+            'deprecated': True,
+            'valid_package_ids': list(packages_dict.keys())
+        }), 410
     except Exception as e:
         logger.error(f"Initiate payment error: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
@@ -5519,6 +5529,7 @@ def history_essay_generate():
     try:
         data = request.get_json() or {}
         topic = data.get('topic')  # id or name
+        form_level = data.get('form_level') or 'Form 1'
         difficulty = (data.get('difficulty') or 'medium').lower()
         credit_action = 'history_topical_essay'
         credit_cost = advanced_credit_service.get_credit_cost(credit_action, platform='mobile')
@@ -5529,7 +5540,7 @@ def history_essay_generate():
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}',
                 'credit_cost': _credits_display(credit_cost),
             }), 402
-        question = history_generate_question(topic, difficulty, g.current_user_id)
+        question = history_generate_question(topic, difficulty, g.current_user_id, form_level=form_level)
         if not question:
             return jsonify({'success': False, 'message': 'Failed to generate question'}), 500
         credits_remaining = _deduct_credits_or_fail(
@@ -5559,6 +5570,7 @@ def history_essay_submit():
         data = request.get_json() or {}
         question = data.get('question')
         answers = data.get('answers') or {}
+        form_level = data.get('form_level') or (question.get('form_level') if isinstance(question, dict) else None) or 'Form 1'
         if not question or not isinstance(answers, dict):
             return jsonify({'success': False, 'message': 'question and answers required'}), 400
         credit_action = 'history_essay_marking'
@@ -5569,7 +5581,7 @@ def history_essay_submit():
                 'success': False,
                 'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}',
             }), 402
-        result = mark_history_essay(question, answers, g.current_user_id)
+        result = mark_history_essay(question, answers, g.current_user_id, form_level=form_level)
         if not result.get('success'):
             return jsonify({'success': False, 'message': result.get('error', 'Marking failed')}), 500
         credits_remaining = _deduct_credits_or_fail(
@@ -5586,6 +5598,7 @@ def history_essay_submit():
         try:
             submission_data = {
                 'user_id': g.current_user_id,
+                'form_level': form_level,
                 'topic': question.get('topic', ''),
                 'question_snapshot': question,
                 'part_a_answer': (answers.get('part_a') or '').strip(),

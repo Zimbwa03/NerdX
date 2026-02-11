@@ -10,13 +10,19 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { Colors } from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
 import { Card } from '../components/Card';
-import { historyTopics, HistoryTopic } from '../data/history';
+import {
+  historyFormLevels,
+  getHistoryTopicsByForm,
+  type HistoryTopic,
+  type HistoryFormLevel,
+} from '../data/history';
 
 const historyColors = {
   primary: ['#4E342E', '#5D4037', '#6D4C41'],
@@ -25,9 +31,13 @@ const historyColors = {
 
 const HistoryNotesScreen: React.FC = () => {
   const navigation = useNavigation();
+  const route = useRoute();
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
+  const initialForm = ((route.params as any)?.formLevel as HistoryFormLevel) || 'Form 1';
+  const [selectedForm, setSelectedForm] = useState<HistoryFormLevel>(initialForm);
+  const filteredTopics = getHistoryTopicsByForm(selectedForm);
 
   const handleTopicPress = (topic: HistoryTopic) => {
     if (expandedTopic === topic.id) setExpandedTopic(null);
@@ -41,7 +51,7 @@ const HistoryNotesScreen: React.FC = () => {
       subject: 'History',
       isALevel: false,
       topicData: topic,
-      index: historyTopics.indexOf(topic),
+      index: filteredTopics.indexOf(topic),
     } as never);
   };
 
@@ -90,10 +100,27 @@ const HistoryNotesScreen: React.FC = () => {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.topicsContainer}>
           <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>Topics</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.formSelector}>
+            {historyFormLevels.map((form) => {
+              const active = form === selectedForm;
+              return (
+                <TouchableOpacity
+                  key={form}
+                  style={[styles.formChip, active && styles.formChipActive]}
+                  onPress={() => {
+                    setExpandedTopic(null);
+                    setSelectedForm(form);
+                  }}
+                >
+                  <Text style={[styles.formChipText, active && styles.formChipTextActive]}>{form}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
           <Text style={[styles.sectionSubtitle, { color: themedColors.text.secondary }]}>
-            Tap a topic to see description; open detailed notes where available
+            Tap a topic to see description and open detailed notes
           </Text>
-          {historyTopics.map((topic, index) => (
+          {filteredTopics.map((topic, index) => (
             <View key={topic.id}>
               <Card variant="elevated" onPress={() => handleTopicPress(topic)} style={styles.topicCard}>
                 <View style={styles.topicHeader}>
@@ -131,6 +158,11 @@ const HistoryNotesScreen: React.FC = () => {
               )}
             </View>
           ))}
+          {filteredTopics.length === 0 && (
+            <Text style={[styles.sectionSubtitle, { color: themedColors.text.secondary }]}>
+              No notes available for {selectedForm} yet.
+            </Text>
+          )}
         </View>
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -162,6 +194,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   topicsContainer: { padding: 20 },
+  formSelector: { marginBottom: 8 },
+  formChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(93, 64, 55, 0.25)',
+    marginRight: 8,
+    backgroundColor: 'rgba(93, 64, 55, 0.05)',
+  },
+  formChipActive: {
+    backgroundColor: '#5D4037',
+    borderColor: '#5D4037',
+  },
+  formChipText: { fontSize: 13, fontWeight: '600', color: '#5D4037' },
+  formChipTextActive: { color: '#FFFFFF' },
   sectionTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 4 },
   sectionSubtitle: { fontSize: 14, marginBottom: 16 },
   topicCard: { marginBottom: 8, borderColor: Colors.border.light, borderWidth: 1 },

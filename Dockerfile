@@ -11,7 +11,8 @@ COPY NerdXWeb ./NerdXWeb
 ARG VITE_API_BASE_URL=https://nerdx.onrender.com
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
-RUN cd NerdXWeb && npm run build
+RUN cd NerdXWeb && npm run build \
+    && test -f /web/NerdXWeb/dist/index.html || (echo "ERROR: NerdXWeb build failed - index.html not found" && exit 1)
 
 FROM python:3.11-slim
 
@@ -56,6 +57,7 @@ COPY . .
 
 # Copy NerdXWeb build output into the expected location for `routes.py`.
 COPY --from=web_build /web/NerdXWeb/dist /app/NerdXWeb/dist
+RUN test -f /app/NerdXWeb/dist/index.html || (echo "ERROR: NerdXWeb dist not copied correctly" && exit 1)
 
 # Create directories for media output
 RUN mkdir -p static/media temp

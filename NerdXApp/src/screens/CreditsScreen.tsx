@@ -249,6 +249,20 @@ const CreditsScreen: React.FC = () => {
 
   const handlePaymentInitiated = (result: any) => {
     setPaymentReference(result.reference);
+
+    // Manual fallback: no poll_url means payment is pending manual confirmation; do not poll
+    if (!result.poll_url) {
+      setCheckingPayment(false);
+      Alert.alert(
+        'Pending Manual Confirmation',
+        `${result.instructions || 'Complete payment per the instructions above.'}\n\nYour payment will be verified manually. Credits will be added once confirmed. You can refresh this screen to check your balance.`,
+        [{ text: 'OK' }]
+      );
+      setShowPaymentModal(false);
+      setPaymentReference(null);
+      return;
+    }
+
     setCheckingPayment(true);
 
     // Handle based on payment method
@@ -276,7 +290,7 @@ const CreditsScreen: React.FC = () => {
       );
     }
 
-    // Start polling for payment status
+    // Start polling for payment status only when we have a poll_url (instant Paynow flow)
     startPaymentPolling(result.reference);
   };
 
