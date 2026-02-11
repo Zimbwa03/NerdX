@@ -65,7 +65,7 @@ else:
     },
     {
         id: 'simple-calculator-python',
-        title: 'Simple Calculator',
+        title: 'Simple Calculator (Python)',
         description: 'Performs +, -, * or / on two numbers. Change a, b, op to test.',
         language: 'python',
         code: `# Very simple calculator (no input required)
@@ -90,6 +90,65 @@ elif op == "/":
         print("Cannot divide by zero")
 else:
     print("Unknown operation")
+`,
+    },
+    {
+        id: 'hello-world-vbnet',
+        title: 'Hello World (VB.NET)',
+        description: 'Basic console output in VB.NET',
+        language: 'vbnet',
+        code: `Module Module1
+    Sub Main()
+        Console.WriteLine("Hello, World!")
+        Console.WriteLine("This is VB.NET running in the browser!")
+    End Sub
+End Module
+`,
+    },
+    {
+        id: 'vars-vbnet',
+        title: 'Variables (VB.NET)',
+        description: 'Working with variables and math in VB.NET',
+        language: 'vbnet',
+        code: `Module Module1
+    Sub Main()
+        Dim a As Integer = 10
+        Dim b As Integer = 20
+        Dim sum As Integer = a + b
+        
+        Console.WriteLine("A = " & a)
+        Console.WriteLine("B = " & b)
+        Console.WriteLine("Sum = " & sum)
+    End Sub
+End Module
+`,
+    },
+    {
+        id: 'hello-world-java',
+        title: 'Hello World (Java)',
+        description: 'Basic class structure in Java',
+        language: 'java',
+        code: `public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+        System.out.println("Java is ready to run.");
+    }
+}
+`,
+    },
+    {
+        id: 'loops-java',
+        title: 'Loops (Java)',
+        description: 'For loop example in Java',
+        language: 'java',
+        code: `public class Main {
+    public static void main(String[] args) {
+        System.out.println("Counting to 5:");
+        for(int i = 1; i <= 5; i++) {
+            System.out.println("Count: " + i);
+        }
+    }
+}
 `,
     },
 ];

@@ -11,7 +11,7 @@ import {
   formatCreditCost,
   getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
-import { ArrowLeft, TrendingUp, Camera, MessageCircle, BookOpen, Calculator, FileText, Play } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Camera, MessageCircle, BookOpen, Calculator, FileText, Play, Atom } from 'lucide-react';
 import './Mathematics.css'; // Import the new premium styles
 
 const MATH_TOPICS_FALLBACK: Topic[] = [
@@ -225,6 +225,22 @@ export function MathematicsTopicsPage() {
               <span className="online-badge">ONLINE</span>
             </div>
             <p className="feature-desc">Snap a photo of any math problem. Our AI solves it instantly with working.</p>
+          </div>
+
+          {/* Virtual Lab */}
+          <div
+            className="glass-card"
+            role="button"
+            onClick={() => navigate('/app/virtual-lab?subject=mathematics')}
+          >
+            <div className="feature-icon-wrapper" style={{ color: '#2979FF', borderColor: 'rgba(41, 121, 255, 0.3)' }}>
+              <Atom size={32} />
+            </div>
+            <div className="feature-badge-row" style={{ marginBottom: 8 }}>
+              <h3 className="feature-title" style={{ margin: 0 }}>Virtual Lab</h3>
+              <span className="online-badge" style={{ background: 'rgba(41, 121, 255, 0.2)', color: '#2979FF', border: '1px solid rgba(41, 121, 255, 0.3)' }}>CALCULUS &amp; ALGEBRA</span>
+            </div>
+            <p className="feature-desc">Interactive simulations for calculus, graphs, probability, and vectors.</p>
           </div>
 
           {/* Exam Mode - Featured */}

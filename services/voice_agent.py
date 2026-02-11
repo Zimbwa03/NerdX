@@ -1331,7 +1331,7 @@ class TransparentGeminiPipe:
         logger.info("👋 Session closed")
 
 
-@app.get("/")
+@app.get("/voice-agent-info")
 async def root():
     """Health check"""
     return {

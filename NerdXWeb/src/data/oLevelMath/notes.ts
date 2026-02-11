@@ -17,6 +17,8 @@ export const oLevelMathNotes: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Factors and Multiples',
+                videoUrl: 'https://www.youtube.com/embed/Z5tL5NW687I', // Sample Math Video
+                audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', // Sample Audio
                 content: "## Definitions\n\n**Factor**: A whole number that divides exactly into another number with no remainder.\n\n**Multiple**: A number obtained by multiplying a given number by a whole number.\n\n## Finding Factors\n\nTo find all factors of a number:\n1. Start from 1 and the number itself\n2. Check each number in between\n3. Factors come in pairs\n\n## Key Facts\n\n- Every number has 1 and itself as factors\n- The smallest factor of any number is 1\n- The largest factor of a number is the number itself",
                 worked_examples: [
                     {

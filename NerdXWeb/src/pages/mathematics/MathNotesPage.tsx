@@ -94,6 +94,29 @@ export function MathNotesPage() {
             </button>
             {expanded.has(i) && (
               <div className="math-notes-card-body">
+                {/* Media Players */}
+                {section.videoUrl && (
+                  <div className="math-notes-video-container">
+                    <iframe
+                      src={section.videoUrl}
+                      title={`Video for ${section.title}`}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="math-notes-video-frame"
+                    />
+                  </div>
+                )}
+                {section.audioUrl && (
+                  <div className="math-notes-audio-container">
+                    <p className="math-notes-audio-label">🎧 Audio Lesson:</p>
+                    <audio controls className="math-notes-audio-player">
+                      <source src={section.audioUrl} type="audio/mpeg" />
+                      Your browser does not support the audio element.
+                    </audio>
+                  </div>
+                )}
+
                 <MathRenderer content={section.content} fontSize={16} />
                 {section.worked_examples?.map((ex, k) => (
                   <div key={k} className="math-notes-example-box">
@@ -157,6 +180,6 @@ export function MathNotesPage() {
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 }

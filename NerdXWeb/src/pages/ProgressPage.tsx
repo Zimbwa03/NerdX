@@ -1,374 +1,538 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { BarChart3, RefreshCw, Target, Flame, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { dktApi, getMasteryColor, getMasteryLabel, type AIInsights, type DailyReviewResponse, type KnowledgeMap } from '../services/api/dktApi';
-import { loadLearningProfile } from '../utils/learningProfile';
+// Enhanced Student Progress Dashboard
+// Gamified progress page with interactive SVG graphs, level system, streaks, achievements
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { dktApi, type KnowledgeMap, type AIInsights } from '../services/api/dktApi';
+import {
+  gamificationService,
+  type LevelInfo,
+  type OverallStats,
+  type Badge,
+  type DailyActivity,
+  type SubjectMasteryData,
+} from '../services/gamificationService';
 
-type InsightsCache = {
-  savedAt: string;
-  data: AIInsights;
-};
+// ============= SVG COMPONENTS =============
 
-const INSIGHTS_CACHE_KEY = 'nerdx_ai_insights_cache_v1';
-const INSIGHTS_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+function LevelRingSVG({ level, currentXP, xpForNextLevel, rank, rankIcon }: LevelInfo) {
+  const radius = 70;
+  const stroke = 10;
+  const normalizedRadius = radius - stroke;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const progress = xpForNextLevel > 0 ? Math.min(currentXP / xpForNextLevel, 1) : 0;
+  const strokeDashoffset = circumference - progress * circumference;
 
-function loadCachedInsights(): AIInsights | null {
-  try {
-    const raw = localStorage.getItem(INSIGHTS_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<InsightsCache>;
-    if (!parsed.savedAt || !parsed.data) return null;
-    const savedAtMs = Date.parse(parsed.savedAt);
-    if (!Number.isFinite(savedAtMs)) return null;
-    if (Date.now() - savedAtMs > INSIGHTS_CACHE_TTL_MS) return null;
-    return parsed.data as AIInsights;
-  } catch {
-    return null;
-  }
+  return (
+    <div className="progress-level-ring">
+      <svg height={radius * 2} width={radius * 2} viewBox={`0 0 ${radius * 2} ${radius * 2}`}>
+        <circle stroke="rgba(255,255,255,0.15)" fill="transparent" strokeWidth={stroke}
+          r={normalizedRadius} cx={radius} cy={radius} />
+        <circle className="level-ring-progress" stroke="url(#xpGradient)" fill="transparent"
+          strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${circumference} ${circumference}`}
+          style={{ strokeDashoffset }} r={normalizedRadius} cx={radius} cy={radius}
+          transform={`rotate(-90 ${radius} ${radius})`} />
+        <defs>
+          <linearGradient id="xpGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#60A5FA" />
+            <stop offset="100%" stopColor="#A78BFA" />
+          </linearGradient>
+        </defs>
+        <text x={radius} y={radius - 10} textAnchor="middle" className="level-ring-number"
+          fill="white" fontSize="32" fontWeight="bold">{level}</text>
+        <text x={radius} y={radius + 14} textAnchor="middle" fill="rgba(255,255,255,0.85)"
+          fontSize="11" fontWeight="500">LEVEL</text>
+      </svg>
+      <div className="level-ring-info">
+        <span className="rank-icon">{rankIcon}</span>
+        <span className="rank-name">{rank}</span>
+      </div>
+    </div>
+  );
 }
 
-function saveCachedInsights(data: AIInsights) {
-  try {
-    const payload: InsightsCache = { savedAt: new Date().toISOString(), data };
-    localStorage.setItem(INSIGHTS_CACHE_KEY, JSON.stringify(payload));
-  } catch {
-    /* ignore */
-  }
+function WeeklyActivityChart({ data }: { data: DailyActivity[] }) {
+  const maxVal = Math.max(...data.map(d => d.questionsAnswered), 5);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const barWidth = 36;
+  const gap = 12;
+  const chartHeight = 160;
+  const chartWidth = data.length * (barWidth + gap);
+  const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  return (
+    <div className="weekly-chart-container">
+      <svg width="100%" viewBox={`0 0 ${chartWidth + 20} ${chartHeight + 40}`} preserveAspectRatio="xMidYMid meet">
+        {data.map((d, i) => {
+          const barH = maxVal > 0 ? (d.questionsAnswered / maxVal) * chartHeight : 0;
+          const x = 10 + i * (barWidth + gap);
+          const y = chartHeight - barH;
+          const accuracy = d.questionsAnswered > 0 ? Math.round((d.correctAnswers / d.questionsAnswered) * 100) : 0;
+          const fill = d.questionsAnswered === 0 ? 'rgba(148,163,184,0.25)' :
+            accuracy >= 70 ? 'url(#barGreen)' : 'url(#barAmber)';
+          return (
+            <g key={i} onMouseEnter={() => setHoveredIdx(i)} onMouseLeave={() => setHoveredIdx(null)}
+              style={{ cursor: 'pointer' }}>
+              <rect x={x} y={y} width={barWidth} height={Math.max(barH, 3)} rx={6} fill={fill}
+                className="weekly-bar" style={{ animationDelay: `${i * 80}ms` }} />
+              <text x={x + barWidth / 2} y={chartHeight + 18} textAnchor="middle"
+                fill="var(--text-secondary, #94A3B8)" fontSize="11" fontWeight="500">
+                {dayLabels[i] || ''}
+              </text>
+              {hoveredIdx === i && (
+                <g>
+                  <rect x={x - 20} y={Math.max(y - 46, 0)} width={barWidth + 40} height={40} rx={8}
+                    fill="var(--card-bg, #1E293B)" stroke="var(--border-color, #334155)" />
+                  <text x={x + barWidth / 2} y={Math.max(y - 28, 14)} textAnchor="middle"
+                    fill="var(--text-primary, #F1F5F9)" fontSize="11" fontWeight="bold">
+                    {d.questionsAnswered} Q&apos;s
+                  </text>
+                  <text x={x + barWidth / 2} y={Math.max(y - 12, 30)} textAnchor="middle"
+                    fill={accuracy >= 70 ? '#22C55E' : '#F59E0B'} fontSize="10">
+                    {accuracy}% acc
+                  </text>
+                </g>
+              )}
+            </g>
+          );
+        })}
+        <defs>
+          <linearGradient id="barGreen" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#22C55E" />
+            <stop offset="100%" stopColor="#16A34A" />
+          </linearGradient>
+          <linearGradient id="barAmber" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#F59E0B" />
+            <stop offset="100%" stopColor="#D97706" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+  );
 }
 
-function dktSubjectToTeacherSubject(subject: string): string {
-  const s = (subject || '').toLowerCase();
-  if (s.includes('math')) return 'O Level Mathematics';
-  if (s.includes('bio')) return 'Biology';
-  if (s.includes('chem')) return 'Chemistry';
-  if (s.includes('phys')) return 'Physics';
-  if (s.includes('eng')) return 'English';
-  if (s.includes('computer')) return 'Computer Science';
-  if (s.includes('geo')) return 'Geography';
-  if (s.includes('history')) return 'History';
-  if (s.includes('commerce')) return 'Commerce';
-  return subject || 'O Level Mathematics';
+function DonutChart({ mastery, color, icon, displayName }: SubjectMasteryData) {
+  const r = 32;
+  const stroke = 7;
+  const nr = r - stroke;
+  const circ = nr * 2 * Math.PI;
+  const offset = circ - (mastery / 100) * circ;
+
+  return (
+    <div className="donut-chart-card">
+      <svg height={r * 2} width={r * 2} viewBox={`0 0 ${r * 2} ${r * 2}`}>
+        <circle stroke="rgba(148,163,184,0.15)" fill="transparent" strokeWidth={stroke} r={nr} cx={r} cy={r} />
+        <circle stroke={color} fill="transparent" strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={`${circ} ${circ}`} style={{ strokeDashoffset: offset }}
+          r={nr} cx={r} cy={r} transform={`rotate(-90 ${r} ${r})`}
+          className="donut-ring-progress" />
+        <text x={r} y={r + 4} textAnchor="middle" fill="var(--text-primary, white)"
+          fontSize="13" fontWeight="bold">{mastery}%</text>
+      </svg>
+      <div className="donut-label">
+        <span className="donut-icon">{icon}</span>
+        <span className="donut-name">{displayName}</span>
+      </div>
+    </div>
+  );
 }
+
+function StreakCalendar({ history, streak }: { history: boolean[]; streak: number }) {
+  return (
+    <div className="streak-calendar-section">
+      <div className="streak-header">
+        <span className="streak-fire">🔥</span>
+        <span className="streak-num">{streak}</span>
+        <span className="streak-label">day streak</span>
+      </div>
+      <div className="streak-grid">
+        {history.map((active, i) => (
+          <div key={i} className={`streak-day ${active ? 'streak-active' : ''}`}
+            title={`${30 - i} days ago`} />
+        ))}
+      </div>
+      <div className="streak-legend">
+        <span>30 days ago</span>
+        <span>Today</span>
+      </div>
+    </div>
+  );
+}
+
+function BadgeCard({ badge }: { badge: Badge }) {
+  const rarityColors: Record<string, string> = {
+    common: '#94A3B8', rare: '#3B82F6', epic: '#A855F7', legendary: '#F59E0B',
+  };
+  return (
+    <div className={`badge-card ${badge.isUnlocked ? 'unlocked' : 'locked'}`}
+      style={{ borderColor: badge.isUnlocked ? rarityColors[badge.rarity] : undefined }}>
+      <span className="badge-icon">{badge.icon}</span>
+      <span className="badge-name">{badge.name}</span>
+      <span className="badge-desc">{badge.description}</span>
+      <span className="badge-rarity" style={{ color: rarityColors[badge.rarity] }}>
+        {badge.rarity.charAt(0).toUpperCase() + badge.rarity.slice(1)}
+      </span>
+    </div>
+  );
+}
+
+function HealthGauge({ score }: { score: number }) {
+  const r = 50;
+  const stroke = 8;
+  const nr = r - stroke;
+  const halfCirc = nr * Math.PI;
+  const offset = halfCirc - (score / 100) * halfCirc;
+  const gaugeColor = score >= 70 ? '#22C55E' : score >= 40 ? '#F59E0B' : '#EF4444';
+
+  return (
+    <svg height={r + 10} width={r * 2} viewBox={`0 0 ${r * 2} ${r + 10}`}>
+      <path d={`M ${stroke} ${r} A ${nr} ${nr} 0 0 1 ${r * 2 - stroke} ${r}`}
+        fill="transparent" stroke="rgba(148,163,184,0.2)" strokeWidth={stroke} strokeLinecap="round" />
+      <path d={`M ${stroke} ${r} A ${nr} ${nr} 0 0 1 ${r * 2 - stroke} ${r}`}
+        fill="transparent" stroke={gaugeColor} strokeWidth={stroke} strokeLinecap="round"
+        strokeDasharray={`${halfCirc} ${halfCirc}`} style={{ strokeDashoffset: offset }}
+        className="gauge-progress" />
+      <text x={r} y={r - 4} textAnchor="middle" fill="var(--text-primary, white)"
+        fontSize="22" fontWeight="bold">{score}</text>
+      <text x={r} y={r + 10} textAnchor="middle" fill="var(--text-secondary, #94A3B8)"
+        fontSize="9">HEALTH SCORE</text>
+    </svg>
+  );
+}
+
+// ============= MAIN PAGE =============
 
 export function ProgressPage() {
   const navigate = useNavigate();
-  const profile = useMemo(() => loadLearningProfile(), []);
+  const { user } = useAuth();
 
-  const [insights, setInsights] = useState<AIInsights | null>(() => loadCachedInsights());
-  const [insightsLoading, setInsightsLoading] = useState(insights == null);
-  const [insightsError, setInsightsError] = useState<string | null>(null);
-  const [dailyReview, setDailyReview] = useState<DailyReviewResponse>({ count: 0, reviews: [] });
-  const [dailyReviewLoading, setDailyReviewLoading] = useState(true);
+  const [levelInfo, setLevelInfo] = useState<LevelInfo | null>(null);
+  const [overallStats, setOverallStats] = useState<OverallStats | null>(null);
+  const [badges, setBadges] = useState<Badge[]>([]);
+  const [weeklyActivity, setWeeklyActivity] = useState<DailyActivity[]>([]);
+  const [streakHistory, setStreakHistory] = useState<boolean[]>(Array(30).fill(false));
+  const [subjectMastery, setSubjectMastery] = useState<SubjectMasteryData[]>([]);
+  const [aiInsights, setAiInsights] = useState<AIInsights | null>(null);
   const [knowledgeMap, setKnowledgeMap] = useState<KnowledgeMap | null>(null);
-  const [knowledgeMapLoading, setKnowledgeMapLoading] = useState(true);
-  const [showAllSkills, setShowAllSkills] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showAllBadges, setShowAllBadges] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
-  const refreshInsights = async (force = false) => {
-    if (!force) {
-      const cached = loadCachedInsights();
-      if (cached) {
-        setInsights(cached);
-        setInsightsLoading(false);
-        setInsightsError(null);
-        return;
+  const loadAllData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Sync with backend first
+      const progress = await gamificationService.syncWithBackend();
+
+      // Load gamification data
+      setLevelInfo(gamificationService.getLevelInfo(progress));
+      setOverallStats(gamificationService.getOverallStats(progress));
+      setBadges(gamificationService.getAllBadges(progress));
+      setWeeklyActivity(gamificationService.getWeeklyActivity(progress));
+      setStreakHistory(gamificationService.getStreakHistory(progress));
+      setSubjectMastery(gamificationService.getDefaultSubjectData());
+
+      // Load API data
+      const [insightsData, kmData] = await Promise.all([
+        dktApi.getAIInsights().catch(() => null),
+        dktApi.getKnowledgeMap().catch(() => null),
+      ]);
+
+      setAiInsights(insightsData);
+      setKnowledgeMap(kmData);
+
+      // Update subject mastery from knowledge map if available
+      if (kmData?.skills) {
+        const subjects = gamificationService.getDefaultSubjectData();
+        const skillsBySubject = new Map<string, { mastered: number; total: number }>();
+
+        kmData.skills.forEach(skill => {
+          const subj = (skill.subject || 'mathematics').toLowerCase();
+          const entry = skillsBySubject.get(subj) || { mastered: 0, total: 0 };
+          entry.total++;
+          if (skill.mastery_level >= 0.7) entry.mastered++;
+          skillsBySubject.set(subj, entry);
+        });
+
+        const updated = subjects.map(s => {
+          const data = skillsBySubject.get(s.subject);
+          if (data && data.total > 0) {
+            return {
+              ...s,
+              mastery: Math.round((data.mastered / data.total) * 100),
+              skillsCount: data.total,
+              masteredSkills: data.mastered,
+            };
+          }
+          return s;
+        });
+        setSubjectMastery(updated);
       }
+    } catch (err) {
+      console.error('Failed to load progress data:', err);
+    } finally {
+      setIsLoading(false);
     }
-
-    setInsightsLoading(true);
-    setInsightsError(null);
-    const data = await dktApi.getAIInsights();
-    if (!data) {
-      setInsightsLoading(false);
-      setInsightsError('Failed to load insights. Try again.');
-      return;
-    }
-    setInsights(data);
-    saveCachedInsights(data);
-    setInsightsLoading(false);
-  };
-
-  const loadDailyReview = async () => {
-    setDailyReviewLoading(true);
-    const res = await dktApi.getDailyReview();
-    setDailyReview(res);
-    setDailyReviewLoading(false);
-  };
-
-  const loadKnowledgeMap = async () => {
-    setKnowledgeMapLoading(true);
-    const map = await dktApi.getKnowledgeMap();
-    setKnowledgeMap(map);
-    setKnowledgeMapLoading(false);
-  };
-
-  useEffect(() => {
-    void refreshInsights(false);
-    void loadDailyReview();
-    void loadKnowledgeMap();
   }, []);
 
-  const practice = (subject: string, topic?: string, skillName?: string) => {
-    const teacherSubject = dktSubjectToTeacherSubject(subject);
-    const preface = topic ? `Teach me ${topic}.` : `Teach me ${skillName || 'this topic'}.`;
-    const initialMessage = `${preface} Explain briefly, then give 5 exam-style questions. Mark my answers and correct my mistakes.`;
+  useEffect(() => { loadAllData(); }, [loadAllData]);
 
-    navigate('/app/teacher/chat', {
-      state: {
-        subject: teacherSubject,
-        gradeLevel: profile.gradeLevel,
-        topic: topic || undefined,
-        initialMessage,
-      },
-    });
-  };
+  // Derived values
+  const healthScore = useMemo(() => {
+    if (!aiInsights) return 0;
+    const { mastered_skills = 0, learning_skills = 0, struggling_skills = 0 } = aiInsights;
+    const total = mastered_skills + learning_skills + struggling_skills;
+    return total > 0 ? Math.round(((mastered_skills + learning_skills * 0.5) / total) * 100) : 50;
+  }, [aiInsights]);
 
-  const sortedSkills = useMemo(() => {
-    const skills = knowledgeMap?.skills ?? [];
-    return [...skills].sort((a, b) => (a.mastery ?? 0) - (b.mastery ?? 0));
-  }, [knowledgeMap?.skills]);
+  const unlockedBadges = useMemo(() => badges.filter(b => b.isUnlocked), [badges]);
+  const lockedBadges = useMemo(() => badges.filter(b => !b.isUnlocked), [badges]);
+  const displayBadges = showAllBadges ? badges : [...unlockedBadges.slice(0, 6), ...lockedBadges.slice(0, 4)];
 
-  const visibleSkills = showAllSkills ? sortedSkills : sortedSkills.slice(0, 18);
+  const kmSkills = useMemo(() => {
+    if (!knowledgeMap?.skills) return { mastered: 0, learning: 0, needsWork: 0, all: [] as KnowledgeMap['skills'] };
+    const mastered = knowledgeMap.skills.filter(s => s.mastery_level >= 0.7).length;
+    const learning = knowledgeMap.skills.filter(s => s.mastery_level >= 0.3 && s.mastery_level < 0.7).length;
+    const needsWork = knowledgeMap.skills.filter(s => s.mastery_level < 0.3).length;
+    return { mastered, learning, needsWork, all: knowledgeMap.skills };
+  }, [knowledgeMap]);
 
-  const trendMax = useMemo(() => {
-    const breakdown = insights?.weekly_trend?.daily_breakdown ?? [];
-    return Math.max(1, ...breakdown.map((d) => d.count || 0));
-  }, [insights?.weekly_trend?.daily_breakdown]);
+  if (isLoading) {
+    return (
+      <div className="progress-dashboard loading-state">
+        <div className="loading-spinner">
+          <div className="spinner" />
+          <p>Loading your progress...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="progress-page insights-page">
-      <Link to="/app" className="back-link">
-        <span>←</span> Back to Dashboard
-      </Link>
-
-      <div className="progress-card glass-card insights-card">
-        <div className="progress-header insights-hero-header">
-          <BarChart3 size={48} className="progress-icon" />
-          <h1>AI Insights</h1>
-          <p className="progress-message">
-            Personalized guidance from your learning history. Grade level: <strong>{profile.gradeLevel}</strong>
-          </p>
-        </div>
-
-        <div className="insights-hero-actions">
-          <button
-            type="button"
-            className="insights-refresh-btn"
-            onClick={() => refreshInsights(true)}
-            disabled={insightsLoading}
-            title="Refresh insights"
-          >
-            <RefreshCw size={16} /> Refresh
-          </button>
-        </div>
-
-        <div className="insights-metrics">
-          <div className="insights-metric">
-            <span className="insights-metric-label">Health</span>
-            <span className="insights-metric-value">{insights ? `${insights.health_score}/100` : '—'}</span>
-          </div>
-          <div className="insights-metric">
-            <span className="insights-metric-label">Mastered</span>
-            <span className="insights-metric-value">{insights ? insights.mastered_count : '—'}</span>
-          </div>
-          <div className="insights-metric">
-            <span className="insights-metric-label">Learning</span>
-            <span className="insights-metric-value">{insights ? insights.learning_count : '—'}</span>
-          </div>
-          <div className="insights-metric">
-            <span className="insights-metric-label">Needs work</span>
-            <span className="insights-metric-value">{insights ? insights.struggling_count : '—'}</span>
-          </div>
-        </div>
-
-        {insightsError && <div className="insights-error">{insightsError}</div>}
-
-        {insightsLoading ? (
-          <div className="insights-loading">Loading insights…</div>
-        ) : (
-          insights?.personalized_message && (
-            <div className="insights-message">
-              <Flame size={18} />
-              <span>{insights.personalized_message}</span>
+    <div className="progress-dashboard">
+      {/* === Hero Section === */}
+      <section className="progress-hero">
+        <div className="hero-gradient" />
+        <div className="hero-content">
+          {levelInfo && <LevelRingSVG {...levelInfo} />}
+          <div className="hero-xp-info">
+            <div className="xp-bar-track">
+              <div className="xp-bar-fill"
+                style={{ width: `${levelInfo ? (levelInfo.currentXP / levelInfo.xpForNextLevel) * 100 : 0}%` }} />
             </div>
-          )
-        )}
-      </div>
-
-      <div className="insights-grid">
-        <section className="glass-card insights-card insights-section">
-          <div className="insights-section-head">
-            <h2>Today’s Plan</h2>
-            <span className="insights-section-meta">~{profile.dailyMinutes} min</span>
+            <p className="xp-text">
+              {levelInfo?.currentXP ?? 0} / {levelInfo?.xpForNextLevel ?? 100} XP to Level {(levelInfo?.level ?? 0) + 1}
+            </p>
+            <p className="hero-greeting">Keep going, {user?.name || 'Student'}! 🚀</p>
           </div>
+        </div>
+      </section>
 
-          {!insights?.study_plan?.length ? (
-            <p className="insights-empty">Practice a few questions to generate a plan.</p>
-          ) : (
-            <div className="insights-plan-list">
-              {insights.study_plan.map((item, idx) => (
-                <div key={`${item.action}-${idx}`} className={`insights-plan-item priority-${item.priority}`}>
-                  <div className="insights-plan-title">
-                    <Target size={16} />
-                    <span>{item.action}</span>
-                  </div>
-                  <div className="insights-plan-desc">{item.description}</div>
-                  <div className="insights-plan-meta">{item.estimated_time}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+      {/* === Quick Stats Grid === */}
+      <section className="stats-grid">
+        <div className="stat-card stat-streak">
+          <span className="stat-icon">🔥</span>
+          <span className="stat-value">{overallStats?.streak ?? 0}</span>
+          <span className="stat-label">Day Streak</span>
+        </div>
+        <div className="stat-card stat-accuracy">
+          <span className="stat-icon">📊</span>
+          <span className="stat-value">{overallStats?.accuracy ?? 0}%</span>
+          <span className="stat-label">Accuracy</span>
+        </div>
+        <div className="stat-card stat-questions">
+          <span className="stat-icon">❓</span>
+          <span className="stat-value">{overallStats?.totalQuestions ?? 0}</span>
+          <span className="stat-label">Questions</span>
+        </div>
+        <div className="stat-card stat-xp">
+          <span className="stat-icon">💎</span>
+          <span className="stat-value">{overallStats?.totalXP ?? 0}</span>
+          <span className="stat-label">Total XP</span>
+        </div>
+      </section>
 
-        <section className="glass-card insights-card insights-section">
-          <div className="insights-section-head">
-            <h2>Daily Review</h2>
-            <span className="insights-section-meta">{dailyReview.count} due</span>
+      {/* === AI Insights Card === */}
+      <section className="insights-summary glass-card">
+        <div className="insights-header-row">
+          <div>
+            <h3>🧠 AI Learning Insights</h3>
+            {aiInsights?.personalized_message && (
+              <p className="insights-message">{aiInsights.personalized_message}</p>
+            )}
           </div>
-
-          {dailyReviewLoading ? (
-            <div className="insights-loading">Loading review queue…</div>
-          ) : dailyReview.reviews.length === 0 ? (
-            <p className="insights-empty">Nothing due today. Great work.</p>
-          ) : (
-            <div className="insights-review-list">
-              {dailyReview.reviews.slice(0, 8).map((r) => (
-                <div key={r.skill_id} className="insights-review-item">
-                  <div className="insights-review-text">
-                    <div className="insights-review-skill">{r.skill_name}</div>
-                    <div className="insights-review-meta">
-                      {r.subject} • {r.topic}
+          <HealthGauge score={healthScore} />
+        </div>
+        <div className="insights-counts">
+          <div className="insights-count green">
+            <span className="cnt-num">{aiInsights?.mastered_skills ?? 0}</span>
+            <span className="cnt-label">Mastered</span>
+          </div>
+          <div className="insights-count amber">
+            <span className="cnt-num">{aiInsights?.learning_skills ?? 0}</span>
+            <span className="cnt-label">Learning</span>
+          </div>
+          <div className="insights-count red">
+            <span className="cnt-num">{aiInsights?.struggling_skills ?? 0}</span>
+            <span className="cnt-label">Needs Work</span>
+          </div>
+        </div>
+        {aiInsights?.study_plan && aiInsights.study_plan.length > 0 && (
+          <div className="insights-expand">
+            <button className="expand-btn" onClick={() => setShowDetails(!showDetails)}>
+              {showDetails ? 'Hide Study Plan ▲' : 'View Study Plan ▼'}
+            </button>
+            {showDetails && (
+              <div className="study-plan-list">
+                {aiInsights.study_plan.map((item, i) => (
+                  <div key={i} className={`study-plan-item priority-${item.priority || 'medium'}`}>
+                    <span className="plan-priority">{item.priority === 'high' ? '🔴' : item.priority === 'low' ? '🟢' : '🟡'}</span>
+                    <div className="plan-content">
+                      <span className="plan-action">{item.action || item.topic}</span>
+                      {item.topic && item.action && <span className="plan-topic">{item.topic}</span>}
                     </div>
                   </div>
-                  <button type="button" className="insights-action-btn" onClick={() => practice(r.subject, r.topic, r.skill_name)}>
-                    Review
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </section>
 
-          <button type="button" className="insights-secondary-btn" onClick={() => loadDailyReview()} disabled={dailyReviewLoading}>
-            Reload daily review
-          </button>
-        </section>
-      </div>
+      {/* === Weekly Activity Chart === */}
+      <section className="glass-card section-card">
+        <h3>📈 Weekly Activity</h3>
+        <p className="section-subtitle">Questions answered this week</p>
+        <WeeklyActivityChart data={weeklyActivity} />
+      </section>
 
-      <section className="glass-card insights-card insights-section">
-        <div className="insights-section-head">
-          <h2>Focus Areas</h2>
-          <span className="insights-section-meta">Practice these to level up</span>
+      {/* === Subject Mastery === */}
+      <section className="glass-card section-card">
+        <h3>📚 Subject Mastery</h3>
+        <p className="section-subtitle">Your progress across subjects</p>
+        <div className="mastery-grid">
+          {subjectMastery.map(s => (
+            <DonutChart key={s.subject} {...s} />
+          ))}
         </div>
+      </section>
 
-        {!insights?.focus_areas?.length ? (
-          <p className="insights-empty">No focus areas yet. Keep practicing to unlock personalized focus.</p>
-        ) : (
-          <div className="insights-skill-list">
-            {insights.focus_areas.map((s, idx) => (
-              <div key={`${s.skill_name}-${idx}`} className="insights-skill-row">
-                <div className="insights-skill-main">
-                  <div className="insights-skill-top">
-                    <span className="insights-skill-name">{s.skill_name}</span>
-                    <span className="insights-skill-badge" style={{ color: getMasteryColor(s.mastery), borderColor: `${getMasteryColor(s.mastery)}55` }}>
-                      {getMasteryLabel(s.mastery)} • {Math.round(s.mastery * 100)}%
-                    </span>
-                  </div>
-                  <div className="insights-skill-meta">{s.subject} • {s.topic}</div>
-                  <div className="insights-bar">
-                    <div className="insights-bar-fill" style={{ width: `${Math.round(s.mastery * 100)}%`, backgroundColor: getMasteryColor(s.mastery) }} />
-                  </div>
+      {/* === Streak Calendar === */}
+      <section className="glass-card section-card">
+        <h3>📅 Consistency Tracker</h3>
+        <StreakCalendar history={streakHistory} streak={overallStats?.streak ?? 0} />
+      </section>
+
+      {/* === Focus Areas === */}
+      {aiInsights?.focus_areas && aiInsights.focus_areas.length > 0 && (
+        <section className="glass-card section-card">
+          <h3>🎯 Focus Areas</h3>
+          <p className="section-subtitle">Skills that need your attention</p>
+          <div className="focus-areas-list">
+            {aiInsights.focus_areas.map((area, i) => (
+              <div key={i} className="focus-area-item">
+                <div className="focus-info">
+                  <span className="focus-name">{area.skill || area.topic}</span>
+                  <span className="focus-level">{area.level || 'Learning'}</span>
                 </div>
-                <button type="button" className="insights-action-btn" onClick={() => practice(s.subject, s.topic, s.skill_name)}>
+                <div className="focus-bar-track">
+                  <div className="focus-bar-fill" style={{
+                    width: `${(area.mastery || 0.3) * 100}%`,
+                    background: (area.mastery || 0) >= 0.5 ? '#F59E0B' : '#EF4444',
+                  }} />
+                </div>
+                <button className="focus-practice-btn" onClick={() => navigate('/app/teacher', {
+                  state: { subject: area.subject || 'Mathematics', topic: area.skill || area.topic }
+                })}>
                   Practice
                 </button>
               </div>
             ))}
           </div>
+        </section>
+      )}
+
+      {/* === Achievement Gallery === */}
+      <section className="glass-card section-card">
+        <div className="section-header-row">
+          <h3>🏆 Achievements</h3>
+          <span className="badge-count">{unlockedBadges.length} / {badges.length} unlocked</span>
+        </div>
+        <div className="badge-gallery">
+          {displayBadges.map(b => <BadgeCard key={b.id} badge={b} />)}
+        </div>
+        {badges.length > 10 && (
+          <button className="show-all-btn" onClick={() => setShowAllBadges(!showAllBadges)}>
+            {showAllBadges ? 'Show Less' : `Show All ${badges.length} Badges`}
+          </button>
         )}
       </section>
 
-      <section className="glass-card insights-card insights-section">
-        <div className="insights-section-head">
-          <h2>Weekly Activity</h2>
-          <span className="insights-section-meta">
-            {insights?.weekly_trend ? `${insights.weekly_trend.total_questions} questions • ${insights.weekly_trend.accuracy}% accuracy` : '—'}
-          </span>
+      {/* === Knowledge Map === */}
+      <section className="glass-card section-card">
+        <h3>🗺️ Knowledge Map</h3>
+        <div className="km-summary">
+          <div className="km-stat green"><span>{kmSkills.mastered}</span><label>Mastered</label></div>
+          <div className="km-stat amber"><span>{kmSkills.learning}</span><label>Learning</label></div>
+          <div className="km-stat red"><span>{kmSkills.needsWork}</span><label>Needs Work</label></div>
         </div>
-
-        {!insights?.weekly_trend?.daily_breakdown?.length ? (
-          <p className="insights-empty">No activity yet. Do a short practice session to get started.</p>
-        ) : (
-          <div className="insights-trend">
-            {insights.weekly_trend.daily_breakdown.map((d) => (
-              <div key={d.date} className="insights-trend-day" title={`${d.date}: ${d.count} questions`}>
-                <div className="insights-trend-bar" style={{ height: `${Math.round((Math.max(0, d.count) / trendMax) * 100)}%` }} />
-                <div className="insights-trend-label">{new Date(d.date).toLocaleDateString(undefined, { weekday: 'short' }).slice(0, 2)}</div>
+        {kmSkills.all.length > 0 && (
+          <div className="km-skills-table">
+            {kmSkills.all.slice(0, 12).map((skill, i) => (
+              <div key={i} className="km-skill-row">
+                <span className="km-skill-name">{skill.skill_name}</span>
+                <div className="km-bar-track">
+                  <div className="km-bar-fill" style={{
+                    width: `${skill.mastery_level * 100}%`,
+                    background: skill.mastery_level >= 0.7 ? '#22C55E' :
+                      skill.mastery_level >= 0.3 ? '#F59E0B' : '#EF4444',
+                  }} />
+                </div>
+                <span className="km-pct">{Math.round(skill.mastery_level * 100)}%</span>
               </div>
             ))}
           </div>
         )}
       </section>
 
-      <section className="glass-card insights-card insights-section">
-        <div className="insights-section-head">
-          <h2>Knowledge Map</h2>
-          <span className="insights-section-meta">
-            {knowledgeMap ? `${knowledgeMap.total_skills} skills` : knowledgeMapLoading ? 'Loading…' : '—'}
-          </span>
-        </div>
-
-        {knowledgeMapLoading ? (
-          <div className="insights-loading">Loading knowledge map…</div>
-        ) : !knowledgeMap ? (
-          <div className="insights-error">
-            <AlertTriangle size={16} /> Failed to load knowledge map.
+      {/* === Lifetime Statistics === */}
+      <section className="glass-card section-card lifetime-stats">
+        <h3>📊 Lifetime Statistics</h3>
+        <div className="lifetime-grid">
+          <div className="lifetime-item">
+            <span className="lt-icon">📝</span>
+            <span className="lt-value">{overallStats?.totalQuizzes ?? 0}</span>
+            <span className="lt-label">Quizzes Completed</span>
           </div>
-        ) : (
-          <>
-            <div className="insights-knowledge-summary">
-              <div className="insights-chip">
-                <CheckCircle2 size={14} /> {knowledgeMap.mastered_skills} mastered
-              </div>
-              <div className="insights-chip">
-                <Target size={14} /> {knowledgeMap.learning_skills} learning
-              </div>
-              <div className="insights-chip">
-                <AlertTriangle size={14} /> {knowledgeMap.struggling_skills} need work
-              </div>
-            </div>
+          <div className="lifetime-item">
+            <span className="lt-icon">⚡</span>
+            <span className="lt-value">{overallStats?.totalXP ?? 0}</span>
+            <span className="lt-label">Total XP Earned</span>
+          </div>
+          <div className="lifetime-item">
+            <span className="lt-icon">💯</span>
+            <span className="lt-value">{overallStats?.perfectScores ?? 0}</span>
+            <span className="lt-label">Perfect Scores</span>
+          </div>
+          <div className="lifetime-item">
+            <span className="lt-icon">🏅</span>
+            <span className="lt-value">{overallStats?.longestStreak ?? 0}</span>
+            <span className="lt-label">Longest Streak</span>
+          </div>
+        </div>
+      </section>
 
-            <div className="insights-skill-table">
-              {visibleSkills.map((s) => (
-                <div key={s.skill_id} className="insights-skill-table-row">
-                  <div className="insights-skill-table-left">
-                    <div className="insights-skill-table-name">{s.skill_name}</div>
-                    <div className="insights-skill-table-meta">{s.subject} • {s.topic}</div>
-                  </div>
-                  <div className="insights-skill-table-right">
-                    <div className="insights-bar small">
-                      <div className="insights-bar-fill" style={{ width: `${Math.round((s.mastery ?? 0) * 100)}%`, backgroundColor: getMasteryColor(s.mastery ?? 0) }} />
-                    </div>
-                    <button type="button" className="insights-action-btn small" onClick={() => practice(s.subject, s.topic, s.skill_name)}>
-                      Practice
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {sortedSkills.length > 18 && (
-              <button type="button" className="insights-secondary-btn" onClick={() => setShowAllSkills((v) => !v)}>
-                {showAllSkills ? 'Show less' : `Show all (${sortedSkills.length})`}
-              </button>
-            )}
-
-            <button type="button" className="insights-secondary-btn" onClick={() => loadKnowledgeMap()} disabled={knowledgeMapLoading}>
-              Reload knowledge map
-            </button>
-          </>
-        )}
-
-        <div className="insights-footer-note">
-          Want a guided path? Go to <button type="button" className="insights-link-btn" onClick={() => navigate('/app/agents')}>Agent Hub</button> and start the Learning Coach.
+      {/* === Motivational Footer === */}
+      <section className="progress-footer">
+        <div className="footer-gradient">
+          <p className="footer-message">
+            {(overallStats?.streak ?? 0) > 0
+              ? `Amazing ${overallStats?.streak}-day streak! You're on fire! 🔥`
+              : 'Start your learning journey today! Every question counts! 💪'}
+          </p>
+          <button className="footer-cta" onClick={() => navigate('/app')}>
+            Start Learning →
+          </button>
         </div>
       </section>
     </div>

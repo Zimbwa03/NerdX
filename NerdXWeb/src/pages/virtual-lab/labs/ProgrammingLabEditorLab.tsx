@@ -6,6 +6,7 @@ import type { ProgrammingLanguage } from '../../../types/programmingLabTypes';
 import { PROGRAMMING_TEMPLATES } from '../../../data/virtualLab/programmingLab/templates';
 import { KnowledgeCheckModal } from '../../../components/virtualLab/KnowledgeCheckModal';
 import { programmingLabApi, type ProgrammingLabExecutionResponse } from '../../../services/api/programmingLabApi';
+import { AiAssistantPanel } from './AiAssistantPanel';
 
 const DEFAULT_CODE: Record<ProgrammingLanguage, string> = {
   python: '# Welcome to Programming Lab\nprint("Hello, World!")\n',
@@ -27,6 +28,7 @@ export function ProgrammingLabEditorLab({ simulation }: { simulation: Simulation
   const [result, setResult] = useState<ProgrammingLabExecutionResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [quizOpen, setQuizOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
 
   const templates = useMemo(
     () => PROGRAMMING_TEMPLATES.filter((t) => t.language === language),
@@ -139,6 +141,12 @@ export function ProgrammingLabEditorLab({ simulation }: { simulation: Simulation
                 <Sparkles size={16} /> Knowledge check
               </button>
             </div>
+
+            <div className="vl-row" style={{ marginTop: 12 }}>
+              <button type="button" className="vl-btn" onClick={() => setAiOpen(!aiOpen)} style={{ background: 'linear-gradient(135deg, #651FFF, #7C4DFF)', color: 'white', border: 'none', width: '100%' }}>
+                <Sparkles size={16} /> Open AI Tutor
+              </button>
+            </div>
           </div>
 
           <div className="vl-card">
@@ -197,6 +205,14 @@ export function ProgrammingLabEditorLab({ simulation }: { simulation: Simulation
           </div>
         </div>
       </div>
+
+      {aiOpen && (
+        <AiAssistantPanel
+          code={code}
+          language={language}
+          onClose={() => setAiOpen(false)}
+        />
+      )}
 
       <KnowledgeCheckModal open={quizOpen} simulation={simulation} onClose={() => setQuizOpen(false)} />
     </div>

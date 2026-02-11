@@ -67,158 +67,319 @@ export const computerScienceNotes: Record<string, TopicNotes> = {
     "Hardware and Software": {
         topic: "Hardware and Software",
         subject: "Computer Science",
-        summary: "Understanding the physical components of computers and the software that runs on them.",
+        summary: "A comprehensive guide to the physical components of computers and the programs that control them.",
         sections: [
             {
-                title: "Hardware Components",
-                content: `Hardware refers to the physical components of a computer system that you can touch and see.
+                title: "1. Computer Hardware Overview",
+                content: `**Hardware** refers to the physical, tangible parts of a computer system - the components you can touch and see.
 
-**Input Devices** - Used to enter data into the computer:
-- Keyboard, Mouse, Scanner, Microphone, Webcam, Touchscreen, Barcode reader
+**The Main Components:**
+A typical computer system consists of:
+1.  **Input Devices**: Used to send data *into* the computer.
+2.  **Processing Devices**: The "brains" that process data (CPU).
+3.  **Output Devices**: Used to display results *out* of the computer.
+4.  **Storage Devices**: Used to save data permanently.
+5.  **Internal Components**: Essential parts inside the case (Motherboard, RAM, PSU).
 
-**Output Devices** - Used to display or present processed data:
-- Monitor, Printer, Speakers, Projector, Headphones
-
-**Storage Devices** - Used to store data permanently:
-- Hard Disk Drive (HDD), Solid State Drive (SSD), USB Flash Drive, Optical discs (CD/DVD/Blu-ray), Cloud storage
-
-**Processing Devices**:
-- CPU (Central Processing Unit) - the "brain" of the computer
-- RAM (Random Access Memory) - temporary working memory
-- GPU (Graphics Processing Unit) - processes graphics`,
+**Key Concept: The IPO Model**
+All computer systems follow the **Input-Process-Output (IPO)** model:
+*   **Input**: Data enters the system.
+*   **Process**: Data is manipulated/changed into information.
+*   **Output**: Information is presented to the user.
+*   **Storage**: Data is kept for later use.`,
                 diagrams: [CS_DIAGRAMS.hardwareIpo],
             },
             {
-                title: "The CPU",
-                content: `The CPU (Central Processing Unit) is the main processor that executes instructions.
+                title: "2. Input Devices",
+                content: `**Input devices** allow users to enter data and instructions into a computer.
 
-**Components of the CPU:**
-- **ALU (Arithmetic Logic Unit)**: Performs calculations and logical operations
-- **CU (Control Unit)**: Controls the sequence of operations
-- **Registers**: Small, fast storage locations within the CPU
+**Manual Input Devices:**
+*   **Keyboard**: The primary text input device. Uses a grid of switches to detect key presses.
+    *   *Usage*: Typing documents, entering commands, gaming.
+*   **Mouse / Trackpad**: Pointing devices that control a cursor on screen.
+    *   *Usage*: Selecting icons, drawing, navigating GUIs.
+*   **Microphone**: Captures sound waves and converts them to digital audio.
+    *   *Usage*: Voice recording, VoIP calls, voice recognition.
+*   **Scanner**: Converts physical documents/photos into digital images.
+    *   *Usage*: Digitizing old photos, scanning contracts.
+*   **Digital Camera / Webcam**: Captures images and video.
+    *   *Usage*: Photography, video conferencing.
+
+**Direct Data Entry (DDE) Devices:**
+*   **Barcode Reader**: Scans black and white lines using a red laser.
+    *   *Usage*: Supermarket checkouts, library systems.
+*   **QR Code Reader**: Scans 2D matrix codes (Quick Response codes).
+    *   *Usage*: Mobile payments, accessing websites quickly.
+*   **OMR (Optical Mark Recognition)**: Detects marks on a page.
+    *   *Usage*: Marking multiple-choice exam papers automatically.
+*   **OCR (Optical Character Recognition)**: Scans text and converts it to editable digital text.
+    *   *Usage*: Digitizing printed books, passport reading.
+*   **Sensors**: Automatically capture physical data (temp, light, pressure).
+    *   *Usage*: Automated greenhouses, burglar alarms, smart thermostats.`,
+                diagrams: [],
+            },
+            {
+                title: "3. Output Devices",
+                content: `**Output devices** report the results of processing to the user.
+
+**Visual Output:**
+*   **LCD/LED Monitor**: Displays text, images, and video.
+    *   *How it works*: Uses liquid crystals or LEDs to create pixels.
+    *   *Key specs*: Resolution (e.g., 1920x1080), Refresh rate (e.g., 60Hz).
+*   **Projector**: Projects computer display onto a large screen/wall.
+    *   *Usage*: Classrooms, home cinemas, business presentations.
+
+**Hard Copy Output:**
+*   **Inkjet Printer**: Sprays tiny droplets of liquid ink.
+    *   *Pros*: Cheap hardware, good photo quality. *Cons*: Expensive ink, slower.
+*   **Laser Printer**: Uses powdered toner and heat (fuser).
+    *   *Pros*: Fast, sharp text, cheap cost-per-page. *Cons*: Expensive hardware.
+*   **3D Printer**: Creates physical objects by layering material (plastic/resin).
+    *   *Usage*: Prototyping parts, medical models, toys.
+*   **Plotter**: Uses pens to draw continuous lines.
+    *   *Usage*: Architectural blueprints, large maps.
+
+**Audio/Mechanical Output:**
+*   **Speakers / Headphones**: Convert digital audio into sound waves.
+*   **Actuators**: Motors that produce physical movement.
+    *   *Usage*: Robotic arms, opening automatic doors.`,
+                diagrams: [],
+            },
+            {
+                title: "4. Storage Devices",
+                content: `Storage is where data, files, and software are kept when the computer is turned off (**Non-volatile**).
+
+**Primary vs Secondary Storage:**
+*   **Primary Storage (RAM/ROM)**: Directly accessible by CPU, usually volatile (except ROM).
+*   **Secondary Storage**: Long-term storage (HDD, SSD), slower but holds more data.
+
+**Types of Secondary Storage:**
+
+1.  **Magnetic Storage** (e.g., Hard Disk Drive - HDD)
+    *   *Mechanism*: Uses magnetic platters and a moving read/write head.
+    *   *Pros*: High capacity, low cost per GB.
+    *   *Cons*: Slower, fragile (moving parts), noisy.
+    *   *Use*: Storing backups, large media libraries.
+
+2.  **Solid State Storage** (e.g., SSD, USB Flash Drive, SD Card)
+    *   *Mechanism*: Uses flash memory (transistors) with no moving parts.
+    *   *Pros*: Very fast, durable, silent, energy-efficient.
+    *   *Cons*: More expensive per GB than HDD.
+    *   *Use*: Boot drives (OS), portable storage, smartphones.
+
+3.  **Optical Storage** (e.g., CD, DVD, Blu-ray)
+    *   *Mechanism*: Uses lasers to burn 'pits' and 'lands' on a disc.
+    *   *Pros*: Very cheap, portable.
+    *   *Cons*: Slow, low capacity, can be scratched.
+    *   *Use*: Distributing movies/games, archiving data.
+
+**Storage Capacity Units:**
+*   **Bit (b)**: 0 or 1
+*   **Byte (B)**: 8 bits
+*   **Kilobyte (KB)**: 1024 Bytes
+*   **Megabyte (MB)**: 1024 KB
+*   **Gigabyte (GB)**: 1024 MB
+*   **Terabyte (TB)**: 1024 GB`,
+                diagrams: [],
+            },
+            {
+                title: "5. Internal Components & The CPU",
+                content: `Inside the computer case (system unit) are the critical components that make it work.
+
+**The Motherboard:**
+The main circuit board that connects all components (CPU, RAM, storage, power) together. It allows them to communicate.
+
+**The CPU (Central Processing Unit):**
+The "brain" of the computer. It executes instructions.
+*   **Clock Speed**: Measured in GHz (billions of cycles per second).
+*   **Cores**: Independent processing units (Dual-core, Quad-core).
+
+**Key CPU Components:**
+1.  **Control Unit (CU)**: Decodes instructions and controls data flow.
+2.  **Arithmetic Logic Unit (ALU)**: Performs math (+, -) and logic (AND, OR, >) operations.
+3.  **Registers**: Tiny, super-fast memory locations inside the CPU (e.g., Accumulator, Program Counter).
+4.  **Cache**: Fast memory near the CPU to store frequently used data.
 
 **The Fetch-Decode-Execute Cycle:**
-1. **Fetch**: The next instruction is fetched from memory
-2. **Decode**: The instruction is decoded to understand what action is needed
-3. **Execute**: The instruction is carried out`,
+1.  **Fetch**: CPU retrieves the next instruction from RAM.
+2.  **Decode**: CPU works out what the instruction means.
+3.  **Execute**: CPU carries out the instruction (e.g., adds two numbers).`,
                 diagrams: [CS_DIAGRAMS.cpuCycle],
             },
             {
-                title: "Software Types",
-                content: `Software is the set of instructions that tell the hardware what to do.
+                title: "6. Computer Software",
+                content: `**Software** refers to the programs and code that run on the computer hardware. Without software, hardware is useless.
 
-**System Software:**
-- Operating Systems (Windows, macOS, Linux, Android, iOS)
-- Utility programs (antivirus, disk cleanup, backup software)
-- Device drivers (software that allows OS to communicate with hardware)
+**Two Main Types of Software:**
 
-**Application Software:**
-- Word processors (Microsoft Word, Google Docs)
-- Spreadsheets (Microsoft Excel, Google Sheets)
-- Databases (Microsoft Access, MySQL)
-- Graphics software (Photoshop, GIMP)
-- Web browsers (Chrome, Firefox, Safari)`,
+1.  **System Software:**
+    Programs designed to run and maintain the computer's hardware and application programs.
+    *   **Operating System (OS)**: The interface between user and hardware (Windows, macOS, Linux, Android).
+        *   *Functions*: Memory management, File management, Multitasking, User Interface, Security.
+    *   **Utility Programs**: Maintenance tools.
+        *   *Examples*: Antivirus, Disk Defragmenter, File Compression (WinZip), Backup software.
+    *   **Device Drivers**: Small programs that tell the OS how to communicate with specific hardware (e.g., a Printer Driver).
+    *   **Translators**: Convert code into machine language (Compilers, Interpreters, Assemblers).
+
+2.  **Application Software:**
+    Programs that allow the user to perform specific tasks.
+    *   **General Purpose**: Can be used for many tasks (Word Processor, Spreadsheet, Presentation software).
+    *   **Special Purpose**: Designed for a specific task (Payroll system, Hotel booking system, Flight simulator).
+    *   **Bespoke (Custom)**: Written specifically for one client's unique needs.
+
+**System vs Application:**
+*   *System Software* runs the computer.
+*   *Application Software* runs *on* the system software to help the *user*.`,
                 diagrams: [CS_DIAGRAMS.softwareTypes],
             }
         ],
         key_points: [
-            "Hardware is physical, software is logical/programs",
-            "CPU components: ALU, CU, and Registers",
-            "Fetch-Decode-Execute cycle describes how CPU processes instructions",
-            "System software manages the computer, application software helps users perform tasks",
-            "Input devices receive data, output devices display results"
+            "Hardware is physical; Software is digital layouts/instructions.",
+            "IPO Model: Input -> Process -> Output (with Storage).",
+            "Input: Keyboard, Mouse, Sensors. Output: Monitor, Printer, Actuators.",
+            "Storage: Magnetic (HDD), Solid State (SSD), Optical (CD/DVD).",
+            "CPU Components: ALU (Math), Control Unit (Management), Registers (Fast storage).",
+            "Software Types: System (OS, Utilities) vs Application (Word, Excel)."
         ],
         exam_tips: [
-            "Be able to classify devices as input, output, or storage",
-            "Know the difference between system and application software with examples",
-            "Understand each stage of the Fetch-Decode-Execute cycle",
-            "Remember the functions of different CPU components"
+            "Be ready to compare HDD vs SSD (Cost, Speed, Durability).",
+            "Remember: RAM is volatile (lost when power off), ROM is non-volatile.",
+            "Don't just list devices for 6-mark questions; explain *why* a specific device is suitable (e.g., 'Barcode reader is faster and more accurate than typing').",
+            "Understand the role of the OS: it manages resources and provides a UI."
         ]
     },
     "Application of Computer Science": {
         topic: "Application of Computer Science",
         subject: "Computer Science",
-        summary: "How computer systems are applied in real-life sectors to improve efficiency, accuracy, and decision-making.",
+        summary: "Exploring how computers are used in various sectors to solve problems and improve efficiency.",
         sections: [
             {
-                title: "Overview of Applications",
-                content: `Computer science is applied to solve real-world problems by collecting, processing, and communicating information.
+                title: "1. Overview of Computer Applications",
+                content: `Computer science is applied across almost every sector of modern life. Computers are used to **collect, store, process, and communicate** information.
 
-**Common application areas and examples:**
-- **Education**: e-learning platforms, online assessments, digital libraries, learning analytics
-- **Health**: electronic health records (EHR), diagnostic systems, telemedicine, hospital management systems
-- **Banking and Finance**: ATMs, mobile banking, fraud detection, online payments
-- **Transport**: GPS navigation, traffic management systems, booking systems, logistics tracking
-- **Agriculture**: precision farming, irrigation control, market price information systems
-- **Manufacturing**: robotics, CAD/CAM, automated quality control
-- **Government**: e-services, national ID systems, tax processing, voter registration
-- **Retail and Business**: stock control, point-of-sale (POS), customer relationship management (CRM)`,
+**Why use computers?**
+*   **Speed**: They perform calculations and tasks much faster than humans.
+*   **Accuracy**: They do not make mistakes if programmed correctly.
+*   **Storage**: They can store vast amounts of data in small spaces.
+*   **Repetition**: They can perform the same task over and over without getting tired.
+*   **Communication**: They allow global connectivity.`,
                 diagrams: [CS_DIAGRAMS.applications],
             },
             {
-                title: "Information Systems in Organizations",
-                content: `An information system combines **people, data, processes, hardware, and software** to support operations and decision-making.
+                title: "2. Applications in Education",
+                content: `Computers have transformed how we teach and learn.
 
-**Types of information systems:**
-- **Transaction Processing Systems (TPS)**: handle routine transactions (sales, payroll, inventory)
-- **Management Information Systems (MIS)**: produce regular reports for managers
-- **Decision Support Systems (DSS)**: analyze data to support complex decisions
-- **Executive Support Systems (ESS)**: high-level dashboards for strategic decisions
+**Key Applications:**
+*   **CAL (Computer Aided Learning)** & **CAI (Computer Aided Instruction)**: Using software to teach subjects (e.g., NerdX App!).
+    *   *Benefits*: Self-paced learning, interactive content, immediate feedback.
+*   **E-Learning / Online Learning**: Learning remotely via the internet.
+    *   *Benefits*: Access to global resources, flexible timing.
+*   **School Administration Systems**:
+    *   Managing student records, attendance, and grades.
+    *   Timetabling and scheduling.
+*   **Digital Libraries**: Access to millions of books and journals online.`,
+                diagrams: [],
+            },
+            {
+                title: "3. Applications in Healthcare",
+                content: `In medicine, computers are used to save lives and improve care.
 
-**Data processing methods:**
-- **Batch processing**: data collected over time then processed together (e.g., monthly billing)
-- **Real-time processing**: immediate processing as data arrives (e.g., ATM withdrawals)
-- **Online processing**: users interact directly with the system via terminals or web`,
+**Key Applications:**
+*   **Patient Record Systems (EHR)**: Storing patient history, allergies, and prescriptions centrally.
+*   **Medical Imaging**:
+    *   **MRI / CT Scans**: Creating detailed 3D images of the body.
+    *   **Ultrasound**: Monitoring pregnancy.
+*   **Patient Monitoring**: Automatically tracking vital signs (heart rate, blood pressure) in ICUs.
+*   **Telemedicine**: Remote consultations with doctors via video calls.
+*   **Robotic Surgery**: Performing precise operations using robotic arms controlled by surgeons.`,
+                diagrams: [],
+            },
+            {
+                title: "4. Applications in Banking & Finance",
+                content: `The financial sector relies heavily on computers for accuracy and security.
+
+**Key Applications:**
+*   **ATMs (Automated Teller Machines)**: Allow 24/7 cash withdrawals and deposits.
+*   **EFT (Electronic Funds Transfer)**: Moving money digitally between accounts (e.g., salary payments).
+*   **Mobile Banking**: Managing accounts via smartphone apps.
+*   **Fintech**: Automated trading algorithms and cryptocurrency.
+*   **Credit/Debit Cards**: Using chip and PIN technology for secure payments.`,
+                diagrams: [],
+            },
+            {
+                title: "5. Applications in Retail & Business",
+                content: `Computers streamline buying, selling, and managing businesses.
+
+**Key Applications:**
+*   **POS (Point of Sale) Systems**: Electronic checkouts that scan barcodes.
+    *   *Function*: Calculates total, updates inventory, prints receipt.
+*   **Inventory Management**: Automatically tracking stock levels and reordering when low.
+*   **E-Commerce**: Buying and selling goods online (e.g., Amazon).
+    *   *Benefits*: 24/7 shopping, global reach, lower overheads.
+*   **Payroll Systems**: Calculating wages, tax, and printing payslips automatically.`,
                 diagrams: [CS_DIAGRAMS.infoSystem],
             },
             {
-                title: "Automation, Control, and Embedded Systems",
-                content: `Computer systems are used to control physical processes using sensors and actuators.
+                title: "6. Industrial & Manufacturing",
+                content: `Computers control machinery to improve production.
 
-**Key concepts:**
-- **Sensors** capture data (temperature, pressure, motion, light)
-- **Controllers** process inputs using programmed rules
-- **Actuators** perform actions (motors, valves, alarms)
-
-**Examples:**
-- Automatic traffic lights and railway crossings
-- Industrial robots and conveyor systems
-- Smart home systems (security, lighting, temperature)
-
-**Benefits and challenges:**
-- **Benefits**: speed, accuracy, safety, 24/7 operation
-- **Challenges**: job displacement, cost, system failures, maintenance needs`,
+**Key Applications:**
+*   **CAD (Computer Aided Design)**: Creating technical drawings and 3D models (e.g., cars, buildings).
+*   **CAM (Computer Aided Manufacturing)**: Using software to control machine tools (drills, lathes).
+*   **Robotics**: Using robots for assembly, painting, and welding.
+    *   *Pros*: Consistent quality, can work in dangerous environments.
+    *   *Cons*: High setup cost, job losses for manual workers.
+*   **Process Control**: Monitoring temperature, pressure, and flow in chemical plants.`,
                 diagrams: [CS_DIAGRAMS.controlLoop],
             },
             {
-                title: "Social and Economic Impact",
-                content: `Computer science applications change how people live and work.
+                title: "7. Expert Systems",
+                content: `An **Expert System** is a computer program that simulates the decision-making ability of a human expert.
 
-**Positive impacts:**
-- Increased productivity and accuracy
-- Improved access to services (banking, education, health)
-- Faster communication and global connectivity
+**Components:**
+1.  **Knowledge Base**: A database of facts and rules.
+2.  **Inference Engine**: The logic that applies rules to the data to deduce new information.
+3.  **User Interface**: Allows the user to ask questions and receive advice.
 
-**Negative impacts:**
-- **Digital divide**: unequal access to technology
-- Privacy concerns due to large-scale data collection
-- Over-reliance on technology and reduced human skills`,
+**Examples:**
+*   **Medical Diagnosis**: Diagnosing illnesses based on symptoms.
+*   **Mineral Prospecting**: Identifying likely locations for oil/minerals.
+*   **Car Diagnostics**: Identifying faults in vehicle engines.`,
+                diagrams: [],
+            },
+            {
+                title: "8. Impact of Technology",
+                content: `The widespread use of computers has both positive and negative effects on society.
+
+**Positive Impacts:**
+*   **Efficiency**: Tasks are completed faster and more cheaply.
+*   **Connectivity**: Easy communication worldwide.
+*   **Access to Information**: Knowledge is available to everyone.
+*   **New Jobs**: Creation of IT careers (developers, technicians).
+
+**Negative Impacts:**
+*   **Unemployment**: Automation replacing manual jobs.
+*   **Digital Divide**: The gap between those who have access to technology and those who don't.
+*   **Privacy Issues**: Increased surveillance and data collection.
+*   **Health Issues**: RSI (Repetitive Strain Injury), eye strain, sedentary lifestyle.
+*   **Security Risks**: Hacking, identity theft, malware.`,
                 diagrams: [CS_DIAGRAMS.techImpact],
             }
         ],
         key_points: [
-            "Computer applications solve real-world problems across many sectors",
-            "Information systems combine people, processes, data, and technology",
-            "TPS, MIS, DSS, and ESS support different levels of decision-making",
-            "Automation uses sensors, controllers, and actuators to manage processes",
-            "Technology brings both benefits and social challenges"
+            "Computers offer speed, accuracy, and vast storage capabilities.",
+            "Education uses CAL, E-learning, and admin systems.",
+            "Healthcare relies on EHRs, imaging (MRI), and monitoring.",
+            "Finance uses ATMs, EFT, and online banking.",
+            "Industry uses CAD (Design) and CAM (Manufacturing).",
+            "Expert Systems consist of a Knowledge Base and Inference Engine.",
+            "Technology creates new jobs but can also cause unemployment (automation)."
         ],
         exam_tips: [
-            "Use sector-based examples when explaining applications",
-            "Differentiate between TPS, MIS, DSS, and ESS with clear use-cases",
-            "Explain batch vs real-time processing with suitable examples",
-            "State both advantages and disadvantages of computerization",
-            "Remember that applications are about solving problems, not just using devices"
+            "When asked for benefits, mention specific sectors (e.g., 'In healthcare, it improves diagnostic accuracy').",
+            "Know the difference between CAD (drawing/designing) and CAM (making/manufacturing).",
+            "For expert systems, remember the three components: Knowledge Base, Inference Engine, User Interface.",
+            "Discuss both positive AND negative impacts for full marks in essay questions."
         ]
     },
     "Data Representation": {
