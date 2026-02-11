@@ -25,7 +25,8 @@ SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 # Use service role key as default for backward compatibility
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", SUPABASE_ANON_KEY)
 
-_is_configured = SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY and SUPABASE_ANON_KEY
+# Dashboard and admin operations only need URL + service role; anon is optional for client-side features
+_is_configured = bool(SUPABASE_URL and (SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY))
 
 # Validate environment variables
 if _is_configured:
@@ -277,14 +278,22 @@ def create_user_projects_table():
 
 def make_supabase_request(method, table, data=None, select="*", filters=None, limit=None, offset=None, use_service_role=False):
     """Make a request to Supabase REST API with proper authentication"""
-
+    if not SUPABASE_URL:
+        logger.warning("SUPABASE_URL not set; skipping request")
+        return None
     # Use SERVICE_ROLE_KEY for write operations and admin tasks, ANON_KEY for reads
     if method in ["POST", "PATCH", "DELETE"] or use_service_role:
         api_key = SUPABASE_SERVICE_ROLE_KEY
-        logger.info(f"Using SERVICE_ROLE_KEY for {method} operation on {table}")
+        if not api_key:
+            logger.warning("SUPABASE_SERVICE_ROLE_KEY not set; required for this operation")
+            return None
+        logger.debug(f"Using SERVICE_ROLE_KEY for {method} operation on {table}")
     else:
-        api_key = SUPABASE_ANON_KEY
-        logger.info(f"Using ANON_KEY for {method} operation on {table}")
+        api_key = SUPABASE_ANON_KEY or SUPABASE_SERVICE_ROLE_KEY
+        if not api_key:
+            logger.warning("No Supabase key available for request")
+            return None
+        logger.debug(f"Using key for {method} operation on {table}")
 
     headers = {
         "apikey": api_key,
@@ -2213,13 +2222,12 @@ def diagnose_supabase_issues():
         return False
 
 def test_connection():
-    """Test database connection with diagnostics"""
+    """Test database connection with a single quick query (no full diagnostics)."""
     try:
-        # Run diagnostics first
-        diagnose_supabase_issues()
-
-        # Simple test query to verify connection
-        result = make_supabase_request("GET", "user_stats", limit=1)
+        if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+            logger.warning("Supabase not configured: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required")
+            return False
+        result = make_supabase_request("GET", "user_stats", limit=1, use_service_role=True)
         return result is not None
     except Exception as e:
         logger.error(f"Database connection test failed: {e}")

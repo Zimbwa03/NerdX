@@ -146,19 +146,19 @@
                     <div class="mb-2">
                         <div class="d-flex justify-content-between">
                             <span>WhatsApp API</span>
-                            <span class="badge bg-success">Connected</span>
+                            <span class="badge bg-success" id="whatsappStatus">Connected</span>
                         </div>
                     </div>
                     <div class="mb-2">
                         <div class="d-flex justify-content-between">
                             <span>AI Services</span>
-                            <span class="badge bg-success">Active</span>
+                            <span class="badge bg-success" id="aiStatus">Active</span>
                         </div>
                     </div>
                     <div class="mb-2">
                         <div class="d-flex justify-content-between">
                             <span>Payment Gateway</span>
-                            <span class="badge bg-warning">Limited</span>
+                            <span class="badge bg-warning" id="paymentStatus">Limited</span>
                         </div>
                     </div>
                 </div>
@@ -240,12 +240,14 @@ let dailyActivityChart;
 
 document.addEventListener('DOMContentLoaded', function() {
     loadOverviewData();
+    loadSystemHealth();
     createDailyActivityChart();
     loadRecentUsers();
-    
+
     // Auto-refresh dashboard every 2 minutes
     setInterval(() => {
         loadOverviewData();
+        loadSystemHealth();
         loadAdvancedMetrics();
     }, 2 * 60 * 1000);
 });
@@ -302,11 +304,11 @@ async function loadOverviewData() {
         
     } catch (error) {
         console.error('Error loading dashboard data:', error);
-        // Show error in UI
         document.getElementById('totalUsers').textContent = 'Error';
         document.getElementById('activeToday').textContent = 'Error';
         document.getElementById('questionsAnswered').textContent = 'Error';
         document.getElementById('totalRevenue').textContent = 'Error';
+        loadSystemHealth();
     }
 }
 
@@ -458,22 +460,30 @@ function refreshData() {
 async function loadSystemHealth() {
     try {
         const response = await fetch('/api/system/health');
+        if (!response.ok) return;
         const health = await response.json();
-        
-        // Update system health indicators
-        updateHealthIndicator('Database', health.database);
-        updateHealthIndicator('WhatsApp API', health.whatsapp_api);
-        updateHealthIndicator('AI Services', health.ai_services?.deepseek || health.ai_services?.gemini);
-        updateHealthIndicator('Payment Gateway', health.payment_gateway);
-        
+
+        updateHealthIndicator('dbStatus', health.database, 'Connected', 'Disconnected');
+        updateHealthIndicator('whatsappStatus', health.whatsapp_api, 'Connected', 'Offline');
+        const aiOk = health.ai_services && (health.ai_services.deepseek || health.ai_services.gemini);
+        updateHealthIndicator('aiStatus', aiOk, 'Active', 'Limited');
+        updateHealthIndicator('paymentStatus', health.payment_gateway, 'Online', 'Limited');
     } catch (error) {
         console.error('Error loading system health:', error);
+        const dbStatus = document.getElementById('dbStatus');
+        if (dbStatus && dbStatus.textContent === 'Checking...') {
+            dbStatus.className = 'badge bg-danger';
+            dbStatus.textContent = 'Unavailable';
+        }
     }
 }
 
-function updateHealthIndicator(service, status) {
-    // This would update the health indicators in the UI
-    // For now, we'll keep the static indicators
+function updateHealthIndicator(elementId, status, okText, failText) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const isOk = status === true || status === 'true';
+    el.className = 'badge ' + (isOk ? 'bg-success' : 'bg-warning');
+    el.textContent = isOk ? okText : failText;
 }
 
 async function loadAdvancedMetrics() {
