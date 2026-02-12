@@ -11,6 +11,7 @@ import {
     getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
 import { ArrowLeft, BookOpen, Microscope, FlaskConical, Play, Dna, Info, X, FileText } from 'lucide-react';
+import { biologyTopics } from '../../data/scienceNotes/biology';
 import '../sciences/ScienceUniverse.css'; // Shared premium styles
 
 const BIO_TOPICS_FALLBACK: Topic[] = [
@@ -236,10 +237,10 @@ export const BiologyTopicsPage = () => {
                     </div>
 
                     <div className="topic-chips-container" style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                        {displayTopics.map((t, i) => (
+                        {biologyTopics.map((topicName, i) => (
                             <Link
                                 key={i}
-                                to={`/app/biology/notes/${encodeURIComponent(t.name)}`}
+                                to={`/app/biology/notes/${encodeURIComponent(topicName)}`}
                                 style={{
                                     display: 'inline-block',
                                     padding: '10px 16px',
@@ -252,7 +253,7 @@ export const BiologyTopicsPage = () => {
                                     transition: 'all 0.2s'
                                 }}
                             >
-                                {t.name}
+                                {topicName}
                             </Link>
                         ))}
                     </div>

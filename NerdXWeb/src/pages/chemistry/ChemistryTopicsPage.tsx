@@ -11,6 +11,7 @@ import {
     getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
 import { ArrowLeft, BookOpen, Atom, FlaskConical, Play, Info, X, FileText } from 'lucide-react';
+import { chemistryTopics } from '../../data/scienceNotes/chemistry';
 import '../sciences/ScienceUniverse.css'; // Shared premium styles
 
 const CHEM_TOPICS_FALLBACK: Topic[] = [
@@ -234,10 +235,10 @@ export const ChemistryTopicsPage = () => {
                     </div>
 
                     <div className="topic-chips-container" style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                        {displayTopics.map((t, i) => (
+                        {chemistryTopics.map((topicName, i) => (
                             <Link
                                 key={i}
-                                to={`/app/chemistry/notes/${encodeURIComponent(t.name)}`}
+                                to={`/app/chemistry/notes/${encodeURIComponent(topicName)}`}
                                 style={{
                                     display: 'inline-block',
                                     padding: '10px 16px',
@@ -250,7 +251,7 @@ export const ChemistryTopicsPage = () => {
                                     transition: 'all 0.2s'
                                 }}
                             >
-                                {t.name}
+                                {topicName}
                             </Link>
                         ))}
                     </div>

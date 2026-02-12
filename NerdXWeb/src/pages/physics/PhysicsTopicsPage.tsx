@@ -11,6 +11,7 @@ import {
     getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
 import { ArrowLeft, BookOpen, Atom, Play, Zap, Info, X, FileText } from 'lucide-react';
+import { physicsTopics } from '../../data/scienceNotes/physics';
 import '../sciences/ScienceUniverse.css'; // Shared premium styles
 
 const PHYS_TOPICS_FALLBACK: Topic[] = [
@@ -233,10 +234,10 @@ export const PhysicsTopicsPage = () => {
                     </div>
 
                     <div className="topic-chips-container" style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                        {displayTopics.map((t, i) => (
+                        {physicsTopics.map((topicName, i) => (
                             <Link
                                 key={i}
-                                to={`/app/physics/notes/${encodeURIComponent(t.name)}`}
+                                to={`/app/physics/notes/${encodeURIComponent(topicName)}`}
                                 style={{
                                     display: 'inline-block',
                                     padding: '10px 16px',
@@ -249,7 +250,7 @@ export const PhysicsTopicsPage = () => {
                                     transition: 'all 0.2s'
                                 }}
                             >
-                                {t.name}
+                                {topicName}
                             </Link>
                         ))}
                     </div>

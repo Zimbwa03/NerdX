@@ -3,24 +3,27 @@ import type { TopicNotes } from './types';
 
 // List of all Chemistry topics (matching constants.py) - ZIMSEC O-Level Syllabus
 export const chemistryTopics: string[] = [
-    // Physical & Theoretical Chemistry
     "States of Matter",
+    "Particulate Nature of Matter",
     "Atoms, Elements and Compounds",
     "Chemical Bonding",
     "Stoichiometry",
+    "Formulae and Stoichiometry",
     "The Periodic Table",
-    // Reaction Dynamics & Energy
+    "Periodic Table",
     "Chemical Reactions",
     "Chemical Energetics",
+    "Energy from Chemicals",
     "Electrochemistry",
+    "Electrolysis",
     "Redox Reactions",
-    // Inorganic & Environmental Chemistry
     "Acids, Bases and Salts",
     "Metals",
     "Non-metals",
     "Chemistry of the Environment",
-    // Organic & Practical Chemistry
+    "Chemistry of Environment",
     "Organic Chemistry",
+    "Experimental Techniques",
     "Experimental Techniques and Chemical Analysis"
 ];
 
