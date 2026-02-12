@@ -284,16 +284,15 @@ export function ScienceNotesPage() {
                 </ul>
               </div>
             )}
-
-            {/* Flashcards (New Feature) */}
-            <FlashcardSection
-              subject={subjectName}
-              topic={notes.topic}
-              notes={notes}
-              accentColor={accentColor}
-            />
           </div>
         </div>
+
+        <FlashcardSection
+          subject={subjectName}
+          topic={notes.topic}
+          notes={notes}
+          accentColor={accentColor}
+        />
       </div>
     </div>
   );
