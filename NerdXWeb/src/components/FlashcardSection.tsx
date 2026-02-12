@@ -8,6 +8,7 @@ import {
 import { flashcardApi, type Flashcard } from '../services/api/flashcardApi';
 import type { TopicNotes } from '../data/scienceNotes/types';
 import { useAuth } from '../context/AuthContext';
+import { MathRenderer } from './MathRenderer';
 import './FlashcardSection.css';
 
 const getDifficultyColor = (difficulty: string): string => {
@@ -395,7 +396,7 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
                                 <div className="fc-card-label">QUESTION</div>
 
                                 <div className="fc-card-body">
-                                    <p className="fc-question-text">{currentCard.question}</p>
+                                    <MathRenderer content={currentCard.question} fontSize={17} className="fc-question-text" />
                                 </div>
 
                                 {hasHint && (
@@ -411,7 +412,7 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
                                         {showHint && currentCard.hint && (
                                             <div className="fc-hint-content" style={{ background: `${accentColor}15`, borderColor: `${accentColor}30` }}>
                                                 <Lightbulb size={14} style={{ color: accentColor, flexShrink: 0 }} />
-                                                <span>{currentCard.hint}</span>
+                                                <MathRenderer content={currentCard.hint || ''} fontSize={14} className="fc-hint-text" />
                                             </div>
                                         )}
                                     </div>
@@ -429,7 +430,7 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
                                 <div className="fc-card-label fc-card-label-back">ANSWER</div>
 
                                 <div className="fc-card-body">
-                                    <p className="fc-answer-text">{currentCard.answer}</p>
+                                    <MathRenderer content={currentCard.answer} fontSize={16} className="fc-answer-text" />
                                 </div>
 
                                 <div className="fc-back-actions">

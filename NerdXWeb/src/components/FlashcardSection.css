@@ -501,6 +501,29 @@
     word-break: break-word;
 }
 
+.fc-question-text p,
+.fc-answer-text p {
+    margin: 0 0 8px 0;
+}
+
+.fc-question-text p:last-child,
+.fc-answer-text p:last-child {
+    margin-bottom: 0;
+}
+
+.fc-question-text .katex,
+.fc-answer-text .katex,
+.fc-hint-text .katex {
+    color: inherit;
+}
+
+.fc-question-text .katex-display,
+.fc-answer-text .katex-display {
+    margin: 12px 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
 .fc-answer-text {
     font-size: 16px;
     font-weight: 500;
@@ -509,6 +532,15 @@
     color: rgba(255, 255, 255, 0.95);
     margin: 0;
     word-break: break-word;
+}
+
+.fc-hint-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.fc-hint-text p {
+    margin: 0;
 }
 
 .fc-hint-area {
