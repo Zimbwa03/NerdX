@@ -1,9 +1,9 @@
-modules = ["python-3.11", "web", "nodejs-20", "postgresql-16"]
+modules = ["nodejs-20", "python-3.11", "web"]
 run = "python app.py"
 
 [nix]
 channel = "stable-25_05"
-packages = ["cairo", "cargo", "ffmpeg", "ffmpeg-full", "freetype", "ghostscript", "glibcLocales", "gobject-introspection", "gtk3", "lcms2", "libiconv", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "openssl", "pkg-config", "postgresql", "qhull", "rustc", "tcl", "tesseract", "tk", "xcodebuild", "xsimd", "zlib"]
+packages = ["cairo", "cargo", "ffmpeg", "ffmpeg-full", "freetype", "ghostscript", "glibcLocales", "gobject-introspection", "gtk3", "lcms2", "libiconv", "libimagequant", "libjpeg", "libsndfile", "libtiff", "libwebp", "libxcrypt", "openjpeg", "openssl", "pkg-config", "postgresql", "qhull", "rustc", "tcl", "tesseract", "tk", "xcodebuild", "xsimd", "zlib"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -37,10 +37,6 @@ waitForPort = 5000
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 44865
-externalPort = 3000
-
 [agent]
-integrations = ["flask_supabase==1.0.0", "python_database==1.0.0", "flask_stripe==1.0.0", "python_gemini==1.0.0"]
+integrations = ["flask_supabase:1.0.0", "python_database:1.0.0", "flask_stripe:1.0.0", "python_gemini:1.0.0"]
 expertMode = true
