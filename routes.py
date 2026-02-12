@@ -170,6 +170,7 @@ def index():
     return _serve_user_app('')
 
 
+@app.route('/login')
 @app.route('/register')
 @app.route('/forgot-password')
 @app.route('/reset-password')

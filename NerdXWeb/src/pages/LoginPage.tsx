@@ -68,7 +68,7 @@ export function LoginPage() {
       <div className="auth-layout__brand">
         <div className="auth-layout__brand-inner">
           <Link to="/" className="auth-logo">
-            <img src="/images/nerdx-logo.png" alt="NerdX" className="auth-logo__img" />
+            <img src="/logo.png" alt="NerdX" className="auth-logo__img" />
             <span className="auth-logo__text">NerdX</span>
           </Link>
           <h1 className="auth-brand__title">Master Your Future with AI</h1>

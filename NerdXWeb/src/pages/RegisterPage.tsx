@@ -102,75 +102,122 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="auth-page">
-      <Link to="/" className="auth-back-btn" aria-label="Back">←</Link>
-
-      <div className="glass-card" style={{ maxWidth: 480, marginTop: 40 }}>
-        <div className="logo-section">
-          <img src="/logo.png" alt="NerdX" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-          <h1 style={{ fontSize: 28 }}>Create Account</h1>
-          <p>Join NerdX Learning Platform</p>
+    <div className="auth-layout">
+      <div className="auth-layout__brand">
+        <div className="auth-layout__brand-inner">
+          <Link to="/" className="auth-logo">
+            <img src="/logo.png" alt="NerdX" className="auth-logo__img" />
+            <span className="auth-logo__text">NerdX</span>
+          </Link>
+          <h1 className="auth-brand__title">Start Your Learning Journey</h1>
+          <p className="auth-brand__desc">Join thousands of students acing their ZIMSEC exams with AI-powered learning.</p>
+          <div className="auth-brand__stats">
+            <div className="auth-brand__stat">
+              <strong>5,000+</strong>
+              <span>Students</span>
+            </div>
+            <div className="auth-brand__stat">
+              <strong>10+</strong>
+              <span>Subjects</span>
+            </div>
+            <div className="auth-brand__stat">
+              <strong>95%</strong>
+              <span>Pass Rate</span>
+            </div>
+          </div>
+          <img src="/images/students-celebrating.png" alt="Students celebrating" className="auth-brand__image" />
         </div>
-
-        <h2 className="form-title">Sign Up</h2>
-        <p className="form-subtitle">Fill in your details to get started</p>
-
-        {error && <div className="auth-error">{error}</div>}
-
-        <form onSubmit={handleRegister}>
-          <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
-            <div className="auth-input-group" style={{ flex: 1 }}>
-              <span className="icon"><User size={20} /></span>
-              <input type="text" placeholder="First Name" value={name} onChange={(e) => setName(e.target.value)} disabled={isLoading} />
-            </div>
-            <div className="auth-input-group" style={{ flex: 1 }}>
-              <span className="icon"><User size={20} /></span>
-              <input type="text" placeholder="Surname" value={surname} onChange={(e) => setSurname(e.target.value)} disabled={isLoading} />
-            </div>
-          </div>
-
-          <div className="auth-input-group">
-            <span className="icon"><Mail size={20} /></span>
-            <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading} />
-          </div>
-
-          <div className="auth-input-group">
-            <span className="icon"><Phone size={20} /></span>
-            <input type="tel" placeholder="Phone Number (optional)" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} disabled={isLoading} />
-          </div>
-
-          <div className="auth-input-group">
-            <span className="icon"><Calendar size={20} /></span>
-            <input type="text" placeholder="Date of Birth (DD/MM/YYYY)" value={dateOfBirth} onChange={(e) => setDateOfBirth(formatDateOfBirth(e.target.value))} maxLength={10} disabled={isLoading} />
-          </div>
-
-          <div className="auth-input-group">
-            <span className="icon"><Lock size={20} /></span>
-            <input type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} />
-            <button type="button" className="toggle-pw" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button>
-          </div>
-
-          <div className="auth-input-group">
-            <span className="icon"><Lock size={20} /></span>
-            <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={isLoading} />
-            <button type="button" className="toggle-pw" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>{showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button>
-          </div>
-
-          <button type="submit" className="gradient-btn" disabled={isLoading} style={{ marginTop: 6 }}>
-            {isLoading ? <span className="auth-loading-spinner" style={{ width: 24, height: 24, borderWidth: 2 }} /> : (<>Create Account <ArrowRight size={20} /></>)}
-          </button>
-        </form>
-
-        <div className="auth-separator"><span>OR</span></div>
-
-        <button type="button" className="google-btn" onClick={handleGoogleSignIn} disabled={isLoading}>
-          <img src="https://www.google.com/favicon.ico" alt="" /> Continue with Google
-        </button>
       </div>
 
-      <p style={{ marginTop: 24, marginBottom: 20, color: 'var(--text-secondary)', fontSize: 15 }}>
-        Already have an account? <Link to="/" className="auth-link">Sign In</Link>
-      </p>
+      <div className="auth-layout__form">
+        <div className="auth-form-wrapper">
+          <div className="auth-form-header">
+            <h2 className="auth-form__title">Create Account</h2>
+            <p className="auth-form__subtitle">Fill in your details to get started</p>
+          </div>
+
+          {error && <div className="auth-alert auth-alert--error">{error}</div>}
+
+          <form onSubmit={handleRegister} className="auth-form">
+            <div className="auth-field-row">
+              <div className="auth-field">
+                <label className="auth-field__label">First Name</label>
+                <div className="auth-field__input-wrap">
+                  <User size={18} className="auth-field__icon" />
+                  <input type="text" placeholder="First name" value={name} onChange={(e) => setName(e.target.value)} disabled={isLoading} className="auth-field__input" />
+                </div>
+              </div>
+              <div className="auth-field">
+                <label className="auth-field__label">Surname</label>
+                <div className="auth-field__input-wrap">
+                  <User size={18} className="auth-field__icon" />
+                  <input type="text" placeholder="Surname" value={surname} onChange={(e) => setSurname(e.target.value)} disabled={isLoading} className="auth-field__input" />
+                </div>
+              </div>
+            </div>
+
+            <div className="auth-field">
+              <label className="auth-field__label">Email Address</label>
+              <div className="auth-field__input-wrap">
+                <Mail size={18} className="auth-field__icon" />
+                <input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading} className="auth-field__input" />
+              </div>
+            </div>
+
+            <div className="auth-field">
+              <label className="auth-field__label">Phone Number (optional)</label>
+              <div className="auth-field__input-wrap">
+                <Phone size={18} className="auth-field__icon" />
+                <input type="tel" placeholder="+263 7X XXX XXXX" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} disabled={isLoading} className="auth-field__input" />
+              </div>
+            </div>
+
+            <div className="auth-field">
+              <label className="auth-field__label">Date of Birth</label>
+              <div className="auth-field__input-wrap">
+                <Calendar size={18} className="auth-field__icon" />
+                <input type="text" placeholder="DD/MM/YYYY" value={dateOfBirth} onChange={(e) => setDateOfBirth(formatDateOfBirth(e.target.value))} maxLength={10} disabled={isLoading} className="auth-field__input" />
+              </div>
+            </div>
+
+            <div className="auth-field-row">
+              <div className="auth-field">
+                <label className="auth-field__label">Password</label>
+                <div className="auth-field__input-wrap">
+                  <Lock size={18} className="auth-field__icon" />
+                  <input type={showPassword ? 'text' : 'password'} placeholder="Min. 6 characters" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} className="auth-field__input" />
+                  <button type="button" className="auth-field__toggle" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                </div>
+              </div>
+              <div className="auth-field">
+                <label className="auth-field__label">Confirm Password</label>
+                <div className="auth-field__input-wrap">
+                  <Lock size={18} className="auth-field__icon" />
+                  <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Re-enter password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={isLoading} className="auth-field__input" />
+                  <button type="button" className="auth-field__toggle" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>{showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" className="auth-submit" disabled={isLoading}>
+              {isLoading ? <span className="auth-spinner" /> : (<>Create Account <ArrowRight size={18} /></>)}
+            </button>
+          </form>
+
+          <div className="auth-divider">
+            <span>or continue with</span>
+          </div>
+
+          <button type="button" className="auth-google" onClick={handleGoogleSignIn} disabled={isLoading}>
+            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A11.96 11.96 0 001 12c0 1.94.46 3.77 1.18 5.07l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            Google
+          </button>
+
+          <p className="auth-switch">
+            Already have an account? <Link to="/login" className="auth-switch__link">Sign In</Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
