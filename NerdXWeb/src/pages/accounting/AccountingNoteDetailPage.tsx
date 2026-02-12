@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Info, Lightbulb, Lock, Video, Volume2 } from 'lucide-react';
+import { ArrowLeft, Info, Lightbulb } from 'lucide-react';
+import { VideoPlayer, AudioPlayer } from '../../components/MediaPlayer';
 import { MathRenderer } from '../../components/MathRenderer';
 import { FlashcardSection } from '../../components/FlashcardSection';
 import { getTopicById } from '../../data/accounting/topics';
@@ -87,47 +88,19 @@ export function AccountingNoteDetailPage() {
       {(notes.audioUrl || notes.videoUrl) && (
         <div className="accounting-media-grid">
           {notes.videoUrl && (
-            <div className="accounting-media-card">
-              <div className="accounting-media-head">
-                <Video size={18} /> <span>Video lesson</span>
-              </div>
-              {isMediaLocked ? (
-                <div className="accounting-media-locked">
-                  <Lock size={28} />
-                  <div>
-                    <strong>Premium video</strong>
-                    <div className="accounting-media-locked-sub">Purchase credits to unlock.</div>
-                  </div>
-                  <Link to="/app/credits" className="accounting-unlock-btn">
-                    Unlock
-                  </Link>
-                </div>
-              ) : (
-                <video controls src={notes.videoUrl} className="accounting-video" />
-              )}
-            </div>
+            <VideoPlayer
+              src={notes.videoUrl}
+              accentColor="#B8860B"
+              locked={isMediaLocked}
+            />
           )}
-
           {notes.audioUrl && (
-            <div className="accounting-media-card">
-              <div className="accounting-media-head">
-                <Volume2 size={18} /> <span>Audio lesson</span>
-              </div>
-              {isMediaLocked ? (
-                <div className="accounting-media-locked">
-                  <Lock size={28} />
-                  <div>
-                    <strong>Premium audio</strong>
-                    <div className="accounting-media-locked-sub">Purchase credits to unlock.</div>
-                  </div>
-                  <Link to="/app/credits" className="accounting-unlock-btn">
-                    Unlock
-                  </Link>
-                </div>
-              ) : (
-                <audio controls src={notes.audioUrl} className="accounting-audio" />
-              )}
-            </div>
+            <AudioPlayer
+              src={notes.audioUrl}
+              subject="Accounting"
+              accentColor="#B8860B"
+              locked={isMediaLocked}
+            />
           )}
         </div>
       )}
