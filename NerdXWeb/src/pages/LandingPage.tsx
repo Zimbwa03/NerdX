@@ -241,22 +241,14 @@ export function LandingPage() {
             <p className="lp-section__subtitle">See how students across Zimbabwe are using NerdX to transform their learning experience.</p>
           </div>
           <div className="lp-gallery">
-            <div className="lp-gallery__featured">
-              <img src={studentImages[0].src} alt={studentImages[0].alt} className="lp-gallery__img" loading="lazy" />
-              <div className="lp-gallery__overlay">
-                <span className="lp-gallery__caption">{studentImages[0].caption}</span>
-              </div>
-            </div>
-            <div className="lp-gallery__side">
-              {studentImages.slice(1).map((img) => (
-                <div key={img.src} className="lp-gallery__item">
-                  <img src={img.src} alt={img.alt} className="lp-gallery__img" loading="lazy" />
-                  <div className="lp-gallery__overlay">
-                    <span className="lp-gallery__caption">{img.caption}</span>
-                  </div>
+            {studentImages.map((img, i) => (
+              <div key={img.src} className={`lp-gallery__item${i === 0 ? ' lp-gallery__item--wide' : ''}`}>
+                <img src={img.src} alt={img.alt} className="lp-gallery__img" loading="lazy" />
+                <div className="lp-gallery__overlay">
+                  <span className="lp-gallery__caption">{img.caption}</span>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

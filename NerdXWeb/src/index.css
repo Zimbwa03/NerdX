@@ -10028,32 +10028,23 @@ body {
 /* Student Gallery */
 .lp-gallery {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 20px;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto auto;
+  gap: 16px;
   margin-top: 60px;
-}
-
-.lp-gallery__featured {
-  position: relative;
-  border-radius: 24px;
-  overflow: hidden;
-  aspect-ratio: 16/10;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.lp-gallery__side {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
 }
 
 .lp-gallery__item {
   position: relative;
   border-radius: 20px;
   overflow: hidden;
-  flex: 1;
-  min-height: 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  aspect-ratio: 4/3;
+}
+
+.lp-gallery__item--wide {
+  grid-column: 1 / 3;
+  aspect-ratio: 16/9;
 }
 
 .lp-gallery__img {
@@ -10064,7 +10055,6 @@ body {
   transition: transform 0.5s ease;
 }
 
-.lp-gallery__featured:hover .lp-gallery__img,
 .lp-gallery__item:hover .lp-gallery__img {
   transform: scale(1.05);
 }
@@ -10074,13 +10064,12 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 24px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.75), transparent);
+  padding: 20px 24px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
   opacity: 0;
   transition: opacity 0.35s ease;
 }
 
-.lp-gallery__featured:hover .lp-gallery__overlay,
 .lp-gallery__item:hover .lp-gallery__overlay {
   opacity: 1;
 }
@@ -10088,16 +10077,8 @@ body {
 .lp-gallery__caption {
   color: #fff;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 15px;
   letter-spacing: -0.01em;
-}
-
-.lp-gallery__item .lp-gallery__caption {
-  font-size: 14px;
-}
-
-.lp-gallery__item .lp-gallery__overlay {
-  padding: 16px;
 }
 
 .lp-section--gallery {
@@ -10106,30 +10087,27 @@ body {
 
 @media (max-width: 768px) {
   .lp-gallery {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .lp-gallery__featured {
-    aspect-ratio: 16/9;
-  }
-
-  .lp-gallery__side {
-    flex-direction: row;
+    grid-template-columns: 1fr 1fr;
     gap: 12px;
   }
 
+  .lp-gallery__item--wide {
+    grid-column: 1 / -1;
+  }
+
   .lp-gallery__item {
-    aspect-ratio: 3/4;
+    aspect-ratio: 3/2;
   }
 }
 
 @media (max-width: 480px) {
-  .lp-gallery__side {
-    flex-direction: column;
+  .lp-gallery {
+    grid-template-columns: 1fr;
   }
 
-  .lp-gallery__item {
+  .lp-gallery__item,
+  .lp-gallery__item--wide {
+    grid-column: auto;
     aspect-ratio: 16/9;
   }
 }
