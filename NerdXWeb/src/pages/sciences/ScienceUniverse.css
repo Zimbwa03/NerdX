@@ -29,7 +29,7 @@
     background: var(--science-bg-depth);
     color: #fff;
     position: relative;
-    overflow-x: hidden;
+    overflow-x: clip;
     padding-bottom: 60px;
 
     /* Full width breakout */
