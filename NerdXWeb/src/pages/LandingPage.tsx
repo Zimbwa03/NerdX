@@ -7,8 +7,15 @@ import {
   MessageSquare, GraduationCap, Calculator, Atom,
   Microscope, Code, ShoppingCart, MapPin, Clock, Landmark,
   Briefcase, Star, ChevronRight, Menu, X, Twitter, Instagram, Youtube,
-  UserPlus, MousePointerClick, Rocket
+  UserPlus, MousePointerClick, Rocket, Camera
 } from 'lucide-react';
+
+const studentImages = [
+  { src: '/images/students-learning.png', alt: 'Zimbabwean students studying together with NerdX', caption: 'Students collaborating with NerdX' },
+  { src: '/images/student-phone.png', alt: 'Student using NerdX on smartphone', caption: 'Learning anytime, anywhere' },
+  { src: '/images/students-celebrating.png', alt: 'Students celebrating exam success', caption: 'Celebrating exam victories' },
+  { src: '/images/student-laptop.png', alt: 'Student studying with NerdX on laptop', caption: 'Focused study sessions' },
+];
 
 function useCountUp(end: number, duration: number, start: boolean) {
   const [count, setCount] = useState(0);
@@ -225,6 +232,34 @@ export function LandingPage() {
           <span>Prince Edward &bull; Dominican Convent &bull; St Georges &bull; Peterhouse &bull; Arundel &bull; Chisipite &bull; Falcon &bull; Watershed &bull; Hellenic &bull; Gateway</span>
         </div>
       </div>
+
+      <section className="lp-section lp-section--gallery">
+        <div className="lp-section__inner">
+          <div className="lp-section__header">
+            <span className="lp-badge"><Camera size={14} /> Students in Action</span>
+            <h2 className="lp-section__title">Real Students, <span className="gradient-text">Real Results</span></h2>
+            <p className="lp-section__subtitle">See how students across Zimbabwe are using NerdX to transform their learning experience.</p>
+          </div>
+          <div className="lp-gallery">
+            <div className="lp-gallery__featured">
+              <img src={studentImages[0].src} alt={studentImages[0].alt} className="lp-gallery__img" loading="lazy" />
+              <div className="lp-gallery__overlay">
+                <span className="lp-gallery__caption">{studentImages[0].caption}</span>
+              </div>
+            </div>
+            <div className="lp-gallery__side">
+              {studentImages.slice(1).map((img) => (
+                <div key={img.src} className="lp-gallery__item">
+                  <img src={img.src} alt={img.alt} className="lp-gallery__img" loading="lazy" />
+                  <div className="lp-gallery__overlay">
+                    <span className="lp-gallery__caption">{img.caption}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section id="features" className="lp-section">
         <div className="lp-section__inner">
