@@ -13,11 +13,16 @@ import './FlashcardSection.css';
 
 const fixLatex = (text: string): string => {
     if (!text) return '';
-    return text
-        .replace(/\t/g, '\\t')
-        .replace(/\f/g, '\\f')
-        .replace(/\b/g, '\\b')
-        .replace(/\r/g, '\\r');
+    let result = '';
+    for (let i = 0; i < text.length; i++) {
+        const c = text.charCodeAt(i);
+        if (c === 9) result += '\\t';
+        else if (c === 12) result += '\\f';
+        else if (c === 8) result += '\\b';
+        else if (c === 13) result += '\\r';
+        else result += text[i];
+    }
+    return result;
 };
 
 const getDifficultyColor = (difficulty: string): string => {
