@@ -10,6 +10,7 @@ import json
 import requests
 import time
 import random
+import re
 from typing import Dict, List, Optional
 from datetime import datetime
 from utils.deepseek import get_deepseek_chat_model, get_deepseek_reasoner_model
@@ -67,6 +68,706 @@ except ImportError:
 
 class MathQuestionGenerator:
     """Vertex AI mathematics question generator with DeepSeek fallback."""
+    # Form-scoped rollout map (mirrors History style). Form 1 populated now.
+    FORM_TOPIC_MAP = {
+        "Form 1": [
+            "Real Numbers",
+            "Sets",
+            "Financial Mathematics",
+            "Measures and Mensuration",
+            "Graphs",
+            "Algebra",
+            "Geometry",
+            "Statistics",
+            "Transformation",
+            "Probability",
+        ],
+        "Form 2": [
+            "Real Numbers",
+            "Sets",
+            "Financial Mathematics",
+            "Measures and Mensuration",
+            "Graphs",
+            "Variation",
+            "Algebra",
+            "Geometry",
+            "Statistics",
+            "Matrices",
+            "Vectors",
+            "Transformation",
+            "Probability",
+        ],
+        "Form 3": [
+            "Real Numbers",
+            "Sets",
+            "Financial Mathematics",
+            "Measures and Mensuration",
+            "Graphs",
+            "Variation",
+            "Algebra",
+            "Geometry",
+            "Statistics",
+            "Trigonometry",
+            "Vectors",
+            "Matrices",
+            "Transformation",
+            "Probability",
+        ],
+        "Form 4": [
+            "Real Numbers",
+            "Financial Mathematics",
+            "Measures and Mensuration",
+            "Graphs",
+            "Variation",
+            "Algebra",
+            "Geometry",
+            "Statistics",
+            "Trigonometry",
+            "Vectors",
+            "Matrices",
+            "Probability",
+            "Transformation",
+        ],
+    }
+
+    # Form 1 coverage focus to steer question generation exactly to syllabus outcomes.
+    FORM_1_COVERAGE_HINTS = {
+        "Number Concepts and Operations": [
+            "identify number types",
+            "find factors and multiples and calculate H.C.F. and L.C.M.",
+            "operate with directed numbers",
+            "perform operations with fractions, decimals, and percentages",
+        ],
+        "Approximation and Estimation": [
+            "round numbers to place value",
+            "round numbers to decimal places",
+        ],
+        "Ratios": [
+            "simplify ratios",
+            "solve ratio problems",
+        ],
+        "Large and Small Numbers": [
+            "express small and large numbers in words and digits",
+        ],
+        "Number Bases": [
+            "identify number bases in everyday contexts",
+            "identify place value in bases",
+            "identify numbers in their respective bases",
+        ],
+        "Scales": [
+            "identify representative fraction and ratio scales",
+            "use scales on plans/maps to measure and calculate distances",
+            "make scale drawings using a given scale",
+        ],
+        "Sets and Set Notation": [
+            "define sets by listing or describing",
+            "identify elements and use set notation",
+            "state number of elements in a set",
+        ],
+        "Types of Sets": [
+            "identify universal, finite, infinite, null, and equal sets",
+            "form subsets",
+            "find union and intersection",
+        ],
+        "Consumer Arithmetic": [
+            "interpret household bills and extract data",
+            "calculate profit/loss and discount",
+            "prepare household budgets",
+        ],
+        "Measures": [
+            "read time on 12-hour and 24-hour clocks",
+            "identify SI units",
+            "convert quantities between units",
+        ],
+        "Mensuration": [
+            "calculate perimeter and area of common plane shapes",
+            "calculate volumes of cuboids and prisms",
+        ],
+        "Functional Graphs": [
+            "draw Cartesian plane with scale",
+            "name and plot coordinates",
+        ],
+        "Travel Graphs": [
+            "interpret and solve distance-time graph problems",
+        ],
+        "Symbolic Expression": [
+            "represent unknown quantities with letters/symbols",
+        ],
+        "Algebraic Manipulation": [
+            "collect like terms and simplify expressions",
+            "substitute values for letters",
+            "group terms, find H.C.F., and factorise linear expressions",
+        ],
+        "Equations": [
+            "solve linear equations with unknown on one side",
+            "form linear equations from given information",
+        ],
+        "Inequalities": [
+            "define inequality language terms",
+            "formulate and solve linear inequalities on number line",
+        ],
+        "Algebraic Expressions in Index Form": [
+            "express products in index form",
+            "find common factors/multiples and algebraic H.C.F./L.C.M.",
+        ],
+        "Lines and Angles": [
+            "identify line and angle types",
+            "calculate angles on a straight line, at a point, vertically opposite, and parallel-line angle relationships",
+        ],
+        "Circles": [
+            "name parts, lines, and regions in a circle",
+        ],
+        "Polygons": [
+            "define polygons and name polygons up to 10 sides",
+        ],
+        "Construction": [
+            "construct lines and angles using geometric instruments",
+        ],
+        "Symmetry": [
+            "identify lines of symmetry in plane shapes and letters",
+        ],
+        "Data Collection and Classification": [
+            "collect, classify, and tabulate statistical data",
+        ],
+        "Data Representation": [
+            "represent data with bar charts, pie charts, and pictograms",
+            "interpret pictograms and frequency tables",
+        ],
+        "Translation": [
+            "define transformation and translation",
+            "translate plane figures",
+        ],
+    }
+
+    # Form 2 coverage focus (syllabus content matrix, aligned to mobile Form 2 subtopic names).
+    FORM_2_COVERAGE_HINTS = {
+        "Number Concepts and Operations": [
+            "find factors and multiples of numbers",
+            "find H.C.F. and L.C.M. of numbers",
+            "find squares and square roots",
+            "find cubes and cube roots",
+        ],
+        "Approximation and Estimation": [
+            "round off numbers to significant figures",
+            "estimate to a given degree of accuracy",
+        ],
+        "Ratios and Proportions": [
+            "simplify and use ratios to solve problems",
+            "use direct and inverse proportion to solve problems",
+        ],
+        "Standard Form": [
+            "express numbers in standard form a x 10^n",
+            "convert small and large numbers to and from standard form",
+        ],
+        "Number Bases": [
+            "convert numbers to base ten",
+            "convert base ten numbers to other bases",
+            "expand numbers in their base place values",
+        ],
+        "Scales": [
+            "identify types of scales",
+            "find scales from given information",
+            "measure lengths and calculate distances using scale",
+        ],
+        "Sets": [
+            "find union and intersection of sets",
+            "identify universal set, union, and intersection in context",
+        ],
+        "Venn Diagrams": [
+            "represent sets on Venn diagrams with up to 2 subsets",
+            "solve practical problems using Venn diagrams",
+            "convert word problems into set notation",
+        ],
+        "Bills": [
+            "interpret household and corporate bills",
+            "extract bill data for calculations",
+        ],
+        "Consumer Arithmetic": [
+            "calculate profit and loss",
+            "calculate discount",
+            "find simple interest",
+            "solve hire purchase problems",
+            "prepare enterprise budgets for small business",
+        ],
+        "Mensuration": [
+            "calculate perimeter and area of plane shapes",
+            "calculate volumes of cylinders and cuboids",
+        ],
+        "Functional Graphs": [
+            "draw Cartesian plane using given scale and plot points",
+            "construct table of values for linear functions",
+            "draw straight-line graphs",
+        ],
+        "Travel Graphs": [
+            "draw and interpret distance-time graphs",
+            "use distance-time graphs to answer questions",
+        ],
+        "Direct Variation": [
+            "express direct variation in algebraic terms",
+            "solve direct variation problems",
+            "read and interpret a ready reckoner",
+        ],
+        "Variation Graphs": [
+            "draw direct variation graphs",
+            "interpret information on variation graphs",
+        ],
+        "Algebraic Manipulation": [
+            "substitute values into expressions with 2 or more variables",
+            "factorise linear and quadratic expressions",
+            "simplify algebraic fractions",
+            "find H.C.F. and L.C.M. of algebraic expressions",
+            "expand algebraic expressions with brackets",
+        ],
+        "Equations": [
+            "solve linear equations with unknown on both sides",
+            "construct linear equations from statements",
+            "solve equations with brackets and algebraic fractions",
+            "solve simultaneous linear equations",
+            "solve quadratic equations where coefficient of x^2 is 1",
+        ],
+        "Inequalities": [
+            "represent linear inequalities on number line",
+            "formulate linear inequalities",
+            "solve linear inequalities",
+            "represent inequalities on Cartesian plane",
+        ],
+        "Indices": [
+            "apply laws of indices",
+            "calculate algebraic squares, square roots, cubes, and cube roots",
+        ],
+        "Bearings": [
+            "name cardinal points and give directions",
+            "find compass bearings and three-figure bearings",
+        ],
+        "Polygons": [
+            "name n-sided polygons up to n=10",
+            "state properties of triangles and quadrilaterals",
+        ],
+        "Similarity and Congruency": [
+            "identify similar and congruent figures",
+            "solve problems on similar and congruent figures",
+        ],
+        "Construction": [
+            "construct lines and angles",
+            "bisect lines and angles",
+        ],
+        "Symmetry": [
+            "identify lines of symmetry for regular polygons",
+            "identify lines of symmetry for isosceles triangles, equilateral triangles, and parallelograms",
+        ],
+        "Data Representation": [
+            "group statistical data",
+            "represent data on bar charts and pie charts",
+        ],
+        "Measures of Central Tendency": [
+            "define measures of central tendency",
+            "state mode and calculate median and mean",
+        ],
+        "Measures of Dispersion": [
+            "define and calculate range",
+        ],
+        "Matrices (Dimension and Order)": [
+            "define matrix and state order/dimension",
+            "identify row, column, and square matrices",
+        ],
+        "Matrix Operations": [
+            "add and subtract matrices",
+            "multiply a matrix by a scalar",
+        ],
+        "Vectors (Definition and Types)": [
+            "define vectors and use vector notation",
+            "identify translation, negative, equal, and parallel vectors",
+        ],
+        "Vector Operations": [
+            "add and subtract two or more vectors",
+        ],
+        "Translation": [
+            "define transformation and translation",
+            "translate plane figures and points",
+        ],
+        "Reflection": [
+            "define reflection",
+            "reflect plane figures in given mirror lines",
+        ],
+        "Probability": [
+            "define probability terms",
+            "describe experimental probability",
+            "calculate probability of single events",
+        ],
+        # Legacy grouped aliases kept for compatibility with existing clients.
+        "Real Numbers": [
+            "find H.C.F. and L.C.M. of numbers",
+            "find squares and square roots",
+            "find cubes and cube roots",
+            "round off numbers to significant figures",
+            "estimate to a given degree of accuracy",
+            "use ratio and proportion to solve problems",
+            "convert numbers in standard form and bases",
+            "calculate distance using scale",
+        ],
+        "Financial Mathematics": [
+            "interpret bills",
+            "calculate simple interest",
+            "solve hire purchase problems",
+            "prepare enterprise budgets",
+        ],
+        "Measures and Mensuration": [
+            "calculate perimeter and area",
+            "calculate volume of cylinders and cuboids",
+        ],
+        "Graphs": [
+            "construct values tables and draw linear graphs",
+            "draw and interpret distance-time graphs",
+        ],
+        "Variation": [
+            "use direct variation and variation graphs",
+        ],
+        "Algebra": [
+            "perform algebraic manipulation, solve equations and inequalities, and apply indices",
+        ],
+        "Geometry": [
+            "work with bearings, polygons, similarity/congruency, construction, and symmetry",
+        ],
+        "Statistics": [
+            "represent data and compute central tendency and dispersion",
+        ],
+        "Matrices": [
+            "state matrix types and perform basic matrix operations",
+        ],
+        "Vectors": [
+            "classify vectors and perform vector operations",
+        ],
+        "Transformation": [
+            "perform translations and reflections",
+        ],
+    }
+
+    # Form 3 coverage focus (aligned to mobile Form 3 subtopic names).
+    FORM_3_COVERAGE_HINTS = {
+        "Number Concepts and Operations": [
+            "apply order of operations using precedence rules",
+            "differentiate rational and irrational numbers and simplify surds",
+            "solve problems with directed numbers, fractions/decimals, and patterns",
+        ],
+        "Approximation and Estimation": [
+            "find lower and upper limits of accuracy",
+            "use limits of accuracy in calculations",
+        ],
+        "Ratios, Rates, and Proportions": [
+            "reduce ratios and share quantities in ratio form",
+            "solve direct and inverse proportion problems in real-life contexts",
+            "calculate and interpret rates",
+        ],
+        "Ordinary and Standard Form": [
+            "add and subtract numbers in standard form",
+            "multiply and divide numbers in standard form",
+        ],
+        "Number Bases": [
+            "add and subtract numbers in bases 2 to 10",
+            "solve equations involving number bases",
+        ],
+        "Scales and Simple Map Problems": [
+            "calculate distances and areas on maps",
+            "determine area factor from scale factor and vice versa",
+            "apply scales in life-situation problems",
+        ],
+        "Set Builder Notation": [
+            "define sets using set-builder notation",
+            "describe sets using symbols and listed elements",
+        ],
+        "Venn Diagrams": [
+            "represent and solve problems using three-subset Venn diagrams",
+            "analyze relationships between subsets",
+        ],
+        "Consumer Arithmetic": [
+            "interpret bank statements and extract data for calculations",
+            "compute compound interest, commission, and hire purchase values",
+        ],
+        "Mensuration: Combined Shapes": [
+            "calculate perimeter of combined shapes",
+            "calculate area of combined shapes",
+        ],
+        "Mensuration: Solids": [
+            "calculate volume of cones",
+            "calculate volume of pyramids",
+        ],
+        "Density": [
+            "use the relationship density = mass/volume",
+            "solve problems involving mass, volume, and density",
+        ],
+        "Functional Graphs": [
+            "use functional notation",
+            "draw linear and quadratic graphs from tables/intercepts",
+            "find unknown values from linear and quadratic graphs",
+        ],
+        "Travel Graphs": [
+            "draw and interpret distance-time and speed-time graphs",
+            "solve distance, speed, time, and acceleration problems",
+        ],
+        "Variation": [
+            "model direct variation and inverse variation",
+            "sketch and interpret inverse variation graphs",
+            "solve variation problems",
+        ],
+        "Algebraic Manipulation": [
+            "find LCM and HCF of algebraic expressions",
+            "simplify algebraic fractions",
+            "factorise quadratic expressions where a=1",
+        ],
+        "Simultaneous Equations": [
+            "solve simultaneous linear equations by substitution",
+            "solve simultaneous linear equations by elimination",
+            "solve simultaneous equations graphically",
+        ],
+        "Quadratic Equations": [
+            "solve quadratic equations by factorisation",
+            "solve linear/quadratic equations using graphs",
+        ],
+        "Change of Subject": [
+            "change subject of formula correctly",
+            "substitute values after rearranging formulas",
+        ],
+        "Simultaneous Inequalities (One Variable)": [
+            "solve simultaneous inequalities in one variable",
+            "represent solution sets on line graphs",
+        ],
+        "Linear Inequalities (Two Variables)": [
+            "represent linear inequalities on Cartesian plane by shading unwanted regions",
+            "represent solution sets of simultaneous linear inequalities on Cartesian plane",
+        ],
+        "Indices": [
+            "simplify algebraic expressions involving indices",
+        ],
+        "Logarithms": [
+            "evaluate logarithms and apply laws of logarithms",
+            "simplify logarithmic expressions",
+            "solve equations involving indices and logarithms",
+        ],
+        "Angles of Elevation and Depression": [
+            "construct angles of elevation and depression",
+            "solve elevation/depression problems using scale drawings",
+        ],
+        "Bearings": [
+            "construct bearing diagrams",
+            "solve three-figure and compass bearing problems",
+            "locate positions using bearings",
+        ],
+        "Polygons": [
+            "state properties of n-sided polygons",
+            "solve interior and exterior angle problems",
+        ],
+        "Similarity and Congruency": [
+            "use scale, area, and volume factors for similar figures/solids",
+            "compute areas, volumes, and masses for similar figures/solids",
+        ],
+        "Constructions": [
+            "construct triangles and quadrilaterals accurately",
+            "solve geometry problems using constructions",
+        ],
+        "Symmetry (Rotational)": [
+            "identify and describe rotational symmetry",
+            "solve problems involving rotational symmetry",
+        ],
+        "Data Collection and Classification (Grouped Data)": [
+            "collect and classify grouped statistical data",
+            "find class width and create frequency tables",
+        ],
+        "Data Representation (Grouped Data)": [
+            "construct bar charts, pie charts, histograms, and frequency polygons",
+            "interpret grouped-data graphs",
+        ],
+        "Measures of Central Tendency (Grouped Data)": [
+            "calculate mean, mode, and median for grouped data",
+            "use the assumed mean method",
+            "interpret significance of central tendency measures",
+        ],
+        "Trigonometry: Pythagoras Theorem": [
+            "find missing sides in right triangles using Pythagoras theorem",
+            "solve real-life problems using Pythagoras theorem",
+        ],
+        "Trigonometrical Ratios": [
+            "calculate sine, cosine, and tangent for acute and obtuse angles",
+            "solve 2D right-angled triangle problems using trig ratios",
+        ],
+        "Vectors: Types": [
+            "identify translational, equal, negative, parallel, and position vectors",
+            "represent vectors on Cartesian plane using vector notation",
+        ],
+        "Vector Operations": [
+            "add and subtract vectors",
+            "multiply vectors by scalars",
+            "find magnitude of vectors and solve vector problems",
+        ],
+        "Matrix Operations": [
+            "add and subtract matrices",
+            "perform scalar multiplication and matrix multiplication",
+            "determine when matrix operations are valid",
+        ],
+        "Determinants": [
+            "calculate determinants of 2x2 matrices",
+            "distinguish singular and non-singular matrices",
+        ],
+        "Inverse Matrix": [
+            "calculate inverse of non-singular 2x2 matrices",
+            "solve simultaneous equations using inverse matrices",
+        ],
+        "Experimental and Theoretical Probability": [
+            "differentiate theoretical and experimental probability",
+            "compute probabilities from probability space and experiments",
+        ],
+        "Probability of Single Events": [
+            "carry out single-event experiments",
+            "compute probabilities of single events using probability rules",
+        ],
+        "Translation (Cartesian Plane)": [
+            "move plane figures using translation vectors",
+            "determine image coordinates after translation",
+        ],
+        "Reflection (Cartesian Plane)": [
+            "draw reflected images on Cartesian plane",
+            "find image coordinates and determine axis/line of reflection",
+        ],
+        "Rotation (Cartesian Plane)": [
+            "draw rotated images on Cartesian plane",
+            "describe rotation fully using center, angle, and direction",
+        ],
+        "Enlargement": [
+            "draw enlarged images of plane figures",
+            "determine enlargement scale factor",
+        ],
+    }
+
+    # Form 4 coverage focus (aligned to mobile Form 4 subtopic names).
+    FORM_4_COVERAGE_HINTS = {
+        "Limits of Accuracy": [
+            "compute minimum and maximum perimeters/areas using bounds",
+            "solve limits of accuracy problems in practical contexts",
+        ],
+        "Consumer Arithmetic (Exchange and Taxes)": [
+            "convert currencies using exchange rates",
+            "calculate PAYE, VAT, customs and excise duty",
+        ],
+        "Mensuration: Similar Shapes": [
+            "identify similar shapes and apply scale factors",
+            "compute area and volume of similar shapes",
+        ],
+        "Mensuration: Prisms and Frustums": [
+            "calculate surface area and volume of prisms",
+            "calculate volume of frustums",
+        ],
+        "Functional Graphs (Cubic and Inverse)": [
+            "draw cubic and inverse function graphs",
+            "solve problems involving cubic or inverse functions",
+            "work with graphs of forms like y=ax^3+b and y=a/x",
+        ],
+        "Travel Graphs (Kinematics)": [
+            "relate displacement, velocity, acceleration and time",
+            "draw and interpret displacement-time and velocity-time graphs",
+        ],
+        "Joint and Partial Variation": [
+            "form equations for joint and partial variation",
+            "compute unknowns from variation formulas and graphs",
+        ],
+        "Algebraic Manipulation (Fractions)": [
+            "simplify algebraic fractions using LCM of denominators",
+            "simplify algebraic fractions by factorisation",
+        ],
+        "Quadratic Equations (Advanced Methods)": [
+            "solve quadratic equations by completing the square",
+            "derive and apply quadratic formula",
+            "solve life-situation quadratic problems",
+        ],
+        "Linear Programming": [
+            "formulate inequalities from life situations",
+            "represent inequalities on Cartesian plane",
+            "solve optimization problems in feasible regions",
+        ],
+        "Circle Theorems (Angles)": [
+            "use centre/circumference angle theorem",
+            "use angle in semicircle, same segment, and alternate segment theorems",
+        ],
+        "Circle Theorems (Tangents and Cyclic Quads)": [
+            "use tangent-radius and tangent theorems",
+            "solve cyclic quadrilateral angle problems",
+        ],
+        "Locus Definitions": [
+            "define locus and construct standard loci",
+            "construct loci equidistant from points/lines/intersecting lines",
+        ],
+        "Locus Applications": [
+            "solve practical problems using loci with bearings, scale and area",
+            "apply perpendicular constructions in locus problems",
+        ],
+        "Data Representation (Cumulative Frequency)": [
+            "construct cumulative frequency tables",
+            "draw and interpret cumulative frequency curves (ogives)",
+        ],
+        "Measures of Central Tendency (Graph Based)": [
+            "determine median from ogive",
+            "estimate quartiles from cumulative frequency curve",
+        ],
+        "Measures of Dispersion (Grouped)": [
+            "compute range, interquartile range, and semi-interquartile range",
+            "interpret importance of interquartile measures",
+        ],
+        "Trigonometrical Ratios (Advanced Rules)": [
+            "apply sine rule and cosine rule in triangle problems",
+            "convert between degrees and minutes where needed",
+        ],
+        "Trigonometry (3D Problems)": [
+            "solve 3D trigonometry problems using sine and cosine rules",
+        ],
+        "Vectors (Plane Shapes)": [
+            "express edges/diagonals as linear combinations of vectors",
+            "find scalar values in equal/parallel vector relations and ratios",
+        ],
+        "Probability: Combined Events": [
+            "define combined events with examples",
+            "compute probabilities for combined events",
+        ],
+        "Probability Tools": [
+            "construct outcome tables and tree diagrams",
+            "apply probability rules to compute probabilities",
+        ],
+        "Translation (Calculation)": [
+            "find translation vectors from object-image pairs",
+            "use translation vectors to compute image coordinates",
+        ],
+        "Reflection (General Lines)": [
+            "reflect figures in general lines of the form y=mx+c",
+            "determine reflection line/axis from object and image",
+        ],
+        "Reflection (Matrices)": [
+            "find reflection matrices for axes and key lines like y=x and y=-x",
+            "calculate image coordinates using matrix multiplication",
+        ],
+        "Rotation (Matrices)": [
+            "find matrices for rotations about origin through standard angles",
+            "rotate figures with matrices and describe rotation fully",
+        ],
+        "Enlargement (Matrices)": [
+            "use enlargement matrices about origin",
+            "calculate image coordinates using enlargement matrices",
+        ],
+        "Enlargement (General Point)": [
+            "enlarge figures about any point using rational scale factors",
+            "describe enlargement fully from given matrix/object/image",
+        ],
+        "Stretch (Definition)": [
+            "define one-way and two-way stretches",
+            "calculate image coordinates under stretch matrices",
+        ],
+        "Stretch (Description)": [
+            "describe stretch using stretch factors and invariant line/point",
+        ],
+        "Shear (Definition)": [
+            "define shear transformation",
+            "compute/draw images under shear matrices",
+        ],
+        "Shear (Description)": [
+            "describe shear using invariant line and shear factor",
+        ],
+    }
 
     # LaTeX formatting rules for all generated math (aligned with Teacher Mode / mathematics_teacher_service)
     MATH_LATEX_GUIDELINES = """
@@ -241,6 +942,34 @@ class MathQuestionGenerator:
         ]
     }
 
+    @classmethod
+    def _normalize_form_level(cls, form_level: Optional[str]) -> str:
+        if not form_level or not isinstance(form_level, str):
+            return "Form 1"
+        cleaned = form_level.strip().lower().replace("_", " ")
+        if cleaned in ("form 1", "form1"):
+            return "Form 1"
+        if cleaned in ("form 2", "form2"):
+            return "Form 2"
+        if cleaned in ("form 3", "form3"):
+            return "Form 3"
+        if cleaned in ("form 4", "form4"):
+            return "Form 4"
+        return "Form 1"
+
+    @classmethod
+    def _get_form_focus_objectives(cls, topic: str, form_level: str = "Form 1") -> List[str]:
+        normalized_form = cls._normalize_form_level(form_level)
+        if normalized_form == "Form 1":
+            return cls.FORM_1_COVERAGE_HINTS.get(topic, [])
+        if normalized_form == "Form 2":
+            return cls.FORM_2_COVERAGE_HINTS.get(topic, [])
+        if normalized_form == "Form 3":
+            return cls.FORM_3_COVERAGE_HINTS.get(topic, [])
+        if normalized_form == "Form 4":
+            return cls.FORM_4_COVERAGE_HINTS.get(topic, [])
+        return []
+
     def __init__(self):
         # DeepSeek configuration (fallback)
         self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
@@ -332,7 +1061,17 @@ class MathQuestionGenerator:
             logger.error(f"Failed to configure Gemini: {e}")
             self._gemini_configured = False
 
-    def generate_question(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None, timeout_seconds: Optional[float] = None, platform: str = 'mobile') -> Optional[Dict]:
+    def generate_question(
+        self,
+        subject: str,
+        topic: str,
+        difficulty: str = 'medium',
+        user_id: str = None,
+        timeout_seconds: Optional[float] = None,
+        platform: str = 'mobile',
+        form_level: str = "Form 1",
+        student_name: Optional[str] = None,
+    ) -> Optional[Dict]:
         """
         Generate a question with Vertex AI as primary and DeepSeek as fallback.
         The prompt and validation logic remain identical across providers.
@@ -352,15 +1091,26 @@ class MathQuestionGenerator:
                     recent_topics = set()
                     recent_subtopics = []
 
-            prompt = self._create_question_prompt(subject, topic, difficulty, recent_topics, recent_subtopics)
+            prompt = self._create_question_prompt(
+                subject,
+                topic,
+                difficulty,
+                recent_topics,
+                recent_subtopics,
+                form_level=form_level,
+                student_name=student_name,
+            )
             context = f"{subject}/{topic}"
 
             logger.info(f"Trying Vertex AI (primary) for {context} on platform={platform}")
             vertex_response = try_vertex_json(prompt, logger=logger, context=context)
             if vertex_response:
-                question_data = self._validate_and_format_question(vertex_response, subject, topic, difficulty, user_id)
+                question_data = self._validate_and_format_question(
+                    vertex_response, subject, topic, difficulty, user_id, student_name=student_name
+                )
                 if question_data:
                     question_data['source'] = 'vertex_ai'
+                    question_data['form_level'] = self._normalize_form_level(form_level)
                     logger.info(f"Vertex AI generated question for {context}")
                     self._record_math_subtopic(user_id, topic)
                     return question_data
@@ -387,9 +1137,12 @@ class MathQuestionGenerator:
 
                     response = self._send_api_request(prompt, timeout=timeout)
                     if response:
-                        question_data = self._validate_and_format_question(response, subject, topic, difficulty, user_id)
+                        question_data = self._validate_and_format_question(
+                            response, subject, topic, difficulty, user_id, student_name=student_name
+                        )
                         if question_data:
                             question_data['source'] = 'deepseek_ai_fallback'
+                            question_data['form_level'] = self._normalize_form_level(form_level)
                             logger.info(f"DeepSeek fallback generated question for {context} on attempt {attempt + 1}")
                             self._record_math_subtopic(user_id, topic)
                             return question_data
@@ -472,12 +1225,12 @@ class MathQuestionGenerator:
             logger.error(f"Gemini generation error: {e}")
             return None
 
-    def generate_question_with_gemini(self, subject: str, topic: str, difficulty: str = 'medium') -> Optional[Dict]:
+    def generate_question_with_gemini(self, subject: str, topic: str, difficulty: str = 'medium', form_level: str = "Form 1") -> Optional[Dict]:
         """
         Legacy method for backward compatibility.
         Now calls the main generate_question which uses Gemini as primary.
         """
-        return self.generate_question(subject, topic, difficulty)
+        return self.generate_question(subject, topic, difficulty, form_level=form_level)
 
     def generate_graph_question(self, equation: str, graph_type: str, difficulty: str = 'medium', user_id: str = None, timeout_seconds: Optional[float] = None) -> Optional[Dict]:
         """
@@ -735,7 +1488,16 @@ Return JSON:
         except Exception as e:
             logger.debug("Could not record math subtopic: %s", e)
 
-    def _create_question_prompt(self, subject: str, topic: str, difficulty: str, recent_topics: set = None, recent_subtopics: list = None) -> str:
+    def _create_question_prompt(
+        self,
+        subject: str,
+        topic: str,
+        difficulty: str,
+        recent_topics: set = None,
+        recent_subtopics: list = None,
+        form_level: str = "Form 1",
+        student_name: Optional[str] = None,
+    ) -> str:
         """Create optimized prompt using structured prompts when available with expert examiner persona"""
         
         if recent_topics is None:
@@ -757,7 +1519,10 @@ Return JSON:
         }
         
         # Get learning objectives for this topic
-        objectives = self.learning_objectives.get(topic, [f"understanding of {topic}"])
+        form_level = self._normalize_form_level(form_level)
+        student_name_for_prompt = (student_name or "Student").strip() or "Student"
+        form_focus_objectives = self._get_form_focus_objectives(topic, form_level)
+        objectives = form_focus_objectives or self.learning_objectives.get(topic, [f"understanding of {topic}"])
         selected_subtopic = random.choice(objectives) if objectives else f"understanding of {topic}"
         
         # Try to get a structured prompt for this topic
@@ -844,6 +1609,11 @@ COMPREHENSIVE COVERAGE REQUIREMENT:
 - All available subtopics for this topic: {chr(10).join(f"  - {obj}" for obj in objectives)}
 - To ensure full syllabus coverage, different subtopics should be tested across multiple question generations
 - Questions should rotate through all learning objectives to ensure comprehensive topic coverage
+
+FORM-SCOPED COVERAGE (ACTIVE):
+- Current syllabus focus: {form_level}
+- Apply these focus points for this topic:
+{chr(10).join(f"  - {obj}" for obj in (form_focus_objectives or objectives))}
 
 TYPICAL QUESTION STYLES FOR THIS TOPIC:
 {', '.join(question_styles)}
@@ -984,7 +1754,7 @@ CRITICAL MATH FORMATTING - STANDARD LaTeX (same as Teacher Mode):
 SOLUTION AND EXPLANATION FORMAT (CRITICAL):
 - "solution": Write CLEAR, NUMBERED STEPS. Each step on its own line. Use "Step 1:", "Step 2:", etc. Show working and method marks. All math in LaTeX ($...$ or $$...$$). No long paragraphs—break into short, clear steps.
 - "explanation": Short conceptual note (2–4 sentences). What was tested and one key takeaway. Use LaTeX for any math.
-- "teaching_explanation": Optional friendly tip; keep brief. Can mention one common mistake.
+- "teaching_explanation": Optional friendly tip; keep brief. Can mention one common mistake. Address the learner by name: "{student_name_for_prompt}".
 
 STUDENT LEVEL: ZIMSEC O-Level Forms 1-4 (ages 15-17 in Zimbabwe). Keep content age-appropriate.
 
@@ -1044,6 +1814,11 @@ COMPREHENSIVE COVERAGE REQUIREMENT:
 - To ensure full syllabus coverage, different subtopics should be tested across multiple question generations
 - Questions should rotate through all learning objectives to ensure comprehensive topic coverage
 
+FORM-SCOPED COVERAGE (ACTIVE):
+- Current syllabus focus: {form_level}
+- Apply these focus points for this topic:
+{chr(10).join(f"  - {obj}" for obj in (form_focus_objectives or objectives))}
+
 TYPICAL QUESTION STYLES FOR THIS TOPIC:
 {', '.join(question_styles)}
 
@@ -1086,7 +1861,7 @@ Requirements:
 SOLUTION AND EXPLANATION FORMAT:
 - "solution": CLEAR NUMBERED STEPS. "Step 1:", "Step 2:", etc. Show working; all math in LaTeX. Short steps, no long paragraphs.
 - "explanation": Brief (2–4 sentences); LaTeX for math.
-- "teaching_explanation": Optional short tip.
+- "teaching_explanation": Optional short tip. Address the learner by name: "{student_name_for_prompt}".
 
 STUDENT LEVEL: ZIMSEC O-Level Forms 1-4 (ages 15-17 in Zimbabwe). Keep content age-appropriate.
 
@@ -1249,7 +2024,15 @@ Generate the question now:"""
             logger.error(f"An unexpected error occurred during AI API request: {e}")
             return None
 
-    def generate_question_stream(self, subject: str, topic: str, difficulty: str = 'medium', user_id: str = None):
+    def generate_question_stream(
+        self,
+        subject: str,
+        topic: str,
+        difficulty: str = 'medium',
+        user_id: str = None,
+        form_level: str = "Form 1",
+        student_name: Optional[str] = None,
+    ):
         """
         Generate a math question using deepseek-reasoner with streaming.
         Yields thinking updates for real-time UI, then final question.
@@ -1264,7 +2047,13 @@ Generate the question now:"""
             return
             
         # Build the prompt
-        prompt = self._create_question_prompt(subject, topic, difficulty)
+        prompt = self._create_question_prompt(
+            subject,
+            topic,
+            difficulty,
+            form_level=form_level,
+            student_name=student_name,
+        )
         
         headers = {
             'Authorization': f'Bearer {self.api_key}',
@@ -1353,7 +2142,7 @@ Generate the question now:"""
                     try:
                         question_data = json.loads(json_str)
                         formatted = self._validate_and_format_question(
-                            question_data, subject, topic, difficulty, user_id
+                            question_data, subject, topic, difficulty, user_id, student_name=student_name
                         )
                         if formatted:
                             formatted['source'] = 'deepseek_reasoner'
@@ -1364,7 +2153,14 @@ Generate the question now:"""
             
             # Fallback to regular generation if streaming fails
             logger.warning("Streaming failed, falling back to regular generation")
-            question = self.generate_question(subject, topic, difficulty, user_id)
+            question = self.generate_question(
+                subject,
+                topic,
+                difficulty,
+                user_id,
+                form_level=form_level,
+                student_name=student_name,
+            )
             if question:
                 yield {'type': 'question', 'data': question}
             else:
@@ -1377,7 +2173,56 @@ Generate the question now:"""
             logger.error(f"Error in streaming generation: {e}")
             yield {'type': 'error', 'message': 'An error occurred'}
 
-    def _validate_and_format_question(self, question_data: Dict, subject: str, topic: str, difficulty: str, user_id: str = None) -> Dict:
+    @staticmethod
+    def _ensure_stepwise_solution(solution_text: str) -> str:
+        """Ensure the solution uses numbered Step lines with readable spacing."""
+        if not solution_text:
+            return ''
+        cleaned = solution_text.replace('\r\n', '\n').strip()
+        if not cleaned:
+            return ''
+        if re.search(r'(?im)^\s*Step\s+\d+\s*:', cleaned):
+            return cleaned
+
+        lines = [ln.strip() for ln in cleaned.split('\n') if ln.strip()]
+        if len(lines) <= 1:
+            sentence_parts = [s.strip() for s in re.split(r'(?<=[.!?])\s+', cleaned) if s.strip()]
+            if len(sentence_parts) > 1:
+                lines = sentence_parts
+
+        if not lines:
+            return cleaned
+
+        numbered_lines: List[str] = []
+        step_number = 1
+        for line in lines:
+            if re.match(r'(?i)^(therefore|hence|final answer)\b', line):
+                numbered_lines.append(line)
+            else:
+                numbered_lines.append(f"Step {step_number}: {line}")
+                step_number += 1
+        return '\n\n'.join(numbered_lines)
+
+    @staticmethod
+    def _contains_latex_math(text: str) -> bool:
+        """Lightweight check for LaTeX math markers/commands."""
+        if not text:
+            return False
+        markers = (
+            '$', '\\(', '\\[', '\\frac', '\\sqrt', '\\times', '\\div', '\\pi',
+            '\\sin', '\\cos', '\\tan', '\\leq', '\\geq', '\\neq', '\\pm'
+        )
+        return any(m in text for m in markers)
+
+    def _validate_and_format_question(
+        self,
+        question_data: Dict,
+        subject: str,
+        topic: str,
+        difficulty: str,
+        user_id: str = None,
+        student_name: Optional[str] = None,
+    ) -> Dict:
         """Validate and format the question response"""
         try:
             # Required fields validation
@@ -1388,23 +2233,49 @@ Generate the question now:"""
                     logger.error(f"Missing required field: {field}")
                     return None
             
+            question_text = (question_data.get('question', '') or '').strip()
+            solution_text = self._ensure_stepwise_solution((question_data.get('solution', '') or '').strip())
+            answer_text = (question_data.get('answer', '') or '').strip()
+            explanation_text = (question_data.get('explanation', '') or '').strip()
+            teaching_explanation = (question_data.get('teaching_explanation', '') or '').strip()
+            subtopic = (question_data.get('subtopic', '') or '').strip()
+            marking_notes = (question_data.get('marking_notes', '') or '').strip()
+
+            if len(solution_text) < 20:
+                logger.error("Solution too short")
+                return None
+
+            # Encourage LaTeX presence without being overly brittle.
+            if not self._contains_latex_math('\n'.join([question_text, solution_text, answer_text, explanation_text])):
+                if answer_text:
+                    solution_text = f"{solution_text}\n\nFinal answer in LaTeX: ${answer_text}$"
+
+            student_first_name = (student_name or "Student").strip() or "Student"
+            prompt_to_student = (question_data.get('prompt_to_student') or '').strip()
+            if not prompt_to_student:
+                topic_label = (topic or '').replace('_', ' ').strip() or 'Mathematics'
+                prompt_to_student = (
+                    f"{student_first_name}, solve this {topic_label} question step by step and show all your working."
+                )
+
             # Format the question with all necessary fields
             formatted_question = {
-                'question': question_data.get('question', '').strip(),
-                'solution': question_data.get('solution', '').strip(),
-                'answer': question_data.get('answer', '').strip(),
+                'question': question_text,
+                'solution': solution_text,
+                'answer': answer_text,
                 'points': question_data.get('points', 10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 30),
-                'explanation': question_data.get('explanation', ''),
+                'explanation': explanation_text,
+                'teaching_explanation': teaching_explanation,
+                'subtopic': subtopic,
+                'marking_notes': marking_notes,
+                'zimsec_paper_reference': (question_data.get('zimsec_paper_reference') or '').strip(),
+                'prompt_to_student': prompt_to_student,
                 'difficulty': difficulty,
                 'topic': topic,
                 'subject': subject,
                 'generated_at': datetime.now().isoformat(),
                 'source': 'deepseek_ai'
             }
-
-            if len(formatted_question['solution']) < 20:
-                logger.error("Solution too short")
-                return None
 
             # Add to history service if user provided and question was successfully generated
             if user_id and formatted_question and formatted_question.get('question'):

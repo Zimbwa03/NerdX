@@ -99,6 +99,32 @@ def _credits_remaining(user_id: str) -> int:
     return _credits_display(units)
 
 
+def _get_student_first_name(user_id: Optional[str]) -> str:
+    """Return a short first-name style label for personalized prompts."""
+    if not user_id:
+        return "Student"
+    try:
+        reg = get_user_registration(user_id) or {}
+        raw_name = (
+            reg.get('name')
+            or reg.get('first_name')
+            or reg.get('full_name')
+            or reg.get('nerdx_id')
+            or reg.get('chat_id')
+            or ''
+        )
+        if not isinstance(raw_name, str):
+            raw_name = str(raw_name)
+        raw_name = raw_name.strip()
+        if raw_name:
+            first = raw_name.split()[0].strip()
+            if first:
+                return first[:40]
+    except Exception as e:
+        logger.debug("Unable to resolve student first name for prompt: %s", e)
+    return "Student"
+
+
 def _deduct_credits_or_fail(user_id: str, cost_units: int, transaction_type: str, description: str):
     """
     Deduct credits and return remaining displayed credits (real-time from RPC when possible).
@@ -1823,6 +1849,8 @@ def generate_question():
         subject = data.get('subject', '')
         topic = data.get('topic')
         difficulty = data.get('difficulty', 'medium')
+        form_level = data.get('form_level', 'Form 1')
+        student_first_name = _get_student_first_name(g.current_user_id)
         question_type = data.get('type', 'topical')  # 'topical' or 'exam'
         question_format = (data.get('question_format') or 'mcq').lower()  # 'mcq' or 'structured'
         
@@ -1960,7 +1988,15 @@ def generate_question():
                             # Allow progressive timeouts to work: don't cap too aggressively
                             # The generator will handle its own progressive timeouts [30s, 45s, 60s]
                             attempt_timeout = max(10, min(max(math_generator.timeouts) if hasattr(math_generator, 'timeouts') else math_generator.base_timeout * 2, int(remaining_budget - 5)))
-                            question_data = math_generator.generate_question('Mathematics', topic or 'Algebra', difficulty, g.current_user_id, timeout_seconds=attempt_timeout)
+                            question_data = math_generator.generate_question(
+                                'Mathematics',
+                                topic or 'Algebra',
+                                difficulty,
+                                g.current_user_id,
+                                timeout_seconds=attempt_timeout,
+                                form_level=form_level,
+                                student_name=student_first_name,
+                            )
                             
                             # Reject fallback questions - they are default/static questions
                             if question_data and question_data.get('source') == 'fallback':
@@ -2481,6 +2517,12 @@ def generate_question():
                 pass
         
         # Format question for mobile
+        topic_label = (topic or question_data.get('topic') or '').replace('_', ' ').strip() or 'Mathematics'
+        math_prompt = (
+            f"{student_first_name}, solve this {form_level} {topic_label} question step by step and show all your working."
+            if subject in ('mathematics', 'a_level_pure_math')
+            else ''
+        )
         question = {
             'id': str(uuid.uuid4()),
             'question_text': (
@@ -2504,6 +2546,8 @@ def generate_question():
             'points': question_data.get('points', 10),
             'topic': topic or '',
             'difficulty': difficulty,
+            'form_level': form_level if subject in ('mathematics', 'a_level_pure_math') else question_data.get('form_level', ''),
+            'prompt_to_student': question_data.get('prompt_to_student') or math_prompt,
             'allows_text_input': (
                 subject == 'mathematics' or 
                 subject == 'a_level_pure_math' or
@@ -2855,6 +2899,8 @@ def generate_question_stream():
         subject = data.get('subject', 'mathematics')
         topic = data.get('topic', 'Algebra')
         difficulty = data.get('difficulty', 'medium')
+        form_level = data.get('form_level', 'Form 1')
+        student_first_name = _get_student_first_name(g.current_user_id)
         
         # Only allow streaming for mathematics subjects
         if subject not in ['mathematics', 'a_level_pure_math', 'a_level_statistics']:
@@ -2887,7 +2933,9 @@ def generate_question_stream():
                     subject_name,
                     topic,
                     difficulty,
-                    user_id
+                    user_id,
+                    form_level=form_level,
+                    student_name=student_first_name,
                 ):
                     event_type = event.get('type', 'unknown')
                     
@@ -2909,6 +2957,11 @@ def generate_question_stream():
                         
                         # Format question for mobile
                         question_data = event.get('data', {})
+                        topic_label = (topic or question_data.get('topic') or 'Mathematics').replace('_', ' ').strip()
+                        personalized_prompt = (
+                            question_data.get('prompt_to_student')
+                            or f"{student_first_name}, solve this {form_level} {topic_label} question step by step and show all your working."
+                        )
                         question = {
                             'id': str(uuid.uuid4()),
                             'question_text': question_data.get('question', ''),
@@ -2921,6 +2974,8 @@ def generate_question_stream():
                             'points': question_data.get('points', 20),
                             'topic': topic,
                             'difficulty': difficulty,
+                            'form_level': form_level,
+                            'prompt_to_student': personalized_prompt,
                             'allows_text_input': True,
                             'allows_image_upload': True,
                             'source': 'deepseek_reasoner',
@@ -3452,13 +3507,25 @@ Step 3: Identify where your approach differed and learn from it.
                 if formatted_solution:
                     detailed_solution = '\n'.join(formatted_solution)
         
-        # Convert LaTeX to readable text, normalize spacing, and apply professional formatting for Vertex/AI-derived answers and explanations
-        if subject in ('mathematics', 'a_level_pure_math', 'combined_science'):
+        # Preserve full LaTeX for Mathematics/Pure Math, but keep text conversion for Combined Science.
+        if subject in ('mathematics', 'a_level_pure_math'):
+            try:
+                detailed_solution = LaTeXConverter.normalize_explanation_spacing(detailed_solution or '')
+                # Keep max_length very high so math working is not truncated.
+                detailed_solution = LaTeXConverter.format_explanation_professionally(detailed_solution, max_length=50000)
+                feedback = LaTeXConverter.format_explanation_professionally(feedback or '', max_length=2000)
+                for k in ('what_went_right', 'what_went_wrong', 'improvement_tips', 'encouragement', 'related_topic', 'step_by_step_explanation'):
+                    v = analysis_result.get(k)
+                    if v and isinstance(v, str):
+                        v = LaTeXConverter.normalize_explanation_spacing(v)
+                        analysis_result[k] = LaTeXConverter.format_explanation_professionally(v, max_length=20000)
+            except Exception as e:
+                logger.warning(f"Math LaTeX-preserving formatting in submit-answer failed (non-blocking): {e}")
+        elif subject == 'combined_science':
             try:
                 lc = LaTeXConverter()
                 detailed_solution = lc.latex_to_readable_text(detailed_solution or '')
                 detailed_solution = LaTeXConverter.normalize_explanation_spacing(detailed_solution)
-                # Use large max_length for solution so full Detailed Solution is returned (no truncation)
                 detailed_solution = LaTeXConverter.format_explanation_professionally(detailed_solution, max_length=16000)
                 feedback = LaTeXConverter.format_explanation_professionally(feedback or '', max_length=600)
                 for k in ('what_went_right', 'what_went_wrong', 'improvement_tips', 'encouragement', 'related_topic', 'step_by_step_explanation'):

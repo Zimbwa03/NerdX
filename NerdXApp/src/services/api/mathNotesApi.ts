@@ -6,6 +6,7 @@
 import { getMathTopicNotes, getMathTopics, MathTopicNotes } from '../../data/mathNotes';
 import { getALevelPureMathNotes, getAvailableALevelPureMathTopics } from '../../data/aLevelPureMath';
 import { getOLevelMathNotes, getAvailableOLevelMathTopics } from '../../data/oLevelMath/notes';
+import { getMathFormTopicNotes } from '../../data/mathematics';
 
 export const mathNotesApi = {
     /**
@@ -28,12 +29,24 @@ export const mathNotesApi = {
      * Uses local data directly - works offline
      * Checks O-Level, A-Level Pure Math notes
      */
-    getTopicNotes: async (topic: string, gradeLevel: string = 'O-Level'): Promise<MathTopicNotes | null> => {
+    getTopicNotes: async (
+        topic: string,
+        gradeLevel: string = 'O-Level',
+        formLevel?: 'Form 1' | 'Form 2' | 'Form 3' | 'Form 4'
+    ): Promise<MathTopicNotes | null> => {
         // For A-Level, check A-Level Pure Math notes first
         if (gradeLevel === 'A-Level' || gradeLevel === 'A Level') {
             const aLevelNotes = getALevelPureMathNotes(topic);
             if (aLevelNotes) {
                 return aLevelNotes;
+            }
+        }
+
+        // Form-specific O-Level notes (new structure)
+        if (formLevel) {
+            const formScopedNotes = getMathFormTopicNotes(topic, formLevel);
+            if (formScopedNotes) {
+                return formScopedNotes;
             }
         }
 
@@ -54,4 +67,3 @@ export const mathNotesApi = {
         return aLevelNotes;
     }
 };
-

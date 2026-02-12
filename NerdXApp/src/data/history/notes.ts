@@ -1769,7 +1769,7 @@ historyNotes['Later Iron Age States in Zimbabwe'] = {
   topic: 'Later Iron Age States in Zimbabwe',
   subject: 'History',
   summary: 'Form 1: State Formation in Zimbabwe. Comprehensive study notes covering the concept of statehood and the five pillars of a state; drivers of state formation (security, trade, population, resources, strong leadership); profiles of Mapungubwe, Great Zimbabwe, Mutapa, and Rozvi; political organisation (Mambo, tribute, army); economic foundations (farming, cattle/Kuronzera, mining, crafts, long-distance trade); social organisation and cultural beliefs (Unhu, Mwari, Masvikiro, Bira, Nhimbe); legacy; key terms glossary; and revision with practice questions.',
-  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Great_Zimbabwe_Shaka_Zulu_And_Colonial_Betrayal.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9HcmVhdF9aaW1iYWJ3ZV9TaGFrYV9adWx1X0FuZF9Db2xvbmlhbF9CZXRyYXlhbC5tNGEiLCJpYXQiOjE3NzA4MzAwNTIsImV4cCI6NTI3MTMyNjA1Mn0.0pssgTYCqAvjw956mw8-VGRFH9nwCpypZu5g7TVanxk',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/remaining/The_Rise_of_Early_Zimbabwean_States.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9yZW1haW5pbmcvVGhlX1Jpc2Vfb2ZfRWFybHlfWmltYmFid2Vhbl9TdGF0ZXMubTRhIiwiaWF0IjoxNzcwOTA2OTQ4LCJleHAiOjUyNzE0MDI5NDh9.CZICIhtc4dgrZ0vF_730Y7tkZnMIRwawB2O9Ztsv3Jg',
   videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/remaining/State_Formation_in_Zimbabwe.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L3JlbWFpbmluZy9TdGF0ZV9Gb3JtYXRpb25faW5fWmltYmFid2UubXA0IiwiaWF0IjoxNzcwODQwOTUyLCJleHAiOjUyNzEzMzY5NTJ9.d1WGJkcJosit6WNyzJ6UQiiX1coYft6nx6t8MxqOHAE',
   sections: [
     {
@@ -2131,6 +2131,7 @@ The slave trade was the **organised capture, sale, and forced movement** of huma
 historyNotes['Causes of the Slave Trade'] = {
   topic: 'Causes of the Slave Trade',
   subject: 'History',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/remaining/The_Mechanics_of_the_Slave_Trade.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9yZW1haW5pbmcvVGhlX01lY2hhbmljc19vZl90aGVfU2xhdmVfVHJhZGUubTRhIiwiaWF0IjoxNzcwOTA3MDYzLCJleHAiOjUyNzE0MDMwNjN9.BzhQ_eTUubIRv41L5ajgxqnfb6BRyF3eTufmtRnEMOg',
   videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/remaining/Causes_of_the_Slave_Trade.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L3JlbWFpbmluZy9DYXVzZXNfb2ZfdGhlX1NsYXZlX1RyYWRlLm1wNCIsImlhdCI6MTc3MDg0MDkzOSwiZXhwIjo1MjcxMzM2OTM5fQ.g7h8a-dAc61st3cb40NWB4QPzYQ63o7Gwkp9UkuURZw',
   summary: 'Form 1: Causes of the Slave Trade. Covers foundational definitions (slavery, slave trade, 15th?19th century peak); scope and systems (domestic slavery vs Trans-Atlantic chattel, Triangular Trade, Middle Passage); economic drivers (plantation agriculture, labour shortage, profit motive); political factors (warfare, European meddling, Portuguese in Zambezi, Mutapa/Rozvi); social causes (middlemen, gun-slave cycle); European infrastructure (slave ships, slave castles); overview of effects and abolition; glossary; summary and revision with practice questions.',
   sections: [
@@ -2296,6 +2297,7 @@ Explain three economic causes of the slave trade. (Hint: To earn full marks, dis
 historyNotes['The Triangular Slave Trade'] = {
   topic: 'The Triangular Slave Trade',
   subject: 'History',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/remaining/Inside_the_Triangular_Slave_Trade_Machine%20(1).m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9yZW1haW5pbmcvSW5zaWRlX3RoZV9Ucmlhbmd1bGFyX1NsYXZlX1RyYWRlX01hY2hpbmUgKDEpLm00YSIsImlhdCI6MTc3MDkwNzA4MCwiZXhwIjo1MjcxNDAzMDgwfQ.FBVftWpsH80G4i-NjslsYcq9AXvf6er2weYLGdP-MFo',
   videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/remaining/The_Triangular_Slave_Trade.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L3JlbWFpbmluZy9UaGVfVHJpYW5ndWxhcl9TbGF2ZV9UcmFkZS5tcDQiLCJpYXQiOjE3NzA4NDA5OTksImV4cCI6NTI3MTMzNjk5OX0.pUt8BXW_pVgOPpi0nFvzjj96hFPp2B-ISRhd3ojhBzQ',
   summary: 'Form 1 (ZIMSEC): The Triangular Slave Trade. Foundational vocabulary (Triangular Trade, Middle Passage, Plantation, Slavery, Labour, Commodity); geometry of trade and North Atlantic Gyre (16th?19th c.); three stages (Europe to Africa, Middle Passage, Americas to Europe); slave factories (e.g. Elmina, Goree); conditions and death rates on Middle Passage; drivers of expansion; global consequences (Africa, Americas, Europe); Ubuntu/Unhu; review and assessment with Section A and B questions.',
   sections: [
@@ -2607,6 +2609,7 @@ The slave trade produced **deep and lasting** effects. **Demographically**: popu
 historyNotes['Abolition of the Slave Trade'] = {
   topic: 'Abolition of the Slave Trade',
   subject: 'History',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/remaining/How_Abolition_Sparked_the_Great_Trek.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9yZW1haW5pbmcvSG93X0Fib2xpdGlvbl9TcGFya2VkX3RoZV9HcmVhdF9UcmVrLm00YSIsImlhdCI6MTc3MDkwNzA5OSwiZXhwIjo1MjcxNDAzMDk5fQ.3cdgNGTMUxvSG47GPnNrTtIXW1Au23mkmglKx_Bwmk0',
   videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/remaining/The_Abolition_of_the_Slave_Trade.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L3JlbWFpbmluZy9UaGVfQWJvbGl0aW9uX29mX3RoZV9TbGF2ZV9UcmFkZS5tcDQiLCJpYXQiOjE3NzA4NDA5NjYsImV4cCI6NTI3MTMzNjk2Nn0.0Y1aY_LfjjMUvJoKo-vb-uuYSV_6Gs5W1wrBg1oEjxM',
   summary: 'Form 1 (MoPSE 2024-2030 Heritage-based History): Abolition of the Slave Trade. Definition and why we study (justice, economic evolution, roots of human rights); key terms (abolition of trade vs abolition of slavery); Four Pillars of change (humanitarian, religious, economic, slave resistance); role of abolitionists (Wilberforce, Olaudah Equiano, petitions); legal framework (1807 Slave Trade Act, 1833 Abolition of Slavery Act, West Africa Squadron); aftermath (legitimate trade, continued vigilance, social transformation); glossary; revision and practice in ZIMSEC format.',
   sections: [
@@ -2768,6 +2771,8 @@ historyNotes['The Portuguese Prazo System in the Zambezi Valley'] = {
   topic: 'The Portuguese Prazo System in the Zambezi Valley',
   subject: 'History',
   summary: 'Form 2 Topic 1 explains the meaning, origin, organisation, effects, and decline of the Portuguese prazo system in the Zambezi Valley.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/form%202/Portuguese_Warlords_and_the_Prazo_System.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9mb3JtIDIvUG9ydHVndWVzZV9XYXJsb3Jkc19hbmRfdGhlX1ByYXpvX1N5c3RlbS5tNGEiLCJpYXQiOjE3NzA5MDEzNTcsImV4cCI6NTI3MTM5NzM1N30._JQ2ssjUY9WqqDHQkGuZsu-unagmtpfNbY3GfpkvVdo',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/form%202/Portuguese_Prazo_System.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L2Zvcm0gMi9Qb3J0dWd1ZXNlX1ByYXpvX1N5c3RlbS5tcDQiLCJpYXQiOjE3NzA5MDE3NTgsImV4cCI6NTI3MTM5Nzc1OH0.ztRzSxSY4SRC0KikgcoViEKbZ4AZQWZOnEl44obQqcg',
   sections: [
     {
       title: 'Introduction and Background',
@@ -2952,6 +2957,8 @@ historyNotes['Early Missionary Activities in Zimbabwe (1850-1900)'] = {
   topic: 'Early Missionary Activities in Zimbabwe (1850-1900)',
   subject: 'History',
   summary: 'Form 2 (MoPSE 2024-2030): Early Missionary Activities in Central and Southern Africa (1850?1900). Foundations and vocabulary (missionary, evangelism, convert, catechist, colonialism); reasons for entry (spiritual, humanitarian, intellectual, medicine, civilising mission); major societies and stations (LMS Inyati/Hope Fountain, Jesuit Empandeni, DRC Morgenster); methods and challenges; impact (positive/negative table, national consciousness); African responses; missionaries and colonialism (Moffat Treaty, Rudd Concession, Helm); summary and ZIMSEC revision.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/form%202/How_Missionaries_Helped_Colonize_Zimbabwe.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9mb3JtIDIvSG93X01pc3Npb25hcmllc19IZWxwZWRfQ29sb25pemVfWmltYmFid2UubTRhIiwiaWF0IjoxNzcwOTAxMzE5LCJleHAiOjUyNzEzOTczMTl9.OPgKFx4qD599Goiz-gTVia_KhXBTVTw_lmxB76oIklI',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/form%202/Early_Missionary_Activities.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L2Zvcm0gMi9FYXJseV9NaXNzaW9uYXJ5X0FjdGl2aXRpZXMubXA0IiwiaWF0IjoxNzcwOTAxNzQxLCJleHAiOjUyNzEzOTc3NDF9.k1wIRan3jQM5KE3mNbWcP31f2uVUxWjTdvbpwiocGmk',
   sections: [
     {
       title: '1. Foundations of the Missionary Era: Introduction',
@@ -3108,6 +3115,8 @@ historyNotes['Background to the Colonisation of Zimbabwe'] = {
   topic: 'Background to the Colonisation of Zimbabwe',
   subject: 'History',
   summary: 'Form 2 Topic 3 covers the meaning of colonisation and the wider Scramble for Africa context that led to foreign occupation in Zimbabwe.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/form%202/How_Lobengula_Was_Tricked_Into_Colonization.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9mb3JtIDIvSG93X0xvYmVuZ3VsYV9XYXNfVHJpY2tlZF9JbnRvX0NvbG9uaXphdGlvbi5tNGEiLCJpYXQiOjE3NzA5MDEzMDMsImV4cCI6NTI3MTM5NzMwM30.JlXGRrdR-7euX9i3Sb0n06Te3iPP-hBWmQEABkbSm9s',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/form%202/Background%20to%20the%20Colonisation%20of%20Zimbabwe.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L2Zvcm0gMi9CYWNrZ3JvdW5kIHRvIHRoZSBDb2xvbmlzYXRpb24gb2YgWmltYmFid2UubXA0IiwiaWF0IjoxNzcwOTAxNzE1LCJleHAiOjUyNzEzOTc3MTV9.ziUOUt2s5xefLiOLxcJ4j6XMrWkIj0lh7VeDKSO9byo',
   sections: [
     {
       title: 'Meaning of Colonisation',
@@ -3540,6 +3549,7 @@ historyNotes['Treaties and Concessions in Zimbabwe'] = {
   topic: 'Treaties and Concessions in Zimbabwe',
   subject: 'History',
   summary: 'Form 2 Topic 7 examines how treaties and concessions were used to legalise colonial penetration, focusing on key examples and their effects.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/form%202/The_Fraudulent_Contract_That_Stole_Zimbabwe.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9mb3JtIDIvVGhlX0ZyYXVkdWxlbnRfQ29udHJhY3RfVGhhdF9TdG9sZV9aaW1iYWJ3ZS5tNGEiLCJpYXQiOjE3NzA5MDE0MzcsImV4cCI6NTI3MTM5NzQzN30.N_hGCxoA4aONLE1nP74v0kfaay55XzSIw-XP9V6AJKY',
   sections: [
     {
       title: 'Meaning of Treaties and Concessions',
@@ -3743,6 +3753,8 @@ historyNotes['The Anglo-Ndebele War (1893-1894)'] = {
   topic: 'The Anglo-Ndebele War (1893-1894)',
   subject: 'History',
   summary: 'Form 2 Topic 10 examines the causes, major events, and consequences of the Anglo-Ndebele War as a key stage in colonial conquest.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/form%202/The_Anglo-Ndebele_War_of_Dispossession.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9mb3JtIDIvVGhlX0FuZ2xvLU5kZWJlbGVfV2FyX29mX0Rpc3Bvc3Nlc3Npb24ubTRhIiwiaWF0IjoxNzcwOTAxNDAxLCJleHAiOjUyNzEzOTc0MDF9.GujMdsSSDoQKLu7Tc__-yku49LkWU_3JhpTkrXzgEgw',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/form%202/The_Anglo-Ndebele_War.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L2Zvcm0gMi9UaGVfQW5nbG8tTmRlYmVsZV9XYXIubXA0IiwiaWF0IjoxNzcwOTAxODM0LCJleHAiOjUyNzEzOTc4MzR9.FpnDKRKiSEjoDHftj3tt5nqmZBzvx8MBo6zyCENDf0Q',
   sections: [
     {
       title: 'Background and Causes',
@@ -3812,6 +3824,8 @@ historyNotes['The First Chimurenga / Umvukela (1896-1897)'] = {
   topic: 'The First Chimurenga / Umvukela (1896-1897)',
   subject: 'History',
   summary: 'Form 2 Topic 11 studies the causes, leadership, phases, and effects of the First Chimurenga/Umvukela as the first major anti-colonial uprising in Zimbabwe.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/form%202/Zimbabwe%201896_First_Chimurenga_Rebellion.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9mb3JtIDIvWmltYmFid2UgMTg5Nl9GaXJzdF9DaGltdXJlbmdhX1JlYmVsbGlvbi5tNGEiLCJpYXQiOjE3NzA5MDE0NDksImV4cCI6NTI3MTM5NzQ0OX0.Ww7cG0vVbn9I0qTabI5o_VHtwF1rqKDJ4JcaTsRfmIM',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/form%202/The_First_Chimurenga_Umvukela.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L2Zvcm0gMi9UaGVfRmlyc3RfQ2hpbXVyZW5nYV9VbXZ1a2VsYS5tcDQiLCJpYXQiOjE3NzA5MDE4NTAsImV4cCI6NTI3MTM5Nzg1MH0.SH4jAipgjIUWi3j9nYF9-maEeZsC4DITDCXEd_9ovNc',
   sections: [
     {
       title: 'Background and Causes',
@@ -4450,6 +4464,8 @@ historyNotes['The Anglo-Ndebele War (1893-1894)'] = {
   topic: 'The Anglo-Ndebele War (1893-1894)',
   subject: 'History',
   summary: 'Form 2: The Anglo-Ndebele War (1893?1894). Introduction and turning point; background (dual authority, borders, BSAC role, subject crisis); causes (Victoria Incident, Second Rand, sovereignty, imperial expansion); course (three columns, Maxim gun, Shangani/Bembesi, laager, fall of Bulawayo); reasons for Ndebele defeat; results (political, economic, social, Loot Committee, reserves); key terms; revision and exam prep.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/form%202/The_Anglo-Ndebele_War_of_Dispossession.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9mb3JtIDIvVGhlX0FuZ2xvLU5kZWJlbGVfV2FyX29mX0Rpc3Bvc3Nlc3Npb24ubTRhIiwiaWF0IjoxNzcwOTAxNDAxLCJleHAiOjUyNzEzOTc0MDF9.GujMdsSSDoQKLu7Tc__-yku49LkWU_3JhpTkrXzgEgw',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/form%202/The_Anglo-Ndebele_War.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L2Zvcm0gMi9UaGVfQW5nbG8tTmRlYmVsZV9XYXIubXA0IiwiaWF0IjoxNzcwOTAxODM0LCJleHAiOjUyNzEzOTc4MzR9.FpnDKRKiSEjoDHftj3tt5nqmZBzvx8MBo6zyCENDf0Q',
   sections: [
     {
       title: '1. Introduction to the Conflict',
@@ -4594,6 +4610,8 @@ historyNotes['The First Chimurenga / Umvukela (1896-1897)'] = {
   topic: 'The First Chimurenga / Umvukela (1896-1897)',
   subject: 'History',
   summary: 'Form 2: The First Chimurenga (Shona) / Umvukela (Ndebele) 1896?1897. Introduction to national resistance; background 1890?1895 (BSAC, tribute vs Hut Tax/Chibharo); categorized causes (economic, political, ideological); course of the war (Jameson Raid, Matabeleland, Mashonaland, tactics, Nehanda/Kaguvi); reasons for failure; results; legacy; glossary and exam preparation.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/form%202/Zimbabwe%201896_First_Chimurenga_Rebellion.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9mb3JtIDIvWmltYmFid2UgMTg5Nl9GaXJzdF9DaGltdXJlbmdhX1JlYmVsbGlvbi5tNGEiLCJpYXQiOjE3NzA5MDE0NDksImV4cCI6NTI3MTM5NzQ0OX0.Ww7cG0vVbn9I0qTabI5o_VHtwF1rqKDJ4JcaTsRfmIM',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/form%202/The_First_Chimurenga_Umvukela.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L2Zvcm0gMi9UaGVfRmlyc3RfQ2hpbXVyZW5nYV9VbXZ1a2VsYS5tcDQiLCJpYXQiOjE3NzA5MDE4NTAsImV4cCI6NTI3MTM5Nzg1MH0.SH4jAipgjIUWi3j9nYF9-maEeZsC4DITDCXEd_9ovNc',
   sections: [
     {
       title: '1. Introduction to the National Resistance',
@@ -6971,6 +6989,8 @@ historyNotes["Process of Colonisation of Zimbabwe"] = {
   topic: "Process of Colonisation of Zimbabwe",
   subject: "History",
   summary: "Form 2 (MoPSE 2024 Topic 6.6): The Process of the Colonisation of Zimbabwe. Conceptual foundations; Berlin Conference and Principle of Effectivity; treaties and concessions (Grobler, Moffat, Rudd); Pioneer Column 1890; BSAC rule and 1898 Order in Council; Anglo-Ndebele War 1893?1894; First Chimurenga/Umvukela 1896?1897; consolidation; political, economic, and social effects; revision and exam prep.",
+  audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/form%202/Zimbabwe%20Colonisation_Pioneers_to_Chimurenga.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9mb3JtIDIvWmltYmFid2UgQ29sb25pc2F0aW9uX1Bpb25lZXJzX3RvX0NoaW11cmVuZ2EubTRhIiwiaWF0IjoxNzcwOTAxNDcyLCJleHAiOjUyNzEzOTc0NzJ9.i-aghn2xlXLvJhNTdXJbtcXpHLCth8xka86xnOnD_rY",
+  videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/form%202/The%20Process%20of%20the%20Colonisation%20of%20Zimbabwe.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L2Zvcm0gMi9UaGUgUHJvY2VzcyBvZiB0aGUgQ29sb25pc2F0aW9uIG9mIFppbWJhYndlLm1wNCIsImlhdCI6MTc3MDkwMTgxMywiZXhwIjo1MjcxMzk3ODEzfQ.cPr963QXySWu2JHYjULdOA7OZHG8ICrd7TyrZr7U4n0",
   sections: [
     {
       title: "1. Conceptual Foundations: Understanding Colonisation",
@@ -7157,6 +7177,8 @@ historyNotes["Colonial policies (1923-1979)"] = {
   topic: 'Colonial policies (1923-1979)',
   subject: 'History',
   summary: 'Form 2: Colonial Policies in Zimbabwe (1923?1979). Framework of colonial governance from Responsible Government (1923); political policies (Land Apportionment 1930, Federation, UDI, Land Tenure 1969); economic policies (taxation, Chibaro, Industrial Conciliation, Maize Control); social policies (Colour Bar, Pass Laws, Native Affairs); synthesis of effects; African response from petitions to Second Chimurenga; revision and assessment.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/form%202/How_Land_and_Labor_Laws_Rigged_Zimbabwe.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9mb3JtIDIvSG93X0xhbmRfYW5kX0xhYm9yX0xhd3NfUmlnZ2VkX1ppbWJhYndlLm00YSIsImlhdCI6MTc3MDkwMTI3OSwiZXhwIjo1MjcxMzk3Mjc5fQ.klZ3PE7V2MaBoBOx4-TEMS4HfUVvwy7G-VoH2m2X-7k',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/form%202/Colonial_Policies_in_Zimbabwe.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L2Zvcm0gMi9Db2xvbmlhbF9Qb2xpY2llc19pbl9aaW1iYWJ3ZS5tcDQiLCJpYXQiOjE3NzA5MDE3MjcsImV4cCI6NTI3MTM5NzcyN30.fV00snnFHjZl4RUB-YPfz-K8hvLnXzKQQH3FTF3J4Y0',
   sections: [
     {
       title: '1. Introduction: The Framework of Colonial Governance',
@@ -7327,6 +7349,7 @@ historyNotes["Federation of Rhodesia and Nyasaland (1953-1963)"] = {
   topic: 'Federation of Rhodesia and Nyasaland (1953-1963)',
   subject: 'History',
   summary: 'Form 2: The Federation of Rhodesia and Nyasaland (1953?1963). Foundational introduction and definition; mechanics and division of powers (Federal vs Territorial); formation (1953) and four motives; political structure (Governor-General, Parliament, A/B Rolls); evaluative effects (economic, political, social); African nationalism and opposition (Banda, Kaunda); collapse and unscrambling (1963); legacy (Kariba, nationalism, UDI, Second Chimurenga); glossary; examination practice.',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/form%202/The%20Federation%20of%20Rhodesia%20and%20Nyasaland%20.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L2Zvcm0gMi9UaGUgRmVkZXJhdGlvbiBvZiBSaG9kZXNpYSBhbmQgTnlhc2FsYW5kIC5tcDQiLCJpYXQiOjE3NzA5MDE3NzgsImV4cCI6NTI3MTM5Nzc3OH0.PwJV8nHRKaCJz8wKMAeBK51khfYG78FOTOq1Y8alyHw',
   sections: [
     {
       title: '1. Foundational Introduction to the Federal Era',
@@ -7496,6 +7519,8 @@ historyNotes["Rise of Nationalism"] = {
   topic: "Rise of Nationalism",
   subject: "History",
   summary: "Form 2: Rise of Nationalism. Introduction and definition of African nationalism; causes (colonial policies, land, labour, education, pan-Africanism); early movements (trade unions, interest groups, Congress movements); key organisations (ANC, NDP, ZAPU, ZANU) and their evolution; key leaders (Nkomo, Mugabe, Sithole, Chitepo); methods (petitions, strikes, protests, banning); impact and transition to armed struggle; glossary; revision and exam prep.",
+  audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/form%202/The_Birth_of_Zimbabwean_Nationalism.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9mb3JtIDIvVGhlX0JpcnRoX29mX1ppbWJhYndlYW5fTmF0aW9uYWxpc20ubTRhIiwiaWF0IjoxNzcwOTAxNDIyLCJleHAiOjUyNzEzOTc0MjJ9.IlGxMqfHV-q2fvmm3RY7Pmuqd8ijk7-8lnsHpaQsQDY",
+  videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/form%202/African_Nationalism_in_Zimbabwe.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L2Zvcm0gMi9BZnJpY2FuX05hdGlvbmFsaXNtX2luX1ppbWJhYndlLm1wNCIsImlhdCI6MTc3MDkwMTcwMCwiZXhwIjo1MjcxMzk3NzAwfQ.zbGxhoeRdUjSVFaOmarrR7QrtIroEt0EMophnbxF1gc",
   sections: [
     {
       title: "1. Introduction: Understanding African Nationalism",
@@ -7715,6 +7740,8 @@ historyNotes["The Portuguese Prazo System in the Zambezi Valley"] = {
   topic: "The Portuguese Prazo System in the Zambezi Valley",
   subject: "History",
   summary: "Examination Study Notes for Form 2: The Portuguese Prazo System in the Zambezi Valley. Introduction; defining the Prazo system (Prazo, Prazero, granting and inheritance through female line); strategic rationale; social and military organization (Chikunda, tribute, co-opting chiefs); economic dynamics; impact assessment; decline and collapse; mandatory examination tools.",
+  audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/form%202/Portuguese_Warlords_and_the_Prazo_System.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9mb3JtIDIvUG9ydHVndWVzZV9XYXJsb3Jkc19hbmRfdGhlX1ByYXpvX1N5c3RlbS5tNGEiLCJpYXQiOjE3NzA5MDEzNTcsImV4cCI6NTI3MTM5NzM1N30._JQ2ssjUY9WqqDHQkGuZsu-unagmtpfNbY3GfpkvVdo",
+  videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/form%202/Portuguese_Prazo_System.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L2Zvcm0gMi9Qb3J0dWd1ZXNlX1ByYXpvX1N5c3RlbS5tcDQiLCJpYXQiOjE3NzA5MDE3NTgsImV4cCI6NTI3MTM5Nzc1OH0.ztRzSxSY4SRC0KikgcoViEKbZ4AZQWZOnEl44obQqcg",
   sections: [
     {
       title: "1. Introduction to Portuguese Intervention",
@@ -7856,6 +7883,8 @@ historyNotes["Unilateral Declaration of Independence (U.D.I.)"] = {
   topic: "Unilateral Declaration of Independence (U.D.I.)",
   subject: "History",
   summary: "Comprehensive examination notes on U.D.I. (1965), including background, causes, actors, immediate and long-term effects, and examination guidance for Form 2.",
+  audioUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/form%202/Rhodesia_s_High-Stakes_Gamble_for_Independence.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9mb3JtIDIvUmhvZGVzaWFfc19IaWdoLVN0YWtlc19HYW1ibGVfZm9yX0luZGVwZW5kZW5jZS5tNGEiLCJpYXQiOjE3NzA5MDEzNjksImV4cCI6NTI3MTM5NzM2OX0.kd9wGVPpr_dCzWwYbBNB0IOsiHlVHPu4DLfSp2agCRU",
+  videoUrl: "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/form%202/The_U.D.I.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L2Zvcm0gMi9UaGVfVS5ELkkubXA0IiwiaWF0IjoxNzcwOTAxODY3LCJleHAiOjUyNzEzOTc4Njd9.AmTXwh8pYRZB98SFZBkpYu8ZaI1lNFFXFogR1S_pP-Q",
   sections: [
     {
       title: "1. Conceptual Foundations: Independence and Unilaterality",

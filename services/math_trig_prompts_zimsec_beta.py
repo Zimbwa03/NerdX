@@ -26,7 +26,7 @@ EXAMPLE QUESTION STYLES / TEMPLATES (vary numbers and contexts):
 
 SKILLS TO TEST: {skills}
 
-DIFFICULTY: {diff_tag} – Vary scenario and calculations accordingly. Use plain-text math only (no LaTeX).
+DIFFICULTY: {diff_tag} – Vary scenario and calculations accordingly. Use standard LaTeX for all mathematical expressions (inline $...$ and display $$...$$ where needed).
 Return valid JSON with question, solution, answer, points, explanation, teaching_explanation, zimsec_paper_reference, marking_notes."""
 
 
@@ -388,3 +388,4 @@ TRIG_PROMPTS_BETA = [
     TRIG_3D,
     TRIG_MIXED,
 ]
+

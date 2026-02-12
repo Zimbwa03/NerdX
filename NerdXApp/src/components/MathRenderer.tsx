@@ -123,7 +123,7 @@ const MathRenderer: React.FC<MathRendererProps> = ({
             background: ${bgColor};
             padding: 8px 6px;
             word-wrap: break-word;
-            overflow: hidden;
+            overflow: visible;
             margin: 0;
         }
         p { margin-bottom: 12px; }
@@ -194,9 +194,9 @@ const MathRenderer: React.FC<MathRendererProps> = ({
         try {
             const data = JSON.parse(event.nativeEvent.data);
             if (data.height && data.height > 0) {
-                // Clamp height to prevent huge gaps, add small padding for safety
+                // Keep full rendered math content visible; only apply a high safety cap.
                 const measured = Number(data.height);
-                const clamped = Math.max(minHeight, Math.min(measured + 8, 5000));
+                const clamped = Math.max(minHeight, Math.min(measured + 12, 30000));
                 setWebViewHeight(clamped);
             }
         } catch (e) {
@@ -228,7 +228,7 @@ const MathRenderer: React.FC<MathRendererProps> = ({
 const styles = StyleSheet.create({
     container: {
         width: '100%',
-        overflow: 'hidden',
+        overflow: 'visible',
     },
     webview: {
         flex: 1,

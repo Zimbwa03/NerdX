@@ -75,6 +75,8 @@ export interface Question {
 
   // Structured Question Fields (Paper 2 style)
   structured_question?: StructuredQuestion;
+  prompt_to_student?: string;
+  form_level?: string;
 }
 
 export interface StreamingThinkingUpdate {
@@ -110,11 +112,12 @@ export const quizApi = {
     subject: string,
     topic: string,
     difficulty: string = 'medium',
-    handlers: StreamHandlers = {}
+    handlers: StreamHandlers = {},
+    formLevel?: string
   ): Promise<Question | null> => {
     // React Native does not reliably support SSE/ReadableStream yet.
     if (Platform.OS !== 'web' || typeof (globalThis as any).ReadableStream === 'undefined') {
-      return await quizApi.generateQuestion(subject, topic, difficulty);
+      return await quizApi.generateQuestion(subject, topic, difficulty, 'topical', undefined, undefined, undefined, undefined, undefined, undefined, undefined, formLevel);
     }
 
     const token = await getAuthToken();
@@ -129,6 +132,7 @@ export const quizApi = {
         subject,
         topic,
         difficulty,
+        ...(formLevel ? { form_level: formLevel } : {}),
       }),
     });
 
@@ -142,7 +146,7 @@ export const quizApi = {
     const reader = (response as any).body?.getReader?.();
     if (!reader) {
       // Streaming not supported in this environment; fall back to standard generation.
-      return await quizApi.generateQuestion(subject, topic, difficulty);
+      return await quizApi.generateQuestion(subject, topic, difficulty, 'topical', undefined, undefined, undefined, undefined, undefined, undefined, undefined, formLevel);
     }
 
     const decoder = typeof (globalThis as any).TextDecoder !== 'undefined'
@@ -267,7 +271,8 @@ export const quizApi = {
     question_type?: string,  // Alternative key for backend compatibility
     mixImages?: boolean,  // NEW: Enable visual questions with Vertex AI
     questionCount?: number,  // NEW: Current question number in session
-    board?: 'zimsec' | 'cambridge'  // For Computer Science: exam board
+    board?: 'zimsec' | 'cambridge',  // For Computer Science: exam board
+    formLevel?: string
   ): Promise<Question | null> => {
     try {
       const payload: any = {
@@ -301,6 +306,9 @@ export const quizApi = {
       }
       if (board) {
         payload.board = board;
+      }
+      if (formLevel) {
+        payload.form_level = formLevel;
       }
       // Use extended timeout for AI question generation
       // Essay and structured questions can take longer (up to 90 seconds)

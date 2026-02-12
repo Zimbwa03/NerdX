@@ -1,7 +1,7 @@
 import logging
 import os
 from pathlib import Path
-from flask import request, jsonify, send_from_directory, abort
+from flask import request, jsonify, send_from_directory, abort, Response
 from app import app
 from api.webhook import webhook_bp
 from api.dashboard import dashboard_bp
@@ -67,9 +67,68 @@ else:
 def _serve_user_app(path=''):
     """Serve the React user app - index.html for SPA routes, static files for assets."""
     if not os.path.isdir(USER_APP_DIR) or not os.path.exists(os.path.join(USER_APP_DIR, 'index.html')):
-        from flask import redirect
-        logger.warning(f"Student app not available at {USER_APP_DIR} - redirecting to admin login")
-        return redirect('/admin/login')
+        logger.warning(f"Student app not available at {USER_APP_DIR} - serving student fallback landing")
+        return Response(
+            """
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NerdX Student Web</title>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #f8fafc;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .card {
+      width: 100%;
+      max-width: 640px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 14px;
+      padding: 24px;
+      backdrop-filter: blur(4px);
+    }
+    h1 { margin: 0 0 12px; font-size: 1.7rem; }
+    p { margin: 0 0 14px; line-height: 1.5; color: #e2e8f0; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    a {
+      text-decoration: none;
+      background: #22c55e;
+      color: #06240f;
+      font-weight: 700;
+      padding: 10px 14px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+    a.secondary { background: #e2e8f0; color: #0f172a; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>NerdX Student Web</h1>
+    <p>This domain is configured for the Student web app landing page.</p>
+    <p>The full frontend bundle is still initializing on this deployment. You can continue with student access below.</p>
+    <div class="actions">
+      <a href="/">Refresh Landing</a>
+      <a class="secondary" href="/login">Student Login</a>
+      <a class="secondary" href="/register">Create Student Account</a>
+    </div>
+  </main>
+</body>
+</html>
+            """,
+            status=200,
+            mimetype='text/html'
+        )
     # Serve static assets (js, css, images) if they exist
     if path:
         file_path = os.path.join(USER_APP_DIR, path)

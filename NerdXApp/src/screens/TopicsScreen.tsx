@@ -40,8 +40,15 @@ import {
   getHistoryTopicsForQuizByForm,
   type HistoryFormLevel,
 } from '../data/history';
+import {
+  mathFormLevels,
+  getMathTopicsForQuizByForm,
+  type MathFormLevel,
+} from '../data/mathematics';
 
 const { width } = Dimensions.get('window');
+const isCompactScreen = width <= 360;
+const isNarrowScreen = width <= 390;
 
 const CS_BOARD_STORAGE_KEY = '@nerdx_cs_board';
 const A_LEVEL_CS_BOARD_STORAGE_KEY = '@nerdx_alevel_cs_board';
@@ -54,10 +61,11 @@ const TopicsScreen: React.FC = () => {
   const themedColors = useThemedColors();
   const { showSuccess, showError, showWarning, showInfo } = useNotification();
   const insets = useSafeAreaInsets();
-  const { subject, parentSubject, historyForm } = route.params as {
+  const { subject, parentSubject, historyForm, mathForm } = route.params as {
     subject: Subject;
     parentSubject?: string;
     historyForm?: HistoryFormLevel;
+    mathForm?: MathFormLevel;
   };
   const subjectDisplayName = getSubjectDisplayName(subject.id, subject.name);
   const subjectSteps = getSubjectLoadingSteps(subject.id);
@@ -71,6 +79,8 @@ const TopicsScreen: React.FC = () => {
 
   const [currentParentSubject, setCurrentParentSubject] = useState<string | undefined>(parentSubject);
   const [selectedHistoryForm, setSelectedHistoryForm] = useState<HistoryFormLevel>(historyForm || 'Form 1');
+  const [selectedMathForm, setSelectedMathForm] = useState<MathFormLevel>(mathForm || 'Form 1');
+  const [isMathNotesExpanded, setIsMathNotesExpanded] = useState(false);
   const [pharmaModalVisible, setPharmaModalVisible] = useState(false);
   const [selectedPharmaTopic, setSelectedPharmaTopic] = useState<Topic | null>(null);
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
@@ -143,13 +153,18 @@ const TopicsScreen: React.FC = () => {
     } else {
       loadTopics(currentParentSubject);
     }
-  }, [currentParentSubject, activeTab, subject.id, csBoard, aLevelCsBoard, selectedHistoryForm]);
+  }, [currentParentSubject, activeTab, subject.id, csBoard, aLevelCsBoard, selectedHistoryForm, selectedMathForm]);
 
   const loadTopics = async (parent?: string) => {
     try {
       setLoading(true);
       if (subject.id === 'history') {
         setTopics(getHistoryTopicsForQuizByForm(selectedHistoryForm));
+        setLoading(false);
+        return;
+      }
+      if (subject.id === 'mathematics') {
+        setTopics(getMathTopicsForQuizByForm(selectedMathForm));
         setLoading(false);
         return;
       }
@@ -179,27 +194,6 @@ const TopicsScreen: React.FC = () => {
           subject: 'commerce',
         }));
         setTopics(commerceTopicList);
-      } else if (subject.id === 'mathematics' && (!data || data.length === 0)) {
-        const mathTopics: Topic[] = [
-          { id: 'num', name: 'Number Theory', subject: 'mathematics' },
-          { id: 'sets', name: 'Sets', subject: 'mathematics' },
-          { id: 'ind', name: 'Indices & Standard Form', subject: 'mathematics' },
-          { id: 'alg', name: 'Algebra', subject: 'mathematics' },
-          { id: 'ineq', name: 'Inequalities', subject: 'mathematics' },
-          { id: 'seq', name: 'Sequences & Series', subject: 'mathematics' },
-          { id: 'mat', name: 'Matrices', subject: 'mathematics' },
-          { id: 'vec', name: 'Vectors', subject: 'mathematics' },
-          { id: 'geo', name: 'Geometry', subject: 'mathematics' },
-          { id: 'mens', name: 'Mensuration', subject: 'mathematics' },
-          { id: 'trig', name: 'Trigonometry', subject: 'mathematics' },
-          { id: 'trans', name: 'Transformation Geometry', subject: 'mathematics' },
-          { id: 'stat', name: 'Statistics', subject: 'mathematics' },
-          { id: 'prob', name: 'Probability', subject: 'mathematics' },
-          { id: 'graph', name: 'Graphs', subject: 'mathematics' },
-          { id: 'var', name: 'Variation', subject: 'mathematics' },
-          { id: 'loci', name: 'Loci & Construction', subject: 'mathematics' },
-        ];
-        setTopics(mathTopics);
       } else {
         setTopics(data);
       }
@@ -222,26 +216,7 @@ const TopicsScreen: React.FC = () => {
         }));
         setTopics(commerceTopicList);
       } else if (subject.id === 'mathematics') {
-        const mathTopics: Topic[] = [
-          { id: 'num', name: 'Number Theory', subject: 'mathematics' },
-          { id: 'sets', name: 'Sets', subject: 'mathematics' },
-          { id: 'ind', name: 'Indices & Standard Form', subject: 'mathematics' },
-          { id: 'alg', name: 'Algebra', subject: 'mathematics' },
-          { id: 'ineq', name: 'Inequalities', subject: 'mathematics' },
-          { id: 'seq', name: 'Sequences & Series', subject: 'mathematics' },
-          { id: 'mat', name: 'Matrices', subject: 'mathematics' },
-          { id: 'vec', name: 'Vectors', subject: 'mathematics' },
-          { id: 'geo', name: 'Geometry', subject: 'mathematics' },
-          { id: 'mens', name: 'Mensuration', subject: 'mathematics' },
-          { id: 'trig', name: 'Trigonometry', subject: 'mathematics' },
-          { id: 'trans', name: 'Transformation Geometry', subject: 'mathematics' },
-          { id: 'stat', name: 'Statistics', subject: 'mathematics' },
-          { id: 'prob', name: 'Probability', subject: 'mathematics' },
-          { id: 'graph', name: 'Graphs', subject: 'mathematics' },
-          { id: 'var', name: 'Variation', subject: 'mathematics' },
-          { id: 'loci', name: 'Loci & Construction', subject: 'mathematics' },
-        ];
-        setTopics(mathTopics);
+        setTopics(getMathTopicsForQuizByForm(selectedMathForm));
       } else if (subject.id === 'history') {
         setTopics(getHistoryTopicsForQuizByForm(selectedHistoryForm));
       } else {
@@ -440,7 +415,7 @@ const TopicsScreen: React.FC = () => {
   };
 
   const handleMathNotes = (topicName: string) => {
-    navigation.navigate('MathNotesDetail' as never, { topic: topicName } as never);
+    navigation.navigate('MathNotesDetail' as never, { topic: topicName, formLevel: selectedMathForm } as never);
   };
 
   const handleMathTutor = (topicName: string) => {
@@ -533,7 +508,8 @@ const TopicsScreen: React.FC = () => {
                   setStreamingStage('Thinking');
                 }
               },
-            }
+            },
+            subject.id === 'mathematics' ? selectedMathForm : undefined
           );
         } catch (streamError) {
           console.warn('Streaming generation failed, falling back to standard generation', streamError);
@@ -552,7 +528,8 @@ const TopicsScreen: React.FC = () => {
           undefined,
           mixImages,
           undefined,  // questionCount
-          subject.id === 'computer_science' ? csBoard : subject.id === 'a_level_computer_science' ? aLevelCsBoard : undefined  // board for CS (O-Level or A-Level)
+          subject.id === 'computer_science' ? csBoard : subject.id === 'a_level_computer_science' ? aLevelCsBoard : undefined,  // board for CS (O-Level or A-Level)
+          subject.id === 'mathematics' ? selectedMathForm : undefined
         );
       }
 
@@ -583,6 +560,7 @@ const TopicsScreen: React.FC = () => {
           subject,
           topic,
           mixImagesEnabled: !!mixImages,
+          ...(subject.id === 'mathematics' ? { mathForm: selectedMathForm } : {}),
           ...(questionType ? { questionType } : {}),
           ...(questionFormat ? { questionFormat } : {}),
           ...(subject.id === 'computer_science' ? { board: csBoard } : subject.id === 'a_level_computer_science' ? { board: aLevelCsBoard } : {}),
@@ -696,7 +674,7 @@ const TopicsScreen: React.FC = () => {
       fontWeight: 'bold',
     },
     featuresContainer: {
-      padding: 20,
+      padding: isCompactScreen ? 14 : 20,
       paddingTop: 10,
     },
     featureCard: {
@@ -738,6 +716,41 @@ const TopicsScreen: React.FC = () => {
       color: '#5D4037',
     },
     historyFormChipTextActive: {
+      color: '#FFFFFF',
+    },
+    mathFormSelectorContainer: {
+      marginBottom: 12,
+      backgroundColor: themedColors.background.paper,
+      borderColor: themedColors.border.light,
+      borderWidth: 1,
+      borderRadius: 12,
+      padding: 12,
+    },
+    mathFormSelectorLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: themedColors.text.secondary,
+      marginBottom: 8,
+    },
+    mathFormChip: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 18,
+      marginRight: 8,
+      borderWidth: 1,
+      borderColor: 'rgba(25, 118, 210, 0.35)',
+      backgroundColor: 'rgba(25, 118, 210, 0.08)',
+    },
+    mathFormChipActive: {
+      borderColor: Colors.subjects.mathematics,
+      backgroundColor: Colors.subjects.mathematics,
+    },
+    mathFormChipText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: Colors.subjects.mathematics,
+    },
+    mathFormChipTextActive: {
       color: '#FFFFFF',
     },
     featureContent: {
@@ -785,7 +798,7 @@ const TopicsScreen: React.FC = () => {
       opacity: 0.9,
     },
     topicsContainer: {
-      padding: 20,
+      padding: isCompactScreen ? 14 : 20,
       paddingTop: 10,
     },
     sectionTitle: {
@@ -804,14 +817,14 @@ const TopicsScreen: React.FC = () => {
     topicContent: {
       flexDirection: 'row',
       alignItems: 'center',
-      padding: 4,
-      gap: 16,
+      padding: isCompactScreen ? 2 : 4,
+      gap: isCompactScreen ? 12 : 16,
     },
     topicInfo: {
       flex: 1,
     },
     topicName: {
-      fontSize: 18,
+      fontSize: isCompactScreen ? 16 : 18,
       fontWeight: '600',
       color: themedColors.text.primary,
     },
@@ -828,37 +841,86 @@ const TopicsScreen: React.FC = () => {
     },
     mathNotesSection: {
       backgroundColor: themedColors.background.paper,
-      borderRadius: 16,
-      padding: 16,
+      borderRadius: 18,
+      padding: isCompactScreen ? 12 : 16,
       marginBottom: 16,
       borderWidth: 1,
       borderColor: themedColors.border.light,
     },
+    mathNotesHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 12,
+    },
+    mathNotesHeaderActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginLeft: 8,
+    },
+    mathNotesHeaderContent: {
+      flex: 1,
+      marginRight: 12,
+    },
+    mathNotesBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderRadius: 999,
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      borderWidth: 1,
+      borderColor: 'rgba(25, 118, 210, 0.28)',
+      backgroundColor: 'rgba(25, 118, 210, 0.08)',
+      gap: 4,
+    },
+    mathNotesBadgeText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: Colors.subjects.mathematics,
+    },
+    mathNotesChevron: {
+      marginLeft: 8,
+    },
     mathNotesSectionTitle: {
-      fontSize: 18,
+      fontSize: isCompactScreen ? 16 : 18,
       fontWeight: 'bold',
       color: themedColors.text.primary,
-      marginBottom: 4,
+      marginBottom: 2,
     },
     mathNotesSectionSubtitle: {
       fontSize: 13,
       color: themedColors.text.secondary,
-      marginBottom: 12,
     },
-    mathTopicsScroll: {
-      marginTop: 8,
+    mathTopicsWrap: {
+      marginTop: 2,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
     },
     mathTopicChip: {
-      paddingHorizontal: 16,
+      width: isNarrowScreen ? '100%' : '48.5%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
       paddingVertical: 10,
-      borderRadius: 20,
-      marginRight: 10,
+      borderRadius: 14,
+      marginBottom: 10,
       borderWidth: 1,
-      borderColor: Colors.subjects.mathematics,
+    },
+    mathTopicIconWrap: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 10,
+      backgroundColor: 'rgba(255, 255, 255, 0.65)',
     },
     mathTopicChipText: {
-      fontSize: 14,
+      flex: 1,
+      fontSize: 13,
       fontWeight: '600',
+      color: themedColors.text.primary,
     },
     backButton: {
       fontSize: 16,
@@ -1101,42 +1163,98 @@ const TopicsScreen: React.FC = () => {
         <View style={styles.featuresContainer}>
           {subject.id === 'mathematics' && (
             <>
+              <View style={styles.mathFormSelectorContainer}>
+                <Text style={styles.mathFormSelectorLabel}>Select Mathematics Form</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {mathFormLevels.map((form) => {
+                    const isActive = form === selectedMathForm;
+                    return (
+                      <TouchableOpacity
+                        key={form}
+                        style={[styles.mathFormChip, isActive && styles.mathFormChipActive]}
+                        onPress={() => setSelectedMathForm(form)}
+                      >
+                        <Text style={[styles.mathFormChipText, isActive && styles.mathFormChipTextActive]}>
+                          {form}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+
               {/* Math Notes Section - All Topics */}
               <View style={styles.mathNotesSection}>
-                <Text style={styles.mathNotesSectionTitle}>📘 Professional Math Notes</Text>
-                <Text style={styles.mathNotesSectionSubtitle}>O-Level Standard - Tap to study</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mathTopicsScroll}>
-                  {(topics && topics.length > 0
-                    ? topics.map(t => t.name)
-                    : [
-                      'Number Theory',
-                      'Sets',
-                      'Indices & Standard Form',
-                      'Algebra',
-                      'Inequalities',
-                      'Sequences & Series',
-                      'Matrices',
-                      'Vectors',
-                      'Geometry',
-                      'Mensuration',
-                      'Trigonometry',
-                      'Transformation Geometry',
-                      'Statistics',
-                      'Probability',
-                      'Graphs',
-                      'Variation',
-                      'Loci & Construction',
-                    ]
-                  ).map((topicName, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={[styles.mathTopicChip, { backgroundColor: Colors.iconBg.mathematics }]}
-                      onPress={() => handleMathNotes(topicName)}
-                    >
-                      <Text style={[styles.mathTopicChipText, { color: Colors.subjects.mathematics }]}>{topicName}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={styles.mathNotesHeaderRow}
+                  onPress={() => setIsMathNotesExpanded((prev) => !prev)}
+                >
+                  <View style={styles.mathNotesHeaderContent}>
+                    <Text style={styles.mathNotesSectionTitle}>Mathematics Notes</Text>
+                    <Text style={styles.mathNotesSectionSubtitle}>
+                      {selectedMathForm} topical notes {isMathNotesExpanded ? '- tap to collapse' : '- tap to expand'}
+                    </Text>
+                  </View>
+                  <View style={styles.mathNotesHeaderActions}>
+                    <View style={styles.mathNotesBadge}>
+                      <Ionicons name="sparkles-outline" size={14} color={Colors.subjects.mathematics} />
+                      <Text style={styles.mathNotesBadgeText}>Pro</Text>
+                    </View>
+                    <Ionicons
+                      name={isMathNotesExpanded ? 'chevron-up' : 'chevron-down'}
+                      size={18}
+                      color={Colors.subjects.mathematics}
+                      style={styles.mathNotesChevron}
+                    />
+                  </View>
+                </TouchableOpacity>
+                {isMathNotesExpanded && (
+                  <View style={styles.mathTopicsWrap}>
+                    {(topics && topics.length > 0
+                      ? topics.map(t => t.name)
+                      : [
+                        'Number Theory',
+                        'Sets',
+                        'Indices & Standard Form',
+                        'Algebra',
+                        'Inequalities',
+                        'Sequences & Series',
+                        'Matrices',
+                        'Vectors',
+                        'Geometry',
+                        'Mensuration',
+                        'Trigonometry',
+                        'Transformation Geometry',
+                        'Statistics',
+                        'Probability',
+                        'Graphs',
+                        'Variation',
+                        'Loci & Construction',
+                      ]
+                    ).map((topicName) => {
+                      const mathVisual = getMathTopicVisual(topicName);
+                      return (
+                        <TouchableOpacity
+                          key={topicName}
+                          style={[
+                            styles.mathTopicChip,
+                            {
+                              borderColor: mathVisual.color,
+                              backgroundColor: mathVisual.bg,
+                            },
+                          ]}
+                          onPress={() => handleMathNotes(topicName)}
+                        >
+                          <View style={styles.mathTopicIconWrap}>
+                            <Ionicons name={mathVisual.iconName as any} size={16} color={mathVisual.color} />
+                          </View>
+                          <Text style={styles.mathTopicChipText}>{topicName}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
               </View>
 
               {/* AI Math Tutor */}
@@ -1701,8 +1819,8 @@ const TopicsScreen: React.FC = () => {
                   backgroundColor="rgba(255, 255, 255, 0.2)"
                 />
                 <View style={styles.examInfo}>
-                  <Text style={styles.examTitle}>Start {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : subject.id === 'accounting' ? 'Principles of Accounting' : subject.id === 'business_enterprise_skills' ? 'Business Enterprise and Skills' : subject.id === 'commerce' ? 'Commerce' : subject.id === 'history' ? `${selectedHistoryForm} History` : ''} Exam</Text>
-                  <Text style={styles.examSubtitle}>Mixed questions from all {subject.id === 'combined_science' ? activeTab : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : subject.id === 'accounting' ? 'Principles of Accounting' : subject.id === 'business_enterprise_skills' ? 'Business Enterprise and Skills' : subject.id === 'commerce' ? 'Commerce' : subject.id === 'history' ? `${selectedHistoryForm} History` : ''} topics</Text>
+                  <Text style={styles.examTitle}>Start {subject.id === 'combined_science' ? activeTab : subject.id === 'mathematics' ? `${selectedMathForm} Mathematics` : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : subject.id === 'accounting' ? 'Principles of Accounting' : subject.id === 'business_enterprise_skills' ? 'Business Enterprise and Skills' : subject.id === 'commerce' ? 'Commerce' : subject.id === 'history' ? `${selectedHistoryForm} History` : ''} Exam</Text>
+                  <Text style={styles.examSubtitle}>Mixed questions from all {subject.id === 'combined_science' ? activeTab : subject.id === 'mathematics' ? `${selectedMathForm} Mathematics` : subject.id === 'computer_science' ? 'Computer Science' : subject.id === 'a_level_computer_science' ? 'A-Level Computer Science' : subject.id === 'geography' ? 'Geography' : subject.id === 'a_level_geography' ? 'A-Level Geography' : subject.id === 'accounting' ? 'Principles of Accounting' : subject.id === 'business_enterprise_skills' ? 'Business Enterprise and Skills' : subject.id === 'commerce' ? 'Commerce' : subject.id === 'history' ? `${selectedHistoryForm} History` : ''} topics</Text>
                 </View>
               </View>
             </Card>
@@ -1716,6 +1834,8 @@ const TopicsScreen: React.FC = () => {
               ? 'Subtopics'
               : subject.id === 'history'
                 ? `${selectedHistoryForm} Topics`
+                : subject.id === 'mathematics'
+                  ? `${selectedMathForm} Topics`
                 : 'Topics'}
           </Text>
 
@@ -1729,6 +1849,8 @@ const TopicsScreen: React.FC = () => {
                 <Text style={styles.noTopicsText}>
                   {subject.id === 'history'
                     ? `No topics available for ${selectedHistoryForm} yet.`
+                    : subject.id === 'mathematics'
+                      ? `No topics available for ${selectedMathForm} yet.`
                     : `No topics available for ${activeTab}`}
                 </Text>
               )}
@@ -2313,10 +2435,119 @@ const getSubjectIcon = (subjectId: string): React.ReactNode => {
   return iconMap[subjectId] || Icons.quiz(32, '#FFFFFF');
 };
 
+const getMathTopicVisual = (topicName: string): { iconName: string; color: string; bg: string } => {
+  const topic = topicName.toLowerCase();
+
+  if (
+    topic.includes('number') ||
+    topic.includes('approximation') ||
+    topic.includes('ratio') ||
+    topic.includes('standard form') ||
+    topic.includes('indices') ||
+    topic.includes('limit')
+  ) {
+    return { iconName: 'calculator-outline', color: '#1565C0', bg: 'rgba(21, 101, 192, 0.12)' };
+  }
+
+  if (topic.includes('set') || topic.includes('venn')) {
+    return { iconName: 'layers-outline', color: '#00897B', bg: 'rgba(0, 137, 123, 0.12)' };
+  }
+
+  if (
+    topic.includes('bill') ||
+    topic.includes('consumer') ||
+    topic.includes('arithmetic') ||
+    topic.includes('tax') ||
+    topic.includes('vat') ||
+    topic.includes('exchange') ||
+    topic.includes('duty')
+  ) {
+    return { iconName: 'wallet-outline', color: '#2E7D32', bg: 'rgba(46, 125, 50, 0.12)' };
+  }
+
+  if (
+    topic.includes('measure') ||
+    topic.includes('mensuration') ||
+    topic.includes('scale')
+  ) {
+    return { iconName: 'cube-outline', color: '#EF6C00', bg: 'rgba(239, 108, 0, 0.12)' };
+  }
+
+  if (
+    topic.includes('graph') ||
+    topic.includes('data') ||
+    topic.includes('statistics') ||
+    topic.includes('central tendency') ||
+    topic.includes('dispersion') ||
+    topic.includes('cumulative') ||
+    topic.includes('ogive') ||
+    topic.includes('quartile') ||
+    topic.includes('variation')
+  ) {
+    return { iconName: 'stats-chart-outline', color: '#0277BD', bg: 'rgba(2, 119, 189, 0.12)' };
+  }
+
+  if (
+    topic.includes('algebra') ||
+    topic.includes('equation') ||
+    topic.includes('inequalit') ||
+    topic.includes('symbolic') ||
+    topic.includes('linear programming')
+  ) {
+    return { iconName: 'code-slash-outline', color: '#3949AB', bg: 'rgba(57, 73, 171, 0.12)' };
+  }
+
+  if (
+    topic.includes('line') ||
+    topic.includes('angle') ||
+    topic.includes('circle') ||
+    topic.includes('polygon') ||
+    topic.includes('bearing') ||
+    topic.includes('geometry') ||
+    topic.includes('similarity') ||
+    topic.includes('congruency') ||
+    topic.includes('construction') ||
+    topic.includes('symmetry') ||
+    topic.includes('locus')
+  ) {
+    return { iconName: 'compass-outline', color: '#D84315', bg: 'rgba(216, 67, 21, 0.12)' };
+  }
+
+  if (topic.includes('matrix')) {
+    return { iconName: 'grid-outline', color: '#283593', bg: 'rgba(40, 53, 147, 0.12)' };
+  }
+
+  if (topic.includes('trigonometry') || topic.includes('trigonometrical')) {
+    return { iconName: 'triangle-outline', color: '#6A1B9A', bg: 'rgba(106, 27, 154, 0.12)' };
+  }
+
+  if (
+    topic.includes('vector') ||
+    topic.includes('translation') ||
+    topic.includes('reflection') ||
+    topic.includes('rotation') ||
+    topic.includes('enlargement') ||
+    topic.includes('stretch') ||
+    topic.includes('shear')
+  ) {
+    return { iconName: 'move-outline', color: '#C62828', bg: 'rgba(198, 40, 40, 0.12)' };
+  }
+
+  if (topic.includes('probability')) {
+    return { iconName: 'shuffle-outline', color: '#00695C', bg: 'rgba(0, 105, 92, 0.12)' };
+  }
+
+  return { iconName: 'school-outline', color: Colors.subjects.mathematics, bg: Colors.iconBg.mathematics };
+};
+
 const getTopicIcon = (topic: Topic, subjectId: string): React.ReactNode => {
   if (subjectId === 'combined_science') {
     // We can use generic science icon or specific if available
     return Icons.science(24, Colors.subjects.science);
+  }
+  if (subjectId === 'mathematics') {
+    const visual = getMathTopicVisual(topic.name);
+    return <Ionicons name={visual.iconName as any} size={24} color={visual.color} />;
   }
   if (subjectId === 'english') {
     if (topic.name.toLowerCase().includes('grammar')) {
@@ -2338,6 +2569,9 @@ const getTopicIconBg = (topic: Topic, subjectId: string): string => {
   if (subjectId === 'combined_science') {
     return Colors.iconBg.science;
   }
+  if (subjectId === 'mathematics') {
+    return getMathTopicVisual(topic.name).bg;
+  }
   if (subjectId === 'computer_science') {
     return Colors.iconBg.info;
   }
@@ -2348,3 +2582,5 @@ const getTopicIconBg = (topic: Topic, subjectId: string): string => {
 };
 
 export default TopicsScreen;
+
+

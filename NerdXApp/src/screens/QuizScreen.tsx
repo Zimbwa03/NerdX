@@ -44,7 +44,7 @@ const QuizScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
   const { showSuccess, showError, showWarning, showInfo } = useNotification();
-  const { question: initialQuestion, subject, topic, isExamMode, year, paper, isReviewMode, reviewItems, questionType, questionFormat: initialQuestionFormat, mixImagesEnabled: initialMixImagesEnabled, board } = route.params as {
+  const { question: initialQuestion, subject, topic, isExamMode, year, paper, isReviewMode, reviewItems, questionType, questionFormat: initialQuestionFormat, mixImagesEnabled: initialMixImagesEnabled, board, mathForm } = route.params as {
     question?: Question;
     subject: any;
     topic?: any;
@@ -57,6 +57,7 @@ const QuizScreen: React.FC = () => {
     questionFormat?: 'mcq' | 'structured' | 'essay'; // For Commerce, Geography, CS
     mixImagesEnabled?: boolean;
     board?: 'zimsec' | 'cambridge'; // Computer Science exam board
+    mathForm?: string;
   };
 
   const normalizeQuestion = useCallback((q: Question | undefined): Question | undefined => {
@@ -622,7 +623,7 @@ const QuizScreen: React.FC = () => {
             ? (nextQuestionType as 'mcq' | 'structured' | 'essay')
             : undefined;
 
-        const canStreamMath = subject?.id === 'mathematics' && !topic?.id;
+        const canStreamMath = subject?.id === 'mathematics' && !!topic?.id;
 
         if (canStreamMath) {
           try {
@@ -641,7 +642,8 @@ const QuizScreen: React.FC = () => {
                     setStreamingStage('Thinking');
                   }
                 },
-              }
+              },
+              subject?.id === 'mathematics' ? mathForm : undefined
             );
           } catch (streamError) {
             console.warn('Streaming generation failed, falling back to standard generation', streamError);
@@ -661,7 +663,8 @@ const QuizScreen: React.FC = () => {
             nextQuestionType,  // Also pass as question_type for backend compatibility
             mixImagesEnabled,  // Enable Vertex AI image questions
             questionCount + 1,  // Pass the next question number
-            subject?.id === 'computer_science' || subject?.id === 'a_level_computer_science' ? board : undefined  // board for CS (O-Level or A-Level)
+            subject?.id === 'computer_science' || subject?.id === 'a_level_computer_science' ? board : undefined,  // board for CS (O-Level or A-Level)
+            subject?.id === 'mathematics' ? mathForm : undefined
           );
         }
       }
@@ -844,6 +847,27 @@ const QuizScreen: React.FC = () => {
     },
     questionTextContainer: {
       marginTop: 4,
+    },
+    promptToStudentContainer: {
+      backgroundColor: themedColors.background.subtle,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: themedColors.border.light,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      marginBottom: 12,
+    },
+    promptToStudentLabel: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: themedColors.text.secondary,
+      marginBottom: 4,
+      letterSpacing: 0.3,
+    },
+    promptToStudentText: {
+      fontSize: 14,
+      color: themedColors.text.primary,
+      lineHeight: 21,
     },
     optionsContainer: {
       marginBottom: 20,
@@ -1521,6 +1545,16 @@ const QuizScreen: React.FC = () => {
                   />
                   <Text style={styles.questionLabel}>Question</Text>
                 </View>
+                {!!question.prompt_to_student && (
+                  <View style={styles.promptToStudentContainer}>
+                    <Text style={styles.promptToStudentLabel}>Teacher Prompt</Text>
+                    {isMathSubject ? (
+                      <MathRenderer content={question.prompt_to_student} fontSize={14} style={styles.promptToStudentText} minHeight={18} />
+                    ) : (
+                      <MathText style={styles.promptToStudentText}>{question.prompt_to_student}</MathText>
+                    )}
+                  </View>
+                )}
                 {isMathSubject ? (
                   <MathRenderer content={formatQuestionParts(question.question_text)} fontSize={16} style={styles.questionTextContainer} minHeight={24} />
                 ) : (
