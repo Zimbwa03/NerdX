@@ -34,7 +34,7 @@ export const flashcardApi = {
             const response = await api.post('/api/mobile/flashcards/generate', {
                 subject,
                 topic,
-                count: Math.min(count, 50), // Cap at 50 for web to be safe
+                count: Math.min(count, 100),
                 notes_content: notesContent,
             });
 

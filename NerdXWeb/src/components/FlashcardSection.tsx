@@ -542,7 +542,7 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
                     <input
                         type="range"
                         min="5"
-                        max="50"
+                        max="100"
                         step="5"
                         value={cardCount}
                         onChange={(e) => setCardCount(parseInt(e.target.value))}
@@ -551,8 +551,8 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
                     />
                     <div className="fc-slider-labels">
                         <span>5</span>
-                        <span>25</span>
                         <span>50</span>
+                        <span>100</span>
                     </div>
                 </div>
 
@@ -580,7 +580,7 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
 
                 <div className="fc-cost-info">
                     <Sparkles size={12} />
-                    <span>0.25 credits per card = <strong>{(cardCount * 0.25).toFixed(1)} credits</strong></span>
+                    <span>0.3 credits per card = <strong>{Math.min(cardCount * 0.3, 30).toFixed(1)} credits</strong></span>
                 </div>
             </div>
         </div>
