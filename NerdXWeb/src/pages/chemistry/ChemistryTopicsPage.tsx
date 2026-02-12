@@ -173,13 +173,16 @@ export const ChemistryTopicsPage = () => {
                         <p className="feature-card-desc">Get instant help with balancing equations, mole calculations, and more.</p>
                     </div>
 
-                    {/* Virtual Labs (Placeholder/Future) */}
-                    <div className="science-feature-card">
-                        <div className="feature-icon-box" style={{ filter: 'grayscale(100%)', opacity: 0.5 }}>
+                    {/* Virtual Labs */}
+                    <div
+                        className="science-feature-card"
+                        onClick={() => navigate('/app/virtual-lab?subject=chemistry')}
+                    >
+                        <div className="feature-icon-box">
                             <Atom size={28} />
                         </div>
                         <h3 className="feature-card-title">Virtual Labs</h3>
-                        <p className="feature-card-desc">Mix chemicals safely in our virtual lab simulation (Coming Soon).</p>
+                        <p className="feature-card-desc">Mix chemicals and explore reactions safely in interactive simulations.</p>
                     </div>
 
                     {/* Exam Mode */}

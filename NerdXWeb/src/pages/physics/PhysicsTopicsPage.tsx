@@ -172,13 +172,16 @@ export const PhysicsTopicsPage = () => {
                         <p className="feature-card-desc">Resolve complex physics problems with step-by-step AI guidance.</p>
                     </div>
 
-                    {/* Virtual Labs (Placeholder/Future) */}
-                    <div className="science-feature-card">
-                        <div className="feature-icon-box" style={{ filter: 'grayscale(100%)', opacity: 0.5 }}>
+                    {/* Virtual Labs */}
+                    <div
+                        className="science-feature-card"
+                        onClick={() => navigate('/app/virtual-lab?subject=physics')}
+                    >
+                        <div className="feature-icon-box">
                             <Atom size={28} />
                         </div>
                         <h3 className="feature-card-title">Virtual Labs</h3>
-                        <p className="feature-card-desc">Experiment with circuits and forces in a virtual environment (Coming Soon).</p>
+                        <p className="feature-card-desc">Experiment with circuits, forces, and waves in interactive simulations.</p>
                     </div>
 
                     {/* Exam Mode */}

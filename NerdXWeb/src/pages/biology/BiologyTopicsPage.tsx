@@ -175,13 +175,16 @@ export const BiologyTopicsPage = () => {
                         <p className="feature-card-desc">Ask any biology question. Get instant, diagram-rich explanations.</p>
                     </div>
 
-                    {/* Virtual Labs (Placeholder/Future) */}
-                    <div className="science-feature-card">
-                        <div className="feature-icon-box" style={{ filter: 'grayscale(100%)', opacity: 0.5 }}>
+                    {/* Virtual Labs */}
+                    <div
+                        className="science-feature-card"
+                        onClick={() => navigate('/app/virtual-lab?subject=biology')}
+                    >
+                        <div className="feature-icon-box">
                             <FlaskConical size={28} />
                         </div>
                         <h3 className="feature-card-title">Virtual Labs</h3>
-                        <p className="feature-card-desc">Simulate experiments and visualize biological processes (Coming Soon).</p>
+                        <p className="feature-card-desc">Simulate experiments and visualize biological processes interactively.</p>
                     </div>
 
                     {/* Exam Mode */}
