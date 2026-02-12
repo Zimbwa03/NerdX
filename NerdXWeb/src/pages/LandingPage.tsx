@@ -113,7 +113,7 @@ export function LandingPage() {
       <header className={`lp-header${headerScrolled ? ' lp-header--scrolled' : ''}`}>
         <div className="lp-header__inner">
           <div className="lp-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <Sparkles size={24} />
+            <img src="/images/nerdx-logo.png" alt="NerdX" className="lp-logo__img" />
             <span>NerdX</span>
           </div>
           <nav className="lp-nav">
@@ -382,7 +382,7 @@ export function LandingPage() {
         <div className="lp-footer__inner">
           <div className="lp-footer__brand">
             <div className="lp-logo">
-              <Sparkles size={20} />
+              <img src="/images/nerdx-logo.png" alt="NerdX" className="lp-logo__img lp-logo__img--sm" />
               <span>NerdX</span>
             </div>
             <p className="lp-footer__tagline">AI-powered learning for ZIMSEC students. Study smarter, not harder.</p>

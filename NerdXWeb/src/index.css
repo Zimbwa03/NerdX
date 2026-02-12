@@ -9528,9 +9528,21 @@ body {
 .lp-logo {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
   color: #7C4DFF;
+}
+
+.lp-logo__img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.lp-logo__img--sm {
+  width: 30px;
+  height: 30px;
 }
 
 .lp-logo span {
