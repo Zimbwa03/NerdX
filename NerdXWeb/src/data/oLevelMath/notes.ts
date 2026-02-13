@@ -3,6 +3,8 @@
 // Following the MathTopicNotes interface for consistency
 
 import type { MathTopicNotes } from '../mathNotes/types';
+import { form1MathNotes } from './form1Notes';
+import { form1MathNotes2 } from './form1Notes2';
 
 // Complete notes for each O-Level Mathematics topic
 export const oLevelMathNotes: Record<string, MathTopicNotes> = {
@@ -3521,12 +3523,16 @@ export const oLevelMathNotes: Record<string, MathTopicNotes> = {
     }
 };
 
-// Helper function to get notes for a specific topic
+const allMathNotes: Record<string, MathTopicNotes> = {
+    ...oLevelMathNotes,
+    ...form1MathNotes,
+    ...form1MathNotes2,
+};
+
 export function getOLevelMathNotes(topicName: string): MathTopicNotes | null {
-    return oLevelMathNotes[topicName] || null;
+    return allMathNotes[topicName] || null;
 }
 
-// Get all available topic names with notes
 export function getAvailableOLevelMathTopics(): string[] {
-    return Object.keys(oLevelMathNotes);
+    return Object.keys(allMathNotes);
 }
