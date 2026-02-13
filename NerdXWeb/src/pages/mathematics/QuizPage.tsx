@@ -11,6 +11,7 @@ import { calculateQuizCreditCost } from '../../utils/creditCalculator';
 import { formatQuestionParts } from '../../utils/formatQuestionText';
 import { MathRenderer } from '../../components/MathRenderer';
 import { ArrowLeft, Upload, Check, X } from 'lucide-react';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 
 function hasLatex(text: string): boolean {
   if (!text || typeof text !== 'string') return false;
@@ -33,6 +34,7 @@ export function QuizPage() {
       backTo?: string;
       board?: 'zimsec' | 'cambridge';
       questionFormat?: 'mcq' | 'structured' | 'essay';
+      formLevel?: string;
     };
   };
   const navigate = useNavigate();
@@ -43,6 +45,7 @@ export function QuizPage() {
   const backTo = state?.backTo ?? '/app/mathematics';
   const quizBoard = state?.board;
   const quizQuestionFormat = state?.questionFormat;
+  const formLevel = state?.formLevel;
 
   const [question, setQuestion] = useState<Question | null>(state?.question ?? null);
   const [selectedAnswer, setSelectedAnswer] = useState('');
@@ -94,7 +97,7 @@ export function QuizPage() {
         (subject.id === 'mathematics' || subject.id === 'a_level_pure_math' || subject.id === 'a_level_statistics');
       let q: Question | null = null;
       if (canStream) {
-        q = await quizApi.generateQuestionStream(subject.id, topic!.id, 'medium', {});
+        q = await quizApi.generateQuestionStream(subject.id, topic!.id, 'medium', {}, formLevel);
       }
       if (!q) {
         const csFormat = isComputerScience ? quizQuestionFormat : undefined;
@@ -113,7 +116,8 @@ export function QuizPage() {
           csFormat ?? geoFormat ?? commerceFormat ?? besFormat,
           mixImagesEnabled,
           undefined,
-          csBoard
+          csBoard,
+          formLevel
         );
       }
       const creditsRemaining = (q as Question & { credits_remaining?: number })?.credits_remaining;
@@ -125,7 +129,7 @@ export function QuizPage() {
     } finally {
       setGenerating(false);
     }
-  }, [subject.id, topic, mixImagesEnabled, updateUser, isComputerScience, isGeography, isCommerce, isBES, quizQuestionFormat, quizBoard]);
+  }, [subject.id, topic, mixImagesEnabled, updateUser, isComputerScience, isGeography, isCommerce, isBES, quizQuestionFormat, quizBoard, formLevel]);
 
   const uploadAnswerImage = async (): Promise<string | undefined> => {
     if (!answerImage) return undefined;
@@ -213,10 +217,13 @@ export function QuizPage() {
   if (generating && !question) {
     return (
       <div className="quiz-page">
-        <div className="quiz-loading">
-          <p>Generating your question…</p>
-          <div className="quiz-loading-dots" />
-        </div>
+        <AILoadingOverlay
+          isVisible={true}
+          title="Generating Question"
+          subtitle="Crafting a mathematics problem"
+          accentColor={subject.color}
+          variant="inline"
+        />
       </div>
     );
   }

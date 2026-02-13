@@ -136,7 +136,7 @@ function App() {
               <Route path="business-enterprise-skills/notes/:topicSlug" element={<BESNoteDetailPage />} />
               <Route path="history" element={<HistoryTopicsPage />} />
               <Route path="history/notes" element={<HistoryNotesPage />} />
-              <Route path="history/notes/:topicSlug" element={<HistoryNoteDetailPage />} />
+              <Route path="history/notes/:topicId" element={<HistoryNoteDetailPage />} />
               <Route path="history/essay" element={<HistoryEssayPage />} />
               <Route path="mathematics/notes/:topic" element={<MathNotesPage />} />
               <Route path="mathematics/graph-practice" element={<GraphPracticePage />} />

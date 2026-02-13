@@ -46,23 +46,30 @@ export interface HistoryImageInput {
   mime_type?: string;
 }
 
+export type HistoryFormLevel = 'Form 1' | 'Form 2' | 'Form 3' | 'Form 4';
+
 export const historyApi = {
-  generateQuestion: async (topic: string | { id: string; name: string }, difficulty = 'medium'): Promise<{ success: boolean; data?: HistoryEssayQuestion; credits_remaining?: number; message?: string }> => {
+  generateQuestion: async (
+    topic: string | { id: string; name: string },
+    difficulty = 'medium',
+    formLevel: HistoryFormLevel = 'Form 1'
+  ): Promise<{ success: boolean; data?: HistoryEssayQuestion; credits_remaining?: number; message?: string }> => {
     const topicParam = typeof topic === 'string' ? topic : topic?.name ?? topic?.id ?? '';
     const response = await api.post<{ success: boolean; data?: HistoryEssayQuestion; credits_remaining?: number; message?: string }>(
       '/api/mobile/history/essay/generate',
-      { topic: topicParam, difficulty }
+      { topic: topicParam, difficulty, form_level: formLevel }
     );
     return response.data;
   },
 
   submitEssay: async (
     question: HistoryEssayQuestion,
-    answers: { part_a: string; part_b: string; part_c: string }
+    answers: { part_a: string; part_b: string; part_c: string },
+    formLevel: HistoryFormLevel = 'Form 1'
   ): Promise<{ success: boolean; data?: HistoryMarkingResult; message?: string }> => {
     const response = await api.post<{ success: boolean; data?: HistoryMarkingResult; message?: string }>(
       '/api/mobile/history/essay/submit',
-      { question, answers }
+      { question, answers, form_level: formLevel }
     );
     return response.data;
   },

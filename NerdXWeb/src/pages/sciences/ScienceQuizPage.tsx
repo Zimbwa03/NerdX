@@ -10,6 +10,7 @@ import {
 import { API_BASE_URL } from '../../services/api/config';
 import { calculateQuizCreditCost } from '../../utils/creditCalculator';
 import { ArrowLeft } from 'lucide-react';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 
 interface SubjectInfo {
   id: string;
@@ -168,9 +169,13 @@ export function ScienceQuizPage() {
   if (generating && !question) {
     return (
       <div className="quiz-page">
-        <div className="quiz-loading">
-          <p>Generating your question...</p>
-        </div>
+        <AILoadingOverlay
+          isVisible={true}
+          title="Generating Question"
+          subtitle="Creating a ZIMSEC-aligned question"
+          accentColor={subject.color}
+          variant="inline"
+        />
       </div>
     );
   }

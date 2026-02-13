@@ -1,21 +1,46 @@
-/**
- * FlashcardSection - Web Version
- * Ports the mobile flashcard functionality to the web (hint, difficulty, category, mastered, shuffle, progress bar)
- */
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layers, Zap, Info, X, Shuffle, CheckCircle, Lightbulb, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+    Layers, Zap, X, Shuffle, CheckCircle, Lightbulb,
+    ChevronLeft, ChevronRight, RotateCcw, Trophy,
+    Brain, Target, Sparkles, Eye, EyeOff, ArrowRight
+} from 'lucide-react';
 import { flashcardApi, type Flashcard } from '../services/api/flashcardApi';
 import type { TopicNotes } from '../data/scienceNotes/types';
-import '../pages/sciences/ScienceUniverse.css'; // Reusing science styles for consistency
 import { useAuth } from '../context/AuthContext';
+import { MathRenderer } from './MathRenderer';
+import { AILoadingOverlay } from './AILoadingOverlay';
+import './FlashcardSection.css';
+
+const fixLatex = (text: string): string => {
+    if (!text) return '';
+    let result = '';
+    for (let i = 0; i < text.length; i++) {
+        const c = text.charCodeAt(i);
+        if (c === 9) result += '\\t';
+        else if (c === 12) result += '\\f';
+        else if (c === 8) result += '\\b';
+        else if (c === 13) result += '\\r';
+        else result += text[i];
+    }
+    return result;
+};
 
 const getDifficultyColor = (difficulty: string): string => {
     switch (difficulty) {
-        case 'easy': return '#4CAF50';
-        case 'medium': return '#FF9800';
-        case 'difficult': return '#F44336';
+        case 'easy': return '#22C55E';
+        case 'medium': return '#F59E0B';
+        case 'difficult': return '#EF4444';
         default: return '#7C4DFF';
+    }
+};
+
+const getDifficultyIcon = (difficulty: string) => {
+    switch (difficulty) {
+        case 'easy': return '🟢';
+        case 'medium': return '🟡';
+        case 'difficult': return '🔴';
+        default: return '⚪';
     }
 };
 
@@ -44,8 +69,57 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
     const [showHint, setShowHint] = useState(false);
     const [isShuffled, setIsShuffled] = useState(false);
     const [masteredCards, setMasteredCards] = useState<Set<number>>(new Set());
+    const [showCompletion, setShowCompletion] = useState(false);
+    const [animDirection, setAnimDirection] = useState<'left' | 'right' | null>(null);
+    const [genProgress, setGenProgress] = useState(0);
+    const cardRef = useRef<HTMLDivElement>(null);
+    const touchStartX = useRef(0);
+    const touchDeltaX = useRef(0);
 
-    // Convert notes to text context
+    const showPlayerRef = useRef(showPlayer);
+    const showCompletionRef = useRef(showCompletion);
+    const currentIndexRef = useRef(currentIndex);
+    const flashcardsLenRef = useRef(flashcards.length);
+
+    useEffect(() => { showPlayerRef.current = showPlayer; }, [showPlayer]);
+    useEffect(() => { showCompletionRef.current = showCompletion; }, [showCompletion]);
+    useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
+    useEffect(() => { flashcardsLenRef.current = flashcards.length; }, [flashcards.length]);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!showPlayerRef.current || showCompletionRef.current) return;
+            if (e.key === 'ArrowLeft') {
+                if (currentIndexRef.current > 0) {
+                    setIsFlipped(false);
+                    setShowHint(false);
+                    setCurrentIndex(prev => prev - 1);
+                }
+            }
+            if (e.key === 'ArrowRight') {
+                if (currentIndexRef.current >= flashcardsLenRef.current - 1) {
+                    setShowCompletion(true);
+                } else {
+                    setIsFlipped(false);
+                    setShowHint(false);
+                    setCurrentIndex(prev => prev + 1);
+                }
+            }
+            if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); setIsFlipped(prev => !prev); setShowHint(false); }
+            if (e.key === 'h') setShowHint(prev => !prev);
+            if (e.key === 'm') {
+                setMasteredCards(prev => {
+                    const next = new Set(prev);
+                    if (next.has(currentIndexRef.current)) next.delete(currentIndexRef.current);
+                    else next.add(currentIndexRef.current);
+                    return next;
+                });
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     const getNotesContent = useCallback((): string => {
         const parts: string[] = [];
         if (notes.summary) parts.push(notes.summary);
@@ -60,16 +134,20 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
 
     const handleGenerate = async () => {
         setIsGenerating(true);
+        setGenProgress(0);
+        const progressInterval = setInterval(() => {
+            setGenProgress(prev => Math.min(prev + Math.random() * 15, 90));
+        }, 500);
         try {
             const notesContent = getNotesContent();
-            // For web, we currently default to batch generation for simplicity 
-            // (Streaming can be added later if needed)
             const result = await flashcardApi.generateFlashcards(
                 subject,
                 topic,
                 cardCount,
                 notesContent
             );
+            clearInterval(progressInterval);
+            setGenProgress(100);
 
             if (result.creditsRemaining !== undefined) {
                 updateUser({ credits: result.creditsRemaining });
@@ -77,13 +155,18 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
 
             if (result.flashcards.length > 0) {
                 setFlashcards(result.flashcards);
-                setShowPlayer(true);
-                setCurrentIndex(0);
-                setIsFlipped(false);
+                setTimeout(() => {
+                    setShowPlayer(true);
+                    setCurrentIndex(0);
+                    setIsFlipped(false);
+                    setGenProgress(0);
+                }, 300);
             } else {
                 alert('Could not generate flashcards. Please try again.');
             }
         } catch (error) {
+            clearInterval(progressInterval);
+            setGenProgress(0);
             console.error('Flashcard generation error:', error);
             const status = (error as { response?: { status?: number } })?.response?.status;
             if (status === 402) {
@@ -98,23 +181,31 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
     };
 
     const nextCard = () => {
-        setIsFlipped(false);
-        setShowHint(false);
-        if (currentIndex < flashcards.length - 1) {
-            setCurrentIndex(prev => prev + 1);
+        if (currentIndex >= flashcards.length - 1) {
+            setShowCompletion(true);
+            return;
         }
+        setAnimDirection('left');
+        setTimeout(() => {
+            setIsFlipped(false);
+            setShowHint(false);
+            setCurrentIndex(prev => prev + 1);
+            setAnimDirection(null);
+        }, 150);
     };
 
     const prevCard = () => {
-        setIsFlipped(false);
-        setShowHint(false);
-        if (currentIndex > 0) {
+        if (currentIndex <= 0) return;
+        setAnimDirection('right');
+        setTimeout(() => {
+            setIsFlipped(false);
+            setShowHint(false);
             setCurrentIndex(prev => prev - 1);
-        }
+            setAnimDirection(null);
+        }, 150);
     };
 
-    const shuffleCards = (e: React.MouseEvent) => {
-        e.stopPropagation();
+    const shuffleCards = () => {
         const shuffled = [...flashcards].sort(() => Math.random() - 0.5);
         setFlashcards(shuffled);
         setCurrentIndex(0);
@@ -123,8 +214,7 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
         setShowHint(false);
     };
 
-    const toggleMastered = (e: React.MouseEvent) => {
-        e.stopPropagation();
+    const toggleMastered = () => {
         setMasteredCards(prev => {
             const next = new Set(prev);
             if (next.has(currentIndex)) next.delete(currentIndex);
@@ -135,6 +225,7 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
 
     const resetPlayer = () => {
         setShowPlayer(false);
+        setShowCompletion(false);
         setFlashcards([]);
         setCurrentIndex(0);
         setIsFlipped(false);
@@ -142,10 +233,101 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
         setMasteredCards(new Set());
     };
 
+    const restartDeck = () => {
+        setShowCompletion(false);
+        setCurrentIndex(0);
+        setIsFlipped(false);
+        setShowHint(false);
+    };
+
     const handleCardFlip = () => {
         setIsFlipped(prev => !prev);
         setShowHint(false);
     };
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        touchStartX.current = e.touches[0].clientX;
+        touchDeltaX.current = 0;
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+    };
+
+    const handleTouchEnd = () => {
+        if (Math.abs(touchDeltaX.current) > 60) {
+            if (touchDeltaX.current < 0) nextCard();
+            else prevCard();
+        }
+        touchDeltaX.current = 0;
+    };
+
+    if (showCompletion) {
+        const totalCards = flashcards.length;
+        const masteredCount = masteredCards.size;
+        const masteredPct = totalCards > 0 ? Math.round((masteredCount / totalCards) * 100) : 0;
+        const circumference = 2 * Math.PI * 54;
+        const strokeDashoffset = circumference - (masteredPct / 100) * circumference;
+
+        return (
+            <div className="fc-section">
+                <div className="fc-completion" style={{ '--fc-accent': accentColor } as React.CSSProperties}>
+                    <div className="fc-completion-glow" style={{ background: `radial-gradient(circle, ${accentColor}30, transparent 70%)` }} />
+
+                    <div className="fc-completion-trophy">
+                        <Trophy size={48} />
+                    </div>
+
+                    <h2 className="fc-completion-title">Deck Complete!</h2>
+                    <p className="fc-completion-subtitle">{topic}</p>
+
+                    <div className="fc-completion-ring-wrap">
+                        <svg className="fc-completion-ring" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
+                            <circle
+                                cx="60" cy="60" r="54" fill="none"
+                                stroke={accentColor} strokeWidth="8" strokeLinecap="round"
+                                strokeDasharray={circumference}
+                                strokeDashoffset={strokeDashoffset}
+                                className="fc-ring-progress"
+                            />
+                        </svg>
+                        <div className="fc-ring-label">
+                            <span className="fc-ring-pct">{masteredPct}%</span>
+                            <span className="fc-ring-sub">Mastered</span>
+                        </div>
+                    </div>
+
+                    <div className="fc-completion-stats">
+                        <div className="fc-stat">
+                            <Brain size={20} />
+                            <span className="fc-stat-val">{totalCards}</span>
+                            <span className="fc-stat-label">Total Cards</span>
+                        </div>
+                        <div className="fc-stat">
+                            <CheckCircle size={20} style={{ color: '#22C55E' }} />
+                            <span className="fc-stat-val">{masteredCount}</span>
+                            <span className="fc-stat-label">Mastered</span>
+                        </div>
+                        <div className="fc-stat">
+                            <Target size={20} style={{ color: '#F59E0B' }} />
+                            <span className="fc-stat-val">{totalCards - masteredCount}</span>
+                            <span className="fc-stat-label">To Review</span>
+                        </div>
+                    </div>
+
+                    <div className="fc-completion-actions">
+                        <button className="fc-btn fc-btn-secondary" onClick={restartDeck}>
+                            <RotateCcw size={18} /> Review Again
+                        </button>
+                        <button className="fc-btn fc-btn-primary" onClick={resetPlayer} style={{ background: accentColor }}>
+                            <Sparkles size={18} /> New Deck
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (showPlayer && flashcards.length > 0) {
         const currentCard = flashcards[currentIndex];
@@ -153,188 +335,267 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
         const hasHint = Boolean(currentCard.hint?.trim());
         const isMastered = masteredCards.has(currentIndex);
         const progressPct = totalCards > 0 ? ((currentIndex + 1) / totalCards) * 100 : 0;
-        const dotStart = Math.max(0, currentIndex - 2);
-        const dotEnd = Math.min(flashcards.length, currentIndex + 3);
 
         return (
-            <div className="science-flashcard-player" style={{ borderColor: accentColor }}>
-                <div className="player-header">
-                    <div className="player-progress-wrap">
-                        <div className="player-progress">
-                            Card {currentIndex + 1} / {totalCards}
+            <div className="fc-section">
+                <div className="fc-player" style={{ '--fc-accent': accentColor } as React.CSSProperties}>
+                    <div className="fc-player-header">
+                        <div className="fc-player-info">
+                            <div className="fc-player-counter">
+                                <Brain size={16} style={{ color: accentColor }} />
+                                <span>{currentIndex + 1} <span className="fc-of">of</span> {totalCards}</span>
+                            </div>
+                            <div className="fc-player-mastered-count">
+                                <CheckCircle size={14} style={{ color: '#22C55E' }} />
+                                <span>{masteredCards.size} mastered</span>
+                            </div>
                         </div>
-                        <div className="player-progress-bar">
-                            <div
-                                className="player-progress-fill"
-                                style={{ width: `${progressPct}%`, backgroundColor: accentColor }}
-                            />
-                        </div>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={shuffleCards}
-                        className={`player-shuffle-btn ${isShuffled ? 'active' : ''}`}
-                        style={isShuffled ? { backgroundColor: accentColor } : undefined}
-                        title="Shuffle cards"
-                    >
-                        <Shuffle size={20} />
-                    </button>
-                    <button type="button" onClick={resetPlayer} className="player-close-btn" title="Close">
-                        <X size={20} />
-                    </button>
-                </div>
-
-                <div className="player-mastered-row">
-                    <CheckCircle size={16} className="mastered-icon" />
-                    <span className="player-mastered-text">{masteredCards.size} mastered</span>
-                </div>
-
-                <div
-                    className={`flashcard-container ${isFlipped ? 'flipped' : ''}`}
-                    onClick={handleCardFlip}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCardFlip(); } }}
-                    aria-label={isFlipped ? 'Tap to flip back to question' : 'Tap to flip and see answer'}
-                >
-                    <div className="flashcard-inner">
-                        <div className="flashcard-front">
-                            {currentCard.difficulty && (
-                                <div
-                                    className="flashcard-difficulty-badge"
-                                    style={{ backgroundColor: getDifficultyColor(currentCard.difficulty) }}
-                                >
-                                    {currentCard.difficulty.toUpperCase()}
-                                </div>
-                            )}
-                            {currentCard.category && (
-                                <div className="flashcard-category" style={{ color: accentColor }}>
-                                    {currentCard.category}
-                                </div>
-                            )}
-                            <div className="card-label">QUESTION</div>
-                            <div className="card-content">{currentCard.question}</div>
-                            {hasHint && (
-                                <button
-                                    type="button"
-                                    className="flashcard-hint-btn"
-                                    style={{ borderColor: accentColor, color: accentColor }}
-                                    onClick={(e) => { e.stopPropagation(); setShowHint(prev => !prev); }}
-                                >
-                                    <Lightbulb size={16} />
-                                    {showHint ? 'Hide Hint' : 'Show Hint'}
-                                </button>
-                            )}
-                            {showHint && hasHint && currentCard.hint && (
-                                <div className="flashcard-hint-box" style={{ backgroundColor: `${accentColor}20` }}>
-                                    💡 {currentCard.hint}
-                                </div>
-                            )}
-                            <div className="card-hint">TAP TO FLIP</div>
-                        </div>
-                        <div className="flashcard-back" style={{ borderColor: accentColor }}>
-                            <div className="card-label" style={{ color: 'rgba(255,255,255,0.95)' }}>ANSWER</div>
-                            <div className="card-content">{currentCard.answer}</div>
+                        <div className="fc-player-actions">
                             <button
-                                type="button"
-                                className={`flashcard-mastered-btn ${isMastered ? 'active' : ''}`}
-                                onClick={toggleMastered}
+                                className={`fc-icon-btn ${isShuffled ? 'active' : ''}`}
+                                onClick={shuffleCards}
+                                title="Shuffle cards"
+                                style={isShuffled ? { background: accentColor, color: '#fff' } : undefined}
                             >
-                                <CheckCircle size={20} />
-                                {isMastered ? 'Mastered!' : 'Mark as Mastered'}
+                                <Shuffle size={18} />
                             </button>
-                            <div className="card-hint">TAP TO FLIP BACK</div>
+                            <button className="fc-icon-btn" onClick={resetPlayer} title="Close">
+                                <X size={18} />
+                            </button>
                         </div>
                     </div>
-                </div>
 
-                <div className="player-controls">
-                    <button
-                        type="button"
-                        onClick={prevCard}
-                        disabled={currentIndex === 0}
-                        className="control-btn"
-                    >
-                        <ChevronLeft size={24} />
-                        Previous
-                    </button>
-
-                    <div className="player-dots">
-                        {flashcards.slice(dotStart, dotEnd).map((_, i) => {
-                            const idx = dotStart + i;
-                            return (
-                                <span
-                                    key={idx}
-                                    className={`player-dot ${idx === currentIndex ? 'active' : ''}`}
-                                    style={{
-                                        backgroundColor: idx === currentIndex ? accentColor : 'rgba(255,255,255,0.2)',
-                                        transform: idx === currentIndex ? 'scale(1.3)' : 'scale(1)',
-                                    }}
-                                />
-                            );
-                        })}
+                    <div className="fc-progress-track">
+                        <div className="fc-progress-fill" style={{ width: `${progressPct}%`, background: accentColor }} />
+                        {flashcards.map((_, i) => (
+                            <div
+                                key={i}
+                                className={`fc-progress-dot ${i === currentIndex ? 'current' : ''} ${masteredCards.has(i) ? 'mastered' : ''} ${i < currentIndex ? 'done' : ''}`}
+                                style={{
+                                    left: `${((i + 0.5) / totalCards) * 100}%`,
+                                    background: i === currentIndex ? accentColor : masteredCards.has(i) ? '#22C55E' : undefined,
+                                }}
+                            />
+                        ))}
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={nextCard}
-                        disabled={currentIndex === flashcards.length - 1}
-                        className="control-btn primary"
-                        style={{ backgroundColor: accentColor }}
+                    <div
+                        ref={cardRef}
+                        className={`fc-card-wrapper ${isFlipped ? 'flipped' : ''} ${animDirection ? `slide-${animDirection}` : ''}`}
+                        onClick={handleCardFlip}
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCardFlip(); } }}
                     >
-                        {currentIndex === flashcards.length - 1 ? 'Finish' : 'Next'}
-                        <ChevronRight size={24} />
-                    </button>
+                        <div className="fc-card-inner">
+                            <div className="fc-card-face fc-card-front">
+                                <div className="fc-card-top-row">
+                                    {currentCard.difficulty && (
+                                        <span
+                                            className="fc-difficulty"
+                                            style={{ background: `${getDifficultyColor(currentCard.difficulty)}20`, color: getDifficultyColor(currentCard.difficulty) }}
+                                        >
+                                            {getDifficultyIcon(currentCard.difficulty)} {currentCard.difficulty}
+                                        </span>
+                                    )}
+                                    {currentCard.category && (
+                                        <span className="fc-category" style={{ color: accentColor }}>
+                                            {currentCard.category}
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="fc-card-label">QUESTION</div>
+
+                                <div className="fc-card-body">
+                                    <MathRenderer content={fixLatex(currentCard.question)} fontSize={17} className="fc-question-text" />
+                                </div>
+
+                                {hasHint && (
+                                    <div className="fc-hint-area">
+                                        <button
+                                            className="fc-hint-toggle"
+                                            style={{ borderColor: `${accentColor}60`, color: accentColor }}
+                                            onClick={(e) => { e.stopPropagation(); setShowHint(prev => !prev); }}
+                                        >
+                                            {showHint ? <EyeOff size={14} /> : <Eye size={14} />}
+                                            {showHint ? 'Hide Hint' : 'Show Hint'}
+                                        </button>
+                                        {showHint && currentCard.hint && (
+                                            <div className="fc-hint-content" style={{ background: `${accentColor}15`, borderColor: `${accentColor}30` }}>
+                                                <Lightbulb size={14} style={{ color: accentColor, flexShrink: 0 }} />
+                                                <MathRenderer content={fixLatex(currentCard.hint || '')} fontSize={14} className="fc-hint-text" />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="fc-card-footer">
+                                    <span className="fc-tap-label">Tap to reveal answer</span>
+                                    <RotateCcw size={14} className="fc-flip-icon" />
+                                </div>
+                            </div>
+
+                            <div className="fc-card-face fc-card-back" style={{ '--fc-back-accent': accentColor } as React.CSSProperties}>
+                                <div className="fc-back-glow" style={{ background: `radial-gradient(ellipse at top, ${accentColor}25, transparent 60%)` }} />
+
+                                <div className="fc-card-label fc-card-label-back">ANSWER</div>
+
+                                <div className="fc-card-body">
+                                    <MathRenderer content={fixLatex(currentCard.answer)} fontSize={16} className="fc-answer-text" />
+                                </div>
+
+                                <div className="fc-back-actions">
+                                    <button
+                                        className={`fc-mastered-btn ${isMastered ? 'active' : ''}`}
+                                        onClick={(e) => { e.stopPropagation(); toggleMastered(); }}
+                                    >
+                                        <CheckCircle size={18} />
+                                        {isMastered ? 'Mastered!' : 'Mark Mastered'}
+                                    </button>
+                                </div>
+
+                                <div className="fc-card-footer">
+                                    <span className="fc-tap-label">Tap to flip back</span>
+                                    <RotateCcw size={14} className="fc-flip-icon" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="fc-nav-controls">
+                        <button
+                            className="fc-nav-btn"
+                            onClick={(e) => { e.stopPropagation(); prevCard(); }}
+                            disabled={currentIndex === 0}
+                        >
+                            <ChevronLeft size={22} />
+                            <span>Prev</span>
+                        </button>
+
+                        <div className="fc-nav-dots">
+                            {flashcards.map((_, i) => {
+                                const dist = Math.abs(i - currentIndex);
+                                if (dist > 3 && i !== 0 && i !== totalCards - 1) return null;
+                                if (dist === 3 && i !== 0 && i !== totalCards - 1) return <span key={i} className="fc-nav-ellipsis">...</span>;
+                                return (
+                                    <button
+                                        key={i}
+                                        className={`fc-nav-dot ${i === currentIndex ? 'active' : ''} ${masteredCards.has(i) ? 'mastered' : ''}`}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setCurrentIndex(i);
+                                            setIsFlipped(false);
+                                            setShowHint(false);
+                                        }}
+                                        style={i === currentIndex ? { background: accentColor, borderColor: accentColor } : undefined}
+                                    />
+                                );
+                            })}
+                        </div>
+
+                        <button
+                            className="fc-nav-btn fc-nav-btn-next"
+                            onClick={(e) => { e.stopPropagation(); nextCard(); }}
+                            style={{ background: accentColor }}
+                        >
+                            <span>{currentIndex === totalCards - 1 ? 'Finish' : 'Next'}</span>
+                            {currentIndex === totalCards - 1 ? <Trophy size={18} /> : <ChevronRight size={22} />}
+                        </button>
+                    </div>
+
+                    <div className="fc-keyboard-hint">
+                        <span><kbd>←</kbd> <kbd>→</kbd> navigate</span>
+                        <span><kbd>Space</kbd> flip</span>
+                        <span><kbd>H</kbd> hint</span>
+                        <span><kbd>M</kbd> master</span>
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="science-notes-card flashcard-setup-card">
-            <div className="science-notes-card-header">
-                <Layers size={24} className="science-notes-card-icon" style={{ color: accentColor }} />
-                <h2 className="science-notes-card-title">AI Flashcards</h2>
-            </div>
+        <div className="fc-section">
+            <div className="fc-setup" style={{ '--fc-accent': accentColor } as React.CSSProperties}>
+                <div className="fc-setup-header">
+                    <div className="fc-setup-icon" style={{ background: `${accentColor}20` }}>
+                        <Layers size={28} style={{ color: accentColor }} />
+                    </div>
+                    <div>
+                        <h2 className="fc-setup-title">AI Flashcards</h2>
+                        <p className="fc-setup-subtitle">Generate smart cards from your notes</p>
+                    </div>
+                </div>
 
-            <div className="flashcard-setup-body">
-                <p className="setup-desc">
-                    Generate custom flashcards from these notes to test your knowledge.
-                </p>
+                <div className="fc-setup-features">
+                    <div className="fc-feature">
+                        <Brain size={16} style={{ color: accentColor }} />
+                        <span>AI-generated questions</span>
+                    </div>
+                    <div className="fc-feature">
+                        <Lightbulb size={16} style={{ color: '#F59E0B' }} />
+                        <span>Hints included</span>
+                    </div>
+                    <div className="fc-feature">
+                        <Target size={16} style={{ color: '#EF4444' }} />
+                        <span>Difficulty levels</span>
+                    </div>
+                    <div className="fc-feature">
+                        <CheckCircle size={16} style={{ color: '#22C55E' }} />
+                        <span>Track mastery</span>
+                    </div>
+                </div>
 
-                <div className="slider-container">
-                    <label>Number of Cards: <span className="highlight-text">{cardCount}</span></label>
+                <div className="fc-setup-slider">
+                    <div className="fc-slider-header">
+                        <label>Number of Cards</label>
+                        <span className="fc-slider-value" style={{ color: accentColor }}>{cardCount}</span>
+                    </div>
                     <input
                         type="range"
                         min="5"
-                        max="50"
+                        max="100"
                         step="5"
                         value={cardCount}
                         onChange={(e) => setCardCount(parseInt(e.target.value))}
-                        className="range-slider"
-                        style={{ accentColor: accentColor }}
+                        className="fc-range"
+                        style={{ '--fc-accent': accentColor } as React.CSSProperties}
                     />
+                    <div className="fc-slider-labels">
+                        <span>5</span>
+                        <span>50</span>
+                        <span>100</span>
+                    </div>
                 </div>
 
-                <button
-                    className="generate-btn"
-                    onClick={handleGenerate}
-                    disabled={isGenerating}
-                    style={{ backgroundColor: accentColor }}
-                >
-                    {isGenerating ? (
-                        <span>Generating...</span>
-                    ) : (
-                        <>
-                            <Zap size={18} />
-                            Generate Flashcards
-                        </>
-                    )}
-                </button>
+                {isGenerating ? (
+                    <AILoadingOverlay
+                        isVisible={true}
+                        title="Generating Flashcards"
+                        subtitle={`Creating ${cardCount} study cards`}
+                        progress={genProgress}
+                        accentColor={accentColor}
+                        variant="card"
+                    />
+                ) : (
+                    <button
+                        className="fc-generate-btn"
+                        onClick={handleGenerate}
+                        style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}CC)` }}
+                    >
+                        <Zap size={20} />
+                        <span>Generate Flashcards</span>
+                        <ArrowRight size={18} />
+                    </button>
+                )}
 
-                <div className="credit-cost-info">
-                    <Info size={14} />
-                    <span>0.25 credits per card</span>
+                <div className="fc-cost-info">
+                    <Sparkles size={12} />
+                    <span>0.3 credits per card = <strong>{Math.min(cardCount * 0.3, 30).toFixed(1)} credits</strong></span>
                 </div>
             </div>
         </div>

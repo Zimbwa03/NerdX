@@ -16,10 +16,8 @@ import {
   ChevronUp,
   Info,
   Lightbulb,
-  Video,
-  Volume2,
-  Lock,
 } from 'lucide-react';
+import { VideoPlayer, AudioPlayer } from '../../components/MediaPlayer';
 import './ScienceUniverse.css'; // Import the new premium science styles
 
 type ScienceSubject = 'Biology' | 'Chemistry' | 'Physics';
@@ -177,59 +175,20 @@ export function ScienceNotesPage() {
         {(notes.audioUrl || notes.videoUrl) && (
           <div className="science-media-section">
             <div className="media-grid">
-
-              {/* Video Player Card */}
               {notes.videoUrl && (
-                <div className="science-media-card video-card">
-                  <div className="media-card-header">
-                    <Video size={20} className="media-icon" />
-                    <span>Video Lesson</span>
-                  </div>
-
-                  {isMediaLocked ? (
-                    <div className="locked-media-container">
-                      <div className="locked-overlay">
-                        <Lock size={48} className="lock-icon" />
-                        <h3>Premium Video</h3>
-                        <p>Unlock this video lesson by purchasing credits</p>
-                        <Link to="/app/credits" className="unlock-btn" style={{ backgroundColor: accentColor }}>
-                          Unlock Now
-                        </Link>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="video-wrapper">
-                      <video controls src={notes.videoUrl} className="science-video-player" />
-                    </div>
-                  )}
-                </div>
+                <VideoPlayer
+                  src={notes.videoUrl}
+                  accentColor={accentColor}
+                  locked={isMediaLocked}
+                />
               )}
-
-              {/* Audio Player Card */}
               {notes.audioUrl && (
-                <div className="science-media-card audio-card">
-                  <div className="media-card-header">
-                    <Volume2 size={20} className="media-icon" />
-                    <span>Audio Lesson</span>
-                  </div>
-
-                  {isMediaLocked ? (
-                    <div className="locked-media-container audio-locked">
-                      <div className="locked-overlay">
-                        <Lock size={32} className="lock-icon" />
-                        <h3>Premium Audio</h3>
-                        <p>Unlock audio lesson</p>
-                        <Link to="/app/credits" className="unlock-btn small" style={{ backgroundColor: accentColor }}>
-                          Unlock
-                        </Link>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="audio-wrapper">
-                      <audio controls src={notes.audioUrl} className="science-audio-player" />
-                    </div>
-                  )}
-                </div>
+                <AudioPlayer
+                  src={notes.audioUrl}
+                  subject={subjectName}
+                  accentColor={accentColor}
+                  locked={isMediaLocked}
+                />
               )}
             </div>
           </div>
@@ -325,16 +284,15 @@ export function ScienceNotesPage() {
                 </ul>
               </div>
             )}
-
-            {/* Flashcards (New Feature) */}
-            <FlashcardSection
-              subject={subjectName}
-              topic={notes.topic}
-              notes={notes}
-              accentColor={accentColor}
-            />
           </div>
         </div>
+
+        <FlashcardSection
+          subject={subjectName}
+          topic={notes.topic}
+          notes={notes}
+          accentColor={accentColor}
+        />
       </div>
     </div>
   );

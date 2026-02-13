@@ -11,6 +11,8 @@ import {
     getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
 import { ArrowLeft, BookOpen, Atom, Play, Zap, Info, X, FileText } from 'lucide-react';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
+import { physicsTopics } from '../../data/scienceNotes/physics';
 import '../sciences/ScienceUniverse.css'; // Shared premium styles
 
 const PHYS_TOPICS_FALLBACK: Topic[] = [
@@ -172,13 +174,16 @@ export const PhysicsTopicsPage = () => {
                         <p className="feature-card-desc">Resolve complex physics problems with step-by-step AI guidance.</p>
                     </div>
 
-                    {/* Virtual Labs (Placeholder/Future) */}
-                    <div className="science-feature-card">
-                        <div className="feature-icon-box" style={{ filter: 'grayscale(100%)', opacity: 0.5 }}>
+                    {/* Virtual Labs */}
+                    <div
+                        className="science-feature-card"
+                        onClick={() => navigate('/app/virtual-lab?subject=physics')}
+                    >
+                        <div className="feature-icon-box">
                             <Atom size={28} />
                         </div>
                         <h3 className="feature-card-title">Virtual Labs</h3>
-                        <p className="feature-card-desc">Experiment with circuits and forces in a virtual environment (Coming Soon).</p>
+                        <p className="feature-card-desc">Experiment with circuits, forces, and waves in interactive simulations.</p>
                     </div>
 
                     {/* Exam Mode */}
@@ -230,10 +235,10 @@ export const PhysicsTopicsPage = () => {
                     </div>
 
                     <div className="topic-chips-container" style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                        {displayTopics.map((t, i) => (
+                        {physicsTopics.map((topicName, i) => (
                             <Link
                                 key={i}
-                                to={`/app/physics/notes/${encodeURIComponent(t.name)}`}
+                                to={`/app/physics/notes/${encodeURIComponent(topicName)}`}
                                 style={{
                                     display: 'inline-block',
                                     padding: '10px 16px',
@@ -246,7 +251,7 @@ export const PhysicsTopicsPage = () => {
                                     transition: 'all 0.2s'
                                 }}
                             >
-                                {t.name}
+                                {topicName}
                             </Link>
                         ))}
                     </div>
@@ -337,6 +342,13 @@ export const PhysicsTopicsPage = () => {
                     </div>
                 </div>
             )}
+            <AILoadingOverlay
+                isVisible={generating}
+                title="Generating Question"
+                subtitle="Creating your practice question"
+                accentColor={SUBJECT.color}
+                variant="fullscreen"
+            />
         </div>
     );
 };

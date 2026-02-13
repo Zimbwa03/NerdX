@@ -7,6 +7,7 @@ import {
   getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
 import { ArrowLeft, BookOpen, MessageSquare, ClipboardList, TrendingUp } from 'lucide-react';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 import { useAuth } from '../../context/AuthContext';
 
 // 8 topics from ZIMSEC O-Level Business Enterprise and Skills 4048
@@ -277,6 +278,13 @@ export function BESTopicsPage() {
           </div>
         </div>
       )}
+      <AILoadingOverlay
+        isVisible={generating}
+        title="Generating Question"
+        subtitle="Creating your practice question"
+        accentColor={SUBJECT.color}
+        variant="fullscreen"
+      />
     </div>
   );
 }

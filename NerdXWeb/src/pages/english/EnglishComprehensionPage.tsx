@@ -8,6 +8,7 @@ import {
   type SummaryGradingResult,
 } from '../../services/api/englishApi';
 import { ArrowLeft, BookOpen } from 'lucide-react';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 
 const COMPREHENSION_CREDITS = 2;
 
@@ -301,6 +302,13 @@ export function EnglishComprehensionPage() {
           </>
         )}
       </main>
+      <AILoadingOverlay
+        isVisible={isGenerating}
+        title="Generating Question"
+        subtitle="Creating your practice question"
+        accentColor="#667eea"
+        variant="fullscreen"
+      />
     </div>
   );
 }

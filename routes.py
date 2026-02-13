@@ -129,12 +129,15 @@ def _serve_user_app(path=''):
             status=200,
             mimetype='text/html'
         )
-    # Serve static assets (js, css, images) if they exist
     if path:
         file_path = os.path.join(USER_APP_DIR, path)
         if os.path.isfile(file_path):
             return send_from_directory(USER_APP_DIR, path)
-    return send_from_directory(USER_APP_DIR, 'index.html')
+    resp = send_from_directory(USER_APP_DIR, 'index.html')
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
+    return resp
 
 
 @app.route('/assets/<path:filename>')
@@ -167,6 +170,7 @@ def index():
     return _serve_user_app('')
 
 
+@app.route('/login')
 @app.route('/register')
 @app.route('/forgot-password')
 @app.route('/reset-password')

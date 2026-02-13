@@ -1,197 +1,281 @@
-/**
- * HistoryTopicsPage - Premium Desktop Design
- * Features gradient cards, glassmorphism, and advanced desktop layout
- */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { quizApi, type Topic } from '../../services/api/quizApi';
+import { useAuth } from '../../context/AuthContext';
+import { type Topic } from '../../services/api/quizApi';
 import {
   formatCreditCost,
   getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
-import { ArrowLeft, BookOpen, MessageSquare, ClipboardList, TrendingUp, GraduationCap, Scroll } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { historyTopicNames } from '../../data/historyNotes/notes';
-
-const HISTORY_TOPICS_FALLBACK: Topic[] = historyTopicNames.map((name) => ({
-  id: name.toLowerCase().replace(/ /g, '_').replace(/-/g, '_'),
-  name,
-  subject: 'history',
-}));
+import { ArrowLeft, BookOpen, MessageSquare, Play, Scroll, Info, X, FileText } from 'lucide-react';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
+import {
+  historyFormLevels,
+  getHistoryTopicsByForm,
+  type HistoryFormLevel,
+} from '../../data/historyNotes';
+import '../sciences/ScienceUniverse.css';
 
 const SUBJECT = {
   id: 'history',
-  name: 'History',
+  name: 'O Level History',
   color: '#5D4037',
 };
 
 export function HistoryTopicsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [topics, setTopics] = useState<Topic[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [selectedForm, setSelectedForm] = useState<HistoryFormLevel>('Form 1');
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const data = await quizApi.getTopics('history');
-        if (!cancelled && data?.length) setTopics(data);
-        else if (!cancelled) setTopics(HISTORY_TOPICS_FALLBACK);
-      } catch {
-        if (!cancelled) setTopics(HISTORY_TOPICS_FALLBACK);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+  const [startQuizModalOpen, setStartQuizModalOpen] = useState(false);
+  const [pendingTopic, setPendingTopic] = useState<Topic | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const displayTopics = topics.length ? topics : HISTORY_TOPICS_FALLBACK;
+  const formTopics = getHistoryTopicsByForm(selectedForm);
+  const displayTopics = formTopics.map((t) => ({ id: t.id, name: t.name, subject: 'history' } as Topic));
+
+  const openStartQuiz = (topic: Topic) => {
+    setPendingTopic(topic);
+    setError(null);
+    setStartQuizModalOpen(true);
+  };
+
   const minCredits = getMinimumCreditsForQuiz({
     subject: 'history',
     questionType: 'topical',
     questionFormat: 'essay',
   });
+
   const userCredits = user?.credits ?? 0;
   const hasEnoughCredits = userCredits >= minCredits;
 
-  const handleTopicClick = (topic: Topic) => {
-    navigate('/app/history/essay', {
-      state: {
-        topic: { id: topic.id, name: topic.name },
-        subject: { id: SUBJECT.id, name: SUBJECT.name, color: SUBJECT.color },
-        backTo: '/app/history',
-      },
-    });
+  const handleStartQuiz = async () => {
+    if (!pendingTopic) return;
+    if (!hasEnoughCredits) {
+      setError(`You need at least ${formatCreditCost(minCredits)} credits to start. Please top up.`);
+      return;
+    }
+
+    setGenerating(true);
+    setStartQuizModalOpen(false);
+    setError(null);
+
+    setTimeout(() => {
+      navigate('/app/history/essay', {
+        state: {
+          topic: { id: pendingTopic.id, name: pendingTopic.name },
+          subject: { id: SUBJECT.id, name: SUBJECT.name, color: SUBJECT.color },
+          formLevel: selectedForm,
+          backTo: '/app/history',
+        },
+      });
+      setGenerating(false);
+    }, 1200);
   };
 
+  const notesTopics = getHistoryTopicsByForm(selectedForm).filter((t) => t.hasNotes);
+
   return (
-    <div className="subject-page-v2">
-      {/* Header */}
-      <header className="subject-header-v2">
-        <Link to="/app" className="back-btn-v2">
-          <ArrowLeft size={20} />
-          <span>Back</span>
-        </Link>
-        <div className="subject-header-content">
-          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #795548, #5D4037)' }}>
-            <Scroll size={28} />
-          </div>
-          <div>
-            <h1>History</h1>
-            <p>ZIMSEC O-Level History – Paper 1 Essays</p>
-          </div>
+    <div className="science-universe-page hist">
+      <div className="science-universe-bg hist-bg">
+        <div className="science-grid-overlay"></div>
+      </div>
+
+      <Link to="/app" className="super-back-btn">
+        <ArrowLeft size={24} />
+      </Link>
+
+      <div className="science-hero">
+        <div className="science-hero-badge hist-badge">
+          <Scroll size={14} />
+          <span>O-LEVEL HISTORY</span>
         </div>
-      </header>
+        <h1 className="science-hero-title hist-title">
+          Explore the<br />Past
+        </h1>
+        <p style={{ maxWidth: 600, margin: '0 auto', opacity: 0.8 }}>
+          Master ZIMSEC History with AI-powered essay practice, study notes, and exam preparation.
+        </p>
 
-      {/* Main content grid - desktop optimized */}
-      <div className="subject-content-grid">
-        {/* Left column - Features */}
-        <div className="subject-features-col">
-          {/* History Features */}
-          <section className="subject-section-v2">
-            <h2>History Skills</h2>
-            <div className="feature-cards-v2">
-              <button
-                type="button"
-                className="feature-card-v2"
-                onClick={() => navigate('/app/history/notes')}
-              >
-                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #8D6E63, #6D4C41)' }}>
-                  <BookOpen size={24} />
-                </div>
-                <div className="feature-card-text">
-                  <h3>History Notes</h3>
-                  <p>Comprehensive notes for all topics</p>
-                </div>
-                <span className="feature-arrow">→</span>
-              </button>
-
-              <button
-                type="button"
-                className="feature-card-v2"
-                onClick={() => navigate('/app/teacher', { state: { subject: 'History', gradeLevel: 'Form 3-4 (O-Level)' } })}
-              >
-                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #7C4DFF, #651FFF)' }}>
-                  <MessageSquare size={24} />
-                </div>
-                <div className="feature-card-text">
-                  <h3>AI Tutor</h3>
-                  <p>Interactive tutoring for History</p>
-                </div>
-                <span className="feature-arrow">→</span>
-              </button>
-
-              <button type="button" className="feature-card-v2" onClick={() => { }} disabled>
-                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #FF6D00, #DD2C00)', opacity: 0.5 }}>
-                  <TrendingUp size={24} />
-                </div>
-                <div className="feature-card-text">
-                  <h3>Virtual Labs</h3>
-                  <p>Coming soon – History simulations</p>
-                </div>
-                <span className="feature-arrow">→</span>
-              </button>
-            </div>
-          </section>
-
-          {/* Exam Mode */}
-          <section className="subject-section-v2">
-            <h2>Exam Practice</h2>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 28, flexWrap: 'wrap' }}>
+          {historyFormLevels.map((form) => (
             <button
+              key={form}
               type="button"
-              className="exam-card-v2"
-              onClick={() =>
-                navigate('/app/exam/setup', {
-                  state: { subject: 'history', backTo: '/app/history', subjectLabel: 'History' },
-                })
-              }
+              onClick={() => setSelectedForm(form)}
+              style={{
+                padding: '10px 22px',
+                borderRadius: 50,
+                border: `2px solid ${selectedForm === form ? '#8D6E63' : 'rgba(255,255,255,0.15)'}`,
+                background: selectedForm === form ? 'rgba(141, 110, 99, 0.25)' : 'rgba(255,255,255,0.05)',
+                color: selectedForm === form ? '#D7CCC8' : 'rgba(255,255,255,0.7)',
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                backdropFilter: 'blur(8px)',
+              }}
             >
-              <div className="exam-card-icon" style={{ background: 'linear-gradient(135deg, #8D6E63, #6D4C41)' }}>
-                <ClipboardList size={28} />
-              </div>
-              <div className="exam-card-text">
-                <h3>Start Exam</h3>
-                <p>Timed exam – Essay questions only</p>
-              </div>
-              <span className="feature-arrow">→</span>
+              {form}
             </button>
-          </section>
-        </div>
-
-        {/* Right column - Topics Grid */}
-        <div className="subject-topics-col">
-          <section className="subject-section-v2">
-            <h2>Topical Questions</h2>
-            <p className="section-subtitle">Choose a topic – Paper 1 Essays (3-part ZIMSEC format)</p>
-            {!hasEnoughCredits && (
-              <p className="modal-cost" style={{ marginBottom: '0.5rem' }}>
-                You need at least {formatCreditCost(minCredits)} to generate a question.
-              </p>
-            )}
-            {loading ? (
-              <div className="loading-state">Loading topics…</div>
-            ) : (
-              <div className="topics-grid-v2">
-                {displayTopics.map((topic) => (
-                  <button
-                    key={topic.id}
-                    type="button"
-                    className="topic-card-v2"
-                    onClick={() => handleTopicClick(topic)}
-                  >
-                    <div className="topic-card-icon" style={{ background: 'linear-gradient(135deg, #8D6E63, #6D4C41)' }}>
-                      <GraduationCap size={18} />
-                    </div>
-                    <span className="topic-card-name">{topic.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </section>
+          ))}
         </div>
       </div>
+
+      <div className="science-content-grid">
+        <div className="science-features-col">
+          <div
+            className="science-feature-card"
+            onClick={() => navigate('/app/teacher', { state: { subject: 'History', gradeLevel: 'Form 3-4 (O-Level)' } })}
+          >
+            <div className="feature-icon-box">
+              <MessageSquare size={28} />
+            </div>
+            <h3 className="feature-card-title">AI History Tutor</h3>
+            <p className="feature-card-desc">Ask any history question. Get instant, detailed explanations.</p>
+          </div>
+
+          <div
+            className="science-feature-card"
+            onClick={() => navigate('/app/exam/setup', { state: { subject: 'history', backTo: '/app/history', subjectLabel: 'History' } })}
+          >
+            <div className="feature-icon-box">
+              <FileText size={28} />
+            </div>
+            <h3 className="feature-card-title">Exam Mode</h3>
+            <p className="feature-card-desc">Practice with timed essay questions under exam conditions.</p>
+          </div>
+        </div>
+
+        <div className="science-topics-col">
+          <div className="topics-section-title" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+            <Play size={24} style={{ color: '#8D6E63' }} />
+            <span style={{ fontSize: 24, fontWeight: 700 }}>Essay Practice – {selectedForm}</span>
+            <span className="topics-count-badge" style={{ fontSize: 12, background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: 12 }}>
+              {displayTopics.length} Topics
+            </span>
+          </div>
+
+          <p style={{ marginBottom: 20, opacity: 0.7 }}>
+            Select a topic to practice <strong>Paper 1 Essay</strong> questions (3-part ZIMSEC format). Each topic generates standard ZIMSEC-aligned questions that are marked with detailed feedback.
+          </p>
+
+          {!hasEnoughCredits && (
+            <div style={{ padding: 12, background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 12, marginBottom: 20, color: '#FCA5A5', fontSize: 14 }}>
+              You need at least {formatCreditCost(minCredits)} to generate a question.
+            </div>
+          )}
+
+          <div className="science-topics-grid">
+            {displayTopics.map((topic) => (
+              <div
+                key={topic.id}
+                className="science-topic-card"
+                onClick={() => openStartQuiz(topic)}
+              >
+                <div className="topic-icon-small">
+                  <Scroll size={20} />
+                </div>
+                <span className="topic-card-name">{topic.name}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="topics-section-title" style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 60, marginBottom: 24 }}>
+            <BookOpen size={24} style={{ color: '#A1887F' }} />
+            <span style={{ fontSize: 24, fontWeight: 700 }}>Study Notes – {selectedForm}</span>
+          </div>
+
+          <div className="topic-chips-container" style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            {notesTopics.map((topic) => (
+              <Link
+                key={topic.id}
+                to={`/app/history/notes/${topic.id}`}
+                style={{
+                  display: 'inline-block',
+                  padding: '10px 16px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '50px',
+                  color: '#fff',
+                  fontSize: '14px',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {topic.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {startQuizModalOpen && pendingTopic && (
+        <div className="modal-overlay" style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
+          zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div className="modal-content" style={{
+            background: '#0F172A', border: '1px solid rgba(255,255,255,0.1)',
+            width: '90%', maxWidth: '450px', borderRadius: 24, padding: 32,
+            position: 'relative',
+          }}>
+            <button
+              onClick={() => setStartQuizModalOpen(false)}
+              style={{ position: 'absolute', top: 20, right: 20, background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
+            >
+              <X size={24} />
+            </button>
+
+            <div style={{ textAlign: 'center', marginBottom: 24 }}>
+              <div style={{
+                width: 60, height: 60, background: 'rgba(93, 64, 55, 0.25)',
+                borderRadius: 16, margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#8D6E63',
+              }}>
+                <Scroll size={32} />
+              </div>
+              <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>{pendingTopic.name}</h2>
+              <p style={{ opacity: 0.7, marginTop: 8 }}>Paper 1 Essay – 3-part ZIMSEC Format</p>
+              <p style={{ opacity: 0.5, marginTop: 4, fontSize: 13 }}>{selectedForm}</p>
+            </div>
+
+            {error && (
+              <div style={{ padding: 12, background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: 12, marginBottom: 20, color: '#FCA5A5', fontSize: 14 }}>
+                {error}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 24, fontSize: 14, opacity: 0.8 }}>
+              <Info size={16} />
+              <span>Cost: <strong>{minCredits} credits</strong></span>
+            </div>
+
+            <button
+              onClick={handleStartQuiz}
+              disabled={generating}
+              style={{
+                width: '100%', padding: '16px', borderRadius: 16,
+                background: 'linear-gradient(135deg, #5D4037, #795548)',
+                border: 'none', color: '#fff', fontSize: 16, fontWeight: 700,
+                cursor: generating ? 'wait' : 'pointer',
+                opacity: generating ? 0.7 : 1,
+              }}
+            >
+              {generating ? 'Starting...' : 'Start Essay Practice'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <AILoadingOverlay
+        isVisible={generating}
+        title="Generating Question"
+        subtitle={`Preparing a ${selectedForm} ZIMSEC essay question on ${pendingTopic?.name ?? 'this topic'}...`}
+        accentColor={SUBJECT.color}
+        variant="fullscreen"
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { mathNotesApi } from '../../services/api/mathNotesApi';
 import type { MathTopicNotes } from '../../data/mathNotes/types';
 import { MathRenderer } from '../../components/MathRenderer';
 import { ArrowLeft, Info, ChevronDown, ChevronUp, CheckCircle, Lightbulb, PenLine } from 'lucide-react';
+import { VideoPlayer, AudioPlayer } from '../../components/MediaPlayer';
 
 export function MathNotesPage() {
   const { topic: topicSlug } = useParams<{ topic: string }>();
@@ -96,25 +97,19 @@ export function MathNotesPage() {
               <div className="math-notes-card-body">
                 {/* Media Players */}
                 {section.videoUrl && (
-                  <div className="math-notes-video-container">
-                    <iframe
-                      src={section.videoUrl}
-                      title={`Video for ${section.title}`}
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="math-notes-video-frame"
-                    />
-                  </div>
+                  <VideoPlayer
+                    src={section.videoUrl}
+                    title={`Video: ${section.title}`}
+                    accentColor="#7C4DFF"
+                  />
                 )}
                 {section.audioUrl && (
-                  <div className="math-notes-audio-container">
-                    <p className="math-notes-audio-label">🎧 Audio Lesson:</p>
-                    <audio controls className="math-notes-audio-player">
-                      <source src={section.audioUrl} type="audio/mpeg" />
-                      Your browser does not support the audio element.
-                    </audio>
-                  </div>
+                  <AudioPlayer
+                    src={section.audioUrl}
+                    title={`Audio: ${section.title}`}
+                    subject="Mathematics"
+                    accentColor="#7C4DFF"
+                  />
                 )}
 
                 <MathRenderer content={section.content} fontSize={16} />

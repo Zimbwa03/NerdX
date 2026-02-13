@@ -11,6 +11,8 @@ import {
     getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
 import { ArrowLeft, BookOpen, Atom, FlaskConical, Play, Info, X, FileText } from 'lucide-react';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
+import { chemistryTopics } from '../../data/scienceNotes/chemistry';
 import '../sciences/ScienceUniverse.css'; // Shared premium styles
 
 const CHEM_TOPICS_FALLBACK: Topic[] = [
@@ -173,13 +175,16 @@ export const ChemistryTopicsPage = () => {
                         <p className="feature-card-desc">Get instant help with balancing equations, mole calculations, and more.</p>
                     </div>
 
-                    {/* Virtual Labs (Placeholder/Future) */}
-                    <div className="science-feature-card">
-                        <div className="feature-icon-box" style={{ filter: 'grayscale(100%)', opacity: 0.5 }}>
+                    {/* Virtual Labs */}
+                    <div
+                        className="science-feature-card"
+                        onClick={() => navigate('/app/virtual-lab?subject=chemistry')}
+                    >
+                        <div className="feature-icon-box">
                             <Atom size={28} />
                         </div>
                         <h3 className="feature-card-title">Virtual Labs</h3>
-                        <p className="feature-card-desc">Mix chemicals safely in our virtual lab simulation (Coming Soon).</p>
+                        <p className="feature-card-desc">Mix chemicals and explore reactions safely in interactive simulations.</p>
                     </div>
 
                     {/* Exam Mode */}
@@ -231,10 +236,10 @@ export const ChemistryTopicsPage = () => {
                     </div>
 
                     <div className="topic-chips-container" style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                        {displayTopics.map((t, i) => (
+                        {chemistryTopics.map((topicName, i) => (
                             <Link
                                 key={i}
-                                to={`/app/chemistry/notes/${encodeURIComponent(t.name)}`}
+                                to={`/app/chemistry/notes/${encodeURIComponent(topicName)}`}
                                 style={{
                                     display: 'inline-block',
                                     padding: '10px 16px',
@@ -247,7 +252,7 @@ export const ChemistryTopicsPage = () => {
                                     transition: 'all 0.2s'
                                 }}
                             >
-                                {t.name}
+                                {topicName}
                             </Link>
                         ))}
                     </div>
@@ -338,6 +343,13 @@ export const ChemistryTopicsPage = () => {
                     </div>
                 </div>
             )}
+            <AILoadingOverlay
+                isVisible={generating}
+                title="Generating Question"
+                subtitle="Creating your practice question"
+                accentColor={SUBJECT.color}
+                variant="fullscreen"
+            />
         </div>
     );
 };

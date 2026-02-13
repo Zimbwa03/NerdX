@@ -416,14 +416,90 @@ Generate the flashcard now (JSON only):"""
             logger.error(f"Vertex AI request error: {e}")
             return None
     
+    def _fix_latex_in_json(self, json_str: str) -> str:
+        """Fix LaTeX backslash commands that get corrupted by JSON escape rules.
+        
+        AI generates LaTeX like \\text, \\frac, \\theta inside JSON strings,
+        but \\t becomes tab, \\f becomes form-feed, \\b becomes backspace
+        during JSON parsing. We pre-escape these before json.loads().
+        """
+        import re
+        result = []
+        i = 0
+        in_string = False
+        escape_next = False
+        
+        while i < len(json_str):
+            ch = json_str[i]
+            
+            if escape_next:
+                escape_next = False
+                if ch in ('"', '\\', '/', 'n', 'r', 'u'):
+                    result.append(ch)
+                elif ch == 't':
+                    lookahead = json_str[i+1:i+5] if i+1 < len(json_str) else ''
+                    if lookahead.startswith('ext') or lookahead.startswith('heta') or lookahead.startswith('imes') or lookahead.startswith('an'):
+                        result.append('\\')
+                        result.append(ch)
+                    else:
+                        result.append(ch)
+                elif ch == 'f':
+                    lookahead = json_str[i+1:i+5] if i+1 < len(json_str) else ''
+                    if lookahead.startswith('rac') or lookahead.startswith('oral'):
+                        result.append('\\')
+                        result.append(ch)
+                    else:
+                        result.append(ch)
+                elif ch == 'b':
+                    lookahead = json_str[i+1:i+6] if i+1 < len(json_str) else ''
+                    if lookahead.startswith('egin') or lookahead.startswith('inom') or lookahead.startswith('eta') or lookahead.startswith('old') or lookahead.startswith('ar'):
+                        result.append('\\')
+                        result.append(ch)
+                    else:
+                        result.append(ch)
+                else:
+                    result.append('\\')
+                    result.append(ch)
+                i += 1
+                continue
+            
+            if ch == '\\' and in_string:
+                escape_next = True
+                result.append(ch)
+                i += 1
+                continue
+            
+            if ch == '"' and (not result or result[-1] != '\\'):
+                in_string = not in_string
+            
+            result.append(ch)
+            i += 1
+        
+        return ''.join(result)
+
+    def _fix_latex_in_card(self, card: Dict) -> Dict:
+        """Fix corrupted LaTeX in parsed flashcard fields.
+        
+        After JSON parsing, control characters (tab, form-feed, backspace)
+        that were originally LaTeX commands get restored.
+        """
+        for field in ('question', 'answer', 'hint'):
+            val = card.get(field)
+            if not val or not isinstance(val, str):
+                continue
+            val = val.replace('\t', '\\t')
+            val = val.replace('\f', '\\f')
+            val = val.replace('\b', '\\b')
+            val = val.replace('\r', '\\r')
+            card[field] = val
+        return card
+
     def _parse_flashcards_response(self, response: str, expected_count: int) -> List[Dict]:
         """Parse batch flashcard response from AI"""
         
         try:
-            # Clean response - extract JSON array
             response = response.strip()
             
-            # Find JSON array boundaries
             start_idx = response.find('[')
             end_idx = response.rfind(']') + 1
             
@@ -432,13 +508,19 @@ Generate the flashcard now (JSON only):"""
                 return self._generate_fallback_flashcards("Topic", expected_count)
             
             json_str = response[start_idx:end_idx]
-            flashcards = json.loads(json_str)
+            json_str = self._fix_latex_in_json(json_str)
             
-            # Validate and clean each flashcard
+            try:
+                flashcards = json.loads(json_str)
+            except json.JSONDecodeError:
+                json_str = response[start_idx:end_idx]
+                flashcards = json.loads(json_str)
+            
             valid_flashcards = []
             for i, card in enumerate(flashcards):
+                card = self._fix_latex_in_card(card)
                 if self._validate_flashcard(card):
-                    card['id'] = i + 1  # Ensure sequential IDs
+                    card['id'] = i + 1
                     valid_flashcards.append(card)
             
             return valid_flashcards
@@ -453,7 +535,6 @@ Generate the flashcard now (JSON only):"""
         try:
             response = response.strip()
             
-            # Find JSON object
             start_idx = response.find('{')
             end_idx = response.rfind('}') + 1
             
@@ -461,8 +542,15 @@ Generate the flashcard now (JSON only):"""
                 return None
             
             json_str = response[start_idx:end_idx]
-            flashcard = json.loads(json_str)
+            json_str = self._fix_latex_in_json(json_str)
             
+            try:
+                flashcard = json.loads(json_str)
+            except json.JSONDecodeError:
+                json_str = response[start_idx:end_idx]
+                flashcard = json.loads(json_str)
+            
+            flashcard = self._fix_latex_in_card(flashcard)
             if self._validate_flashcard(flashcard):
                 flashcard['id'] = index + 1
                 return flashcard

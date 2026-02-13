@@ -120,16 +120,19 @@ export const quizApi = {
     subject: string,
     topic: string,
     difficulty: string = 'medium',
-    handlers: StreamHandlers = {}
+    handlers: StreamHandlers = {},
+    formLevel?: string
   ): Promise<Question | null> => {
     const token = getAuthToken();
+    const bodyPayload: Record<string, unknown> = { subject, topic, difficulty };
+    if (formLevel) bodyPayload.form_level = formLevel;
     const response = await fetch(`${API_BASE_URL}/api/mobile/quiz/generate-stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ subject, topic, difficulty }),
+      body: JSON.stringify(bodyPayload),
     });
 
     if (!response.ok) {
@@ -217,7 +220,8 @@ export const quizApi = {
     questionFormat?: 'mcq' | 'structured' | 'essay',
     mixImages?: boolean,
     questionCount?: number,
-    board?: 'zimsec' | 'cambridge'
+    board?: 'zimsec' | 'cambridge',
+    formLevel?: string
   ): Promise<Question | null> => {
     const payload: Record<string, unknown> = {
       subject,
@@ -231,6 +235,7 @@ export const quizApi = {
     if (mixImages !== undefined) payload.mix_images = mixImages;
     if (questionCount !== undefined) payload.question_count = questionCount;
     if (board) payload.board = board;
+    if (formLevel) payload.form_level = formLevel;
 
     const timeout = type === 'essay' || questionType === 'structured' ? 120000 : 90000;
     const response = await api.post('/api/mobile/quiz/generate', payload, { timeout });

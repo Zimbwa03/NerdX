@@ -11,6 +11,8 @@ import {
     getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
 import { ArrowLeft, BookOpen, Microscope, FlaskConical, Play, Dna, Info, X, FileText } from 'lucide-react';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
+import { biologyTopics } from '../../data/scienceNotes/biology';
 import '../sciences/ScienceUniverse.css'; // Shared premium styles
 
 const BIO_TOPICS_FALLBACK: Topic[] = [
@@ -175,13 +177,16 @@ export const BiologyTopicsPage = () => {
                         <p className="feature-card-desc">Ask any biology question. Get instant, diagram-rich explanations.</p>
                     </div>
 
-                    {/* Virtual Labs (Placeholder/Future) */}
-                    <div className="science-feature-card">
-                        <div className="feature-icon-box" style={{ filter: 'grayscale(100%)', opacity: 0.5 }}>
+                    {/* Virtual Labs */}
+                    <div
+                        className="science-feature-card"
+                        onClick={() => navigate('/app/virtual-lab?subject=biology')}
+                    >
+                        <div className="feature-icon-box">
                             <FlaskConical size={28} />
                         </div>
                         <h3 className="feature-card-title">Virtual Labs</h3>
-                        <p className="feature-card-desc">Simulate experiments and visualize biological processes (Coming Soon).</p>
+                        <p className="feature-card-desc">Simulate experiments and visualize biological processes interactively.</p>
                     </div>
 
                     {/* Exam Mode */}
@@ -233,10 +238,10 @@ export const BiologyTopicsPage = () => {
                     </div>
 
                     <div className="topic-chips-container" style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                        {displayTopics.map((t, i) => (
+                        {biologyTopics.map((topicName, i) => (
                             <Link
                                 key={i}
-                                to={`/app/biology/notes/${encodeURIComponent(t.name)}`}
+                                to={`/app/biology/notes/${encodeURIComponent(topicName)}`}
                                 style={{
                                     display: 'inline-block',
                                     padding: '10px 16px',
@@ -249,7 +254,7 @@ export const BiologyTopicsPage = () => {
                                     transition: 'all 0.2s'
                                 }}
                             >
-                                {t.name}
+                                {topicName}
                             </Link>
                         ))}
                     </div>
@@ -340,6 +345,13 @@ export const BiologyTopicsPage = () => {
                     </div>
                 </div>
             )}
+            <AILoadingOverlay
+                isVisible={generating}
+                title="Generating Question"
+                subtitle="Creating your practice question"
+                accentColor={SUBJECT.color}
+                variant="fullscreen"
+            />
         </div>
     );
 };

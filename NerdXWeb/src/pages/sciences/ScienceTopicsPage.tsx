@@ -9,6 +9,7 @@ import {
 } from '../../utils/creditCalculator';
 import { scienceTopics } from '../../data/scienceNotes';
 import { ArrowLeft, Atom, FlaskConical, Leaf, MessageCircle, Sparkles } from 'lucide-react';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 
 type ScienceSubject = 'Biology' | 'Chemistry' | 'Physics';
 
@@ -399,6 +400,13 @@ export function ScienceTopicsPage() {
           </div>
         </div>
       )}
+      <AILoadingOverlay
+        isVisible={generating}
+        title="Generating Question"
+        subtitle="Creating your practice question"
+        accentColor={subjectMeta.accent}
+        variant="fullscreen"
+      />
     </div>
   );
 }
