@@ -122,7 +122,13 @@ export function MathematicsTopicsPage() {
     }
   };
 
-  const notesTopics = getMathTopicsByForm(selectedForm).filter((t) => t.hasNotes);
+  const notesKeys = Array.from(
+    new Map(
+      getMathTopicsByForm(selectedForm)
+        .filter((t) => t.hasNotes && t.notesKey)
+        .map((t) => [t.notesKey!, t])
+    ).values()
+  );
 
   return (
     <div className="science-universe-page math">
@@ -263,7 +269,7 @@ export function MathematicsTopicsPage() {
             ))}
           </div>
 
-          {notesTopics.length > 0 && (
+          {notesKeys.length > 0 && (
             <>
               <div className="topics-section-title" style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 60, marginBottom: 24 }}>
                 <BookOpen size={24} style={{ color: '#82B1FF' }} />
@@ -271,10 +277,10 @@ export function MathematicsTopicsPage() {
               </div>
 
               <div className="topic-chips-container" style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                {notesTopics.map((topic) => (
+                {notesKeys.map((topic) => (
                   <Link
-                    key={topic.id}
-                    to={`/app/mathematics/notes/${encodeURIComponent(topic.name.replace(/\s+/g, '-'))}`}
+                    key={topic.notesKey}
+                    to={`/app/mathematics/notes/${encodeURIComponent(topic.notesKey!.replace(/\s+/g, '-'))}`}
                     style={{
                       display: 'inline-block',
                       padding: '10px 16px',
@@ -287,7 +293,7 @@ export function MathematicsTopicsPage() {
                       transition: 'all 0.2s',
                     }}
                   >
-                    {topic.name}
+                    {topic.notesKey}
                   </Link>
                 ))}
               </div>
