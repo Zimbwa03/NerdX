@@ -132,6 +132,8 @@ export function HistoryEssayPage() {
     if (!topic) return;
     setGenerating(true);
     setError(null);
+    setQuestion(null);
+    resetAnswers();
     try {
       const res = await historyApi.generateQuestion(topic, 'medium', formLevel);
       if (res.success && res.data) {
