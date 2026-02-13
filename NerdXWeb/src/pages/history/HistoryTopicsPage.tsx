@@ -157,17 +157,6 @@ export function HistoryTopicsPage() {
 
           <div
             className="science-feature-card"
-            onClick={() => navigate('/app/history/notes')}
-          >
-            <div className="feature-icon-box">
-              <BookOpen size={28} />
-            </div>
-            <h3 className="feature-card-title">Study Notes</h3>
-            <p className="feature-card-desc">Comprehensive notes covering all ZIMSEC History topics.</p>
-          </div>
-
-          <div
-            className="science-feature-card"
             onClick={() => navigate('/app/exam/setup', { state: { subject: 'history', backTo: '/app/history', subjectLabel: 'History' } })}
           >
             <div className="feature-icon-box">

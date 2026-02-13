@@ -49,6 +49,10 @@ task = "shell.exec"
 args = "cd /home/runner/workspace && PORT=3000 python main.py"
 
 [[ports]]
+localPort = 3000
+externalPort = 3000
+
+[[ports]]
 localPort = 5000
 externalPort = 80
 
