@@ -1,77 +1,136 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { quizApi, type Topic } from '../../services/api/quizApi';
-import { ArrowLeft, BookOpen } from 'lucide-react';
-import { historyTopicNames } from '../../data/historyNotes/notes';
-
-const HISTORY_TOPICS_FALLBACK: Topic[] = historyTopicNames.map((name) => ({
-  id: name.toLowerCase().replace(/ /g, '_').replace(/-/g, '_'),
-  name,
-  subject: 'history',
-}));
+import { ArrowLeft, BookOpen, Scroll } from 'lucide-react';
+import {
+  historyFormLevels,
+  getHistoryTopicsByForm,
+  type HistoryFormLevel,
+} from '../../data/historyNotes';
+import '../sciences/ScienceUniverse.css';
 
 export function HistoryNotesPage() {
-  const [topics, setTopics] = useState<Topic[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const data = await quizApi.getTopics('history');
-        if (!cancelled && data?.length) setTopics(data);
-        else if (!cancelled) setTopics(HISTORY_TOPICS_FALLBACK);
-      } catch {
-        if (!cancelled) setTopics(HISTORY_TOPICS_FALLBACK);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
-  const displayTopics = topics.length ? topics : HISTORY_TOPICS_FALLBACK;
+  const [selectedForm, setSelectedForm] = useState<HistoryFormLevel>('Form 1');
+  const filteredTopics = getHistoryTopicsByForm(selectedForm);
 
   return (
-    <div className="commerce-notes-page bes-notes-page history-notes-page">
-      <header className="commerce-notes-header">
-        <Link to="/app/history" className="back-link">
-          <ArrowLeft size={20} /> Back
-        </Link>
-        <h1 className="commerce-notes-title">History Notes</h1>
-        <p className="commerce-notes-subtitle">Comprehensive notes aligned with ZIMSEC O-Level History</p>
-      </header>
+    <div className="science-universe-page hist">
+      <div className="science-universe-bg hist-bg" />
+      <div className="science-grid-overlay" />
 
-      <section className="commerce-notes-content">
-        <div className="commerce-notes-intro">
-          <div className="commerce-notes-intro-icon" style={{ backgroundColor: 'rgba(93, 64, 55, 0.15)' }}>
-            <BookOpen size={40} color="#5D4037" />
-          </div>
-          <p>
-            Notes for each topic are aligned with the ZIMSEC O-Level History syllabus.
-            Use the Topical Questions and Exam features to practice 3-part essays (Part [a], [b], [c]).
-          </p>
+      <Link to="/app/history" className="super-back-btn">
+        <ArrowLeft size={24} />
+      </Link>
+
+      <div className="science-hero">
+        <div className="science-hero-badge hist-badge">
+          <Scroll size={14} />
+          <span>HISTORY NOTES</span>
+        </div>
+        <h1 className="science-hero-title hist-title">
+          Study Notes
+        </h1>
+        <p style={{ maxWidth: 600, margin: '0 auto', opacity: 0.8 }}>
+          Comprehensive notes aligned with ZIMSEC O-Level History syllabus. Includes videos, audio, and flashcards.
+        </p>
+      </div>
+
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 20px' }}>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 32, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {historyFormLevels.map((form) => (
+            <button
+              key={form}
+              onClick={() => setSelectedForm(form)}
+              style={{
+                padding: '10px 24px',
+                borderRadius: 50,
+                border: `2px solid ${selectedForm === form ? '#795548' : 'rgba(255,255,255,0.15)'}`,
+                background: selectedForm === form ? 'rgba(121, 85, 72, 0.3)' : 'rgba(255,255,255,0.05)',
+                color: selectedForm === form ? '#D7CCC8' : 'rgba(255,255,255,0.7)',
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              {form}
+            </button>
+          ))}
         </div>
 
-        <h2 className="commerce-notes-topics-title">Topics</h2>
-        {loading ? (
-          <div className="commerce-notes-loading">Loading topics…</div>
-        ) : (
-          <ul className="commerce-notes-topic-list">
-            {displayTopics.map((topic) => (
-              <li key={topic.id} className="commerce-notes-topic-item">
-                <Link
-                  to={`/app/history/notes/${topic.id.replace(/_/g, '-')}`}
-                  className="commerce-notes-topic-link"
-                >
-                  <span className="commerce-notes-topic-name">{topic.name}</span>
-                  <span className="commerce-notes-topic-badge">View notes</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <BookOpen size={24} style={{ color: '#8D6E63' }} />
+          <span style={{ fontSize: 22, fontWeight: 700 }}>{selectedForm} Topics</span>
+          <span style={{ fontSize: 12, background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: 12 }}>
+            {filteredTopics.length} Topics
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {filteredTopics.map((topic, idx) => (
+            <Link
+              key={topic.id}
+              to={`/app/history/notes/${topic.id}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+                padding: '16px 20px',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 16,
+                color: '#fff',
+                textDecoration: 'none',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'rgba(121, 85, 72, 0.15)';
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(121, 85, 72, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)';
+              }}
+            >
+              <div style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                background: 'rgba(121, 85, 72, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#8D6E63',
+                fontWeight: 700,
+                fontSize: 14,
+                flexShrink: 0,
+              }}>
+                {idx + 1}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 15, fontWeight: 600 }}>{topic.name}</div>
+                <div style={{ fontSize: 13, opacity: 0.6, marginTop: 2 }}>{topic.description}</div>
+              </div>
+              <span style={{
+                padding: '6px 14px',
+                borderRadius: 20,
+                background: 'rgba(121, 85, 72, 0.15)',
+                color: '#8D6E63',
+                fontSize: 12,
+                fontWeight: 600,
+                flexShrink: 0,
+              }}>
+                View Notes
+              </span>
+            </Link>
+          ))}
+        </div>
+
+        {filteredTopics.length === 0 && (
+          <div style={{ textAlign: 'center', padding: 40, opacity: 0.5 }}>
+            No notes available for {selectedForm} yet.
+          </div>
         )}
-      </section>
+      </div>
     </div>
   );
 }
