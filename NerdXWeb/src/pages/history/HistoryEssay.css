@@ -1,0 +1,363 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.hist-essay-page {
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+  background: #050510;
+  color: #fff;
+  position: relative;
+  overflow-x: clip;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+}
+
+.hist-essay-bg {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(circle at 15% 25%, rgba(93, 64, 55, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 85% 75%, rgba(141, 110, 99, 0.1) 0%, transparent 40%);
+}
+
+.hist-essay-back {
+  position: fixed; top: 24px; left: 24px; z-index: 100;
+  width: 44px; height: 44px; border-radius: 14px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; text-decoration: none;
+  backdrop-filter: blur(12px);
+  transition: all 0.2s;
+}
+.hist-essay-back:hover { background: rgba(255,255,255,0.12); transform: scale(1.05); }
+
+.hist-essay-container {
+  position: relative; z-index: 1;
+  max-width: 900px; margin: 0 auto;
+  padding: 80px 24px 60px;
+}
+
+.hist-essay-header {
+  text-align: center; margin-bottom: 36px;
+}
+.hist-essay-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(93, 64, 55, 0.2); border: 1px solid rgba(141, 110, 99, 0.3);
+  border-radius: 50px; padding: 6px 16px;
+  font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  color: #D7CCC8; margin-bottom: 12px;
+}
+.hist-essay-header h1 {
+  font-size: 28px; font-weight: 800; margin: 0 0 6px;
+  background: linear-gradient(135deg, #D7CCC8, #A1887F);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hist-essay-header p {
+  font-size: 14px; opacity: 0.6; margin: 0;
+}
+.hist-essay-meta-row {
+  display: flex; justify-content: center; gap: 16px; margin-top: 14px; flex-wrap: wrap;
+}
+.hist-essay-meta-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 50px; padding: 6px 14px; font-size: 12px; color: rgba(255,255,255,0.7);
+}
+
+.hist-essay-context-card {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px; padding: 24px 28px; margin-bottom: 28px;
+  position: relative; overflow: hidden;
+}
+.hist-essay-context-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #5D4037, #8D6E63, #A1887F);
+}
+.hist-essay-context-title {
+  font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  color: #A1887F; margin: 0 0 10px; display: flex; align-items: center; gap: 8px;
+}
+.hist-essay-context-text {
+  font-size: 15px; line-height: 1.6; color: rgba(255,255,255,0.85); margin: 0;
+}
+
+.hist-essay-part-card {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px; padding: 0; margin-bottom: 20px;
+  overflow: hidden; transition: border-color 0.3s;
+}
+.hist-essay-part-card:focus-within {
+  border-color: rgba(141, 110, 99, 0.4);
+}
+
+.hist-essay-part-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px; border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+}
+.hist-essay-part-label {
+  display: flex; align-items: center; gap: 10px;
+}
+.hist-essay-part-num {
+  width: 32px; height: 32px; border-radius: 10px;
+  background: linear-gradient(135deg, rgba(93,64,55,0.3), rgba(141,110,99,0.2));
+  border: 1px solid rgba(141,110,99,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #D7CCC8;
+}
+.hist-essay-part-title {
+  font-size: 16px; font-weight: 700; margin: 0;
+}
+.hist-essay-part-marks {
+  background: rgba(141, 110, 99, 0.15); border: 1px solid rgba(141, 110, 99, 0.25);
+  border-radius: 50px; padding: 4px 12px;
+  font-size: 12px; font-weight: 600; color: #D7CCC8;
+}
+
+.hist-essay-part-question {
+  padding: 16px 24px;
+  font-size: 15px; line-height: 1.65; color: rgba(255,255,255,0.9);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.hist-essay-toolbar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.015);
+  flex-wrap: wrap;
+}
+.hist-essay-tool-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 12px; border-radius: 10px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.7); font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s; font-family: inherit;
+}
+.hist-essay-tool-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.1); color: #fff;
+  border-color: rgba(255,255,255,0.15);
+}
+.hist-essay-tool-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.hist-essay-tool-btn.recording {
+  background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3);
+  color: #FCA5A5; animation: hist-pulse 1.5s infinite;
+}
+.hist-essay-tool-status {
+  font-size: 12px; color: #A1887F; display: flex; align-items: center; gap: 5px;
+  margin-left: auto;
+}
+.hist-essay-tool-status .spin { animation: hist-spin 1s linear infinite; }
+
+@keyframes hist-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+@keyframes hist-spin {
+  to { transform: rotate(360deg); }
+}
+
+.hist-essay-textarea {
+  width: 100%; min-height: 140px; padding: 16px 24px;
+  background: transparent; border: none; outline: none;
+  color: #fff; font-size: 15px; line-height: 1.7;
+  font-family: 'Outfit', sans-serif; resize: vertical;
+}
+.hist-essay-textarea::placeholder {
+  color: rgba(255,255,255,0.25);
+}
+.hist-essay-textarea.short { min-height: 100px; }
+.hist-essay-textarea.tall { min-height: 180px; }
+
+.hist-essay-char-count {
+  padding: 6px 24px 12px; text-align: right;
+  font-size: 11px; color: rgba(255,255,255,0.3);
+}
+
+.hist-essay-error {
+  background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 14px; padding: 14px 20px; margin-bottom: 20px;
+  color: #FCA5A5; font-size: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+
+.hist-essay-actions {
+  display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap;
+}
+.hist-essay-submit-btn {
+  flex: 1; min-width: 200px; padding: 16px 28px;
+  border-radius: 16px; border: none;
+  background: linear-gradient(135deg, #5D4037, #795548);
+  color: #fff; font-size: 16px; font-weight: 700;
+  font-family: inherit; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.3s; box-shadow: 0 4px 20px rgba(93,64,55,0.3);
+}
+.hist-essay-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px); box-shadow: 0 8px 30px rgba(93,64,55,0.4);
+}
+.hist-essay-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.hist-essay-submit-btn .spin { animation: hist-spin 1s linear infinite; }
+
+.hist-essay-next-btn {
+  padding: 16px 28px; border-radius: 16px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  color: #fff; font-size: 15px; font-weight: 600;
+  font-family: inherit; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.2s;
+}
+.hist-essay-next-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.18);
+}
+.hist-essay-next-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.hist-essay-results {
+  margin-top: 32px;
+}
+
+.hist-essay-score-banner {
+  background: linear-gradient(135deg, rgba(93,64,55,0.2), rgba(141,110,99,0.15));
+  border: 1px solid rgba(141,110,99,0.25);
+  border-radius: 24px; padding: 32px; margin-bottom: 24px;
+  text-align: center; position: relative; overflow: hidden;
+}
+.hist-essay-score-banner::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #5D4037, #8D6E63, #A1887F);
+}
+.hist-essay-score-ring {
+  width: 120px; height: 120px; margin: 0 auto 16px; position: relative;
+}
+.hist-essay-score-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.hist-essay-score-ring .ring-bg {
+  fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 8;
+}
+.hist-essay-score-ring .ring-fill {
+  fill: none; stroke-width: 8; stroke-linecap: round;
+  transition: stroke-dashoffset 1s ease-out;
+}
+.hist-essay-score-value {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  text-align: center;
+}
+.hist-essay-score-value .num {
+  font-size: 32px; font-weight: 800; display: block;
+}
+.hist-essay-score-value .den {
+  font-size: 13px; opacity: 0.5; display: block;
+}
+.hist-essay-score-label {
+  font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.7);
+  margin-top: 4px;
+}
+.hist-essay-score-grade {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.06); border-radius: 50px;
+  padding: 6px 16px; font-size: 14px; font-weight: 600; margin-top: 12px;
+}
+
+.hist-essay-teacher-card {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px; padding: 24px 28px; margin-bottom: 20px;
+}
+.hist-essay-teacher-card h3 {
+  font-size: 16px; font-weight: 700; margin: 0 0 12px;
+  display: flex; align-items: center; gap: 8px; color: #D7CCC8;
+}
+.hist-essay-teacher-card p {
+  font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.75); margin: 0;
+}
+
+.hist-essay-fb-card {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px; overflow: hidden; margin-bottom: 16px;
+}
+.hist-essay-fb-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 24px; background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.hist-essay-fb-header-left {
+  display: flex; align-items: center; gap: 10px;
+}
+.hist-essay-fb-score-pill {
+  padding: 4px 14px; border-radius: 50px;
+  font-size: 14px; font-weight: 700;
+}
+.hist-essay-fb-score-pill.good {
+  background: rgba(16,185,129,0.15); color: #6EE7B7; border: 1px solid rgba(16,185,129,0.25);
+}
+.hist-essay-fb-score-pill.mid {
+  background: rgba(245,158,11,0.15); color: #FCD34D; border: 1px solid rgba(245,158,11,0.25);
+}
+.hist-essay-fb-score-pill.low {
+  background: rgba(239,68,68,0.15); color: #FCA5A5; border: 1px solid rgba(239,68,68,0.25);
+}
+
+.hist-essay-submitted-answer {
+  padding: 16px 24px;
+  background: rgba(93, 64, 55, 0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.hist-essay-fb-body { padding: 20px 24px; }
+.hist-essay-fb-section { margin-bottom: 16px; }
+.hist-essay-fb-section:last-child { margin-bottom: 0; }
+.hist-essay-fb-section-title {
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+  color: #A1887F; margin: 0 0 8px;
+}
+.hist-essay-fb-text {
+  font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.8);
+  margin: 0; white-space: pre-wrap;
+}
+.hist-essay-fb-points {
+  list-style: none; padding: 0; margin: 0;
+}
+.hist-essay-fb-points li {
+  position: relative; padding-left: 20px; margin-bottom: 6px;
+  font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.7);
+}
+.hist-essay-fb-points li::before {
+  content: ''; position: absolute; left: 0; top: 8px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #8D6E63;
+}
+
+.hist-essay-model-toggle {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 10px;
+  background: rgba(141,110,99,0.12); border: 1px solid rgba(141,110,99,0.2);
+  color: #D7CCC8; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; font-family: inherit;
+}
+.hist-essay-model-toggle:hover { background: rgba(141,110,99,0.2); }
+
+.hist-essay-model-answer {
+  background: rgba(141,110,99,0.06); border-top: 1px solid rgba(255,255,255,0.05);
+  padding: 20px 24px;
+}
+.hist-essay-model-answer-title {
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+  color: #A1887F; margin: 0 0 10px;
+}
+.hist-essay-model-answer-text {
+  font-size: 14px; line-height: 1.8; color: rgba(255,255,255,0.8);
+  margin: 0; white-space: pre-wrap;
+}
+
+@media (max-width: 640px) {
+  .hist-essay-container { padding: 70px 16px 40px; }
+  .hist-essay-header h1 { font-size: 22px; }
+  .hist-essay-part-header { padding: 14px 18px; flex-wrap: wrap; gap: 8px; }
+  .hist-essay-part-question { padding: 14px 18px; }
+  .hist-essay-toolbar { padding: 8px 14px; }
+  .hist-essay-textarea { padding: 14px 18px; min-height: 120px; }
+  .hist-essay-score-banner { padding: 24px 20px; }
+  .hist-essay-fb-body { padding: 16px 18px; }
+  .hist-essay-actions { flex-direction: column; }
+  .hist-essay-submit-btn, .hist-essay-next-btn { width: 100%; }
+}
