@@ -2,13 +2,15 @@
  * DashboardPage - Premium Desktop Dashboard
  * Advanced design with gradient cards, floating particles, and glassmorphism
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { formatCreditBalance } from '../utils/creditCalculator';
 import { FloatingParticles } from '../components/FloatingParticles';
 import { SubjectCard } from '../components/SubjectCard';
-import { LogOut, Calculator, FlaskConical, BookOpen, Monitor, Globe, Receipt, Briefcase, Clock, GraduationCap, MessageCircle, Beaker, TrendingUp, Coins, Wifi, Mic, Atom, Brain, Map, Sparkles, Bell, Sigma, FileText, Wallet } from 'lucide-react';
+import { getStudentBookings } from '../services/api/teacherMarketplaceApi';
+import type { LessonBooking } from '../types';
+import { LogOut, Calculator, FlaskConical, BookOpen, Monitor, Globe, Receipt, Briefcase, Clock, GraduationCap, MessageCircle, Beaker, TrendingUp, Coins, Wifi, Mic, Atom, Brain, Map, Sparkles, Bell, Sigma, FileText, Wallet, Search, Calendar, Video } from 'lucide-react';
 
 // O Level subjects with gradient colors and icons
 const O_LEVEL_SUBJECTS = [
@@ -39,6 +41,7 @@ const A_LEVEL_SUBJECTS = [
 
 // Feature cards (no images, just gradients and icons)
 const FEATURE_CARDS = [
+  { id: 'marketplace', title: 'Find a Teacher', subtitle: 'Verified ZIMSEC & Cambridge teachers', icon: Search, from: '#667eea', to: '#764ba2' },
   { id: 'agents', title: 'Agent Hub', subtitle: 'Multi-agent tutoring & coaching', icon: Sparkles, from: '#7C4DFF', to: '#00E676' },
   { id: 'teacher', title: 'Teacher Mode', subtitle: 'Interactive AI Teaching', icon: MessageCircle, from: '#00E676', to: '#00C853' },
   { id: 'virtual_labs', title: 'Virtual Labs', subtitle: 'Interactive Simulations', icon: FlaskConical, from: '#FF6D00', to: '#E65100' },
@@ -52,14 +55,27 @@ const MORE_TOOLS = [
   { id: 'offline', title: 'Offline Chat', subtitle: 'Free • Works Offline', icon: Wifi, from: '#10B981', to: '#059669' },
   { id: 'nerdx_live', title: 'NerdX Live', subtitle: 'Real-time Speech Conversations', icon: Mic, from: '#6C63FF', to: '#5A52E0' },
   { id: 'progress', title: 'My Progress', subtitle: 'Track Your Learning', icon: TrendingUp, from: '#a18cd1', to: '#8B7FD1' },
+  { id: 'my_lessons', title: 'My Lessons', subtitle: 'Upcoming Booked Lessons', icon: Calendar, from: '#667eea', to: '#764ba2' },
+  { id: 'teacher_dashboard', title: 'Teacher Dashboard', subtitle: 'Manage Your Teaching', icon: GraduationCap, from: '#00E676', to: '#00C853' },
   { id: 'credits', title: 'Credits & Store', subtitle: 'Boost Your Learning', icon: Coins, from: '#fbc2eb', to: '#e8b4d9' },
 ];
 
 export function DashboardPage() {
   const [selectedLevel, setSelectedLevel] = useState<'O Level' | 'A Level'>('O Level');
   const [toast, setToast] = useState<string | null>(null);
+  const [upcomingLessons, setUpcomingLessons] = useState<LessonBooking[]>([]);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  // Fetch student's confirmed bookings
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const bookings = await getStudentBookings(user.id);
+      const confirmed = bookings.filter((b) => b.status === 'confirmed' && b.room_id);
+      setUpcomingLessons(confirmed);
+    })();
+  }, [user]);
 
   const showComingSoon = () => {
     setToast('Coming soon - available on the NerdX mobile app');
@@ -90,6 +106,9 @@ export function DashboardPage() {
       business_enterprise_skills: '/app/business-enterprise-skills',
       history: '/app/history',
       teacher: '/app/teacher',
+      marketplace: '/app/marketplace',
+      my_lessons: '/app/marketplace',
+      teacher_dashboard: '/app/teacher-dashboard',
       virtual_labs: '/app/virtual-lab',
       formula_sheet: '/app/formula-sheet',
       past_papers: '/app/past-papers',
@@ -207,6 +226,34 @@ export function DashboardPage() {
           ))}
         </div>
       </section>
+
+      {/* Upcoming Lessons Section */}
+      {upcomingLessons.length > 0 && (
+        <section className="upcoming-lessons-v2">
+          <h3><Video size={18} /> Upcoming Lessons</h3>
+          <div className="upcoming-lessons-grid">
+            {upcomingLessons.slice(0, 4).map((lesson) => (
+              <div key={lesson.id} className="upcoming-lesson-card">
+                <div className="upcoming-lesson-card__info">
+                  <span className="upcoming-lesson-card__subject">
+                    <BookOpen size={14} /> {lesson.subject}
+                  </span>
+                  <span className="upcoming-lesson-card__time">
+                    <Calendar size={12} /> {lesson.date} &middot; {lesson.start_time} - {lesson.end_time}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="vc-join-btn"
+                  onClick={() => navigate(`/app/classroom/${lesson.id}`)}
+                >
+                  <Video size={14} /> Join Classroom
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* More Tools Section */}
       <section className="more-tools-v2">

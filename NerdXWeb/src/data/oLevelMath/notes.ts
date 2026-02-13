@@ -794,6 +794,101 @@ export const oLevelMathNotes: Record<string, MathTopicNotes> = {
     },
 
     // ============================================
+    // TOPIC: ALGEBRAIC EXPRESSIONS IN INDEX FORM (Form 1)
+    // ============================================
+    'Algebraic Expressions in Index Form': {
+        topic: 'Algebraic Expressions in Index Form',
+        subject: 'Mathematics',
+        grade_level: 'O-Level',
+        summary: "In the ZIMSEC 2024-2030 Mathematics Syllabus B, index notation serves as a vital mathematical shorthand for repeated multiplication. This Form 1 topic covers the anatomy of indices (base and index), the fundamental laws for positive integers (multiplication, division, power of a power), expressions with numerical and variable bases, and the power of zero and one. Mastering this notation enables precise symbolic communication essential for engineering and industrial applications.",
+        sections: [
+            {
+                title: '1. Introduction to the Language of Indices',
+                content: "## ZIMSEC Syllabus Context\n\nIndex notation allows precise representation of repeated operations and management of very large or small values. It is essential for industrial applications—from structural engineering to high-tech manufacturing.\n\n## Definitions and Anatomy\n\nAn **index** (plural: indices) is a number or variable that indicates how many times the **base** is multiplied by itself. It is also called a **power** or **exponent**.\n\n| Expression | Part | Description |\n|------------|------|-------------|\n| $x^n$ | $x$ | **Base**: The value being multiplied |\n| $x^n$ | $n$ | **Index**: The number of times the base is used as a factor |\n| $5^4$ | — | Meaning: $5 \\\\times 5 \\\\times 5 \\\\times 5$ |\n\n## Process: Repeated Multiplication to Index Form\n\nIdentify the base and count how many times it appears as a factor.",
+                worked_examples: [
+                    { question: "Express $a \\\\times a \\\\times a$ in index form.", steps: ["Base $a$ appears 3 times."], final_answer: "$a^3$" },
+                    { question: "Express $4 \\\\times 4 \\\\times 4 \\\\times 4 \\\\times 4$ in index form.", steps: ["Base 4 appears 5 times."], final_answer: "$4^5$" },
+                    { question: "Express $2 \\\\times 2 \\\\times 2 \\\\times 3 \\\\times 3$ in index form.", steps: ["$2$ appears 3 times, $3$ appears 2 times."], final_answer: "$2^3 \\\\times 3^2$" }
+                ]
+            },
+            {
+                title: '2. The Fundamental Laws of Indices (Positive Integers)',
+                content: "## Constraint\n\nThe laws apply **only when the bases are identical**. Do not combine $2^3 \\\\times 5^2$ using index laws.\n\n## Law 1: Multiplication ($a^m \\\\times a^n = a^{m+n}$)\n\nWhen multiplying same bases, **add** the indices.\n\n## Law 2: Division ($a^m \\\\div a^n = a^{m-n}$)\n\nWhen dividing same bases, **subtract** the index of the divisor from the dividend.\n\n## Law 3: Power of a Power ($(a^m)^n = a^{m \\\\times n}$)\n\nWhen an expression in index form is raised to another power, **multiply** the indices.\n\n## Common Errors\n\n- **Bases must be identical**: $3^2 \\\\times 4^3 \\\\neq 12^5$\n- **Addition vs. Multiplication**: In Law 1 you add indices ($x^2 \\\\times x^3 = x^5$), not multiply",
+                worked_examples: [
+                    { question: "Simplify $3^2 \\\\times 3^4$.", steps: ["$3^{2+4} = 3^6$"], final_answer: "$3^6$" },
+                    { question: "Simplify $4^6 \\\\div 4^2$.", steps: ["$4^{6-2} = 4^4$"], final_answer: "$4^4$" },
+                    { question: "Simplify $(x^2)^5$.", steps: ["$x^{2 \\\\times 5} = x^{10}$"], final_answer: "$x^{10}$" },
+                    { question: "Simplify $x^8 \\\\div x^3$.", steps: ["$x^{8-3} = x^5$"], final_answer: "$x^5$" },
+                    { question: "Write $a^7 \\\\div a^7$ as a single power.", steps: ["$a^{7-7} = a^0$"], final_answer: "$a^0$" }
+                ]
+            },
+            {
+                title: '3. Expressions with Numerical Bases',
+                content: "## Evaluation Methodology\n\n1. Identify and apply the correct index law.\n2. State the resulting single power (e.g., \"Therefore, $2^5$\").\n3. Perform the final arithmetic evaluation.\n4. Clearly box the final answer.",
+                worked_examples: [
+                    { question: "Evaluate $2^3 \\\\times 2^2$.", steps: ["$2^{3+2} = 2^5$. Therefore $2^5 = 32$."], final_answer: "$32$" },
+                    { question: "Evaluate $3^5 \\\\div 3^2$.", steps: ["$3^{5-2} = 3^3$. Therefore $3^3 = 27$."], final_answer: "$27$" },
+                    { question: "Evaluate $(2^2)^3$.", steps: ["$2^{2 \\\\times 3} = 2^6$. Therefore $2^6 = 64$."], final_answer: "$64$" }
+                ]
+            },
+            {
+                title: '4. Expressions with Variable Bases',
+                content: "## Simplification Methodology\n\n- **Coefficients**: Multiply or divide as with whole numbers.\n- **Variable indices**: Apply index laws only to **identical** variable bases.\n\n## Caution\n\nWhen $(kx^n)^m$ is expanded, **both** the coefficient and the variable are raised: $(3x^4)^2 = 9x^8$, not $3x^8$.",
+                worked_examples: [
+                    { question: "Simplify $3a^2 \\\\times 4a^3$.", steps: ["$(3 \\\\times 4) \\\\times a^{2+3} = 12a^5$"], final_answer: "$12a^5$" },
+                    { question: "Simplify $12x^5 \\\\div 3x^2$.", steps: ["$(12 \\\\div 3) \\\\times x^{5-2} = 4x^3$"], final_answer: "$4x^3$" },
+                    { question: "Simplify $(2x^2)^3$.", steps: ["$2^3 \\\\times x^{2 \\\\times 3} = 8x^6$"], final_answer: "$8x^6$" },
+                    { question: "Simplify $(a^3b^2)^2$.", steps: ["$a^{3 \\\\times 2} \\\\times b^{2 \\\\times 2} = a^6b^4$"], final_answer: "$a^6b^4$" }
+                ]
+            },
+            {
+                title: '5. The Power of Zero and One',
+                content: "## Definitions\n\n- **Identity** ($a^1$): Any base raised to the power 1 equals itself: $a^1 = a$.\n- **Zero Index** ($a^0$): Any non-zero base raised to 0 equals 1: $a^0 = 1$.\n\n**Derivation**: $x^3 \\\\div x^3 = x^{3-3} = x^0$. Any value divided by itself is 1. Therefore $x^0 = 1$.\n\n## Important Distinction\n\n- $5x^0 = 5 \\\\times 1 = 5$ (only the variable is raised to 0)\n- $(5x)^0 = 1$ (the entire term is raised to 0)",
+                worked_examples: [
+                    { question: "Evaluate $15^0$.", steps: ["Any non-zero base to power 0 equals 1."], final_answer: "$1$" },
+                    { question: "Simplify $5x^0$.", steps: ["$5 \\\\times (x^0) = 5 \\\\times 1 = 5$"], final_answer: "$5$" },
+                    { question: "Evaluate $(5x)^0$.", steps: ["The entire term is raised to 0."], final_answer: "$1$" }
+                ]
+            },
+            {
+                title: '6. Word Problems and Structured Simplification',
+                content: "## ZIMSEC-Style Problems\n\nApply index laws within real-world contexts such as area and volume.",
+                worked_examples: [
+                    { question: "A square plot has side length $4x^3$ m. (a) Express the area in index form. (b) Find the area if $x = 2$.", steps: ["(a) Area $= (4x^3) \\\\times (4x^3) = 16x^6$. (b) If $x = 2$: $16(2)^6 = 16 \\\\times 64 = 1024\\\\text{ m}^2$."], final_answer: "(a) $16x^6$ (b) $1024\\\\text{ m}^2$" },
+                    { question: "A cube has side $2y^2$ cm. Calculate its volume in index form.", steps: ["Volume $= (2y^2)^3 = 2^3 \\\\times y^{6} = 8y^6\\\\text{ cm}^3$."], final_answer: "$8y^6\\\\text{ cm}^3$" },
+                    { question: "A rectangular floor has length $6a^5$ and width $3a^2$. Express the area in index form.", steps: ["Area $= (6a^5) \\\\times (3a^2) = 18a^7$."], final_answer: "$18a^7$" }
+                ]
+            },
+            {
+                title: '7. Comprehensive Assessment and Memo',
+                content: "## Mixed Revision Exercise\n\n**Express in index form:** 1. $m \\\\times m \\\\times m \\\\times m \\\\times m$ 2. $5 \\\\times 5 \\\\times y \\\\times y \\\\times y$ 3. $2 \\\\times a \\\\times a \\\\times b \\\\times b \\\\times b \\\\times b$ 4. $10 \\\\times 10 \\\\times 10 \\\\times 10$ 5. $x \\\\times x \\\\times z \\\\times z \\\\times z$\n\n**Simplify:** 6. $a^3 \\\\times a^7$ 7. $b^{12} \\\\div b^4$ 8. $(x^3)^4$ 9. $5y^2 \\\\times 3y^4$ 10. $20m^9 \\\\div 4m^3$ 11. $(2x^5)^3$ 12. $a^2 \\\\times a \\\\times a^5$ 13. $30p^4 \\\\div 6p^3$ 14. $(xy^3)^2$ 15. $8a^0$ 16. $(8a)^0$ 17. $x^{10} \\\\times x^0$ 18. $y^5 \\\\div y^5$ 19. $4m^3n \\\\times 2mn^2$ 20. $\\\\frac{36x^8}{9x^3}$\n\n**Evaluate:** 21. $2^2 \\\\times 2^3$ 22. $3^7 \\\\div 3^4$ 23. $(2^2)^4$ 24. $10^6 \\\\div 10^3$ 25. $5^2 \\\\times 2^0$ 26. $6^3 \\\\div 6^2$ 27. $(3^2)^2$ 28. $2^5 \\\\times 2^0$ 29. $10^2 \\\\times 10^2$ 30. $5^3 \\\\div 5^3$\n\n## Exam-Style Structured Test\n\n1. Simplify $y^4 \\\\times y^5$. 2. Evaluate $2^6 \\\\div 2^3$. 3. Express $3 \\\\times 3 \\\\times 3 \\\\times x \\\\times x$ in index form. 4. Simplify $(3b^2)^3$. 5. Evaluate $5^0 + 5^1$. 6. Find $(10^2)^2$. 7. Simplify $15a^9 \\\\div 3a^5$. 8. Express $x^3 \\\\times x^5$ as a single power. 9. Simplify $\\\\frac{20m^7}{5m}$. 10. Evaluate $3^3 \\\\times 3^0$. 11. A square has side $5x^2$. Express its area in index form. 12. Simplify $(a^3b^2)^4$. 13. Write $x \\\\times y \\\\times x \\\\times y \\\\times x$ in index form. 14. Evaluate $3^5 \\\\div 3^2$. 15. If $x = 3$, evaluate $2x^3$.\n\n## Full Memo (Selected)\n\n**Practice 1:** $a^5$, $y^3$, $x^8$, $b^8$, $m^9$, $10^7$, $x^0 = 1$, $2^7$, $n^{12}$.\n\n**Practice 2:** $16$, $9$, $125$, $1000$, $8$, $64$, $81$, $5$.\n\n**Practice 3:** $10x^7$, $3y^4$, $9a^8$, $8b^7$, $5n$, $x^8y^{12}$, $7m^5$, $6p^4$, $8c^9$, $a^5b^5$.\n\n**Practice 4:** $1$, $25$, $7$, $1$, $1$.\n\n**Mixed:** $m^5$; $5^2y^3$; $2a^2b^4$; $x^2z^3$; $a^{10}$; $b^8$; $x^{12}$; $15y^6$; $5m^6$; $8x^{15}$; $a^8$; $5p$; $x^2y^6$; $8$; $1$; $x^{10}$; $1$; $8m^4n^3$; $4x^5$; $32$; $27$; $256$; $1000$; $25$; $6$; $81$; $32$; $10000$; $1$.\n\n**Exam:** $y^9$; $8$; $27x^2$; $27b^6$; $6$; $10000$; $5a^4$; $x^8$; $4m^6$; $27$; $25x^4$; $a^{12}b^8$; $x^3y^2$; $27$; $54$."
+            }
+        ],
+        key_points: [
+            "Base $\\\\times$ base $\\\\times$ ... (index times); base and index anatomy",
+            "Multiply same base: add indices $a^m \\\\times a^n = a^{m+n}$",
+            "Divide same base: subtract indices $a^m \\\\div a^n = a^{m-n}$",
+            "Power of power: multiply indices $(a^m)^n = a^{m \\\\times n}$",
+            "Bases must be identical to apply laws",
+            "$a^1 = a$; $a^0 = 1$ (for $a \\\\neq 0$)",
+            "$(kx^n)^m$: raise both coefficient and variable"
+        ],
+        exam_tips: [
+            "Bases must be the same—never add indices for $2^3 \\\\times 5^2$.",
+            "In Law 1 add indices; common error is multiplying them.",
+            "When expanding $(3x^4)^2$, square both 3 and $x^4$: $9x^8$.",
+            "Distinguish $5x^0 = 5$ from $(5x)^0 = 1$.",
+            "Show each step: apply law, state result, evaluate."
+        ],
+        visual_descriptions: [
+            "Base and index labeled on x^n",
+            "Multiplication law: adding indices",
+            "Division law: subtracting indices",
+            "Power of power: multiplying indices"
+        ]
+    },
+
+    // ============================================
     // TOPIC 4: INDICES AND STANDARD FORM (Form 2-3)
     // ============================================
     'Indices and Standard Form': {
@@ -1329,6 +1424,107 @@ export const oLevelMathNotes: Record<string, MathTopicNotes> = {
             "Area model for expanding (x+3)(x+2)",
             "Number line showing solution to inequality",
             "Graph of parabola showing x-intercepts (roots)"
+        ]
+    },
+
+    // ============================================
+    // TOPIC: LINES AND ANGLES (Form 1)
+    // ============================================
+    'Lines and Angles': {
+        topic: 'Lines and Angles',
+        subject: 'Mathematics',
+        grade_level: 'O-Level',
+        summary: "In the ZIMSEC Heritage-based Mathematics Syllabus B (2024–2030), Geometry serves as a critical pillar for developing spatial reasoning. Mastering the properties of lines and angles is the first step toward understanding numerical and spatial patterns—from the precision of dry-stone walls to the symmetry of traditional structures. This Form 1 topic covers basic geometrical terms, angle classification, angle properties on a straight line and around a point, vertically opposite angles, parallel lines and transversals, and algebraic angle problems.",
+        sections: [
+            {
+                title: '1. Introduction and Basic Geometrical Terms',
+                content: "## ZIMSEC Syllabus Context (Objective 1.1)\n\nGeometry empowers learners with critical thinking and problem-solving skills for everyday life. Precise mathematical notation is the \"alphabet\" of geometry.\n\n## Key Definitions\n\n- **Point**: A precise location in space, represented by a dot and labeled with a capital letter (e.g., Point $P$).\n- **Line**: A path that extends infinitely in both directions.\n- **Line Segment**: A part of a line with two definite endpoints (e.g., a beam in a roof truss).\n- **Ray**: A part of a line that starts at a fixed point and extends infinitely in one direction.\n\n## Relationships Between Lines\n\n1. **Parallel Lines** ($AB \\\\parallel CD$): Lines in the same plane that never meet.\n2. **Perpendicular Lines** ($AB \\\\perp CD$): Lines that intersect at a right angle ($90^\\\\circ$).\n3. **Intersecting Lines**: Lines that cross at a single common point.\n\n## Mathematical Notation\n\n- Line Segment: $AB$\n- Angle: $\\\\angle ABC$ or $\\\\hat{B}$ (vertex is the middle letter)\n- Parallel: $AB \\\\parallel CD$\n- Perpendicular: $AB \\\\perp CD$\n\n## Common Errors\n\n- **Notation**: $\\\\hat{ABC}$ is incorrect; the hat belongs only to the vertex: $\\\\hat{B}$.\n- **Case**: Points must be labeled with CAPITAL LETTERS.",
+                worked_examples: [
+                    { question: "State the relationship between two lines that remain equidistant and never intersect.", steps: ["Lines that never meet are parallel."], final_answer: "Parallel" },
+                    { question: "Calculate the number of points shared by two intersecting lines.", steps: ["Intersection of two straight lines occurs at exactly one point."], final_answer: "1 point" },
+                    { question: "Identify the figure that starts at point $M$ and continues infinitely through point $N$.", steps: ["One endpoint and one infinite direction defines a ray."], final_answer: "Ray $MN$" },
+                    { question: "If line $AB$ meets line $GC$ at exactly $90^\\\\circ$, state the symbolic relationship.", steps: ["Intersection at right angle is perpendicular."], final_answer: "$AB \\\\perp GC$" },
+                    { question: "Use ZIMSEC notation for an angle at vertex $Q$ between lines $PQ$ and $RQ$.", steps: ["Vertex must be the middle letter."], final_answer: "$\\\\angle PQR$ or $\\\\hat{Q}$" }
+                ]
+            },
+            {
+                title: '2. Classification and Types of Angles',
+                content: "## Classification of Angles\n\n| Type | Measure |\n|------|--------|\n| Acute | $0^\\\\circ < \\\\text{angle} < 90^\\\\circ$ |\n| Right | Exactly $90^\\\\circ$ |\n| Obtuse | $90^\\\\circ < \\\\text{angle} < 180^\\\\circ$ |\n| Straight | Exactly $180^\\\\circ$ |\n| Reflex | $180^\\\\circ < \\\\text{angle} < 360^\\\\circ$ |\n| Full Turn | Exactly $360^\\\\circ$ |\n\n## Common Error\n\nReflex vs. Obtuse: An angle like $200^\\\\circ$ is reflex, not obtuse. Check against the $180^\\\\circ$ boundary. Always include the degree ($^\\\\circ$) symbol.",
+                worked_examples: [
+                    { question: "Classify an angle of $145^\\\\circ$.", steps: ["$145^\\\\circ$ is greater than $90^\\\\circ$ but less than $180^\\\\circ$."], final_answer: "Obtuse" },
+                    { question: "Calculate the angle required to complete a full turn if given $210^\\\\circ$.", steps: ["$360^\\\\circ - 210^\\\\circ = 150^\\\\circ$."], final_answer: "$150^\\\\circ$" },
+                    { question: "Identify the reflex angle at vertex $B$ if the interior angle is $100^\\\\circ$.", steps: ["Reflex $= 360^\\\\circ - 100^\\\\circ = 260^\\\\circ$."], final_answer: "$260^\\\\circ$" },
+                    { question: "Calculate the size of a straight line angle divided by 3.", steps: ["$180^\\\\circ \\\\div 3 = 60^\\\\circ$."], final_answer: "$60^\\\\circ$" }
+                ]
+            },
+            {
+                title: '3. Angles on a Straight Line and Around a Point',
+                content: "## Fundamental Rules\n\n1. **Angles on a straight line** sum to $180^\\\\circ$.\n2. **Angles around a point** (at a point) sum to $360^\\\\circ$.\n\n## Common Error\n\nNever assume a line is $180^\\\\circ$ just because it \"looks\" straight. Look for \"Line ABC is a straight line\" in the question.",
+                worked_examples: [
+                    { question: "Calculate angle $x$ on a straight line if the adjacent angle is $72^\\\\circ$.", steps: ["$x = 180^\\\\circ - 72^\\\\circ = 108^\\\\circ$."], final_answer: "$108^\\\\circ$" },
+                    { question: "Three angles meet at point $P$: two are $110^\\\\circ$ and $140^\\\\circ$. Find the third angle $y$.", steps: ["$y = 360^\\\\circ - (110^\\\\circ + 140^\\\\circ) = 110^\\\\circ$."], final_answer: "$110^\\\\circ$" },
+                    { question: "Three equal angles $x$ lie on a straight line. Find $x$.", steps: ["$3x = 180^\\\\circ \\\\Rightarrow x = 60^\\\\circ$."], final_answer: "$60^\\\\circ$" },
+                    { question: "Four equal angles meet at a point. Find each angle $a$.", steps: ["$4a = 360^\\\\circ \\\\Rightarrow a = 90^\\\\circ$."], final_answer: "$90^\\\\circ$" }
+                ]
+            },
+            {
+                title: '4. Vertically Opposite Angles',
+                content: "## Definition\n\n**Vertically opposite angles** are the pairs of angles directly opposite each other at the vertex of two intersecting straight lines.\n\n## Proof\n\nConsider two straight lines intersecting. Angles $a$ and $b$ are on a straight line: $a + b = 180^\\\\circ$. Angles $c$ and $b$ are also on a straight line: $c + b = 180^\\\\circ$. Therefore $a + b = c + b$, so $a = c$. **Vertically opposite angles are equal.**",
+                worked_examples: [
+                    { question: "Two lines intersect. The top angle is $65^\\\\circ$. Find the bottom angle.", steps: ["Vertically opposite angles are equal."], final_answer: "$65^\\\\circ$" },
+                    { question: "At an intersection, $\\\\angle 1 = 110^\\\\circ$. Find the adjacent angle $\\\\angle 2$.", steps: ["Adjacent angles on intersecting lines sum to $180^\\\\circ$: $180 - 110 = 70^\\\\circ$."], final_answer: "$70^\\\\circ$" },
+                    { question: "Vertically opposite angles are $(3x)^\\\\circ$ and $120^\\\\circ$. Find $x$.", steps: ["$3x = 120 \\\\Rightarrow x = 40$."], final_answer: "$x = 40$" },
+                    { question: "Four angles at an intersection are $x$, $130^\\\\circ$, $x$, $130^\\\\circ$. Find $x$.", steps: ["$x = 180 - 130 = 50^\\\\circ$ (angles on a straight line)."], final_answer: "$50^\\\\circ$" }
+                ]
+            },
+            {
+                title: '5. Angles Formed by Parallel Lines and a Transversal',
+                content: "## Transversal\n\nA **transversal** is a line that crosses at least two other lines.\n\n## When a transversal crosses two parallel lines:\n\n1. **Corresponding angles** (F-shape): Equal\n2. **Alternate angles** (Z-shape): Equal\n3. **Co-interior/Allied angles** (C-shape): Sum to $180^\\\\circ$\n\n## Condition\n\nThese properties hold **only when the lines are parallel**.",
+                worked_examples: [
+                    { question: "Angle $a$ is alternate to $68^\\\\circ$ on parallel lines. Find $a$.", steps: ["Alternate angles on parallel lines are equal."], final_answer: "$68^\\\\circ$" },
+                    { question: "State the size of an angle corresponding to $115^\\\\circ$.", steps: ["Corresponding angles are equal."], final_answer: "$115^\\\\circ$" },
+                    { question: "Calculate the co-interior angle to $70^\\\\circ$.", steps: ["Co-interior angles sum to $180^\\\\circ$: $180 - 70 = 110^\\\\circ$."], final_answer: "$110^\\\\circ$" },
+                    { question: "Corresponding angles are $2x$ and $100^\\\\circ$. Find $x$.", steps: ["$2x = 100 \\\\Rightarrow x = 50$."], final_answer: "$x = 50$" }
+                ]
+            },
+            {
+                title: '6. Algebraic Problems Involving Angles',
+                content: "## Methodology\n\n1. Identify the geometric property (e.g., sum to $180^\\\\circ$ or $360^\\\\circ$).\n2. Form an equation.\n3. Solve for the variable $x$.\n4. Substitute $x$ back to find the final angle size.",
+                worked_examples: [
+                    { question: "Two angles on a straight line are $(x + 20)^\\\\circ$ and $(x + 40)^\\\\circ$. Find $x$.", steps: ["$(x + 20) + (x + 40) = 180 \\\\Rightarrow 2x + 60 = 180 \\\\Rightarrow x = 60$."], final_answer: "$x = 60$" },
+                    { question: "Hence determine the larger angle from the above.", steps: ["$60 + 40 = 100^\\\\circ$."], final_answer: "$100^\\\\circ$" },
+                    { question: "Vertically opposite angles are $(5x - 30)^\\\\circ$ and $(2x + 60)^\\\\circ$. Find $x$.", steps: ["$5x - 30 = 2x + 60 \\\\Rightarrow 3x = 90 \\\\Rightarrow x = 30$."], final_answer: "$x = 30$" },
+                    { question: "Co-interior angles are $(3y + 10)^\\\\circ$ and $(y + 10)^\\\\circ$. Find $y$.", steps: ["$(3y + 10) + (y + 10) = 180 \\\\Rightarrow 4y + 20 = 180 \\\\Rightarrow y = 40$."], final_answer: "$y = 40$" },
+                    { question: "Angles at a point are $x$, $2x$, and $3x$. Find the largest angle.", steps: ["$x + 2x + 3x = 360 \\\\Rightarrow 6x = 360 \\\\Rightarrow x = 60$. Largest $= 3(60) = 180^\\\\circ$."], final_answer: "$180^\\\\circ$" }
+                ]
+            },
+            {
+                title: '7. Comprehensive Assessment and Memo',
+                content: "## Mixed Revision Exercise (25 Questions)\n\n1. Define a Line Segment. 2. State the symbol for perpendicular. 3. Calculate the complement of $35^\\\\circ$. 4. Classify $195^\\\\circ$. 5. State the sum of angles on a straight line. 6. State the sum of angles at a point. 7. Find $x$ if $x$ and $112^\\\\circ$ are supplementary. 8. True or False: A ray has no endpoints. 9. Which shape (F, Z, or C) represents corresponding angles? 10. If $\\\\angle P = 42^\\\\circ$, find its vertically opposite partner. 11. Two co-interior angles are $2x$ and $4x$. Find $x$. 12. Classify $90.1^\\\\circ$. 13. How many degrees in three-quarters of a full turn? 14. Describe Ray $PQ$ starting at $P$. 15. If $AB \\\\perp CD$, what is the angle at the intersection? 16. Find the allied angle to $125^\\\\circ$. 17. In a Z-shape, are the angles equal or supplementary? 18. Find $y$ if $y$, $y$, $y$, $y$ are equal on a straight line. 19. Solve: $2x + 40 = 180$. 20. Define a transversal. 21. Are alternate angles equal if lines are not parallel? 22. Find the reflex angle of $110^\\\\circ$. 23. If $L_1 \\\\parallel L_2$ and $\\\\angle 1 = 60^\\\\circ$ (alternate to $\\\\angle 2$), find $\\\\angle 2$. 24. Write using symbols: Line $AB$ is parallel to line $XY$. 25. Find the sum of $140^\\\\circ$ and its vertically opposite partner.\n\n## Exam-Style Structured Test (12 Questions)\n\n1. Line $PQ$ is straight. $\\\\angle PQR = 4x$, $\\\\angle RQS = 2x + 30$. Find $\\\\angle PQR$. 2. State why vertically opposite angles are equal. 3. $AB \\\\parallel CD$ with co-interior angles $120^\\\\circ$ and $y$. Find $y$. 4. Hence find the reflex angle of $y$. 5. At point $O$: $x$, $x$, $x$, $90^\\\\circ$, $90^\\\\circ$. Find $x$. 6. In an X-shape, one angle is $3y$, the other $150^\\\\circ$. Find $y$. 7. A transversal crosses parallel lines. Corresponding angle is $80^\\\\circ$. Find the co-interior on that side. 8. Classify the sum of three $60^\\\\circ$ angles. 9. What does $MN \\\\parallel OP$ mean? 10. $(3x + 15)$ and $(x + 45)$ are alternate on parallel lines. Find $x$. 11. State the relationship between clock hands at 9:00 AM. 12. At a point, three angles are $100^\\\\circ$ each. Find the fourth.\n\n## Full Memo\n\n**Mixed Revision:** 1. Finite part of a line with two endpoints. 2. $\\\\perp$. 3. $55^\\\\circ$. 4. Reflex. 5. $180^\\\\circ$. 6. $360^\\\\circ$. 7. $68^\\\\circ$. 8. False (ray has one endpoint). 9. F. 10. $42^\\\\circ$. 11. $x = 30$. 12. Obtuse. 13. $270^\\\\circ$. 15. $90^\\\\circ$. 16. $55^\\\\circ$. 17. Equal. 18. $45^\\\\circ$. 19. $x = 70$. 20. A line that crosses two or more other lines. 21. No. 22. $250^\\\\circ$. 23. $60^\\\\circ$. 24. $AB \\\\parallel XY$. 25. $280^\\\\circ$.\n\n**Exam-Style:** 1. $4x + 2x + 30 = 180 \\\\Rightarrow x = 25$, $\\\\angle PQR = 100^\\\\circ$. 2. Both supplementary to the same adjacent angle. 3. $y = 60^\\\\circ$ (co-interior sum to $180^\\\\circ$). 4. $300^\\\\circ$. 5. $x = 60^\\\\circ$. 6. $y = 50$. 7. $100^\\\\circ$. 8. Straight angle. 9. Line $MN$ is parallel to line $OP$. 10. $x = 15$. 11. Perpendicular ($90^\\\\circ$). 12. $60^\\\\circ$."
+            }
+        ],
+        key_points: [
+            "Point, Line, Ray, Line Segment: definitions and notation",
+            "Parallel $AB \\\\parallel CD$; Perpendicular $AB \\\\perp CD$",
+            "Acute $< 90^\\\\circ$; Right $= 90^\\\\circ$; Obtuse $90^\\\\circ$ to $180^\\\\circ$; Reflex $180^\\\\circ$ to $360^\\\\circ$",
+            "Angles on a straight line sum to $180^\\\\circ$",
+            "Angles at a point sum to $360^\\\\circ$",
+            "Vertically opposite angles are equal",
+            "Corresponding (F) and Alternate (Z): equal; Co-interior (C): sum to $180^\\\\circ$"
+        ],
+        exam_tips: [
+            "Vertex is always the middle letter: $\\\\angle ABC$.",
+            "Include the degree symbol ($^\\\\circ$) in final answers.",
+            "Identify the geometric property before forming equations.",
+            "Check: reflex vs obtuse—use the $180^\\\\circ$ boundary.",
+            "Parallel lines are required for F, Z, C angle rules."
+        ],
+        visual_descriptions: [
+            "Point, line, ray, and line segment with labels",
+            "Parallel and perpendicular lines",
+            "Angle types: acute, right, obtuse, reflex",
+            "Vertically opposite angles in X-shape",
+            "F, Z, C shapes for parallel line angles"
         ]
     },
 

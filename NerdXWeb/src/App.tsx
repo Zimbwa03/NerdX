@@ -71,6 +71,12 @@ import { ProjectAssistantHubPage } from './pages/project-assistant/ProjectAssist
 import { ProjectAssistantChatPage } from './pages/project-assistant/ProjectAssistantChatPage';
 import { NerdXLivePage } from './pages/nerdx-live/NerdXLivePage';
 import { OfflineChatPage } from './pages/tools/OfflineChatPage';
+import { FindTeacherPage } from './pages/teacher-marketplace/FindTeacherPage';
+import { TeacherProfilePage } from './pages/teacher-marketplace/TeacherProfilePage';
+import { BookLessonPage } from './pages/teacher-marketplace/BookLessonPage';
+import { TeacherOnboardingPage } from './pages/teacher-marketplace/TeacherOnboardingPage';
+import { TeacherDashboardPage } from './pages/teacher-marketplace/TeacherDashboardPage';
+import { VirtualClassroomPage } from './pages/teacher-marketplace/VirtualClassroomPage';
 
 function App() {
   return (
@@ -160,10 +166,17 @@ function App() {
               <Route path="sciences/notes/:subject/:topic" element={<ScienceNotesPage />} />
               <Route path="sciences/notes" element={<ScienceNotesPage />} />
               <Route path="sciences/tutor" element={<Navigate to="/app/teacher" state={{ subject: 'Biology' }} replace />} />
+              <Route path="marketplace" element={<FindTeacherPage />} />
+              <Route path="marketplace/teacher/:teacherId" element={<TeacherProfilePage />} />
+              <Route path="marketplace/book/:teacherId" element={<BookLessonPage />} />
+              <Route path="teacher-onboarding" element={<TeacherOnboardingPage />} />
+              <Route path="teacher-dashboard" element={<TeacherDashboardPage />} />
               <Route path="teacher" element={<TeacherSetupPage />} />
               <Route path="teacher/chat" element={<TeacherChatPage />} />
               <Route path="teacher/history" element={<TeacherHistoryPage />} />
             </Route>
+            {/* Virtual Classroom - fullscreen, outside AppLayout */}
+            <Route path="/app/classroom/:bookingId" element={<ProtectedRoute><VirtualClassroomPage /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>

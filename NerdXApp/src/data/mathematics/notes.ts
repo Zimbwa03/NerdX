@@ -1507,6 +1507,152 @@ const mensurationForm1Notes: MathTopicNotes = {
   ],
 };
 
+const functionalGraphsForm1Notes: MathTopicNotes = {
+  topic: 'Functional Graphs',
+  subject: 'Mathematics',
+  grade_level: 'Form 1',
+  summary:
+    'Comprehensive Form 1 Mathematics notes on Functional Graphs for ZIMSEC Syllabus B (2024–2030). The Cartesian coordinate system is the foundation for all graphical work. Form 1 objectives: draw the Cartesian plane with a given scale, and name and plot coordinates accurately. Covers the axes, origin, quadrants, and precise plotting technique—prerequisites for travel graphs, linear graphs, and transformations in later forms.',
+  sections: [
+    {
+      title: '1. The Cartesian Plane',
+      content:
+        'The **Cartesian plane** (or coordinate plane) is a flat surface formed by two perpendicular number lines that intersect at a point called the **origin**.\n\n**Key Components**\n\n- **x-axis (horizontal):** Runs left to right; positive values to the right, negative to the left.\n- **y-axis (vertical):** Runs down to up; positive values upward, negative downward.\n- **Origin** labelled $O$: The point where both axes meet, with coordinates $(0, 0)$.\n\n**Setting Up the Plane**\n\n1. Draw two perpendicular lines crossing at the origin.\n2. Mark equal intervals on both axes according to the given scale.\n3. Label the x-axis and y-axis clearly.\n4. Add arrows at the ends to show the axes continue infinitely.\n5. Choose and state the **scale** (e.g. 1 cm $= 1$ unit, or 2 cm $= 5$ units).\n\n**Choosing a Scale**\n\n- The scale must allow all required points to fit clearly on the grid.\n- Both axes can have different scales if the question demands (e.g. x: 2 cm $= 1$ unit, y: 1 cm $= 10$ units).\n- Common scales: 1 cm : 1 unit; 1 cm : 2 units; 2 cm : 1 unit.\n- Use the decimal comma (e.g. $0{,}5$, $3{,}14$) as per ZIMSEC standard.',
+      worked_examples: [
+        {
+          question:
+            'Draw a Cartesian plane with the x-axis from $-5$ to $5$ and the y-axis from $-4$ to $4$, using a scale of 1 cm $= 1$ unit.',
+          steps: [
+            'Draw a horizontal line and mark $-5$ to $5$ at equal intervals',
+            'Draw a vertical line through 0 and mark $-4$ to $4$',
+            'Label the horizontal line as $x$ and the vertical line as $y$',
+            'Mark the intersection as $O$ (origin)',
+            'Add arrows at both ends of each axis',
+          ],
+          final_answer:
+            'Cartesian plane drawn with x-axis from $-5$ to $5$, y-axis from $-4$ to $4$, scale 1 cm : 1 unit.',
+        },
+        {
+          question:
+            'Draw a Cartesian plane for x from $0$ to $10$ and y from $0$ to $20$, scale: 1 cm $= 2$ units on both axes.',
+          steps: [
+            'x-axis: marks at 0, 2, 4, 6, 8, 10 (1 cm apart)',
+            'y-axis: marks at 0, 4, 8, 12, 16, 20',
+            'Label axes and origin; add arrows',
+          ],
+          final_answer:
+            'Plane drawn with scale 1 cm $= 2$ units on both axes.',
+        },
+      ],
+    },
+    {
+      title: '2. Coordinates: Reading and Naming',
+      content:
+        'A **coordinate** (or ordered pair) is written as $(x, y)$. It describes the exact position of a point on the Cartesian plane.\n\n**Order is Critical**\n\n- The **first number** ($x$) is the horizontal position (distance from the origin along the x-axis).\n- The **second number** ($y$) is the vertical position (distance from the origin along the y-axis).\n- Always read and write **$(x, y)$** — never swap them. $(3, 2)$ and $(2, 3)$ are different points.\n\n**Reading Coordinates**\n\n- Positive $x$: right of origin.\n- Negative $x$: left of origin.\n- Positive $y$: above origin.\n- Negative $y$: below origin.\n\n**Special Points**\n\n- Points on the x-axis have $y = 0$: e.g. $(5, 0)$, $(-2, 0)$.\n- Points on the y-axis have $x = 0$: e.g. $(0, 4)$, $(0, -3)$.\n- The origin is $(0, 0)$.',
+      worked_examples: [
+        {
+          question:
+            'Write down the coordinates of a point that lies on the x-axis.',
+          steps: ['On the x-axis, $y = 0$ for every point'],
+          final_answer: 'Any point of the form $(a, 0)$, e.g. $(3, 0)$.',
+        },
+        {
+          question:
+            'Give the coordinates of a point on the y-axis.',
+          steps: ['On the y-axis, $x = 0$ for every point'],
+          final_answer: 'Any point of the form $(0, b)$, e.g. $(0, -4)$.',
+        },
+        {
+          question:
+            'State which coordinate changes between $(5, 3)$ and $(5, -3)$.',
+          steps: ['Compare: $x$ is 5 in both; $y$ changes from 3 to $-3$'],
+          final_answer: 'The $y$-coordinate changes from $3$ to $-3$.',
+        },
+      ],
+    },
+    {
+      title: '3. Plotting Points Accurately',
+      content:
+        'Plotting coordinates correctly is a core Form 1 skill. Use the **"along then up"** rule (walk along the corridor, then climb the stairs).\n\n**Step-by-Step Method**\n\n1. Start at the **origin** $(0, 0)$.\n2. Move **horizontally** by the $x$-value (right if positive, left if negative).\n3. From there, move **parallel to the y-axis** by the $y$-value (up if positive, down if negative).\n4. Mark the point with a clear cross (×) or dot (•).\n5. **Label** the point with its letter and coordinates, e.g. $A(3, 2)$.\n\n**Common Errors**\n\n- Swapping $x$ and $y$: $(2, 3)$ plotted as $(3, 2)$.\n- Moving vertical first, then horizontal—always horizontal first.\n- Forgetting to label points in exam questions.',
+      worked_examples: [
+        {
+          question:
+            'Plot and label: $A(3, 2)$, $B(-4, 1)$, $C(-2, -3)$, $D(5, -2)$, $E(0, 4)$.',
+          steps: [
+            '$A(3, 2)$: 3 right, 2 up',
+            '$B(-4, 1)$: 4 left, 1 up',
+            '$C(-2, -3)$: 2 left, 3 down',
+            '$D(5, -2)$: 5 right, 2 down',
+            '$E(0, 4)$: stay at origin horizontally, 4 up (on y-axis)',
+          ],
+          final_answer: 'All five points plotted and labelled on the Cartesian plane.',
+        },
+        {
+          question:
+            'Plot the point $P(-3, 0)$. Which axis does it lie on?',
+          steps: [
+            'From origin: 3 left, 0 up or down',
+            'Point lies on the horizontal line through 0',
+          ],
+          final_answer: '$P$ lies on the x-axis (since $y = 0$).',
+        },
+      ],
+    },
+    {
+      title: '4. The Four Quadrants',
+      content:
+        'The x-axis and y-axis divide the plane into **four quadrants**. Knowing the quadrants helps you name and describe the position of points.\n\n**Quadrant Layout (numbered anticlockwise from top-right)**\n\n| Quadrant | Position | Signs of $(x, y)$ | Example |\n| :--- | :--- | :--- | :--- |\n| **1st** | Top-right | $(+,\\, +)$ | $(3, 2)$ |\n| **2nd** | Top-left | $(-,\\, +)$ | $(-4, 1)$ |\n| **3rd** | Bottom-left | $(-,\\, -)$ | $(-2, -3)$ |\n| **4th** | Bottom-right | $(+,\\, -)$ | $(5, -2)$ |\n\n**Points on the Axes**\n\nPoints on an axis are **not in any quadrant**:\n- $(5, 0)$, $(-3, 0)$ lie on the x-axis.\n- $(0, 4)$, $(0, -1)$ lie on the y-axis.\n- $(0, 0)$ is the origin.',
+      worked_examples: [
+        {
+          question:
+            'State which quadrant each point lies in: (a) $(7, -3)$ (b) $(-1, -5)$ (c) $(-6, 2)$ (d) $(4, 9)$.',
+          steps: [
+            '(a) $(7, -3)$: $x$ positive, $y$ negative $\\Rightarrow$ 4th quadrant',
+            '(b) $(-1, -5)$: both negative $\\Rightarrow$ 3rd quadrant',
+            '(c) $(-6, 2)$: $x$ negative, $y$ positive $\\Rightarrow$ 2nd quadrant',
+            '(d) $(4, 9)$: both positive $\\Rightarrow$ 1st quadrant',
+          ],
+          final_answer: '(a) 4th (b) 3rd (c) 2nd (d) 1st quadrant.',
+        },
+      ],
+    },
+    {
+      title: '5. Mixed Revision Exercise',
+      content:
+        '1. Draw a Cartesian plane with x from $-4$ to $4$ and y from $-3$ to $3$, scale 1 cm $= 1$ unit.\n2. Plot $A(2, 3)$, $B(-2, 3)$, $C(-2, -3)$, $D(2, -3)$. What shape do $A$, $B$, $C$, $D$ form?\n3. Name the quadrant of: $( -5, 6)$; $(8, -1)$; $(0, 4)$.\n4. State the coordinates of the origin.\n5. Which axis does the point $(0, -7)$ lie on?\n6. Plot $(1, 0)$, $(0, 1)$, $(-1, 0)$, $(0, -1)$. Join them in order. What shape?\n7. If $P(a, b)$ is in the 2nd quadrant, what can you say about $a$ and $b$?\n8. Point $Q$ is 4 units right and 3 units down from the origin. Write its coordinates.\n9. Draw axes for $-6 \\leq x \\leq 6$ and $-5 \\leq y \\leq 5$, scale 1 cm $= 1$ unit. Plot $(-3, 4)$, $(3, 4)$, $(3, -4)$, $(-3, -4)$.\n10. Define the Cartesian plane.',
+    },
+    {
+      title: '6. Exam-Style Structured Test',
+      content:
+        '**Section A (Short Answers)**\n\n1. Name the point where the x-axis and y-axis meet.\n2. Give the coordinates of a point on the x-axis.\n3. In which quadrant does $(-2, -2)$ lie?\n4. Plot and label $M(4, -1)$ and $N(-4, 1)$.\n5. State the scale if 2 cm represents 4 units.\n6. Which coordinate is zero for every point on the y-axis?\n7. Write the coordinates of a point in the 1st quadrant.\n8. If $R$ is 5 units left and 2 units up from the origin, find its coordinates.\n\n**Section B (Extended)**\n\n9. Draw a Cartesian plane, x from $-5$ to $5$, y from $-4$ to $4$, scale 1 cm $= 1$ unit. Plot $A(1, 2)$, $B(1, -2)$, $C(-1, -2)$, $D(-1, 2)$. Join $A$ to $B$ to $C$ to $D$ to $A$. Name the shape.\n10. List three rules for plotting coordinates accurately.',
+    },
+    {
+      title: '7. Full Memo and Worked Solutions',
+      content:
+        '**Revision 2:** $A$, $B$, $C$, $D$ form a **rectangle** (or square with sides 4 and 6).\n\n**Revision 3:** $(-5, 6)$: 2nd; $(8, -1)$: 4th; $(0, 4)$: on y-axis (not in a quadrant).\n\n**Revision 4:** Origin is $(0, 0)$.\n\n**Revision 5:** $(0, -7)$ lies on the **y-axis**.\n\n**Revision 6:** A diamond/rhombus shape (or square rotated 45°).\n\n**Revision 7:** $a < 0$ and $b > 0$.\n\n**Revision 8:** $Q(4, -3)$.\n\n**Exam Q1:** Origin. **Q2:** e.g. $(3, 0)$. **Q3:** 3rd quadrant. **Q5:** 1 cm $= 2$ units. **Q6:** $x$-coordinate is zero. **Q7:** e.g. $(2, 5)$. **Q8:** $R(-5, 2)$.\n\n**Exam Q9:** Shape is a **rectangle** (or square). **Q10:** (i) Always $x$ first, then $y$; (ii) Start at origin; (iii) Label points clearly.',
+    },
+  ],
+  key_points: [
+    'Cartesian plane: x-axis (horizontal) and y-axis (vertical) meeting at origin $(0, 0)$.',
+    'Coordinates are ordered pairs $(x, y)$ — x first, y second; never swap.',
+    'Four quadrants: 1st $(+,+)$, 2nd $(-,+)$, 3rd $(-,-)$, 4th $(+,-)$.',
+    'Points on an axis are not in any quadrant; origin is $(0, 0)$.',
+    'Scale must be stated and used consistently on both axes.',
+  ],
+  exam_tips: [
+    'Always label both axes and mark the scale clearly on graph paper.',
+    'Use a sharp pencil and ruler; plot with a clear cross or dot.',
+    '$(3, 2)$ is NOT the same as $(2, 3)$ — order matters.',
+    '"Along then up": move along x-axis first, then parallel to y-axis.',
+    'Points on axes: x-axis $\\Rightarrow y = 0$; y-axis $\\Rightarrow x = 0$.',
+  ],
+  visual_descriptions: [
+    'Cartesian plane: two perpendicular axes, four quadrants, origin at centre.',
+    'Plotting $(3, -2)$: 3 right from origin, then 2 down.',
+    'Quadrant signs: 1st (+,+), 2nd (-,+), 3rd (-,-), 4th (+,-).',
+  ],
+};
+
 const travelGraphsForm1Notes: MathTopicNotes = {
   topic: 'Travel Graphs',
   subject: 'Mathematics',
@@ -2382,10 +2528,874 @@ const circlesForm1Notes: MathTopicNotes = {
   ],
 };
 
+const polygonsForm1Notes: MathTopicNotes = {
+  topic: 'Polygons',
+  subject: 'Mathematics',
+  grade_level: 'Form 1',
+  summary:
+    'Comprehensive Form 1 Mathematics notes on Polygons for ZIMSEC Heritage-based Syllabus B (2024–2030). Covers definition and classification (convex/concave, regular/irregular), naming up to $n=10$, interior angle sum $(n-2)\\times180°$, exterior angles (sum 360°), algebraic applications, diagonals $\\frac{n(n-3)}{2}$, and ZIMSEC exam-style problems.',
+  sections: [
+    {
+      title: '1. Introduction: Definition and Classification',
+      content:
+        'In the Heritage-based ZIMSEC Mathematics Syllabus B (2024–2030), geometry is a pillar of the curriculum designed to drive innovation and industrialisation. Understanding polygons is the foundation for spatial reasoning required in engineering, construction, and architectural design.\n\n**Defining a Polygon**\n\nA polygon is a closed plane (two-dimensional) shape with:\n- **Straight sides:** Every side is a straight line segment\n- **Vertices:** Corners where two sides meet\n- **Interior angles:** Angles formed inside at each vertex\n- **Closed shape:** Path begins and ends at the same point, enclosing a space\n\nA circle is NOT a polygon because its boundary is a continuous curve, not straight segments.\n\n**Convex vs. Concave**\n- **Convex:** All interior angles $< 180°$; all vertices point "outwards."\n- **Concave:** At least one interior angle is reflex ($> 180°$); one or more vertices "cave in."\n\n**Classification by sides ($n$):** Triangle (3), Quadrilateral (4), Pentagon (5), Hexagon (6), Heptagon (7), Octagon (8), Nonagon (9), Decagon (10).\n\n**Regular vs. Irregular:** Regular = equilateral (all sides equal) AND equiangular (all angles equal). Irregular = varying sides and/or angles. For irregular shapes, shortcuts like $\\frac{\\text{Sum}}{n}$ for one angle do not apply.',
+    },
+    {
+      title: '2. Worked Examples: Identification',
+      content:
+        '**Example 1:** 6 sides equal, all angles $120°$ $\\Rightarrow$ Regular hexagon.\n**Example 2:** 5 sides, one angle $250°$ $\\Rightarrow$ Concave pentagon (reflex angle).\n**Example 3:** Is a rectangle always regular? No—regular requires equal sides AND equal angles; rectangle has equal angles but often different adjacent sides (unless square).\n**Example 4:** 3 sides, angles $60°, 60°, 60°$ $\\Rightarrow$ Regular triangle (equilateral).\n**Example 5:** 8 sides of different lengths $\\Rightarrow$ Irregular octagon.\n**Example 6:** 10 sides, all vertices outwards, equal angles $\\Rightarrow$ Regular decagon.\n**Example 7:** Star shape—closed, straight lines, angles inwards $\\Rightarrow$ Concave polygon.\n**Example 8:** 4 sides, one angle $180{,}5°$ $\\Rightarrow$ Concave quadrilateral.\n\n**Common Error:** A "V" shape is not a polygon—it does not enclose an area.\n\n**Practice 1:** (1) Polygon with 9 sides. (2) Two requirements for "regular". (3) Hexagon with one angle $200°$: convex or concave? (4) Polygon with 7 sides. (5) Why is a circle excluded?',
+    },
+    {
+      title: '3. Interior Angles: The Sum',
+      content:
+        '**Formula**\n$$\\text{Sum of interior angles} = (n - 2) \\times 180°$$\n\n**Logic (Triangulation):** Draw diagonals from one vertex to all non-adjacent vertices. This creates exactly $n-2$ triangles. Each triangle has $180°$, so total $= (n-2) \\times 180°$.\n\n**Single interior angle (regular polygon)**\n$$\\text{One angle} = \\frac{(n-2) \\times 180°}{n}$$\n\n**Worked Examples**\n\n1. Pentagon: Sum $= (5-2) \\times 180° = 540°$.\n2. Regular hexagon: Sum $= 720°$; each angle $= 720° \\div 6 = 120°$.\n3. Regular nonagon: Sum $= 1260°$; each $= 140°$.\n4. 11-gon: Sum $= 1620°$.\n5. Regular polygon with each $135°$: $\\frac{(n-2)180}{n} = 135$ $\\Rightarrow$ $180n - 360 = 135n$ $\\Rightarrow$ $n = 8$ (octagon).\n6. Decagon: Sum $= 1440°$.\n7. Regular quadrilateral: each $= 90°$.\n8. Quadrilateral angles $70°, 110°, 120°$: fourth $= 360° - 300° = 60°$.\n\n**Common Errors:** Forgetting $(n-2)$ (not $n \\times 180°$); wrong $n$ (e.g. heptagon vs hexagon).\n\n**Practice 2:** (1) Sum for heptagon. (2) One angle of regular octagon. (3) Sum $= 1800°$: find $n$. (4) Equilateral triangle using formula. (5) Why cannot sum be $250°$?',
+    },
+    {
+      title: '4. Exterior Angles',
+      content:
+        'Walking around any convex polygon, you turn through exactly one full circle. **Sum of exterior angles $= 360°$** (always).\n\n**Linear pair:** Interior $+$ Exterior $= 180°$ (supplementary).\n\n**Single exterior angle (regular):** $\\frac{360°}{n}$\n\n**Worked Examples**\n\n1. Interior $144°$: Exterior $= 180° - 144° = 36°$.\n2. Regular pentagon: Each exterior $= 360° \\div 5 = 72°$.\n3. Exterior $30°$: $n = 360 \\div 30 = 12$ sides.\n4. Regular octagon: Exterior $= 45°$.\n5. Interior $160°$: Exterior $= 20°$; $n = 360 \\div 20 = 18$.\n6. Regular decagon: Exterior $= 36°$.\n\n**Common Error:** Do not confuse exterior angle (supplement of interior, $180° - I$) with the large reflex angle.\n\n**Practice 3:** (1) Exterior of regular hexagon. (2) Exterior $40°$: name polygon. (3) Interior $108°$: exterior? (4) Sum of exterior angles for 40-gon. (5) Interior $150°$: find $n$ via exterior method.',
+    },
+    {
+      title: '5. Algebraic Applications: Unknown Angles',
+      content:
+        '**Process:** (1) Find sum for $n$: $(n-2) \\times 180°$. (2) Add all algebraic terms. (3) Set equal to sum. (4) Solve for $x$. (5) Substitute back.\n\n**Worked Examples**\n\n1. Triangle: $2x + 3x + 5x = 180$ $\\Rightarrow$ $x = 18°$.\n2. Quadrilateral $2x, x+30, 2x-10, x$: $6x + 20 = 360$ $\\Rightarrow$ $x \\approx 56{,}67°$.\n3. Pentagon $x, x+20, x+40, x+60, x+80$: $5x + 200 = 540$ $\\Rightarrow$ $x = 68°$; largest $= 148°$.\n4. Quadrilateral $110°, 70°, 3x, 2x$: $180 + 5x = 360$ $\\Rightarrow$ $x = 36°$.\n5. Hexagon all $(x+15)$: $6(x+15) = 720$ $\\Rightarrow$ $x = 105°$.\n6. Pentagon: four $110°$, one $x$: $440 + x = 540$ $\\Rightarrow$ $x = 100°$.\n7. Quadrilateral exterior $x, 2x, 3x, 4x$: $10x = 360$ $\\Rightarrow$ $x = 36°$.\n8. Heptagon: three sum $420°$, four each $x$: $420 + 4x = 900$ $\\Rightarrow$ $x = 120°$.\n\n**Common Error:** Setting every equation to $360°$; always use the correct sum for $n$.\n\n**Practice 4:** (1) Quadrilateral $x, 3x, 5x, 9x$: smallest angle. (2) Triangle $x, x+20, x+40$. (3) Regular: interior $5x$, exterior $x$: find $x$ and $n$. (4) Pentagon $2x, 2x, 3x, 4x, 4x$. (5) Hexagon with four known, two equal $x$.',
+    },
+    {
+      title: '6. Diagonals',
+      content:
+        'A diagonal connects non-adjacent vertices. A triangle has 0 diagonals—it is the most rigid structural shape.\n\n**Formula**\n$$\\text{Number of diagonals} = \\frac{n(n - 3)}{2}$$\n\n**Logic:** From each vertex, you cannot draw to yourself (1) or the two neighbors (2), so $n-3$ diagonals per vertex. $n \\times (n-3)$ total, divided by 2 to avoid double-counting.\n\n**Worked Examples**\n\n1. Quadrilateral: $\\frac{4 \\times 1}{2} = 2$ diagonals.\n2. Pentagon: $\\frac{5 \\times 2}{2} = 5$.\n3. Hexagon: $\\frac{6 \\times 3}{2} = 9$.\n4. Octagon: $\\frac{8 \\times 5}{2} = 20$.\n5. Decagon: $\\frac{10 \\times 7}{2} = 35$.\n6. Triangle: $\\frac{3 \\times 0}{2} = 0$.\n\n**Practice 5:** (1) Heptagon diagonals. (2) 14 diagonals: show $n=7$. (3) Nonagon minus hexagon. (4) Dodecagon $(n=12)$. (5) Why $(n-3)$?',
+    },
+    {
+      title: '7. ZIMSEC Exam-Style Problems',
+      content:
+        '**Problem 1:** (a) One interior angle of regular octagon: $135°$. (b) Three octagons at a point: gap $45°$ (overlap).\n\n**Problem 2:** Pentagon $x, 2x, 100°, 110°, 120°$: $3x + 330 = 540$ $\\Rightarrow$ $x = 70°$.\n\n**Problem 3:** Interior $= 5 \\times$ exterior. (a) $5x + x = 180$ $\\Rightarrow$ exterior $= 30°$. (b) $n = 360 \\div 30 = 12$.\n\n**Problem 4:** Sum $1260°$: $(n-2)180 = 1260$ $\\Rightarrow$ $n = 9$ (Nonagon).\n\n**Problem 5:** Exterior $36°$: $n = 10$; diagonals $= 35$.\n\n**Problem 6:** Quadrilateral $P=x, Q=3x, R=4x, S=4x$: (a) $12x = 360$ $\\Rightarrow$ $x = 30°$. (b) Largest $= 120°$.\n\n**Problem 7:** Sum $2340°$: $n = 15$ sides.\n\n**Problem 8:** Hexagon: four $130°$, two equal $x$: $520 + 2x = 720$ $\\Rightarrow$ $x = 100°$.',
+    },
+    {
+      title: '8. Mixed Revision and Exam-Style Test',
+      content:
+        '**Mixed Revision (25):** 1. 10 sides: decagon. 2. Define equiangular. 3. Quadrilateral sum. 4. Exterior regular octagon. 5. Interior $150°$: exterior. 6. Heptagon diagonals. 7. Triangle $x, 4x, 5x$. 8. Nonagon sum. 9. One angle $144°$: find $n$. 10. Exterior $200°$ possible? 11. Regular pentagon each angle. 12. 11-gon diagonals. 13. Quadrilateral all $90°$, equal sides: name. 14. Quadrilateral $x, x, 100°, 120°$. 15. 25-gon exterior sum. 16. 14-gon interior sum. 17. 9 diagonals: name. 18. Triangle diagonals. 19. Interior $= 8 \\times$ exterior: $n$. 20. Pentagon $110°, 110°, 110°, x, x$. 21. Dodecagon exterior. 22. Draw concave quadrilateral. 23. 20-gon sum. 24. Regular decagon interior. 25. Square regular, rhombus not?\n\n**Exam Test (40 marks):** 1. Hexagon sum; one angle. 2. Exterior $15°$: $n$. 3. Pentagon $x, 3x, x+50, x-10, 120°$. 4. Nonagon diagonals. 5. 18-gon exterior. 6. Interior $156°$: $n$. 7. Quadrilateral ratio 1:2:3:4: largest. 8. Why triangle has 0 diagonals. 9. 8-gon sum. 10. Exterior $45°$: interior. 11. Quadrilateral $x, x+10, x+20, x+30$. 12. 15-gon: sum; exterior; diagonals. 13. Convex vs concave. 14. 20-gon interior sum.',
+    },
+    {
+      title: '9. Full Memo: Worked Solutions',
+      content:
+        '**Practice 1:** 1. Nonagon. 2. Equal sides and equal angles. 3. Concave. 4. Heptagon. 5. No straight sides.\n\n**Practice 2:** 1. $900°$. 2. $135°$. 3. $n = 12$. 4. $60°$. 5. Sum must be multiple of 180.\n\n**Practice 3:** 1. $60°$. 2. Nonagon. 3. $72°$. 4. Always $360°$. 5. $n = 12$.\n\n**Practice 4:** 1. Smallest $20°$. 2. $x = 40°$. 3. $x = 30°$, $n = 12$. 4. $x = 36°$. 5. $x = 130°$.\n\n**Practice 5:** 1. 14. 2. $n(n-3) = 28$ $\\Rightarrow$ $n = 7$. 3. 18 more. 4. 54. 5. Cannot connect to self or 2 neighbors.\n\n**Mixed Revision memo:** 1. Decagon. 2. All angles equal. 3. $360°$. 4. $45°$. 5. $30°$. 6. 14. 7. $x = 18°$. 8. $1260°$. 9. $n = 10$. 10. No; exterior $< 180°$ for convex. 11. $108°$. 12. 44. 13. Square. 14. $x = 70°$. 15. $360°$. 16. $2160°$. 17. Hexagon. 18. 0. 19. $n = 18$. 20. $x = 105°$. 21. $30°$. 22. One reflex angle. 23. $3240°$. 24. $144°$. 25. Square has equal sides AND angles; rhombus only equal sides.\n\n**Exam memo:** 1a) $720°$ 1b) $120°$. 2. 24. 3. $x \\approx 63{,}33°$. 4. 27. 5. $20°$. 6. 15. 7. $144°$. 8. $n=3 \\Rightarrow \\frac{3(0)}{2} = 0$. 9. $1080°$. 10. $135°$. 11. $x = 75°$. 12a) $2340°$ 12b) $24°$ 12c) 90. 13. Convex: all $< 180°$; concave: at least one $> 180°$. 14. $3240°$.',
+    },
+  ],
+  key_points: [
+    'Polygon: closed, straight sides, vertices. Sum of interior angles $= (n-2) \\times 180°$.',
+    'Regular: equal sides AND equal angles. Single interior angle $= \\frac{(n-2)180°}{n}$.',
+    'Sum of exterior angles $= 360°$ (convex). Single exterior $= \\frac{360°}{n}$; Interior $+$ Exterior $= 180°$.',
+    'Diagonals $= \\frac{n(n-3)}{2}$; triangle has 0.',
+    'Convex: all angles $< 180°$. Concave: at least one reflex ($> 180°$).',
+  ],
+  exam_tips: [
+    'Use $(n-2)$, not $n$, in the interior sum formula—$n-2$ is the number of triangles.',
+    'For "find $n$" when given interior angle: use $\\frac{(n-2)180}{n} =$ given, or find exterior first.',
+    'Exterior angle method is often quicker: $n = 360° \\div$ exterior.',
+  ],
+  visual_descriptions: [
+    'Convex: vertices outwards. Concave: at least one vertex "caves in" (reflex angle).',
+    'Triangulation: diagonals from one vertex create $n-2$ triangles.',
+    'Exterior: extend a side; forms linear pair with interior ($180°$).',
+  ],
+};
+
+const inequalitiesForm1Notes: MathTopicNotes = {
+  topic: 'Inequalities',
+  subject: 'Mathematics',
+  grade_level: 'Form 1',
+  summary:
+    'Comprehensive Form 1 Mathematics notes on Inequalities for ZIMSEC 2024–2030 Heritage-based Syllabus B. Covers inequality symbols ($<$, $>$, $\\leq$, $\\geq$), solving one-step and two-step inequalities, the negative coefficient rule (flip the sign), number line representation, and word problems (budgets, agriculture, transport, wages) in the spirit of Unhu/Ubuntu.',
+  sections: [
+    {
+      title: '1. Introduction to Inequalities',
+      content:
+        'In the ZIMSEC 2024–2030 Heritage-based Syllabus B, we transition from the precise "balance" of equations to the strategic flexibility of inequalities. While an equation represents a single point of truth, inequalities allow us to model real-world constraints and ranges—budgets, minimum livestock feed, industrial safety thresholds. Understanding inequalities is fundamental to critical thinking and problem solving in the spirit of Unhu/Ubuntu/Vumunhu.\n\n**Defining Key Terms**\n\n- **Inequality:** A mathematical statement using a relation symbol to show that one expression is greater than, less than, or not equal to another.\n- **Solution Set:** The collection of all values that make an inequality true (typically a range, not a single value).\n\n**Symbols**\n\n| Symbol | Meaning | Verbal (exam context) |\n| :--- | :--- | :--- |\n| $<$ | Less than | Smaller than; below; fewer than |\n| $>$ | Greater than | More than; above; exceeds |\n| $\\leq$ | Less than or equal to | At most; not more than; maximum; does not exceed |\n| $\\geq$ | Greater than or equal to | At least; not less than; minimum; threshold |\n\n**Word-to-Symbol:** "at least 5" $\\Rightarrow$ $x \\geq 5$; "more than 30°C" $\\Rightarrow$ $t > 30$; "at most 10 kg" $\\Rightarrow$ $m \\leq 10$; "less than $100$" $\\Rightarrow$ $c < 100$; "exceeds 80 km/h" $\\Rightarrow$ $s > 80$; "not more than 2 m" $\\Rightarrow$ $h \\leq 2$; "not less than 50%" $\\Rightarrow$ $y \\geq 50$; "below 5 km" $\\Rightarrow$ $d < 5$.\n\n**Example:** List integers $x$ such that $-3 < x \\leq 2$: $\\{-2, -1, 0, 1, 2\\}$.',
+    },
+    {
+      title: '2. Solving One-Step Inequalities (Addition and Subtraction)',
+      content:
+        '**Principle of Balance:** Adding or subtracting the same value from both sides maintains the truth of the inequality. The direction of the sign remains unchanged.\n\n**Worked Examples**\n\n1. $x + 7 < 12$ $\\Rightarrow$ $x < 5$.\n2. $y - 3 \\geq 8$ $\\Rightarrow$ $y \\geq 11$.\n3. $a + 15 > 20$ $\\Rightarrow$ $a > 5$.\n4. $b - 1{,}5 \\leq 4$ $\\Rightarrow$ $b \\leq 5{,}5$.\n5. $x + 100 \\geq 150$ $\\Rightarrow$ $x \\geq 50$.\n6. $z - 9 < -2$ $\\Rightarrow$ $z < 7$.\n7. $m + 4 \\leq 1$ $\\Rightarrow$ $m \\leq -3$.\n8. $n - 12 > -20$ $\\Rightarrow$ $n > -8$.\n\n**Practice 1:** Solve: $x + 5 > 13$; $y - 8 \\leq 2$; $a + 11 < 7$; $b - 20 \\geq -5$; $m + 0{,}5 < 2{,}5$.',
+    },
+    {
+      title: '3. One-Step Inequalities (Multiplication and Division by Positive Numbers)',
+      content:
+        'When the coefficient is positive, the process is identical to solving equations. The sign direction stays the same.\n\n**Worked Examples**\n\n1. $3x > 12$ $\\Rightarrow$ $x > 4$.\n2. $\\frac{y}{2} \\leq 5$ $\\Rightarrow$ $y \\leq 10$.\n3. $5a \\geq 35$ $\\Rightarrow$ $a \\geq 7$.\n4. $\\frac{x}{4} < 3$ $\\Rightarrow$ $x < 12$.\n5. $10m \\leq 2$ $\\Rightarrow$ $m \\leq 0{,}2$.\n6. $\\frac{1}{2}x > 4$ $\\Rightarrow$ $x > 8$.\n7. $0{,}5y < 10$ $\\Rightarrow$ $y < 20$.\n8. $\\frac{2}{3}a \\geq 6$ $\\Rightarrow$ $a \\geq 9$.\n\n**Practice 2:** Solve: $4x \\leq 20$; $\\frac{y}{3} > 7$; $8a < 64$; $\\frac{1}{4}b \\geq 5$; $2x \\leq 15$.',
+    },
+    {
+      title: '4. The Negative Coefficient Rule',
+      content:
+        '**Critical Rule:** When multiplying or dividing by a negative number, you **must reverse** the inequality sign. Failure to do so gives a false statement.\n\n**Proof:** $2 < 5$ is true. Multiply by $-1$ without flipping: $-2 < -5$ is false (on a number line, $-2$ is to the right of $-5$). Correct: $-2 > -5$.\n\n**Worked Examples**\n\n1. $-2x < 10$ $\\Rightarrow$ $x > -5$ (sign reverses).\n2. $\\frac{y}{-3} \\geq 4$ $\\Rightarrow$ $y \\leq -12$.\n3. $-5a \\leq -25$ $\\Rightarrow$ $a \\geq 5$.\n4. $-x > 7$ $\\Rightarrow$ $x < -7$.\n5. $\\frac{m}{-2} < -8$ $\\Rightarrow$ $m > 16$.\n6. $-3x \\geq 21$ $\\Rightarrow$ $x \\leq -7$.\n7. $-0{,}2y < 4$ $\\Rightarrow$ $y > -20$.\n8. $\\frac{x}{-5} \\leq 0$ $\\Rightarrow$ $x \\geq 0$.\n\n**Common Error:** Forgetting to flip when dividing by a negative. Always ask: "Is the number I am dividing by negative?"\n\n**Practice 3:** Solve: $-4x > 12$; $\\frac{y}{-2} \\leq 9$; $-10a \\geq -100$; $\\frac{b}{-5} > -1$; $-x < -4$.',
+    },
+    {
+      title: '5. Two-Step Inequalities',
+      content:
+        'Use **SADMEP** (Subtraction/Addition first, then Division/Multiplication).\n\n1. Remove the constant via addition or subtraction.\n2. Remove the coefficient via division or multiplication (flip sign if dividing by negative).\n\n**Worked Examples**\n\n1. $2x + 5 < 13$ $\\Rightarrow$ $2x < 8$ $\\Rightarrow$ $x < 4$.\n2. $3y - 4 \\geq 11$ $\\Rightarrow$ $3y \\geq 15$ $\\Rightarrow$ $y \\geq 5$.\n3. $-4a + 7 \\leq 19$ $\\Rightarrow$ $-4a \\leq 12$ $\\Rightarrow$ $a \\geq -3$ (sign reverses).\n4. $10 - 2x > 4$ $\\Rightarrow$ $-2x > -6$ $\\Rightarrow$ $x < 3$ (sign reverses).\n5. $\\frac{x}{3} + 2 < 5$ $\\Rightarrow$ $\\frac{x}{3} < 3$ $\\Rightarrow$ $x < 9$.\n6. $5 - 3m \\geq 20$ $\\Rightarrow$ $-3m \\geq 15$ $\\Rightarrow$ $m \\leq -5$ (sign reverses).\n7. $-x - 5 > 2$ $\\Rightarrow$ $-x > 7$ $\\Rightarrow$ $x < -7$ (sign reverses).\n8. $\\frac{y}{2} - 7 \\leq -10$ $\\Rightarrow$ $\\frac{y}{2} \\leq -3$ $\\Rightarrow$ $y \\leq -6$.\n\n**Practice 4:** Solve: $5x + 2 < 17$; $2y - 10 \\geq 4$; $-3a + 1 \\leq 10$; $12 - 4x > 20$; $\\frac{m}{5} + 3 < 2$.',
+    },
+    {
+      title: '6. Representing Inequalities on a Number Line',
+      content:
+        '**Conventions**\n- **Open circle** ($\\circ$): For $<$ and $>$ — boundary excluded.\n- **Closed (solid) circle** ($\\bullet$): For $\\leq$ and $\\geq$ — boundary included.\n\n**Shading direction:** Variable on left; symbol as arrow: $>$ or $\\geq$ $\\Rightarrow$ arrow right; $<$ or $\\leq$ $\\Rightarrow$ arrow left.\n\n**Worked Examples**\n\n1. $x + 2 > 5$ $\\Rightarrow$ $x > 3$: Open circle at 3, arrow right.\n2. $2x \\leq 8$ $\\Rightarrow$ $x \\leq 4$: Solid circle at 4, arrow left.\n3. $-3x < 6$ $\\Rightarrow$ $x > -2$: Open circle at $-2$, arrow right.\n4. $x \\geq -1$: Solid circle at $-1$, arrow right.\n5. $x < 0$: Open circle at 0, arrow left.\n6. $5 - x \\geq 3$ $\\Rightarrow$ $x \\leq 2$: Solid circle at 2, arrow left.\n7. $x > -5$: Open circle at $-5$, arrow right.\n8. $\\frac{x}{2} > 1$ $\\Rightarrow$ $x > 2$: Open circle at 2, arrow right.\n\n**Common Error:** "Solid symbol ($\\leq$, $\\geq$) = Solid circle."',
+    },
+    {
+      title: '7. Word Problems Involving Inequalities',
+      content:
+        '**3-Step Strategy:** (1) Identify the unknown and assign a variable. (2) Form the inequality from word constraints. (3) Solve and interpret in context.\n\n**Worked Examples**\n\n1. **Budget:** Student has $50, books cost $8 each. $8x \\leq 50$ $\\Rightarrow$ $x \\leq 6{,}25$. Max 6 books.\n2. **Agriculture:** Farmer needs at least 200 kg, has 85 kg. $85 + a \\geq 200$ $\\Rightarrow$ $a \\geq 115$ kg minimum.\n3. **Tuckshop:** Fixed $60, profit $3 per item. $3n - 60 > 0$ $\\Rightarrow$ $n > 20$. At least 21 items.\n4. **Transport:** Kombi max 400 kg; driver 80 kg, boxes 20 kg each. $20x + 80 \\leq 400$ $\\Rightarrow$ $x \\leq 16$ boxes.\n5. **Age:** Youth club older than 13. $y > 13$.\n6. **Savings:** $20 weekly to reach $350. $20w \\geq 350$ $\\Rightarrow$ $w \\geq 17{,}5$. 18 weeks.\n7. **Temperature:** Greenhouse below 25°C, currently 18°C. $18 + r < 25$ $\\Rightarrow$ $r < 7°$C.\n8. **Wages:** Gardener $10/h to earn $450. $10h \\geq 450$ $\\Rightarrow$ $h \\geq 45$ hours.\n\n**Practice 5:** Tank max 1500 L, has 700 L. Taxi $5 + $2/km with $21. Average $\\geq 60$, first test 55. Poultry needs $> 1000$, has $450$. Write: $3n + 4 \\leq 19$.',
+    },
+    {
+      title: '8. Mixed Revision Exercise',
+      content:
+        '**Section A:** 1. Symbol for "at least." 2. $p \\geq -2$. 3. $x - 9 > 2$. 4. $4y \\leq 24$. 5. $-2a < 8$. 6. $x/5 \\geq -3$. 7. True/False: If $x > 5$, then $-x > -5$. 8. Circle type for $x \\geq 10$? 9. $3m + 1 < 10$. 10. $10 - y \\geq 4$. 11. Represent $x < -1$. 12. $2x + 7 = 15$. 13. $2x + 7 < 15$. 14. Temperature $T > 0°$C. 15. $-x/2 \\leq 4$.\n\n**Section B:** 16. $5x - 3 \\leq 12$ and number line. 17. Garden width 4 m, area $\\geq 24\\ \\text{m}^2$: min length. 18. $2(x+3) > 10$. 19. "Five times $n$ decreased by 7 is at least 23." 20. Pens: buy $2, sell $5, fixed $60—profit? 21. $15 - 3x < 0$. 22. $4 - 2y \\geq -2$ on number line. 23. $\\frac{x}{4} + 1 \\leq 0$. 24. $20 for drink $3 + pies $4 each: max pies. 25. $7x + 2 > 3x + 10$. 26. $1 - x \\leq 5$. 27. Car hire $50 + $0,20/km, under $100: max km. 28. $3(2y-1) \\leq 9$. 29. Define null set; is $x > 5$ null? 30. $-5(x-2) > 20$.',
+    },
+    {
+      title: '9. Exam-Style Structured Test',
+      content:
+        '1. Solve $x + 11 < 4$. 2. Represent $x \\geq -2$ on number line. 3. Solve $3y - 5 \\geq 10$. 4. Solve $-4m < 16$; smallest integer for $m$. 5. Integers $x$ such that $2 < x \\leq 5$. 6. Solve $12 - 2x > 4$. 7. Power budget at most $80; fixed $15, $0,50/unit: max units. 8. Solve $\\frac{x}{3} + 5 \\leq 2$. 9. Solve $2(3x-1) < 16$. 10. Represent $5 - y \\leq 2$. 11. Boy $x$, father $x+30$, combined $< 60$: boy\'s max age. 12. Solve $-3(x+1) \\geq 9$. 13. Solve $10x + 2 \\leq 7x + 11$. 14. Revenue $10/item, cost $50, profit $> 200$: solve for $n$. 15. Solve $\\frac{2x-4}{2} > 3$.',
+    },
+    {
+      title: '10. Marking Memorandum',
+      content:
+        '**Revision (selected):** 1. $\\geq$. 2. $p \\geq -2$. 3. $x > 11$. 4. $y \\leq 6$. 5. $a > -4$. 6. $x \\geq -15$. 7. False. 8. Solid. 9. $m < 3$. 10. $y \\leq 6$. 11. Open circle at $-1$, arrow left. 12. $x = 4$. 13. $x < 4$. 14. $T > 0$. 15. $x \\geq -8$. 16. $x \\leq 3$; solid circle at 3, arrow left. 17. $L \\geq 6$ m. 18. $x > 2$. 19. $n \\geq 6$. 20. 21 pens. 21. $x > 5$. 22. $y \\leq 3$; solid at 3, arrow left. 23. $x \\leq -4$. 24. 4 pies. 25. $x > 2$. 26. $x \\geq -4$. 27. $k < 250$ km. 28. $y \\leq 2$. 29. Null set: no elements; no, $x > 5$ is infinite. 30. $x < -2$.\n\n**Exam Test:** 1. $x < -7$. 2. Solid circle at $-2$, arrow right. 3. $y \\geq 5$. 4. $m > -4$; smallest integer $-3$. 5. $\\{3, 4, 5\\}$. 6. $x < 4$. 7. $u \\leq 130$ units. 8. $x \\leq -9$. 9. $x < 3$. 10. $y \\geq 3$; solid at 3, arrow right. 11. $x < 15$; max age 14. 12. $x \\leq -4$. 13. $x \\leq 3$. 14. $n > 25$; 26 items. 15. $x > 5$.',
+    },
+  ],
+  key_points: [
+    'Inequality symbols: $<$ less; $>$ greater; $\\leq$ at most; $\\geq$ at least.',
+    'Add/subtract: sign unchanged. Multiply/divide by positive: sign unchanged.',
+    'Multiply/divide by NEGATIVE: REVERSE the sign. This is the most common ZIMSEC error.',
+    'Number line: open circle for $<$ and $>$; solid circle for $\\leq$ and $\\geq$.',
+    'Word problems: assign variable, form inequality, solve, interpret in context.',
+  ],
+  exam_tips: [
+    'Always check: "Am I dividing by a negative?" If yes, flip the sign immediately.',
+    'Solid symbol ($\\leq$, $\\geq$) = solid circle on number line.',
+    'For "maximum" use $\\leq$; for "minimum" use $\\geq$; for "at least" use $\\geq$.',
+  ],
+  visual_descriptions: [
+    'Number line: open circle = excluded; solid circle = included. Arrow shows direction of solution set.',
+    'Negative division: $<$ becomes $>$; $\\geq$ becomes $\\leq$ when multiplying/dividing both sides by $-1$.',
+    'SADMEP: subtract/add constant first, then divide/multiply by coefficient.',
+  ],
+};
+
+const equationsForm1Notes: MathTopicNotes = {
+  topic: 'Equations',
+  subject: 'Mathematics',
+  grade_level: 'Form 1',
+  summary:
+    'Comprehensive Form 1 Mathematics notes on Equations for ZIMSEC Syllabus B (2024–2030). An equation states that two expressions are equal. Form 1 covers solving linear equations with the unknown on one side only, and forming linear equations from word statements. Uses the balance principle and inverse operations. Use the decimal comma (e.g. $0{,}5$, $2{,}75$) as per ZIMSEC standard.',
+  sections: [
+    {
+      title: '1. Introduction: What Is an Equation?',
+      content:
+        'An **equation** is a mathematical statement that two expressions are **equal**. It contains an equals sign ($=$). The value(s) that make the equation true are called the **solution** (or **root**).\n\n**Examples of Equations**\n\n- $x + 5 = 12$ — "A number plus 5 equals 12"\n- $3y = 15$ — "Three times a number equals 15"\n- $2m - 7 = 9$ — "Twice a number minus 7 equals 9"\n\n**Equation vs Expression**\n\n- An **expression** (e.g. $4x + 3$) has no equals sign—we simplify or evaluate it.\n- An **equation** (e.g. $4x + 3 = 15$) has an equals sign—we **solve** it to find the value of the unknown.\n\n**Form 1 Scope**\n\nWe solve linear equations where the unknown appears on **one side only**. Examples: $x + 9 = 21$, $4a = 32$, $5n - 3 = 22$.',
+      worked_examples: [
+        {
+          question: 'State which of the following are equations: (a) $2x + 5$ (b) $y - 7 = 10$ (c) $3 \\times 4$ (d) $m + 4 = 9$.',
+          steps: [
+            '(a) No equals sign $\\Rightarrow$ expression',
+            '(b) Contains $=$ $\\Rightarrow$ equation',
+            '(c) No equals sign $\\Rightarrow$ expression',
+            '(d) Contains $=$ $\\Rightarrow$ equation',
+          ],
+          final_answer: 'Equations: (b) and (d).',
+        },
+      ],
+    },
+    {
+      title: '2. The Balance Principle',
+      content:
+        'An equation is like a **balanced scale**. Whatever you do to one side, you must do the **same** to the other side so the balance is maintained.\n\n**Rules**\n\n1. **Add** the same number to both sides.\n2. **Subtract** the same number from both sides.\n3. **Multiply** both sides by the same non-zero number.\n4. **Divide** both sides by the same non-zero number.\n\n**Example:** $x + 3 = 8$\n\n- Subtract 3 from both sides: $x + 3 - 3 = 8 - 3$\n- Simplify: $x = 5$\n- **Check:** $5 + 3 = 8$ $\\checkmark$\n\n**Example:** $4y = 20$\n\n- Divide both sides by 4: $\\frac{4y}{4} = \\frac{20}{4}$\n- Simplify: $y = 5$\n- **Check:** $4 \\times 5 = 20$ $\\checkmark$',
+      worked_examples: [
+        {
+          question: 'Solve $x + 7 = 15$ using the balance principle.',
+          steps: [
+            'Subtract 7 from both sides: $x + 7 - 7 = 15 - 7$',
+            'Simplify: $x = 8$',
+            'Check: $8 + 7 = 15$ $\\checkmark$',
+          ],
+          final_answer: '$x = 8$',
+        },
+        {
+          question: 'Solve $5k = 35$.',
+          steps: [
+            'Divide both sides by 5: $\\frac{5k}{5} = \\frac{35}{5}$',
+            'Simplify: $k = 7$',
+            'Check: $5 \\times 7 = 35$ $\\checkmark$',
+          ],
+          final_answer: '$k = 7$',
+        },
+      ],
+    },
+    {
+      title: '3. One-Step Equations',
+      content:
+        'One-step equations require a single inverse operation to isolate the unknown.\n\n**Addition Equations:** $x + a = b$ $\\Rightarrow$ subtract $a$: $x = b - a$\n\n**Subtraction Equations:** $x - a = b$ $\\Rightarrow$ add $a$: $x = b + a$\n\n**Multiplication Equations:** $ax = b$ $\\Rightarrow$ divide by $a$: $x = \\frac{b}{a}$\n\n**Division Equations:** $\\frac{x}{a} = b$ $\\Rightarrow$ multiply by $a$: $x = ab$',
+      worked_examples: [
+        {
+          question: 'Solve $x + 9 = 21$.',
+          steps: ['Subtract 9 from both sides: $x = 21 - 9$'],
+          final_answer: '$x = 12$',
+        },
+        {
+          question: 'Solve $n - 4 = 11$.',
+          steps: ['Add 4 to both sides: $n = 11 + 4$'],
+          final_answer: '$n = 15$',
+        },
+        {
+          question: 'Solve $4a = 32$.',
+          steps: ['Divide both sides by 4: $a = \\frac{32}{4}$'],
+          final_answer: '$a = 8$',
+        },
+        {
+          question: 'Solve $\\frac{m}{5} = 6$.',
+          steps: ['Multiply both sides by 5: $m = 6 \\times 5$'],
+          final_answer: '$m = 30$',
+        },
+        {
+          question: 'Solve $12 + p = 20$.',
+          steps: ['Subtract 12 from both sides: $p = 20 - 12$'],
+          final_answer: '$p = 8$',
+        },
+        {
+          question: 'Solve $7y = 42$.',
+          steps: ['Divide both sides by 7: $y = \\frac{42}{7}$'],
+          final_answer: '$y = 6$',
+        },
+      ],
+    },
+    {
+      title: '4. Two-Step Equations (Unknown on One Side)',
+      content:
+        'Two-step equations combine addition/subtraction with multiplication/division. Use **SADMEP** (opposite of BODMAS):\n\n1. **S**ubtract or **A**dd the constant term first (to remove the number added to or subtracted from the unknown).\n2. **D**ivide or **M**ultiply by the coefficient of the unknown.\n\n**General form:** $ax + b = c$ or $ax - b = c$\n\n**Example:** $3x - 7 = 14$\n\n- Add 7 to both sides: $3x = 21$\n- Divide by 3: $x = 7$\n\n**Example:** $5x + 3 = 23$\n\n- Subtract 3 from both sides: $5x = 20$\n- Divide by 5: $x = 4$',
+      worked_examples: [
+        {
+          question: 'Solve $3x - 7 = 14$.',
+          steps: [
+            'Add 7 to both sides: $3x - 7 + 7 = 14 + 7$',
+            'Simplify: $3x = 21$',
+            'Divide by 3: $x = \\frac{21}{3}$',
+            'Final: $x = 7$',
+          ],
+          final_answer: '$x = 7$',
+        },
+        {
+          question: 'Solve $5n + 3 = 23$.',
+          steps: [
+            'Subtract 3 from both sides: $5n = 20$',
+            'Divide by 5: $n = \\frac{20}{5}$',
+            'Final: $n = 4$',
+          ],
+          final_answer: '$n = 4$',
+        },
+        {
+          question: 'Solve $2m + 8 = 18$.',
+          steps: [
+            'Subtract 8 from both sides: $2m = 10$',
+            'Divide by 2: $m = 5$',
+          ],
+          final_answer: '$m = 5$',
+        },
+        {
+          question: 'Solve $4y - 5 = 19$.',
+          steps: [
+            'Add 5 to both sides: $4y = 24$',
+            'Divide by 4: $y = 6$',
+          ],
+          final_answer: '$y = 6$',
+        },
+        {
+          question: 'Solve $6x - 4 = 20$.',
+          steps: [
+            'Add 4 to both sides: $6x = 24$',
+            'Divide by 6: $x = 4$',
+          ],
+          final_answer: '$x = 4$',
+        },
+        {
+          question: 'Solve $\\frac{a}{3} + 2 = 7$.',
+          steps: [
+            'Subtract 2 from both sides: $\\frac{a}{3} = 5$',
+            'Multiply by 3: $a = 15$',
+          ],
+          final_answer: '$a = 15$',
+        },
+      ],
+    },
+    {
+      title: '5. Forming Linear Equations from Statements',
+      content:
+        'Translating word statements into equations is a core Form 1 skill. Assign a letter (e.g. $x$, $n$) to the unknown, then build the equation from the words.\n\n**Keyword Guide**\n\n| Words | Operation | Example |\n| :--- | :--- | :--- |\n| "sum of", "added to", "more than" | $+$ | $x + 5$ |\n| "difference", "less than", "subtract" | $-$ | $x - 3$ |\n| "product", "times", "multiplied by" | $\\times$ | $4x$, $3n$ |\n| "quotient", "divided by", "shared" | $\\div$ | $\\frac{x}{2}$ |\n| "is", "equals", "gives" | $=$ | equation |\n\n**Order matters:** "5 more than $x$" $= x + 5$; "5 less than $x$" $= x - 5$.',
+      worked_examples: [
+        {
+          question: '"A number increased by 7 gives 15." Form the equation.',
+          steps: ["Let the number be $x$. Increased by 7 means $x + 7$. 'Gives' means $=$."],
+          final_answer: '$x + 7 = 15$',
+        },
+        {
+          question: '"Twice a number is 24." Form the equation.',
+          steps: ["Let the number be $n$. Twice means $2n$. 'Is' means $=$."],
+          final_answer: '$2n = 24$',
+        },
+        {
+          question: '"When 4 is subtracted from a number, the result is 9." Form the equation.',
+          steps: ["Let the number be $m$. Subtracted from means $m - 4$. Result is 9."],
+          final_answer: '$m - 4 = 9$',
+        },
+        {
+          question: '"Three times a number plus 2 equals 17." Form the equation.',
+          steps: ["Let the number be $x$. Three times $= 3x$. Plus 2 $= 3x + 2$. Equals 17."],
+          final_answer: '$3x + 2 = 17$',
+        },
+        {
+          question: '"A number divided by 5 gives 6." Form the equation.',
+          steps: ["Let the number be $y$. Divided by 5 $= \\frac{y}{5}$. Gives 6."],
+          final_answer: '$\\frac{y}{5} = 6$',
+        },
+      ],
+    },
+    {
+      title: '6. Word Problems: Form and Solve',
+      content:
+        '**Strategy:** (1) Identify the unknown and assign a variable. (2) Form the equation from the problem. (3) Solve the equation. (4) Interpret the answer in context and state units.\n\n**Common contexts:** Age, money, lengths, shares, scores.',
+      worked_examples: [
+        {
+          question: 'Tendai has some sweets. When he gets 8 more, he has 23. How many did he have?',
+          steps: [
+            'Let $x =$ number Tendai had',
+            'Equation: $x + 8 = 23$',
+            'Solve: $x = 23 - 8 = 15$',
+          ],
+          final_answer: 'Tendai had 15 sweets.',
+        },
+        {
+          question: 'A rectangle has length 12 cm. The perimeter is 36 cm. Find the width.',
+          steps: [
+            'Let $w =$ width (cm). Perimeter $= 2 \\times 12 + 2 \\times w = 24 + 2w$',
+            'Equation: $24 + 2w = 36$',
+            'Solve: $2w = 12$, $w = 6$',
+          ],
+          final_answer: 'Width is 6 cm.',
+        },
+        {
+          question: 'Five times a number minus 3 equals 22. Find the number.',
+          steps: [
+            "Let the number be $n$. Equation: $5n - 3 = 22$",
+            'Add 3: $5n = 25$. Divide by 5: $n = 5$',
+          ],
+          final_answer: 'The number is 5.',
+        },
+        {
+          question: 'A farmer sells $x$ bags of maize at \\$12 each and receives \\$180. Form and solve.',
+          steps: [
+            "Total $= 12x$. Equation: $12x = 180$",
+            'Divide by 12: $x = 15$',
+          ],
+          final_answer: 'The farmer sold 15 bags.',
+        },
+        {
+          question: 'The sum of two consecutive numbers is 25. Find the smaller number.',
+          steps: [
+            "Let smaller $= n$, next $= n + 1$",
+            "Equation: $n + (n + 1) = 25$ $\\Rightarrow$ $2n + 1 = 25$",
+            "Solve: $2n = 24$, $n = 12$",
+          ],
+          final_answer: 'The smaller number is 12.',
+        },
+      ],
+    },
+    {
+      title: '7. Equations with Fractions (Simple Cases)',
+      content:
+        'When the unknown is divided by a number, multiply both sides by that number to clear the division.\n\n**Example:** $\\frac{x}{4} = 5$ $\\Rightarrow$ $x = 5 \\times 4 = 20$\n\n**Example:** $\\frac{n}{3} - 2 = 4$ $\\Rightarrow$ Add 2: $\\frac{n}{3} = 6$; Multiply by 3: $n = 18$',
+      worked_examples: [
+        {
+          question: 'Solve $\\frac{x}{6} = 4$.',
+          steps: ['Multiply both sides by 6: $x = 4 \\times 6$'],
+          final_answer: '$x = 24$',
+        },
+        {
+          question: 'Solve $\\frac{m}{7} + 1 = 4$.',
+          steps: [
+            'Subtract 1: $\\frac{m}{7} = 3$',
+            'Multiply by 7: $m = 21$',
+          ],
+          final_answer: '$m = 21$',
+        },
+        {
+          question: 'Solve $\\frac{y}{5} - 3 = 2$.',
+          steps: [
+            'Add 3: $\\frac{y}{5} = 5$',
+            'Multiply by 5: $y = 25$',
+          ],
+          final_answer: '$y = 25$',
+        },
+      ],
+    },
+    {
+      title: '8. Mixed Revision Exercise',
+      content:
+        '**Solve:** 1. $x + 11 = 25$. 2. $a - 6 = 14$. 3. $5m = 45$. 4. $\\frac{n}{4} = 7$. 5. $2x + 5 = 17$. 6. $4y - 9 = 15$. 7. $3k + 8 = 26$. 8. $6p - 12 = 24$. 9. $\\frac{t}{3} + 2 = 8$. 10. $7q + 4 = 39$.\n\n**Form equations:** 11. "A number plus 9 equals 20." 12. "Twice a number is 18." 13. "7 less than a number gives 10." 14. "Half of a number is 6." 15. "4 times a number minus 5 equals 19."\n\n**Word problems:** 16. Rudo thinks of a number. Doubling it and adding 7 gives 21. Find the number. 17. 3 kg bags of sugar: 12 bags cost \\$72. Find cost per bag. 18. Perimeter of square = 28 cm. Find side length.',
+    },
+    {
+      title: '9. Exam-Style Structured Test',
+      content:
+        '**Section A (Short):** 1. Solve $x + 15 = 32$. 2. Solve $8n = 64$. 3. Solve $3a - 5 = 19$. 4. "5 more than $x$ gives 12." Form equation. 5. Solve $\\frac{b}{5} = 6$.\n\n**Section B (Extended):** 6. Solve $4x + 7 = 31$. 7. "Twice a number decreased by 3 equals 15." Form and solve. 8. A book costs \\$8. After buying $n$ books, total paid is \\$56. Form equation and find $n$. 9. Solve $\\frac{m}{4} - 2 = 5$. 10. Rope 40 m cut into 5 equal pieces. Form equation and find length of each piece.',
+    },
+    {
+      title: '10. Full Memo and Worked Solutions',
+      content:
+        '**Revision (Solve):** 1. $x = 14$. 2. $a = 20$. 3. $m = 9$. 4. $n = 28$. 5. $x = 6$. 6. $y = 6$. 7. $k = 6$. 8. $p = 6$. 9. $t = 18$. 10. $q = 5$.\n\n**Form equations:** 11. $x + 9 = 20$. 12. $2n = 18$. 13. $x - 7 = 10$ or $n - 7 = 10$. 14. $\\frac{x}{2} = 6$ or $\\frac{n}{2} = 6$. 15. $4n - 5 = 19$.\n\n**Word problems:** 16. $2x + 7 = 21$ $\\Rightarrow$ $x = 7$. 17. $12c = 72$ $\\Rightarrow$ $c = 6$ (\\$6 per bag). 18. $4s = 28$ $\\Rightarrow$ $s = 7$ cm.\n\n**Exam Test:** 1. $x = 17$. 2. $n = 8$. 3. $a = 8$. 4. $x + 5 = 12$. 5. $b = 30$. 6. $x = 6$. 7. $2n - 3 = 15$ $\\Rightarrow$ $n = 9$. 8. $8n = 56$ $\\Rightarrow$ $n = 7$ books. 9. $m = 28$. 10. $5\\ell = 40$ $\\Rightarrow$ $\\ell = 8$ m per piece.',
+    },
+  ],
+  key_points: [
+    'Equation: two expressions equal; we solve to find the unknown.',
+    'Balance principle: do the same to both sides (add, subtract, multiply, divide).',
+    'SADMEP: remove constant first (add/subtract), then remove coefficient (multiply/divide).',
+    'Form equations: assign variable, translate keywords ("sum" $\\rightarrow$ $+$, "is" $\\rightarrow$ $=$).',
+    'Always check by substituting your answer back into the original equation.',
+  ],
+  exam_tips: [
+    'Show clear steps—each line earns method marks even if the final answer is wrong.',
+    'For "form the equation," do not solve unless asked. Write the equation only.',
+    'Use decimal comma (e.g. $2{,}5$) as per ZIMSEC standard.',
+    'One-step: inverse of add is subtract; of multiply is divide.',
+  ],
+  visual_descriptions: [
+    'Balance scale: both sides must stay equal; add same weight to both = still balanced.',
+    'SADMEP flow: $3x + 7 = 22$ $\\rightarrow$ subtract 7 $\\rightarrow$ $3x = 15$ $\\rightarrow$ divide 3 $\\rightarrow$ $x = 5$.',
+    'Word-to-symbol map: sum $\\rightarrow$ $+$, difference $\\rightarrow$ $-$, product $\\rightarrow$ $\\times$, is $\\rightarrow$ $=$.',
+  ],
+};
+
+const algebraicExpressionsIndexFormForm1Notes: MathTopicNotes = {
+  topic: 'Algebraic Expressions in Index Form',
+  subject: 'Mathematics',
+  grade_level: 'Form 1',
+  summary:
+    'Comprehensive Form 1 Mathematics notes on Algebraic Expressions in Index Form for ZIMSEC Syllabus B (2024–2030). Covers index notation (powers), writing repeated products in index form, basic index laws for multiplication and division, common factors and multiples, and algebraic H.C.F. and L.C.M. Use the decimal comma (e.g. $0{,}5$) as per ZIMSEC standard.',
+  sections: [
+    {
+      title: '1. Index Notation: Base and Power',
+      content:
+        'When we multiply a number or letter by itself repeatedly, we use **index notation** (or **power** notation) to write it concisely.\n\n**Definitions**\n\n- **Base:** The number or letter being multiplied (e.g. in $x^3$, the base is $x$).\n- **Index (or exponent):** The small number that shows how many times the base is used as a factor (e.g. in $x^3$, the index is $3$).\n\n**Meaning**\n\n- $x^2 = x \\times x$ (read as "$x$ squared" or "$x$ to the power of 2")\n- $x^3 = x \\times x \\times x$ (read as "$x$ cubed" or "$x$ to the power of 3")\n- $a^4 = a \\times a \\times a \\times a$\n- $5^2 = 5 \\times 5 = 25$; $2^3 = 2 \\times 2 \\times 2 = 8$',
+      worked_examples: [
+        {
+          question: 'Write $y \\times y \\times y$ in index form.',
+          steps: ['$y$ is used 3 times as a factor'],
+          final_answer: '$y^3$',
+        },
+        {
+          question: 'Expand $m^4$ as a product.',
+          steps: ['$m^4$ means $m$ multiplied by itself 4 times'],
+          final_answer: '$m \\times m \\times m \\times m$',
+        },
+        {
+          question: 'Evaluate $3^2$ and $2^4$.',
+          steps: ['$3^2 = 3 \\times 3 = 9$; $2^4 = 2 \\times 2 \\times 2 \\times 2 = 16$'],
+          final_answer: '$3^2 = 9$; $2^4 = 16$',
+        },
+      ],
+    },
+    {
+      title: '2. Writing Products in Index Form',
+      content:
+        'When a product involves repeated factors, group identical factors and write each in index form.\n\n**Rules**\n\n1. Count how many times each base appears.\n2. Write each base with its count as the index.\n3. If there are different bases, write them as a product of powers (e.g. $x^2 \\times y^3$ or $x^2 y^3$).\n\n**Example:** $a \\times a \\times b \\times b \\times b = a^2 \\times b^3 = a^2 b^3$',
+      worked_examples: [
+        {
+          question: 'Write $x \\times x \\times x \\times x$ in index form.',
+          steps: ['$x$ appears 4 times'],
+          final_answer: '$x^4$',
+        },
+        {
+          question: 'Write $p \\times p \\times q \\times q$ in index form.',
+          steps: ['$p$ appears 2 times, $q$ appears 2 times'],
+          final_answer: '$p^2 q^2$',
+        },
+        {
+          question: 'Write $2 \\times a \\times a \\times 2 \\times a$ in index form.',
+          steps: ['$2$ appears 2 times $\\Rightarrow 2^2$; $a$ appears 3 times $\\Rightarrow a^3$'],
+          final_answer: '$2^2 a^3$ or $4a^3$',
+        },
+        {
+          question: 'Write $m \\times m \\times n \\times n \\times n \\times n$ in index form.',
+          steps: ['$m^2 \\times n^4$'],
+          final_answer: '$m^2 n^4$',
+        },
+        {
+          question: 'Write $3 \\times x \\times x \\times x \\times y$ in index form.',
+          steps: ['Coefficient 3; $x$ three times; $y$ once'],
+          final_answer: '$3x^3 y$',
+        },
+      ],
+    },
+    {
+      title: '3. Index Law: Multiplication (Same Base)',
+      content:
+        'When multiplying powers of the **same base**, add the indices.\n\n$$x^a \\times x^b = x^{a+b}$$\n\n**Example:** $x^2 \\times x^3 = x^{2+3} = x^5$\n\n**Why?** $x^2 \\times x^3 = (x \\times x) \\times (x \\times x \\times x) = x^5$',
+      worked_examples: [
+        {
+          question: 'Simplify $a^2 \\times a^5$.',
+          steps: ['Same base $a$; add indices: $2 + 5 = 7$'],
+          final_answer: '$a^7$',
+        },
+        {
+          question: 'Simplify $n^3 \\times n^4$.',
+          steps: ['$n^{3+4} = n^7$'],
+          final_answer: '$n^7$',
+        },
+        {
+          question: 'Simplify $x \\times x^4$ (remember $x = x^1$).',
+          steps: ['$x^1 \\times x^4 = x^{1+4} = x^5$'],
+          final_answer: '$x^5$',
+        },
+        {
+          question: 'Simplify $y^2 \\times y^2 \\times y$.',
+          steps: ['$y^2 \\times y^2 \\times y^1 = y^{2+2+1} = y^5$'],
+          final_answer: '$y^5$',
+        },
+      ],
+    },
+    {
+      title: '4. Index Law: Division (Same Base)',
+      content:
+        'When dividing powers of the **same base**, subtract the indices.\n\n$$x^a \\div x^b = x^{a-b}$$\n\n**Example:** $x^7 \\div x^3 = x^{7-3} = x^4$\n\n**With coefficients:** $12m^5 \\div 3m^2 = (12 \\div 3) \\times m^{5-2} = 4m^3$',
+      worked_examples: [
+        {
+          question: 'Simplify $p^6 \\div p^2$.',
+          steps: ['Subtract indices: $6 - 2 = 4$'],
+          final_answer: '$p^4$',
+        },
+        {
+          question: 'Simplify $15a^4 \\div 5a$.',
+          steps: ['Coefficients: $15 \\div 5 = 3$; Indices: $a^{4-1} = a^3$'],
+          final_answer: '$3a^3$',
+        },
+        {
+          question: 'Simplify $x^5 \\div x^5$.',
+          steps: ['$x^{5-5} = x^0$. By convention $x^0 = 1$ (when $x \\neq 0$).'],
+          final_answer: '$1$',
+        },
+        {
+          question: 'Simplify $8m^7 \\div 2m^3$.',
+          steps: ['$8 \\div 2 = 4$; $m^{7-3} = m^4$'],
+          final_answer: '$4m^4$',
+        },
+      ],
+    },
+    {
+      title: '5. Common Factors and Multiples (Revision)',
+      content:
+        '**H.C.F. (Highest Common Factor):** The largest number that divides exactly into two or more numbers.\n\n**L.C.M. (Lowest Common Multiple):** The smallest number that is a multiple of two or more numbers.\n\n**Method:** Use prime factorisation, then take the product of common primes (lowest power) for HCF, and all primes (highest power) for LCM.',
+      worked_examples: [
+        {
+          question: 'Find the HCF of 12 and 18.',
+          steps: ['$12 = 2^2 \\times 3$; $18 = 2 \\times 3^2$. Common: $2 \\times 3 = 6$'],
+          final_answer: 'HCF $= 6$',
+        },
+        {
+          question: 'Find the LCM of 6 and 8.',
+          steps: ['$6 = 2 \\times 3$; $8 = 2^3$. LCM $= 2^3 \\times 3 = 24$'],
+          final_answer: 'LCM $= 24$',
+        },
+        {
+          question: 'Find the HCF of 24, 36 and 60.',
+          steps: ['$24 = 2^3 \\times 3$; $36 = 2^2 \\times 3^2$; $60 = 2^2 \\times 3 \\times 5$. Common: $2^2 \\times 3 = 12$'],
+          final_answer: 'HCF $= 12$',
+        },
+      ],
+    },
+    {
+      title: '6. Algebraic H.C.F. (Highest Common Factor)',
+      content:
+        'The **algebraic HCF** of two or more terms is the product of:\n\n1. The **numerical HCF** of the coefficients.\n2. Each **common letter** with the **lowest** index in which it appears.\n\n**Example:** HCF of $6x^2$ and $18x$:\n- Numerical: HCF of 6 and 18 $= 6$.\n- Common letter: $x$ (lowest index is 1 in $18x$).\n- Algebraic HCF $= 6x$.\n\n**Factorisation:** $6x^2 + 18x = 6x(x + 3)$',
+      worked_examples: [
+        {
+          question: 'Find the HCF of $8a$ and $12a^2$.',
+          steps: ['Numerical HCF of 8 and 12 $= 4$; Common $a$ with lowest index 1'],
+          final_answer: 'HCF $= 4a$',
+        },
+        {
+          question: 'Factorise $5x + 15$ using the HCF.',
+          steps: ['HCF of 5 and 15 is 5. $5x + 15 = 5(x) + 5(3)$'],
+          final_answer: '$5(x + 3)$',
+        },
+        {
+          question: 'Factorise $6m^2 + 12m$.',
+          steps: ['HCF: 6 and $m$. $6m^2 + 12m = 6m(m) + 6m(2)$'],
+          final_answer: '$6m(m + 2)$',
+        },
+        {
+          question: 'Find the HCF of $4x^2 y$ and $8xy^2$.',
+          steps: ['Numerical: 4; $x$: lowest index 1; $y$: lowest index 1'],
+          final_answer: 'HCF $= 4xy$',
+        },
+        {
+          question: 'Factorise $10n - 25$.',
+          steps: ['HCF of 10 and 25 is 5'],
+          final_answer: '$5(2n - 5)$',
+        },
+      ],
+    },
+    {
+      title: '7. Algebraic L.C.M. (Lowest Common Multiple)',
+      content:
+        'The **algebraic LCM** of two or more expressions is used when adding or subtracting algebraic fractions. For Form 1, we find the LCM of **simple** algebraic terms.\n\n**Rules:**\n\n1. LCM of coefficients = numerical LCM.\n2. Each letter appears with the **highest** index in which it appears.\n\n**Example:** LCM of $4x$ and $6x^2$: numerical LCM of 4 and 6 $= 12$; $x$ highest index 2. LCM $= 12x^2$.',
+      worked_examples: [
+        {
+          question: 'Find the LCM of $3a$ and $5a$.',
+          steps: ['Numerical LCM of 3 and 5 $= 15$; $a$ appears to power 1 in both'],
+          final_answer: 'LCM $= 15a$',
+        },
+        {
+          question: 'Find the LCM of $2x^2$ and $6x$.',
+          steps: ['Numerical LCM of 2 and 6 $= 6$; $x$ highest index is 2'],
+          final_answer: 'LCM $= 6x^2$',
+        },
+        {
+          question: 'Find the LCM of $4m$ and $10m^2$.',
+          steps: ['LCM of 4 and 10 $= 20$; $m^2$'],
+          final_answer: 'LCM $= 20m^2$',
+        },
+      ],
+    },
+    {
+      title: '8. Mixed Revision Exercise',
+      content:
+        '**Index form:** 1. Write $k \\times k \\times k \\times k$ in index form. 2. Write $2 \\times a \\times b \\times a \\times b \\times b$ in index form. 3. Expand $n^3$. 4. Simplify $x^4 \\times x^2$. 5. Simplify $y^8 \\div y^3$.\n\n**HCF/LCM:** 6. HCF of $9x$ and $15x^2$. 7. Factorise $12p + 18$. 8. Factorise $7a^2 - 14a$. 9. LCM of $5n$ and $10n^2$. 10. HCF of $20$ and $35$.\n\n**Combined:** 11. Simplify $6m^5 \\div 2m^2$. 12. Write $p \\times p \\times q \\times q \\times q$ in index form. 13. Factorise $8k - 24$. 14. Simplify $a^3 \\times a^4 \\times a$. 15. LCM of $3x$ and $9x^3$.',
+    },
+    {
+      title: '9. Exam-Style Structured Test',
+      content:
+        '**Section A:** 1. Write $t \\times t \\times t \\times t \\times t$ in index form. 2. Simplify $b^6 \\div b^2$. 3. Factorise $4x + 20$. 4. Find HCF of $6y$ and $9y^2$. 5. Simplify $2^3 \\times 2^2$.\n\n**Section B:** 6. Write $3 \\times m \\times m \\times n \\times n$ in index form. 7. Factorise $15a^2 - 25a$ fully. 8. Simplify $x^2 \\times x^3 \\times x^4$. 9. Find the LCM of $4p$ and $6p^2$. 10. Given $12k + 18$, (a) find the HCF, (b) factorise fully.',
+    },
+    {
+      title: '10. Full Memo and Worked Solutions',
+      content:
+        '**Revision:** 1. $k^4$. 2. $2a^2 b^3$. 3. $n \\times n \\times n$. 4. $x^6$. 5. $y^5$. 6. HCF $= 3x$. 7. $6(2p + 3)$. 8. $7a(a - 2)$. 9. LCM $= 10n^2$. 10. HCF $= 5$. 11. $3m^3$. 12. $p^2 q^3$. 13. $8(k - 3)$. 14. $a^8$. 15. LCM $= 9x^3$.\n\n**Exam Test:** 1. $t^5$. 2. $b^4$. 3. $4(x + 5)$. 4. HCF $= 3y$. 5. $2^5 = 32$. 6. $3m^2 n^2$. 7. $5a(3a - 5)$. 8. $x^9$. 9. LCM $= 12p^2$. 10. (a) HCF $= 6$; (b) $6(2k + 3)$.',
+    },
+  ],
+  key_points: [
+    'Index form: $x^n$ means $x$ multiplied by itself $n$ times; base $x$, index $n$.',
+    'Multiplication (same base): $x^a \\times x^b = x^{a+b}$. Division: $x^a \\div x^b = x^{a-b}$.',
+    'Algebraic HCF: numerical HCF $\\times$ each common letter with lowest index.',
+    'Algebraic LCM: numerical LCM $\\times$ each letter with highest index.',
+    '$x^0 = 1$ when $x \\neq 0$; $x^1 = x$.',
+  ],
+  exam_tips: [
+    'When writing products in index form, count each base separately.',
+    'For algebraic HCF, take the **lowest** power of each common letter.',
+    'For algebraic LCM, take the **highest** power of each letter.',
+    'Factorisation: HCF outside bracket; divide each term by HCF to get terms inside.',
+  ],
+  visual_descriptions: [
+    '$x^3$: base $x$, index 3; three $x$ factors multiplied together.',
+    'HCF: "common and lowest"; LCM: "all and highest."',
+    'Factorisation: $6x + 12 = 6(x + 2)$ — HCF 6 outside, remainder inside.',
+  ],
+};
+
+const linesAndAnglesForm1Notes: MathTopicNotes = {
+  topic: 'Lines and Angles',
+  subject: 'Mathematics',
+  grade_level: 'Form 1',
+  summary:
+    'Comprehensive Form 1 Mathematics notes on Lines and Angles for ZIMSEC Syllabus B (2024–2030). Covers line types (line, ray, segment, parallel, perpendicular), angle types (acute, right, obtuse, reflex, straight), angles on a straight line ($180°$), angles at a point ($360°$), vertically opposite angles (equal), and angles formed by parallel lines (corresponding, alternate, co-interior).',
+  sections: [
+    {
+      title: '1. Line Types',
+      content:
+        '**Line:** A straight path that extends infinitely in both directions. Notation: $\\overleftrightarrow{AB}$ or a single letter.\n\n**Ray:** A line that starts at a point and extends infinitely in one direction. Notation: $\\overrightarrow{AB}$ (starts at $A$, passes through $B$).\n\n**Line segment:** A part of a line with two definite endpoints. Notation: $\\overline{AB}$ or $AB$.\n\n**Parallel lines:** Lines in the same plane that never meet. Symbol: $\\parallel$ (e.g. $AB \\parallel CD$).\n\n**Perpendicular lines:** Lines that meet at $90°$. Symbol: $\\perp$ (e.g. $AB \\perp CD$).',
+      worked_examples: [
+        {
+          question: 'State the difference between a ray and a line segment.',
+          steps: ['Ray: one endpoint, extends infinitely in one direction. Segment: two endpoints, finite length.'],
+          final_answer: 'Ray has one end; segment has two ends and fixed length.',
+        },
+        {
+          question: 'If two lines are parallel, what is the angle between them?',
+          steps: ['Parallel lines never meet; we say the angle between them is $0°$ (or they do not intersect).'],
+          final_answer: 'They do not intersect; angle between parallel lines is not defined in the usual sense.',
+        },
+      ],
+    },
+    {
+      title: '2. Angle Types',
+      content:
+        '**Acute angle:** Less than $90°$ (e.g. $45°$, $60°$).\n\n**Right angle:** Exactly $90°$. Marked with a small square.\n\n**Obtuse angle:** Between $90°$ and $180°$ (e.g. $120°$, $150°$).\n\n**Straight angle:** Exactly $180°$ — a straight line.\n\n**Reflex angle:** Between $180°$ and $360°$ (e.g. $200°$, $270°$).\n\n**Revolution:** A full turn $= 360°$.',
+      worked_examples: [
+        {
+          question: 'Classify: (a) $35°$ (b) $90°$ (c) $175°$ (d) $200°$.',
+          steps: [
+            '(a) $35° < 90°$ $\\Rightarrow$ acute',
+            '(b) $90°$ $\\Rightarrow$ right',
+            '(c) $90° < 175° < 180°$ $\\Rightarrow$ obtuse',
+            '(d) $180° < 200° < 360°$ $\\Rightarrow$ reflex',
+          ],
+          final_answer: '(a) Acute (b) Right (c) Obtuse (d) Reflex',
+        },
+        {
+          question: 'What type of angle is $180°$?',
+          steps: ['$180°$ forms a straight line'],
+          final_answer: 'Straight angle',
+        },
+      ],
+    },
+    {
+      title: '3. Angles on a Straight Line',
+      content:
+        'When angles lie on a **straight line**, they add up to $180°$.\n\n$$\\angle AOB + \\angle BOC + \\angle COA = 180°$$\n\n**Example:** If two angles on a straight line are $x$ and $3x$, then $x + 3x = 180°$, so $4x = 180°$, $x = 45°$. The angles are $45°$ and $135°$.',
+      worked_examples: [
+        {
+          question: 'Two angles on a straight line are $70°$ and $110°$. Verify they sum to $180°$.',
+          steps: ['$70° + 110° = 180°$'],
+          final_answer: 'Yes: $70 + 110 = 180$ $\\checkmark$',
+        },
+        {
+          question: 'Two angles on a straight line are in the ratio $2 : 3$. Find each angle.',
+          steps: [
+            'Let angles be $2x$ and $3x$. $2x + 3x = 180°$',
+            '$5x = 180°$, $x = 36°$',
+            'Angles: $2(36) = 72°$ and $3(36) = 108°$',
+          ],
+          final_answer: '$72°$ and $108°$',
+        },
+        {
+          question: 'On a straight line, one angle is $5x$ and the other is $x$. Find $x$.',
+          steps: ['$5x + x = 180°$ $\\Rightarrow$ $6x = 180°$ $\\Rightarrow$ $x = 30°$'],
+          final_answer: '$x = 30°$',
+        },
+      ],
+    },
+    {
+      title: '4. Angles at a Point',
+      content:
+        'When angles meet at a single point, they add up to $360°$ (a full revolution).\n\n$$\\angle AOB + \\angle BOC + \\angle COD + \\angle DOA = 360°$$\n\n**Example:** If three angles at a point are $80°$, $120°$ and $x$, then $80 + 120 + x = 360$, so $x = 160°$.',
+      worked_examples: [
+        {
+          question: 'Four angles at a point are $90°$, $90°$, $100°$ and $80°$. Verify they sum to $360°$.',
+          steps: ['$90 + 90 + 100 + 80 = 360°$'],
+          final_answer: 'Yes: $360°$ $\\checkmark$',
+        },
+        {
+          question: 'Three angles at a point are $120°$, $100°$ and $x$. Find $x$.',
+          steps: ['$120 + 100 + x = 360$ $\\Rightarrow$ $x = 360 - 220 = 140°$'],
+          final_answer: '$x = 140°$',
+        },
+        {
+          question: 'Five equal angles meet at a point. Find each angle.',
+          steps: ['$5x = 360°$ $\\Rightarrow$ $x = 72°$'],
+          final_answer: 'Each angle $= 72°$',
+        },
+      ],
+    },
+    {
+      title: '5. Vertically Opposite Angles',
+      content:
+        'When two straight lines intersect, the angles opposite each other are called **vertically opposite angles**. They are **equal**.\n\n**In the diagram:** Lines $AB$ and $CD$ intersect at $O$.\n- Angles $AOC$ and $BOD$ are vertically opposite $\\Rightarrow$ equal.\n- Angles $AOD$ and $BOC$ are vertically opposite $\\Rightarrow$ equal.',
+      worked_examples: [
+        {
+          question: 'Two lines intersect. One pair of vertically opposite angles are each $65°$. Find the other pair.',
+          steps: ['Angles on a straight line with $65°$ are $180° - 65° = 115°$. The other pair are each $115°$.'],
+          final_answer: 'Each of the other pair $= 115°$',
+        },
+        {
+          question: 'Two lines intersect. One angle is $3x$, the vertically opposite is $x + 40$. Find $x$.',
+          steps: ['Vertically opposite $\\Rightarrow$ $3x = x + 40$ $\\Rightarrow$ $2x = 40$ $\\Rightarrow$ $x = 20$'],
+          final_answer: '$x = 20$',
+        },
+        {
+          question: 'If one angle at an intersection is $50°$, find all four angles.',
+          steps: [
+            'Vertically opposite to $50°$ is $50°$',
+            'Adjacent angles: $180° - 50° = 130°$ each',
+          ],
+          final_answer: 'Angles: $50°$, $50°$, $130°$, $130°$',
+        },
+      ],
+    },
+    {
+      title: '6. Angles with Parallel Lines',
+      content:
+        'When a **transversal** (a line crossing two or more other lines) cuts a pair of **parallel lines**, special angle relationships apply.\n\n**Corresponding angles:** In the same relative position (e.g. top-left and top-left). They are **equal** when the lines are parallel.\n\n**Alternate angles:** On opposite sides of the transversal, between the parallel lines. They are **equal** when the lines are parallel.\n\n**Co-interior angles:** On the same side of the transversal, between the parallel lines. They are **supplementary** (add to $180°$).',
+      worked_examples: [
+        {
+          question: 'In the diagram, $AB \\parallel CD$. Corresponding angle to $70°$ is $x$. Find $x$.',
+          steps: ['Corresponding angles are equal when lines are parallel'],
+          final_answer: '$x = 70°$',
+        },
+        {
+          question: 'Alternate angle to $55°$ is $y$. $AB \\parallel CD$. Find $y$.',
+          steps: ['Alternate angles are equal'],
+          final_answer: '$y = 55°$',
+        },
+        {
+          question: 'Co-interior angles are $2x$ and $3x$. Find $x$.',
+          steps: ['Co-interior $\\Rightarrow$ $2x + 3x = 180°$ $\\Rightarrow$ $5x = 180°$ $\\Rightarrow$ $x = 36°$'],
+          final_answer: '$x = 36°$',
+        },
+      ],
+    },
+    {
+      title: '7. Combined Angle Calculations',
+      content:
+        'Many ZIMSEC problems combine several angle facts. Work step by step, identifying straight lines, points, vertically opposite pairs, and parallel-line relationships.',
+      worked_examples: [
+        {
+          question: 'In a diagram, $AB \\parallel CD$. Angle at $A$ is $65°$. Find the angle at $C$ if they are corresponding.',
+          steps: ['Corresponding angles $\\Rightarrow$ equal'],
+          final_answer: 'Angle at $C = 65°$',
+        },
+        {
+          question: 'Two straight lines intersect. One angle is $2a$, another is $a + 30$. Find $a$ if these are vertically opposite.',
+          steps: ['$2a = a + 30$ $\\Rightarrow$ $a = 30$'],
+          final_answer: '$a = 30$',
+        },
+        {
+          question: 'Three angles on a straight line are $x$, $2x$ and $3x$. Find each.',
+          steps: ['$x + 2x + 3x = 180°$ $\\Rightarrow$ $6x = 180°$ $\\Rightarrow$ $x = 30°$. Angles: $30°$, $60°$, $90°$.'],
+          final_answer: '$30°$, $60°$, $90°$',
+        },
+      ],
+    },
+    {
+      title: '8. Mixed Revision Exercise',
+      content:
+        '1. Classify $85°$. 2. Angles on a straight line: $45°$ and $x$. Find $x$. 3. Angles at a point: $90°$, $90°$, $80°$, $y$. Find $y$. 4. Vertically opposite angles: one is $110°$. Find the adjacent angle. 5. Two lines intersect; one angle is $4x$, the opposite is $x + 60$. Find $x$. 6. Co-interior angles $70°$ and $p$. Find $p$. 7. Three equal angles at a point. Find each. 8. Straight line: angles $2 : 3 : 4$. Find each. 9. Corresponding angle to $55°$ when lines parallel? 10. Alternate angle to $72°$?',
+    },
+    {
+      title: '9. Exam-Style Structured Test',
+      content:
+        '**Section A:** 1. Classify a $95°$ angle. 2. Two angles on a straight line are $x$ and $2x$. Find $x$. 3. Vertically opposite angles are equal. True or false? 4. Co-interior angles sum to ___. 5. How many degrees in a revolution?\n\n**Section B:** 6. Four angles at a point are $85°$, $95°$, $100°$ and $q$. Find $q$. 7. $AB \\parallel CD$. Corresponding angle to $48°$ is $r$. Find $r$. 8. Two lines intersect. One pair of vertically opposite angles are each $75°$. Find the other two angles. 9. Straight line: $3a$ and $5a$. Find $a$. 10. Alternate angles: $x + 20$ and $2x - 10$. Lines parallel. Find $x$.',
+    },
+    {
+      title: '10. Full Memo and Worked Solutions',
+      content:
+        '**Revision:** 1. Acute. 2. $x = 135°$. 3. $y = 100°$. 4. $180 - 110 = 70°$. 5. $4x = x + 60$ $\\Rightarrow$ $x = 20$. 6. $p = 110°$. 7. $360 \\div 3 = 120°$ each. 8. $2x + 3x + 4x = 180$ $\\Rightarrow$ $x = 20°$; angles $40°$, $60°$, $80°$. 9. $55°$. 10. $72°$.\n\n**Exam Test:** 1. Obtuse. 2. $x + 2x = 180$ $\\Rightarrow$ $x = 60°$. 3. True. 4. $180°$. 5. $360°$. 6. $q = 80°$. 7. $r = 48°$. 8. $180 - 75 = 105°$ each. 9. $8a = 180$ $\\Rightarrow$ $a = 22{,}5°$. 10. $x + 20 = 2x - 10$ $\\Rightarrow$ $x = 30$.',
+    },
+  ],
+  key_points: [
+    'Straight line: angles sum to $180°$; at a point: sum to $360°$.',
+    'Vertically opposite angles are equal.',
+    'Parallel lines + transversal: corresponding = equal; alternate = equal; co-interior = supplementary ($180°$).',
+    'Angle types: acute $< 90°$; right $= 90°$; obtuse $90°$–$180°$; reflex $180°$–$360°$; straight $= 180°$.',
+    'Line: infinite both ways; ray: one endpoint; segment: two endpoints.',
+  ],
+  exam_tips: [
+    'Always state which angle fact you are using (e.g. "angles on a straight line").',
+    'Vertically opposite: only when two lines cross; look for the "X" shape.',
+    'For parallel lines, first mark which lines are parallel; then identify F, Z or C patterns.',
+  ],
+  visual_descriptions: [
+    'Straight line: two rays forming $180°$; vertically opposite: X-shape with equal opposite angles.',
+    'Parallel lines cut by transversal: F (corresponding), Z (alternate), C (co-interior).',
+    'Acute $<$ right $<$ obtuse $<$ straight $<$ reflex $<$ revolution.',
+  ],
+};
+
 const form1Notes: Record<string, MathTopicNotes> = {
   ...Object.fromEntries(
     Object.entries(form1Objectives)
-      .filter(([k]) => k !== 'Number Concepts and Operations' && k !== 'Approximation and Estimation' && k !== 'Ratios' && k !== 'Large and Small Numbers' && k !== 'Number Bases' && k !== 'Sets and Set Notation' && k !== 'Types of Sets' && k !== 'Scales' && k !== 'Consumer Arithmetic' && k !== 'Measures' && k !== 'Mensuration' && k !== 'Travel Graphs' && k !== 'Symbolic Expression' && k !== 'Algebraic Manipulation' && k !== 'Translation' && k !== 'Data Representation' && k !== 'Symmetry' && k !== 'Circles')
+      .filter(([k]) => k !== 'Number Concepts and Operations' && k !== 'Approximation and Estimation' && k !== 'Ratios' && k !== 'Large and Small Numbers' && k !== 'Number Bases' && k !== 'Sets and Set Notation' && k !== 'Types of Sets' && k !== 'Scales' && k !== 'Consumer Arithmetic' && k !== 'Measures' && k !== 'Mensuration' && k !== 'Functional Graphs' && k !== 'Travel Graphs' && k !== 'Symbolic Expression' && k !== 'Algebraic Manipulation' && k !== 'Equations' && k !== 'Algebraic Expressions in Index Form' && k !== 'Lines and Angles' && k !== 'Translation' && k !== 'Data Representation' && k !== 'Symmetry' && k !== 'Circles' && k !== 'Polygons' && k !== 'Inequalities')
       .map(([topic, objectives]) => [topic, buildFormNote(topic, objectives, 'Form 1')])
   ),
   'Number Concepts and Operations': numberConceptsForm1Notes,
@@ -2399,13 +3409,19 @@ const form1Notes: Record<string, MathTopicNotes> = {
   Measures: measuresForm1Notes,
   Mensuration: mensurationForm1Notes,
   Scales: scalesForm1Notes,
+  'Functional Graphs': functionalGraphsForm1Notes,
   'Travel Graphs': travelGraphsForm1Notes,
   'Symbolic Expression': symbolicExpressionsForm1Notes,
   'Algebraic Manipulation': algebraicManipulationForm1Notes,
+  Equations: equationsForm1Notes,
+  'Algebraic Expressions in Index Form': algebraicExpressionsIndexFormForm1Notes,
+  'Lines and Angles': linesAndAnglesForm1Notes,
   Translation: translationForm1Notes,
   'Data Representation': dataRepresentationForm1Notes,
   Symmetry: symmetryForm1Notes,
   Circles: circlesForm1Notes,
+  Polygons: polygonsForm1Notes,
+  Inequalities: inequalitiesForm1Notes,
 };
 
 const form2Objectives: Record<string, string[]> = {

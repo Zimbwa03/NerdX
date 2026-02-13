@@ -7,8 +7,10 @@ import {
   MessageSquare, GraduationCap, Calculator, Atom,
   Microscope, Code, ShoppingCart, MapPin, Clock, Landmark,
   Briefcase, Star, ChevronRight, Menu, X, Twitter, Instagram, Youtube,
-  UserPlus, MousePointerClick, Rocket, Camera
+  UserPlus, MousePointerClick, Rocket, Camera,
+  Search, CalendarCheck, ShieldCheck, DollarSign, User
 } from 'lucide-react';
+import { FEATURED_TEACHERS } from '../data/marketplaceConstants';
 
 const studentImages = [
   { src: '/images/students-learning.png', alt: 'Zimbabwean students studying together with NerdX', caption: 'Students collaborating with NerdX' },
@@ -69,7 +71,15 @@ const testimonials = [
 const steps = [
   { icon: UserPlus, title: 'Sign Up Free', description: 'Create your account in seconds. No credit card required.' },
   { icon: MousePointerClick, title: 'Choose Your Subjects', description: 'Pick from 10+ ZIMSEC O-Level and A-Level subjects.' },
-  { icon: Rocket, title: 'Start Learning', description: 'Get AI tutoring, practice exams, and watch your grades soar.' },
+  { icon: Search, title: 'Find a Teacher', description: 'Browse verified teachers or use AI tutoring — your choice.' },
+  { icon: Rocket, title: 'Start Learning', description: 'Get lessons, practice exams, and watch your grades soar.' },
+];
+
+const teacherValueProps = [
+  { icon: CalendarCheck, title: 'Set Your Schedule', description: 'Teach on your own terms. Choose the days and hours that work for you.' },
+  { icon: Users, title: 'Reach 5,000+ Students', description: 'Connect with students from 50+ schools across Zimbabwe instantly.' },
+  { icon: ShieldCheck, title: 'Get Verified & Trusted', description: 'Our verification badge builds student confidence in your expertise.' },
+  { icon: DollarSign, title: 'Grow Your Income', description: 'Earn by sharing your knowledge. More students, more opportunities.' },
 ];
 
 export function LandingPage() {
@@ -119,7 +129,9 @@ export function LandingPage() {
           <nav className="lp-nav">
             <button type="button" className="lp-nav__link" onClick={() => scrollTo('features')}>Features</button>
             <button type="button" className="lp-nav__link" onClick={() => scrollTo('subjects')}>Subjects</button>
+            <button type="button" className="lp-nav__link" onClick={() => scrollTo('find-teachers')}>Find a Teacher</button>
             <button type="button" className="lp-nav__link" onClick={() => scrollTo('testimonials')}>Testimonials</button>
+            <button type="button" className="lp-nav__link lp-nav__link--highlight" onClick={() => scrollTo('for-teachers')}>Teach on NerdX</button>
           </nav>
           <div className="lp-header__actions">
             <button type="button" className="lp-btn lp-btn--ghost" onClick={() => navigate('/login')}>Sign In</button>
@@ -133,7 +145,9 @@ export function LandingPage() {
           <div className="lp-mobile-menu">
             <button type="button" onClick={() => scrollTo('features')}>Features</button>
             <button type="button" onClick={() => scrollTo('subjects')}>Subjects</button>
+            <button type="button" onClick={() => scrollTo('find-teachers')}>Find a Teacher</button>
             <button type="button" onClick={() => scrollTo('testimonials')}>Testimonials</button>
+            <button type="button" onClick={() => scrollTo('for-teachers')}>Teach on NerdX</button>
             <button type="button" onClick={() => navigate('/login')}>Sign In</button>
             <button type="button" className="lp-btn lp-btn--primary lp-btn--full" onClick={() => navigate('/register')}>Get Started</button>
           </div>
@@ -294,6 +308,48 @@ export function LandingPage() {
         </div>
       </section>
 
+      <section id="find-teachers" className="lp-section">
+        <div className="lp-section__inner">
+          <div className="lp-section__header">
+            <span className="lp-badge"><GraduationCap size={14} /> Teacher Marketplace</span>
+            <h2 className="lp-section__title">Expert Teachers, Ready to <span className="gradient-text">Help You Excel</span></h2>
+            <p className="lp-section__subtitle">Connect with verified, experienced ZIMSEC & Cambridge teachers for personalized one-on-one lessons.</p>
+          </div>
+          <div className="lp-teachers-grid">
+            {FEATURED_TEACHERS.map((t) => (
+              <div key={t.id} className="lp-teacher-card">
+                <div className="lp-teacher-card__avatar">
+                  <User size={36} />
+                </div>
+                <div className="lp-teacher-card__body">
+                  <h3 className="lp-teacher-card__name">{t.full_name} {t.surname}</h3>
+                  <div className="lp-teacher-card__rating">
+                    <Star size={14} />
+                    <span>{t.rating}</span>
+                    <span className="lp-teacher-card__reviews">({t.reviews} reviews)</span>
+                  </div>
+                  <p className="lp-teacher-card__bio">{t.bio}</p>
+                  <div className="lp-teacher-card__tags">
+                    {t.subjects.map((s) => (
+                      <span key={s} className="lp-teacher-card__tag">{s}</span>
+                    ))}
+                    <span className="lp-teacher-card__tag lp-teacher-card__tag--level">{t.level}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="lp-teachers-actions">
+            <button type="button" className="lp-btn lp-btn--primary lp-btn--lg" onClick={() => navigate('/register')}>
+              Find a Teacher <Search size={18} />
+            </button>
+            <button type="button" className="lp-btn lp-btn--outline lp-btn--lg" onClick={() => scrollTo('for-teachers')}>
+              Become a Teacher <ArrowRight size={18} />
+            </button>
+          </div>
+        </div>
+      </section>
+
       <section className="lp-section">
         <div className="lp-section__inner">
           <div className="lp-section__header">
@@ -367,6 +423,32 @@ export function LandingPage() {
         </div>
       </section>
 
+      <section id="for-teachers" className="lp-section lp-section--teachers">
+        <div className="lp-section__inner">
+          <div className="lp-section__header">
+            <span className="lp-badge"><GraduationCap size={14} /> For Teachers</span>
+            <h2 className="lp-section__title">Share Your Knowledge, <span className="gradient-text">Earn on NerdX</span></h2>
+            <p className="lp-section__subtitle">Join Zimbabwe's fastest-growing learning platform as a verified teacher. Set your schedule, connect with students, and make an impact.</p>
+          </div>
+          <div className="lp-teacher-values">
+            {teacherValueProps.map((v) => (
+              <div key={v.title} className="lp-teacher-value">
+                <div className="lp-teacher-value__icon">
+                  <v.icon size={28} />
+                </div>
+                <h3 className="lp-teacher-value__title">{v.title}</h3>
+                <p className="lp-teacher-value__desc">{v.description}</p>
+              </div>
+            ))}
+          </div>
+          <div className="lp-teachers-actions">
+            <button type="button" className="lp-btn lp-btn--primary lp-btn--lg" onClick={() => navigate('/register?role=teacher')}>
+              Start Teaching on NerdX <ArrowRight size={18} />
+            </button>
+          </div>
+        </div>
+      </section>
+
       <section className="lp-final-cta">
         <div className="lp-final-cta__inner">
           <h2 className="lp-final-cta__title">Ready to Ace Your Exams?</h2>
@@ -404,6 +486,12 @@ export function LandingPage() {
               <button type="button" onClick={() => scrollTo('features')}>About</button>
               <button type="button" onClick={() => scrollTo('features')}>Contact</button>
               <button type="button" onClick={() => scrollTo('features')}>Careers</button>
+            </div>
+            <div className="lp-footer__col">
+              <h4>For Teachers</h4>
+              <button type="button" onClick={() => navigate('/register?role=teacher')}>Become a Teacher</button>
+              <button type="button" onClick={() => scrollTo('find-teachers')}>Teacher Marketplace</button>
+              <button type="button" onClick={() => scrollTo('for-teachers')}>Why Teach on NerdX</button>
             </div>
             <div className="lp-footer__col">
               <h4>Get Started</h4>

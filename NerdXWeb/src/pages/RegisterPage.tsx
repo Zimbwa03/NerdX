@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, Calendar, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { User, Mail, Phone, Calendar, Lock, Eye, EyeOff, ArrowRight, GraduationCap, BookOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/api/authApi';
 import { supabase } from '../services/supabase';
@@ -14,6 +14,10 @@ const formatDateOfBirth = (text: string) => {
 };
 
 export function RegisterPage() {
+  const [searchParams] = useSearchParams();
+  const [role, setRole] = useState<'student' | 'teacher'>(
+    searchParams.get('role') === 'teacher' ? 'teacher' : 'student'
+  );
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [email, setEmail] = useState('');
@@ -27,6 +31,10 @@ export function RegisterPage() {
   const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (searchParams.get('role') === 'teacher') setRole('teacher');
+  }, [searchParams]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +76,11 @@ export function RegisterPage() {
             ? { email: email.trim().toLowerCase(), password }
             : undefined;
           await login(response.user, response.token, undefined, supabaseCredentials);
-          navigate('/app', { replace: true });
+          if (role === 'teacher') {
+            navigate('/app/teacher-onboarding', { replace: true });
+          } else {
+            navigate('/app', { replace: true });
+          }
         } else {
           navigate('/verify-email', { replace: true });
         }
@@ -109,8 +121,8 @@ export function RegisterPage() {
             <img src="/logo.png" alt="NerdX" className="auth-logo__img" />
             <span className="auth-logo__text">NerdX</span>
           </Link>
-          <h1 className="auth-brand__title">Start Your Learning Journey</h1>
-          <p className="auth-brand__desc">Join thousands of students acing their ZIMSEC exams with AI-powered learning.</p>
+          <h1 className="auth-brand__title">{role === 'teacher' ? 'Start Teaching on NerdX' : 'Start Your Learning Journey'}</h1>
+          <p className="auth-brand__desc">{role === 'teacher' ? 'Join our marketplace of verified teachers. Share your knowledge with 5,000+ students across Zimbabwe.' : 'Join thousands of students acing their ZIMSEC exams with AI-powered learning.'}</p>
           <div className="auth-brand__stats">
             <div className="auth-brand__stat">
               <strong>5,000+</strong>
@@ -134,6 +146,25 @@ export function RegisterPage() {
           <div className="auth-form-header">
             <h2 className="auth-form__title">Create Account</h2>
             <p className="auth-form__subtitle">Fill in your details to get started</p>
+          </div>
+
+          <div className="auth-role-toggle">
+            <button
+              type="button"
+              className={`auth-role-toggle__btn${role === 'student' ? ' auth-role-toggle__btn--active' : ''}`}
+              onClick={() => setRole('student')}
+            >
+              <BookOpen size={16} />
+              I'm a Student
+            </button>
+            <button
+              type="button"
+              className={`auth-role-toggle__btn${role === 'teacher' ? ' auth-role-toggle__btn--active' : ''}`}
+              onClick={() => setRole('teacher')}
+            >
+              <GraduationCap size={16} />
+              I'm a Teacher
+            </button>
           </div>
 
           {error && <div className="auth-alert auth-alert--error">{error}</div>}
@@ -200,7 +231,7 @@ export function RegisterPage() {
             </div>
 
             <button type="submit" className="auth-submit" disabled={isLoading}>
-              {isLoading ? <span className="auth-spinner" /> : (<>Create Account <ArrowRight size={18} /></>)}
+              {isLoading ? <span className="auth-spinner" /> : (<>{role === 'teacher' ? 'Create Teacher Account' : 'Create Account'} <ArrowRight size={18} /></>)}
             </button>
           </form>
 

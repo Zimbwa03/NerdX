@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Bell, Sun, Moon } from 'lucide-react';
+import { Bell, Sun, Moon, Search } from 'lucide-react';
 import { getUnreadCount, subscribeToNotifications } from '../services/notifications';
 import { getSupabaseAuthUserId } from '../services/supabase';
 import { appUpdateApi, type AppUpdateInfo } from '../services/api/appUpdateApi';
@@ -84,6 +84,9 @@ export function AppLayout() {
             <span>NerdX</span>
           </Link>
           <div className="header-actions">
+            <Link to="/app/marketplace" className="icon-btn header-marketplace" aria-label="Find a Teacher" title="Find a Teacher">
+              <Search size={20} />
+            </Link>
             <button
               type="button"
               className="icon-btn theme-toggle"
