@@ -12,6 +12,7 @@ import {
   getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
 import { ArrowLeft, TrendingUp, Camera, MessageCircle, BookOpen, Calculator, FileText, Play, Atom } from 'lucide-react';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 import './Mathematics.css'; // Import the new premium styles
 
 const MATH_TOPICS_FALLBACK: Topic[] = [
@@ -366,6 +367,13 @@ export function MathematicsTopicsPage() {
           </div>
         </div>
       )}
+      <AILoadingOverlay
+        isVisible={generating}
+        title="Generating Question"
+        subtitle="Creating your practice question"
+        accentColor={SUBJECT.color}
+        variant="fullscreen"
+      />
     </div>
   );
 }

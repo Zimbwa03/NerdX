@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Loader2, Mic, Send, Square, Upload, Camera, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 import {
   historyApi,
   type HistoryEssayQuestion,
@@ -228,9 +229,13 @@ export function HistoryEssayPage() {
           <Link to={backTo} className="back-link"><ArrowLeft size={20} /> Back</Link>
           <h1 className="commerce-topics-title">History Study Exam</h1>
         </header>
-        <div className="commerce-loading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Loader2 size={24} className="animate-spin" /> Generating 3 questions...
-        </div>
+        <AILoadingOverlay
+          isVisible={true}
+          title="Generating Question"
+          subtitle="Creating a ZIMSEC-aligned question"
+          accentColor="#F59E0B"
+          variant="inline"
+        />
       </div>
     );
   }

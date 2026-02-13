@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ClipboardList, GraduationCap, MessageSquare, TrendingUp } from 'lucide-react';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 import { quizApi, type Topic } from '../../services/api/quizApi';
 import { useAuth } from '../../context/AuthContext';
 import { accountingTopics } from '../../data/accounting/topics';
@@ -250,6 +251,13 @@ export function AccountingTopicsPage() {
           </div>
         </div>
       )}
+      <AILoadingOverlay
+        isVisible={generating}
+        title="Generating Question"
+        subtitle="Creating your practice question"
+        accentColor={SUBJECT.color}
+        variant="fullscreen"
+      />
     </div>
   );
 }

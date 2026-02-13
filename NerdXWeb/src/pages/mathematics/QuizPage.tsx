@@ -11,6 +11,7 @@ import { calculateQuizCreditCost } from '../../utils/creditCalculator';
 import { formatQuestionParts } from '../../utils/formatQuestionText';
 import { MathRenderer } from '../../components/MathRenderer';
 import { ArrowLeft, Upload, Check, X } from 'lucide-react';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 
 function hasLatex(text: string): boolean {
   if (!text || typeof text !== 'string') return false;
@@ -213,10 +214,13 @@ export function QuizPage() {
   if (generating && !question) {
     return (
       <div className="quiz-page">
-        <div className="quiz-loading">
-          <p>Generating your question…</p>
-          <div className="quiz-loading-dots" />
-        </div>
+        <AILoadingOverlay
+          isVisible={true}
+          title="Generating Question"
+          subtitle="Crafting a mathematics problem"
+          accentColor={subject.color}
+          variant="inline"
+        />
       </div>
     );
   }

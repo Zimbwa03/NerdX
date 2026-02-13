@@ -11,6 +11,7 @@ import {
   getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
 import { ArrowLeft, BookOpen, MessageSquare, ClipboardList, TrendingUp, GraduationCap } from 'lucide-react';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 import { useAuth } from '../../context/AuthContext';
 
 // 11 topics from ZIMSEC O-Level Principles of Commerce syllabus
@@ -308,6 +309,13 @@ export function CommerceTopicsPage() {
           </div>
         </div>
       )}
+      <AILoadingOverlay
+        isVisible={generating}
+        title="Generating Question"
+        subtitle="Creating your practice question"
+        accentColor={SUBJECT.color}
+        variant="fullscreen"
+      />
     </div>
   );
 }

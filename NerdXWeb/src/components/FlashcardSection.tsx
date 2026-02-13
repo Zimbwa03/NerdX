@@ -9,6 +9,7 @@ import { flashcardApi, type Flashcard } from '../services/api/flashcardApi';
 import type { TopicNotes } from '../data/scienceNotes/types';
 import { useAuth } from '../context/AuthContext';
 import { MathRenderer } from './MathRenderer';
+import { AILoadingOverlay } from './AILoadingOverlay';
 import './FlashcardSection.css';
 
 const fixLatex = (text: string): string => {
@@ -572,15 +573,14 @@ export const FlashcardSection: React.FC<FlashcardSectionProps> = ({
                 </div>
 
                 {isGenerating ? (
-                    <div className="fc-generating">
-                        <div className="fc-gen-spinner">
-                            <Sparkles size={24} className="fc-gen-icon" style={{ color: accentColor }} />
-                        </div>
-                        <p className="fc-gen-text">Generating {cardCount} flashcards...</p>
-                        <div className="fc-gen-bar">
-                            <div className="fc-gen-fill" style={{ width: `${genProgress}%`, background: accentColor }} />
-                        </div>
-                    </div>
+                    <AILoadingOverlay
+                        isVisible={true}
+                        title="Generating Flashcards"
+                        subtitle={`Creating ${cardCount} study cards`}
+                        progress={genProgress}
+                        accentColor={accentColor}
+                        variant="card"
+                    />
                 ) : (
                     <button
                         className="fc-generate-btn"

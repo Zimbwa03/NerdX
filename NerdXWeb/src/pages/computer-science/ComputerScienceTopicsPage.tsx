@@ -7,6 +7,7 @@ import {
   getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
 import { ArrowLeft, BookOpen, MessageSquare, ClipboardList, Cpu } from 'lucide-react';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 import { useAuth } from '../../context/AuthContext';
 
 const CS_TOPICS_FALLBACK: Topic[] = [
@@ -304,6 +305,13 @@ export function ComputerScienceTopicsPage() {
           </div>
         </div>
       )}
+      <AILoadingOverlay
+        isVisible={generating}
+        title="Generating Question"
+        subtitle="Creating your practice question"
+        accentColor={SUBJECT.color}
+        variant="fullscreen"
+      />
     </div>
   );
 }

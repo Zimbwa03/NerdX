@@ -11,6 +11,7 @@ import {
     getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
 import { ArrowLeft, BookOpen, Microscope, FlaskConical, Play, Dna, Info, X, FileText } from 'lucide-react';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 import { biologyTopics } from '../../data/scienceNotes/biology';
 import '../sciences/ScienceUniverse.css'; // Shared premium styles
 
@@ -344,6 +345,13 @@ export const BiologyTopicsPage = () => {
                     </div>
                 </div>
             )}
+            <AILoadingOverlay
+                isVisible={generating}
+                title="Generating Question"
+                subtitle="Creating your practice question"
+                accentColor={SUBJECT.color}
+                variant="fullscreen"
+            />
         </div>
     );
 };

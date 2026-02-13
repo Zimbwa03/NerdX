@@ -1,0 +1,384 @@
+.ai-loading-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 14, 33, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: aiOverlayIn 0.4s ease;
+}
+
+@keyframes aiOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.ai-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-loading-inline {
+  padding: 48px 24px;
+  border-radius: 24px;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  animation: aiContainerIn 0.5s ease;
+}
+
+.ai-loading-card {
+  padding: 40px 20px;
+  animation: aiContainerIn 0.5s ease;
+}
+
+.ai-loading-fullscreen {
+  padding: 48px 32px;
+  max-width: 480px;
+  width: 100%;
+  animation: aiContainerIn 0.5s ease;
+}
+
+@keyframes aiContainerIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.ai-loading-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ai-particle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  animation: aiParticleFloat linear infinite;
+}
+
+@keyframes aiParticleFloat {
+  0% { opacity: 0; transform: translateY(0) scale(0); }
+  15% { opacity: 0.6; transform: translateY(-10px) scale(1); }
+  85% { opacity: 0.3; transform: translateY(-60px) scale(0.6); }
+  100% { opacity: 0; transform: translateY(-80px) scale(0); }
+}
+
+.ai-loading-orb-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-loading-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid;
+  border-style: dashed;
+}
+
+.ai-ring-1 {
+  width: 140px;
+  height: 140px;
+  animation: aiRingSpin 8s linear infinite;
+}
+
+.ai-ring-2 {
+  width: 110px;
+  height: 110px;
+  animation: aiRingSpin 6s linear infinite reverse;
+}
+
+.ai-ring-3 {
+  width: 80px;
+  height: 80px;
+  animation: aiRingSpin 4s linear infinite;
+}
+
+.ai-ring-dot {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+@keyframes aiRingSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.ai-loading-core {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: aiCorePulse 2.5s ease-in-out infinite;
+}
+
+@keyframes aiCorePulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+.ai-loading-brain-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.ai-brain-icon {
+  color: #fff;
+  animation: aiBrainPulse 2s ease-in-out infinite;
+}
+
+@keyframes aiBrainPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.ai-loading-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 6px;
+  letter-spacing: -0.3px;
+}
+
+.ai-loading-subtitle {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0 0 28px;
+  min-width: 200px;
+}
+
+.ai-loading-stages {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.ai-stage {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.4s ease;
+}
+
+.ai-stage-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid;
+  transition: all 0.4s ease;
+  flex-shrink: 0;
+}
+
+.ai-stage.active .ai-stage-icon {
+  animation: aiStageGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes aiStageGlow {
+  0%, 100% { box-shadow: 0 0 0 0 var(--ai-accent-20); }
+  50% { box-shadow: 0 0 12px 4px var(--ai-accent-20); }
+}
+
+.ai-stage-label {
+  font-size: 12px;
+  font-weight: 500;
+  transition: color 0.4s ease;
+  white-space: nowrap;
+}
+
+.ai-stage-connector {
+  width: 20px;
+  height: 2px;
+  border-radius: 1px;
+  margin: 0 6px;
+  transition: background 0.4s ease;
+  flex-shrink: 0;
+}
+
+.ai-loading-progress-wrap {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.ai-loading-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: visible;
+  position: relative;
+}
+
+.ai-loading-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+  position: relative;
+}
+
+.ai-loading-progress-fill::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: inherit;
+  box-shadow: 0 0 12px 2px var(--ai-accent-40);
+  animation: aiProgressDot 1.5s ease-in-out infinite;
+}
+
+@keyframes aiProgressDot {
+  0%, 100% { box-shadow: 0 0 8px 1px var(--ai-accent-20); }
+  50% { box-shadow: 0 0 16px 4px var(--ai-accent-40); }
+}
+
+.ai-loading-progress-glow {
+  display: none;
+}
+
+.ai-loading-progress-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  min-width: 36px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ai-loading-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 320px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  margin-bottom: 24px;
+  animation: aiTipFade 0.5s ease;
+}
+
+.ai-loading-tip span {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
+  text-align: left;
+}
+
+@keyframes aiTipFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ai-loading-wave {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+}
+
+.ai-wave-bar {
+  width: 3px;
+  height: 8px;
+  border-radius: 2px;
+  opacity: 0.6;
+  animation: aiWaveBounce 1.2s ease-in-out infinite;
+}
+
+@keyframes aiWaveBounce {
+  0%, 100% { height: 8px; opacity: 0.4; }
+  50% { height: 22px; opacity: 0.9; }
+}
+
+@media (max-width: 600px) {
+  .ai-loading-inline {
+    padding: 32px 16px;
+    border-radius: 20px;
+  }
+
+  .ai-loading-orb-wrap {
+    width: 110px;
+    height: 110px;
+    margin-bottom: 20px;
+  }
+
+  .ai-ring-1 { width: 110px; height: 110px; }
+  .ai-ring-2 { width: 85px; height: 85px; }
+  .ai-ring-3 { width: 60px; height: 60px; }
+
+  .ai-loading-core {
+    width: 75px;
+    height: 75px;
+  }
+
+  .ai-loading-brain-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .ai-brain-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .ai-loading-title {
+    font-size: 18px;
+  }
+
+  .ai-loading-stages {
+    gap: 0;
+  }
+
+  .ai-stage-label {
+    font-size: 10px;
+  }
+
+  .ai-stage-connector {
+    width: 12px;
+    margin: 0 3px;
+  }
+
+  .ai-loading-tip {
+    max-width: 280px;
+  }
+}

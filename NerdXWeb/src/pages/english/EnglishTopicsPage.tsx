@@ -11,6 +11,7 @@ import {
   getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
 import { ArrowLeft, BookOpen, PenLine, MessageSquare, ClipboardList, GraduationCap } from 'lucide-react';
+import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 import { useAuth } from '../../context/AuthContext';
 
 const ENGLISH_TOPICS_FALLBACK: Topic[] = [
@@ -293,6 +294,13 @@ export function EnglishTopicsPage() {
           </div>
         </div>
       )}
+      <AILoadingOverlay
+        isVisible={generating}
+        title="Generating Question"
+        subtitle="Creating your practice question"
+        accentColor="#667eea"
+        variant="fullscreen"
+      />
     </div>
   );
 }
