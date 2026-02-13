@@ -7,6 +7,7 @@ import {
   historyApi,
   type HistoryEssayQuestion,
   type HistoryMarkingResult,
+  type HistoryFormLevel,
 } from '../../services/api/historyApi';
 
 const SUBJECT_COLOR = '#5D4037';
@@ -15,6 +16,7 @@ type PartKey = 'a' | 'b' | 'c';
 type LocationState = {
   topic?: { id: string; name: string };
   subject?: { id: string; name: string; color: string };
+  formLevel?: HistoryFormLevel;
   backTo?: string;
   question?: HistoryEssayQuestion;
 };
@@ -39,6 +41,7 @@ export function HistoryEssayPage() {
   const { updateUser } = useAuth();
 
   const topic = state.topic ?? null;
+  const formLevel = state.formLevel ?? 'Form 1';
   const backTo = state.backTo ?? '/app/history';
 
   const [question, setQuestion] = useState<HistoryEssayQuestion | null>(state.question ?? null);
@@ -86,7 +89,7 @@ export function HistoryEssayPage() {
     setGenerating(true);
     setError(null);
     try {
-      const res = await historyApi.generateQuestion(topic);
+      const res = await historyApi.generateQuestion(topic, 'medium', formLevel);
       if (res.success && res.data) {
         setQuestion(res.data);
         resetAnswers();
@@ -129,7 +132,7 @@ export function HistoryEssayPage() {
         part_a: partA.trim(),
         part_b: partB.trim(),
         part_c: partC.trim(),
-      });
+      }, formLevel);
       if (res.success && res.data) {
         setResult(res.data);
         if (res.data.credits_remaining !== undefined) updateUser({ credits: res.data.credits_remaining });

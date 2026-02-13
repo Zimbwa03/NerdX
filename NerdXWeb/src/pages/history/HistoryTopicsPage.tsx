@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { quizApi, type Topic } from '../../services/api/quizApi';
+import { type Topic } from '../../services/api/quizApi';
 import {
   formatCreditCost,
   getMinimumCreditsForQuiz,
@@ -11,7 +11,6 @@ import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 import {
   historyFormLevels,
   getHistoryTopicsByForm,
-  historyTopicsForQuiz,
   type HistoryFormLevel,
 } from '../../data/historyNotes';
 import '../sciences/ScienceUniverse.css';
@@ -25,7 +24,6 @@ const SUBJECT = {
 export function HistoryTopicsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [topics, setTopics] = useState<Topic[]>([]);
   const [selectedForm, setSelectedForm] = useState<HistoryFormLevel>('Form 1');
 
   const [startQuizModalOpen, setStartQuizModalOpen] = useState(false);
@@ -33,23 +31,8 @@ export function HistoryTopicsPage() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const data = await quizApi.getTopics('history');
-        if (!cancelled && data?.length) setTopics(data);
-        else if (!cancelled) setTopics(historyTopicsForQuiz as Topic[]);
-      } catch {
-        if (!cancelled) setTopics(historyTopicsForQuiz as Topic[]);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
-  const formTopicIds = getHistoryTopicsByForm(selectedForm).map((t) => t.id);
-  const allTopics = topics.length ? topics : (historyTopicsForQuiz as Topic[]);
-  const displayTopics = allTopics.filter((t) => formTopicIds.includes(t.id));
+  const formTopics = getHistoryTopicsByForm(selectedForm);
+  const displayTopics = formTopics.map((t) => ({ id: t.id, name: t.name, subject: 'history' } as Topic));
 
   const openStartQuiz = (topic: Topic) => {
     setPendingTopic(topic);
@@ -74,9 +57,10 @@ export function HistoryTopicsPage() {
     }
 
     setGenerating(true);
+    setStartQuizModalOpen(false);
     setError(null);
 
-    try {
+    setTimeout(() => {
       navigate('/app/history/essay', {
         state: {
           topic: { id: pendingTopic.id, name: pendingTopic.name },
@@ -85,12 +69,8 @@ export function HistoryTopicsPage() {
           backTo: '/app/history',
         },
       });
-      setStartQuizModalOpen(false);
-    } catch (err: any) {
-      setError(err.message || 'Failed to start. Please try again.');
-    } finally {
       setGenerating(false);
-    }
+    }, 1200);
   };
 
   const notesTopics = getHistoryTopicsByForm(selectedForm).filter((t) => t.hasNotes);
@@ -177,7 +157,7 @@ export function HistoryTopicsPage() {
           </div>
 
           <p style={{ marginBottom: 20, opacity: 0.7 }}>
-            Select a topic to practice <strong>Paper 1 Essay</strong> questions (3-part ZIMSEC format).
+            Select a topic to practice <strong>Paper 1 Essay</strong> questions (3-part ZIMSEC format). Each topic generates standard ZIMSEC-aligned questions that are marked with detailed feedback.
           </p>
 
           {!hasEnoughCredits && (
@@ -291,8 +271,8 @@ export function HistoryTopicsPage() {
 
       <AILoadingOverlay
         isVisible={generating}
-        title="Preparing Essay"
-        subtitle="Setting up your practice session"
+        title="Generating Question"
+        subtitle={`Preparing a ${selectedForm} ZIMSEC essay question on ${pendingTopic?.name ?? 'this topic'}...`}
         accentColor={SUBJECT.color}
         variant="fullscreen"
       />
