@@ -82,6 +82,13 @@
         radial-gradient(circle at 85% 75%, rgba(141, 110, 99, 0.1) 0%, transparent 40%);
 }
 
+/* Mathematics Background */
+.math-bg {
+    background:
+        radial-gradient(circle at 10% 30%, rgba(41, 121, 255, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 85% 70%, rgba(68, 138, 255, 0.08) 0%, transparent 40%);
+}
+
 .science-grid-overlay {
     position: absolute;
     top: 0;
@@ -252,6 +259,11 @@
     border-color: rgba(141, 110, 99, 0.4);
 }
 
+.math .science-feature-card:hover {
+    box-shadow: 0 10px 40px rgba(41, 121, 255, 0.15);
+    border-color: rgba(41, 121, 255, 0.4);
+}
+
 .feature-icon-box {
     width: 56px;
     height: 56px;
@@ -345,6 +357,11 @@
 .hist .science-topic-card:hover {
     border-color: rgba(141, 110, 99, 0.3);
     box-shadow: 0 8px 30px rgba(93, 64, 55, 0.15);
+}
+
+.math .science-topic-card:hover {
+    border-color: rgba(41, 121, 255, 0.3);
+    box-shadow: 0 8px 30px rgba(41, 121, 255, 0.1);
 }
 
 .topic-icon-small {
