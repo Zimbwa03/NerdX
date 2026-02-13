@@ -2309,6 +2309,127 @@ export const oLevelMathNotes: Record<string, MathTopicNotes> = {
     },
 
     // ============================================
+    // TOPIC: DATA COLLECTION AND CLASSIFICATION (Form 1)
+    // ============================================
+    'Data Collection and Classification': {
+        topic: 'Data Collection and Classification',
+        subject: 'Mathematics',
+        grade_level: 'O-Level',
+        summary: "In the ZIMSEC Mathematics Syllabus B (2024–2030), Statistics is positioned as a critical tool for driving innovation, entrepreneurship, and industrialization. This Form 1 topic covers data definitions, types and classifications, methods of collection, tallying and frequency tables, pictograms and bar graphs, and interpreting results to draw conclusions.",
+        sections: [
+            {
+                title: '1. Introduction to Statistics',
+                content: "## ZIMSEC Syllabus Context\n\nIn the ZIMSEC Mathematics Syllabus B (2024–2030), Statistics is positioned as a critical tool for driving innovation, entrepreneurship, and industrialization. The study of Statistics is not merely about numbers; it is about empowering learners with critical thinking and problem-solving skills to address everyday life problems. By investigating and interpreting numerical relationships, learners develop the ability to communicate effectively and apply mathematical concepts in the spirit of Unhu/Ubuntu/Vumunhu.\n\n## Definitions\n\n**Data**: Raw facts, numbers, or symbols collected for analysis. In our heritage-based context, this involves numerical and spatial patterns found in the environment.\n\n**Statistics**: The mathematical science of collecting, classifying, tabulating, and interpreting data to draw meaningful inferences and facilitate decision-making.\n\n## The Strategic Importance of Data Collection\n\n1. **Decision Making**: Providing a factual basis for school, business, and national policy choices.\n2. **Problem Solving**: Identifying patterns to resolve issues in sectors like agriculture, engineering, or health.\n3. **Research**: Enabling learners to conduct mathematical research projects that lead to innovation and the production of goods and services.\n\n## Real-Life Data Examples (Zimbabwean School Context)\n\n| Example | Type of Data | Contextual Application |\n|--------|--------------|------------------------|\n| 1 | Number of learners per class | Classroom resource management |\n| 2 | Daily tuckshop sales (in ZiG) | Business enterprise and financial accounting |\n| 3 | Heights of Form 1 learners | Health and wellbeing monitoring |\n| 4 | Daily rainfall in the school garden | Agriculture and meteorology |\n| 5 | Types of SI units used in the workshop | Technical and vocational training |\n\n## Common Error\n\nA frequent mistake is confusing \"raw data\" with \"information.\" Raw data is the unorganized list of numbers (e.g., 5, 8, 2), whereas information is the result of processing that data (e.g., \"The average number of broken chairs is 5\").",
+                worked_examples: [
+                    { question: "A teacher records the attendance of learners in Form 1 East.", steps: ["This is a collection of raw data for monitoring school attendance."], final_answer: "Raw data for monitoring attendance" },
+                    { question: "An agriculture student measures the mass of a harvest of maize.", steps: ["This is numerical data used to determine crop yield."], final_answer: "Numerical data for crop yield" },
+                    { question: "The school bursar lists the various household bills to be paid this month.", steps: ["This is financial data used for school budgeting."], final_answer: "Financial data for budgeting" },
+                    { question: "A student notes the colors of the Zimbabwe flag during a heritage lesson.", steps: ["This is qualitative data used for cultural identification."], final_answer: "Qualitative data" },
+                    { question: "A science club member records the temperature of the local environment at midday.", steps: ["This is measured data used for environmental management."], final_answer: "Measured data for environmental management" },
+                    { question: "A learner counts the number of desks in the technical drawing room.", steps: ["This is discrete data used for inventory and resource allocation."], final_answer: "Discrete data for inventory" }
+                ]
+            },
+            {
+                title: '2. The Taxonomy of Data: Types and Classifications',
+                content: "## Why Classification Matters\n\nClassifying data is a prerequisite for accurate mathematical modeling. In the ZIMSEC framework, these distinctions determine how we represent data visually and how we calculate measures of central tendency.\n\n## Key Data Classifications\n\n- **Primary vs. Secondary Data**: Primary data is collected first-hand by the researcher (e.g., conducting an interview), while secondary data is obtained from existing sources (e.g., ZIMSEC reports or newspapers).\n- **Discrete vs. Continuous Data**: Discrete data can only take specific, isolated values (usually whole numbers through counting), while continuous data can take any value within a range (usually through measurement).\n- **Qualitative vs. Quantitative Data**: Qualitative data describes non-numerical qualities (e.g., types of polygons), while quantitative data deals with numerical quantities (e.g., currency or time).\n\n## Discrete vs. Continuous Differentiators\n\n| Discrete Data (Counted) | Continuous Data (Measured) |\n|-------------------------|---------------------------|\n| Number of learners in a class | Mass of a bag of fertilizer (kg) |\n| Number of sides in a quadrilateral | Time taken to run 400 m |\n| Number of elements in a set | Temperature of a classroom (°C) |\n\n## Common Error\n\nA major error is treating rounded continuous data as discrete. For example, \"age in years\" is often listed as 13 or 14, but age is a continuous measurement of time and should be classified as continuous.",
+                worked_examples: [
+                    { question: "Classify: The number of children in a household.", steps: ["Quantitative (numbers), Discrete (counted), Primary (if surveyed directly)."], final_answer: "Quantitative, Discrete, and Primary data" },
+                    { question: "Classify: The capacity of a water tank in liters.", steps: ["Quantitative (numerical measurement), Continuous (can take any value within range)."], final_answer: "Quantitative and Continuous data" },
+                    { question: "Classify: The different types of sets (e.g., Null, Finite, Infinite).", steps: ["Describes categories, not quantities."], final_answer: "Qualitative data" },
+                    { question: "Classify: Rainfall statistics for Bulawayo found in a 2023 Almanac.", steps: ["Obtained from an existing published source."], final_answer: "Secondary data" },
+                    { question: "Classify: The weight of learners recorded during a health check.", steps: ["Numerical, measured with precision (e.g., 45.3 kg)."], final_answer: "Quantitative and Continuous data" },
+                    { question: "Classify: The number of participants in a Disaster Risk Management workshop.", steps: ["Counted whole number."], final_answer: "Quantitative and Discrete data" },
+                    { question: "Classify: The brands of calculators used in a Mathematics lesson.", steps: ["Non-numerical categories (brand names)."], final_answer: "Qualitative and Discrete data" },
+                    { question: "Classify: The time recorded on a digital watch at the start of a race.", steps: ["Measured, can take decimal values."], final_answer: "Quantitative and Continuous data" }
+                ]
+            },
+            {
+                title: '3. Strategic Methods of Data Collection',
+                content: "## Methods Overview\n\nThe choice of collection method directly impacts the reliability and validity of the mathematical inferences.\n\n## Observation\n- **Definition**: Systematically watching and recording behavior or events as they occur.\n- **Application**: Counting the number of students using the library during the lunch hour.\n- **Advantage**: Provides accurate, real-time data without relying on people's memory.\n- **Disadvantage**: Can be very time-consuming and prone to observer bias.\n\n## Questionnaire\n- **Definition**: A set of printed or written questions with a choice of answers, devised for a survey.\n- **Application**: Surveying Form 1 learners on their preferred school sports.\n- **Advantage**: Efficiently collects data from a large number of people simultaneously.\n- **Disadvantage**: Respondents may misinterpret questions or provide dishonest answers.\n\n## Interview\n- **Definition**: A direct, face-to-face conversation between a researcher and a respondent.\n- **Application**: Asking the School Head about the history of the school's founding.\n- **Advantage**: Allows for deep probing and clarification of complex answers.\n- **Disadvantage**: Takes a long time to conduct and analyze for many people.\n\n## Experiment\n- **Definition**: A scientific procedure undertaken to make a discovery or test a hypothesis.\n- **Application**: Tossing a coin 50 times to record the frequency of \"heads.\"\n- **Advantage**: Provides high levels of control and verifiable scientific evidence.\n- **Disadvantage**: Can be artificial and may not reflect real-world complexity.\n\n## ZIMSEC Survey Design (Project Stages)\n\n1. **Problem Identification**: Clearly state what you want to investigate.\n2. **Investigation**: Decide on the target population and choose the best collection method.\n3. **Generation of Solutions**: Create the questionnaire, interview guide, or experiment plan.\n4. **Presentation**: Collect the raw data and prepare it for organization.\n\n## Common Error\n\nBeware of \"Leading Questions\" in questionnaires. Asking \"Why do you think Mathematics is the best subject?\" is biased. Instead, ask \"What is your favorite subject?\" to ensure neutrality.",
+                worked_examples: [
+                    { question: "You want to find out the most popular tuckshop snack.", steps: ["Need to reach many students quickly with standardized questions."], final_answer: "Questionnaire is best" },
+                    { question: "A student needs to find the number of learners wearing glasses.", steps: ["Direct visual count as learners are present."], final_answer: "Observation is the most efficient and accurate method" },
+                    { question: "Determining the average lifespan of two different battery brands.", steps: ["Requires controlled testing under same conditions."], final_answer: "Experiment is the only way to get scientific results" },
+                    { question: "Finding the historical reasons for the school's name.", steps: ["Needs detailed explanation from someone with knowledge."], final_answer: "Interview with a long-serving community member is appropriate" },
+                    { question: "Recording the number of cars entering the school gate between 7:00 AM and 8:00 AM.", steps: ["Data happens in real time; must be observed."], final_answer: "Observation is required" },
+                    { question: "Investigating the impact of fertilizer on plant growth in the school garden.", steps: ["Must control variables (with/without fertilizer) and measure outcomes."], final_answer: "Experiment is necessary" }
+                ]
+            },
+            {
+                title: '4. Organizing and Classifying Data: Tallying and Frequency',
+                content: "## Why Organization Matters\n\nRaw data must be organized before analysis because organization reveals patterns that are invisible in raw lists.\n\n## How to Tally\n\nTallying is a fast counting method using strokes:\n\n1. For every item, draw a vertical stroke ($|$).\n2. For every fifth item, draw a diagonal slash through the four strokes (e.g. ~~||||~~ for 5). This allows for quick counting in groups of five.\n\n## Constructing a Frequency Table\n\nA frequency table has three columns: the **Data Category**, the **Tally**, and the **Frequency** (the total count).\n\n## Grouped Data\n\nWhen the data range is large, we use **Class Intervals** (e.g., $0$–$9$, $10$–$19$). These intervals must be **non-overlapping** so that every piece of data has exactly one place to go.\n\n## Common Errors\n\n1. **Incorrect tallying**: Forgetting to use the slash for the 5th item.\n2. **Overlapping intervals**: Using intervals like $0$–$10$ and $10$–$20$. If a value is $10$, it is unclear where to place it. Use $0$–$9$ and $10$–$19$ instead.",
+                worked_examples: [
+                    { question: "Raw data (ages): 12, 13, 12, 14, 13, 13, 12, 13. Construct a frequency table.", steps: ["Age 12: ||| (3); Age 13: |||| (4); Age 14: | (1). Age 13 is the most frequent."], final_answer: "Mode = 13" },
+                    { question: "Raw data (dice rolls): 1, 6, 2, 1, 3, 1, 2, 6. Construct a frequency table.", steps: ["Score 1: ||| (3); Score 2: || (2); Score 3: | (1); Score 6: || (2). Most common score was 1."], final_answer: "Mode = 1" },
+                    { question: "Group 12, 15, 22, 28, 19 into classes 10–19 and 20–29.", steps: ["10–19: 12, 15, 19 → Freq 3; 20–29: 22, 28 → Freq 2."], final_answer: "3 values in the 10–19 range" },
+                    { question: "Raw data (colors): Red, Blue, Red, Red, Green, Blue. Construct a frequency table.", steps: ["Red: ||| (3); Blue: || (2); Green: | (1). Red is the most popular."], final_answer: "Mode = Red" },
+                    { question: "Values 4, 9, 12, 7, 14. Group into 0–9 and 10–19.", steps: ["0–9: 4, 9, 7 → Freq 3; 10–19: 12, 14 → Freq 2. The 0–9 interval contains the majority."], final_answer: "0–9 has frequency 3" }
+                ]
+            },
+            {
+                title: '5. Representing Data Visually: Pictograms and Bar Graphs',
+                content: "## Rules for Success\n\nVisual communication is the most effective way to share statistical findings. In ZIMSEC marking schemes, points are awarded for accurate scaling, clear labeling, and consistent formatting.\n\n## Pictograms\n- Select a clear **Key** (e.g., 1 image $= 10$ items).\n- Use partial images (e.g., half an image) to represent partial values.\n\n## Bar Charts\n- **Equal widths**: All bars must be the same width.\n- **Equal gaps**: Gaps between bars must be consistent.\n- **Labeling**: Both axes must be labeled. The $y$-axis usually shows Frequency.\n\n## Checklist for Success (Hand-Drawing)\n- Clear title at the top\n- $x$-axis labeled (Categories)\n- $y$-axis labeled (Frequency)\n- Consistent scale (e.g., intervals of 2, 5, or 10)\n- Key included for pictograms\n- Bars do not touch (for discrete data)\n\n## Common Errors\n\n\"Missing Labels\" and \"Inconsistent Scales\" (e.g., jumping from 0 to 5 then 5 to 15) are major mark-losers in ZIMSEC examinations.",
+                worked_examples: [
+                    { question: "30 learners were surveyed. Key: 1 stick figure $= 5$ learners. How many stick figures in the pictogram?", steps: ["$30 \\\\div 5 = 6$ stick figures."], final_answer: "Draw exactly 6 stick figures" },
+                    { question: "A table shows 15 apples. Key: 1 circle $= 10$ apples. What does the pictogram show?", steps: ["15 apples $= 1$ full circle $+ \\\\frac{1}{2}$ circle."], final_answer: "1 full circle and 1 half-circle" },
+                    { question: "Bar chart: Soccer (20), Netball (10), Tennis (5). How high is the Soccer bar?", steps: ["Soccer bar must reach the height of 20 units on the $y$-axis."], final_answer: "20 units" },
+                    { question: "Frequency: Size 4 (8), Size 5 (12). Scale: 1 cm $= 2$ units. How tall is the Size 5 bar?", steps: ["Size 5 frequency = 12; Height $= 12 \\\\div 2 = 6$ cm."], final_answer: "6 cm tall" },
+                    { question: "25 cars. Key: 1 car icon $= 5$ cars. How many car icons?", steps: ["$25 \\\\div 5 = 5$ car icons."], final_answer: "5 car icons in a straight row" },
+                    { question: "Bar chart for colors: Green (4), Yellow (8). Compare the bars.", steps: ["Yellow bar will be exactly twice the height of the Green bar (8 is double 4)."], final_answer: "Yellow bar = 2 $\\\\times$ Green bar height" }
+                ]
+            },
+            {
+                title: '6. Interpreting Results and Drawing Conclusions',
+                content: "## The \"So What?\" of Statistics\n\nInterpretation involves moving beyond calculation to make informed decisions based on the data trends. ZIMSEC examinations use phrases like \"Hence determine\" to prompt you to use your previous calculations to find new information.\n\n## ZIMSEC Interpretation Wording\n\n- **Reading information**: Identifying values directly from the table or graph.\n- **Comparing frequencies**: Finding the highest (mode) or lowest values.\n- **\"Hence determine\"**: Using your current result to calculate a total, a percentage, or a projection.\n\n## Percentage Formula\n\n$$\\\\text{Percentage} = \\\\frac{\\\\text{Part}}{\\\\text{Whole}} \\\\times 100$$",
+                worked_examples: [
+                    { question: "Table: Pens (40), Pencils (10). Find (a) most frequent item, (b) total, (c) percentage of pencils.", steps: ["(a) Pens; (b) $40 + 10 = 50$; (c) $\\\\frac{10}{50} \\\\times 100 = 20\\\\%$"], final_answer: "20% of the stationery consists of pencils" },
+                    { question: "Bar chart: Grade A frequency is 15 in a class of 30. Interpret.", steps: ["$\\\\frac{15}{30} = \\\\frac{1}{2}$. Exactly half of the class achieved Grade A."], final_answer: "Half of the class achieved Grade A" },
+                    { question: "Mon sales 100 ZiG, Tue 200 ZiG. How much more on Tuesday? Hence determine total.", steps: ["Difference $= 200 - 100 = 100$ ZiG; Total $= 100 + 200 = 300$ ZiG."], final_answer: "Total sales = 300 ZiG" },
+                    { question: "Pictogram: 4 apples, Key 1 apple = 10 kg. Total mass? If 1 kg costs 2 ZiG, find total value.", steps: ["Mass $= 4 \\\\times 10 = 40$ kg; Value $= 40 \\\\times 2 = 80$ ZiG."], final_answer: "Total value = 80 ZiG" },
+                    { question: "Class 0–9 (Freq 5), 10–19 (Freq 15). How many scored 10 or more? What percentage?", steps: ["Scored 10+: 15; Total $= 5 + 15 = 20$; Percentage $= \\\\frac{15}{20} \\\\times 100 = 75\\\\%$"], final_answer: "75% scored in the higher bracket" },
+                    { question: "Mode of shoe sizes is 6. What should the shop do?", steps: ["Order more of size 6 than any other size."], final_answer: "Order more size 6" }
+                ]
+            },
+            {
+                title: '7. Mixed Revision Exercise',
+                content: "## Practice Questions\n\n1. Define 'Primary Data' and provide a school-based example.\n2. Classify 'The weight of a school bag' as Discrete or Continuous.\n3. Classify 'The names of districts in Zimbabwe' as Qualitative or Quantitative.\n4. Identify the best method to find out how many students have a cell phone.\n5. Construct a tally for the number 17.\n6. Construct a frequency table for: 2, 4, 2, 5, 4, 2, 2.\n7. Interpret: If a bar represents 40 units and the scale is 1 cm $= 5$ units, how tall is the bar?\n8. Hence determine the total frequency if Category A $= 12$ and Category B $= 18$.\n9. (Multiple Choice) Which is Secondary Data? A) Interview B) Census Report C) Observation D) Experiment.\n10. Define 'Statistics' according to the ZIMSEC preamble.\n11. Collect and tabulate the number of sides in a Triangle, Square, and Hexagon.\n12. Classify 'Age in years' correctly.\n13. Identify one disadvantage of an Interview.\n14. Describe why class intervals in a table should not overlap.\n15. Interpret: In a pictogram, if 1 icon $= 4$ people, how many people do 3.5 icons represent?\n16. Construct class intervals for data ranging from 1 to 20 using a width of 5.\n17. Identify the most suitable collection method for checking the quality of seeds.\n18. Hence determine the percentage of students who failed if 5 failed and 20 passed.\n19. Define 'Quantitative Data'.\n20. Classify 'Types of SI units' as Qualitative or Quantitative.\n21. Calculate the total frequency from a table with frequencies 5, 9, 11, and 15.\n22. Interpret: Which is the mode if frequencies are Blue(10), Red(12), Green(8)?\n23. Construct a bar chart description for: Boys (15), Girls (20).\n24. Identify a \"leading question\" and rewrite it to be neutral.\n25. Calculate the difference between the highest and lowest frequency in Question 22."
+            },
+            {
+                title: '8. Exam-Style Structured Test',
+                content: "## Section A: Short Answer (20 Marks)\n\n1. Define 'Data' and 'Statistics'. (2)\n2. Distinguish between Discrete and Continuous data with an example of each. (4)\n3. Name two advantages of using a Questionnaire. (2)\n4. List the four stages of a ZIMSEC Survey Design. (4)\n5. Identify the SI unit for measuring Mass and Length. (2)\n6. Give one example of a Cross-Cutting Theme related to Statistics. (2)\n7. Why must a pictogram always include a 'Key'? (2)\n8. State the purpose of the 'diagonal slash' in tallying. (2)\n\n## Section B: Long-form Application (30 Marks)\n\n9. A learner collected the following marks in a 10-point quiz: 5, 8, 3, 5, 10, 5, 3, 8, 5, 2.\n   a) Construct a frequency table with a tally column. (10)\n   b) Identify the modal mark. (2)\n   c) Calculate the total number of learners. (3)\n   d) If the pass mark is 5, how many learners passed? (5)\n   e) Hence, determine the percentage of learners who failed. (10)"
+            },
+            {
+                title: '9. Full Memo and Worked Solutions',
+                content: "## Practice Exercise 1\n\n1. School Register/Observation. 2. Measuring scale. 3. Field observation. 4. Meteorological station/Internet. 5. Score sheet/Records.\n\n## Practice Exercise 2\n\n1. Discrete (12). 2. Continuous (Measured). 3. Qualitative. 4. Secondary. 5. Discrete (5). 6. Continuous (Measured). 7. Discrete (ZiG is counted). 8. Qualitative.\n\n## Practice Exercise 3\n\n1. Questionnaire. 2. Observation. 3. Secondary/Archival. 4. Experiment. 5. Interview. 6. Observation.\n\n## Practice Exercise 4\n\n1. Dog (4), Cat (2), Bird (1). 2. 1(1), 2(1), 3(1), 4(4), 6(1)—Mode 4. 3. 13(4), 14(2), 15(1). 4. 50(3), 75(1), 100(2). 5. 0–9: Freq 3; 10–19: Freq 2.\n\n## Practice Exercise 5\n\n1. Scale of 1 unit $= 1$ cm (Max freq is 4). 2. 1 icon $= 2$ rolls. 3. Categories: 50, 75, 100. 4. 4 cm. 5. 2 icons.\n\n## Practice Exercise 6 (Mangoes 15, Oranges 5, Bananas 20)\n\n1. Bananas (20). 2. $15 + 5 + 20 = 40$. 3. $\\\\frac{5}{40} \\\\times 100 = 12.5\\\\%$. 4. $15 : 5 = 3 : 1$. 5. $40 + 5 = 45$. 6. Oranges (5).\n\n## Mixed Revision Exercise\n\n1. Collected by others; e.g., Census. 2. Continuous. 3. Qualitative. 4. Questionnaire. 5. Tally for 17: ~~||||~~ ~~||||~~ ~~||||~~ ||. 6. 2(4), 4(2), 5(1). 7. $40 \\\\div 5 = 8$ cm. 8. $12 + 18 = 30$. 9. B. 10. Tool for problem solving/investigation. 11. Triangle 3, Square 4, Hexagon 6. 12. Continuous. 13. Time-consuming. 14. Avoid confusion/ensure each value has exactly one place. 15. $3.5 \\\\times 4 = 14$ people. 16. 1–5, 6–10, 11–15, 16–20. 17. Experiment. 18. $\\\\frac{5}{25} \\\\times 100 = 20\\\\%$. 19. Numerical data. 20. Qualitative. 21. $5 + 9 + 11 + 15 = 40$. 22. Red. 23. Two bars: Boys 15, Girls 20. 24. \"Don't you love Math?\" $\\\\to$ \"How do you feel about Math?\". 25. $12 - 8 = 4$.\n\n## Structured Test Memo\n\n1. Data: Raw facts; Statistics: Science of analysis. 2. Discrete: Counted (e.g., 5 pens); Continuous: Measured (e.g., 5.5 kg). 3. Reaches many; easy to analyze. 4. Problem ID, Investigation, Generation, Presentation. 5. Kilogram (kg); Meter (m). 6. Environmental Management. 7. To explain the value of symbols. 8. To group data into fives for easy counting.\n\n**Section B:** Mark 2 (Freq 1), Mark 3 (Freq 2), Mark 5 (Freq 4), Mark 8 (Freq 2), Mark 10 (Freq 1). b) Modal mark $= 5$. c) Total $= 10$. d) Passed: 4(5s) $+$ 2(8s) $+$ 1(10) $= 7$. e) Failed $= 3$; $\\\\frac{3}{10} \\\\times 100 = 30\\\\%$."
+            }
+        ],
+        key_points: [
+            "Data: raw facts; Statistics: science of collecting and interpreting data",
+            "Primary data: first-hand; Secondary: from existing sources",
+            "Discrete: counted (whole numbers); Continuous: measured",
+            "Qualitative: non-numerical; Quantitative: numerical",
+            "Methods: Observation, Questionnaire, Interview, Experiment",
+            "Tally: use diagonal slash for every 5th item",
+            "Class intervals must not overlap (use 0–9, 10–19, not 0–10, 10–20)",
+            "Pictograms need a Key; Bar charts need equal widths and gaps",
+            "Percentage $= \\\\frac{\\\\text{Part}}{\\\\text{Whole}} \\\\times 100$"
+        ],
+        exam_tips: [
+            "Avoid leading questions in questionnaires.",
+            "Always label both axes on bar charts.",
+            "Use consistent scales—no jumps like 0, 5, 15.",
+            "Check tally groups of five with diagonal slash.",
+            "For \"Hence determine,\" use your previous answer.",
+            "Age in years is continuous despite being rounded."
+        ],
+        visual_descriptions: [
+            "Frequency table with tally and frequency columns",
+            "Pictogram with key showing 1 icon = 5 items",
+            "Bar chart with labeled axes and equal bar widths"
+        ]
+    },
+
+    // ============================================
     // TOPIC 11: PROBABILITY (Form 3-4)
     // ============================================
     'Probability': {
@@ -3205,6 +3326,107 @@ export const oLevelMathNotes: Record<string, MathTopicNotes> = {
     },
 
     // ============================================
+    // TOPIC: GEOMETRICAL CONSTRUCTIONS (Form 1)
+    // ============================================
+    'Geometrical Constructions': {
+        topic: 'Geometrical Constructions',
+        subject: 'Mathematics',
+        grade_level: 'O-Level',
+        summary: "Geometrical construction is the rigorous process of creating geometric figures with high precision using ruler and compasses. As defined in ZIMSEC Syllabus B Section 8.7, this goes beyond mere drawing—every line and intersection is mathematically justified. This Form 1 topic covers line segments, angles, perpendicular and angle bisectors, perpendiculars from points, triangle construction (SSS, SAS, ASA), and introductory locus.",
+        sections: [
+            {
+                title: '1. Introduction to Geometrical Construction',
+                content: "## ZIMSEC Syllabus Context (Section 8.7)\n\nGeometrical construction is the rigorous process of creating geometric figures with high precision using specific instruments. This goes beyond mere drawing; it is a discipline where every line and intersection is mathematically justified. In professional fields such as civil engineering, architecture, and industrial design, these constructions form the blueprint for structural integrity and spatial planning.\n\n## Core Requirement: Ruler and Compasses Only\n\nThe ZIMSEC curriculum requires \"ruler and compasses only.\" This constraint develops logical reasoning and intellectual honesty. By justifying the placement of every point through the intersection of arcs, we align with Syllabus Aim 3.6 (Unhu/Ubuntu). Examiners look for construction arcs as evidence of methodology.\n\n## Required Instruments\n\n- **Ruler**: For drawing straight lines and transferring lengths.\n- **Compasses**: For drawing circles and intersecting arcs.\n- **Pencil**: Must be kept extremely sharp (2H or H grade) for line precision.\n- **Protractor**: Used exclusively for initial setting of non-standard angles or final verification.\n\n## Examiner Expectations\n\n- **Construction Arcs**: Never erase your arcs. They are essential for Method Marks (M1). Erasing arcs may result in zero marks.\n- **Neatness and Accuracy**: Lines must be thin, clear, and single-stroke. Double-lining or thick strokes leads to loss of Accuracy Marks (A1).\n- **Tolerance**: Aim for $\\\\pm 2\\\\text{ mm}$ for lengths and $\\\\pm 2^\\\\circ$ for angles.\n\n## Common Errors\n\n- **Blunt pencils**: Primary cause of inaccurate intersections and lines that fail tolerance checks.\n- **Poor labeling**: Candidates lose marks by not labeling vertices (e.g., A, B, C) as specified.",
+                worked_examples: []
+            },
+            {
+                title: '2. Constructing Line Segments and Angles',
+                content: "## Lines and Angles as Building Blocks\n\nWhile a protractor \"measures\" an angle, a compass \"constructs\" it. Construction ensures structural symmetry and geometric proof. For example, a constructed $60^\\\\circ$ angle is based on the properties of an equilateral triangle.\n\n## Sequential Instructions\n\n**1. Line Segment**: Draw a straight line slightly longer than required. Mark the starting point. Set your compass to the exact length on a ruler, then mark the endpoint on the line with an arc.\n\n**2. $60^\\\\circ$ Angle**: From a point on a line, draw a wide arc. Using the same compass width, place the point where the arc meets the line and intersect the first arc.\n\n**3. $90^\\\\circ$ Angle**: Construct two $60^\\\\circ$ arcs ($120^\\\\circ$) and bisect the second $60^\\\\circ$ segment, or use the perpendicular method from a point.\n\n**4. $45^\\\\circ$ Angle**: First construct a $90^\\\\circ$ angle, then bisect it.\n\n## Common Error\n\nIncorrect compass width: Changing the compass radius between the base arc and the intersecting arc when constructing $60^\\\\circ$ invalidates the angle.",
+                worked_examples: [
+                    { question: "Construct a line segment $PQ = 5.8\\\\text{ cm}$.", steps: ["Draw line, set compass to 5.8 cm, mark endpoint with arc."], final_answer: "Line segment $PQ = 5.8\\\\text{ cm}$" },
+                    { question: "Construct an angle of $60^\\\\circ$ at point $X$ on line $XY$.", steps: ["Draw wide arc from $X$, same width from intersection, join to $X$."], final_answer: "$\\\\angle YXZ = 60^\\\\circ$" },
+                    { question: "Construct an angle of $90^\\\\circ$ at vertex $B$ of line $AB$.", steps: ["Use perpendicular method or two $60^\\\\circ$ arcs and bisect."], final_answer: "Right angle at $B$" },
+                    { question: "Construct an angle of $45^\\\\circ$ at point $M$.", steps: ["Construct $90^\\\\circ$ first, then bisect it. Show construction arcs."], final_answer: "$45^\\\\circ$ angle" },
+                    { question: "Construct an angle of $120^\\\\circ$ using two consecutive $60^\\\\circ$ arcs.", steps: ["Construct first $60^\\\\circ$, then step off same arc from new line."], final_answer: "$120^\\\\circ$ angle" },
+                    { question: "Construct $30^\\\\circ$ by bisecting a constructed $60^\\\\circ$ angle.", steps: ["Construct $60^\\\\circ$, then construct angle bisector."], final_answer: "$30^\\\\circ$ angle" }
+                ]
+            },
+            {
+                title: '3. The Perpendicular Bisector of a Line',
+                content: "## Purpose\n\nThe perpendicular bisector identifies the exact midpoint and creates a $90^\\\\circ$ intersection. It is vital for finding centers of circles and establishing symmetry.\n\n## Construction Steps\n\n1. Place the compass on one endpoint of the line.\n2. Open the compass to a width clearly greater than half the line's length.\n3. Draw arcs above and below the line.\n4. Without changing the compass width, repeat from the other endpoint to intersect the first arcs.\n5. Draw a straight line through the two intersection points.",
+                worked_examples: [
+                    { question: "Construct the perpendicular bisector of line $AB = 8\\\\text{ cm}$.", steps: ["Arcs from $A$ and $B$ (width $> 4\\\\text{ cm}$), join intersections."], final_answer: "Perpendicular bisector through midpoint $M$" },
+                    { question: "Locate the midpoint $M$ of line $XY = 6.4\\\\text{ cm}$ using construction.", steps: ["Construct perpendicular bisector; $M$ is where it meets $XY$."], final_answer: "$XM = MY = 3.2\\\\text{ cm}$" },
+                    { question: "Construct line $CD = 9.2\\\\text{ cm}$ and divide it into four equal parts.", steps: ["Bisect to get 2 equal parts, bisect each half again."], final_answer: "Four equal segments of $2.3\\\\text{ cm}$" }
+                ]
+            },
+            {
+                title: '4. The Angle Bisector',
+                content: "## Purpose\n\nAngle bisectors are essential for determining the incentre of a triangle and achieving angular balance. Every point on the bisector is equidistant from the two arms of the angle.\n\n## Construction Steps\n\n1. Place the compass point on the vertex and draw an arc cutting both arms of the angle.\n2. From the two points where the arc cuts the arms, draw two intersecting arcs in the interior (keep compass width constant).\n3. Draw a straight line from the vertex through the intersection of these interior arcs.\n\n## Common Error\n\nCompass hinge movement: If the compass width changes between the two interior arcs, the bisector will be off-center.",
+                worked_examples: [
+                    { question: "Construct $\\\\angle ABC = 60^\\\\circ$. Construct its bisector.", steps: ["Construct $60^\\\\circ$, then bisect to get $30^\\\\circ$ each."], final_answer: "Bisector gives two $30^\\\\circ$ angles" },
+                    { question: "Construct a $90^\\\\circ$ angle and bisect it to obtain $45^\\\\circ$.", steps: ["Construct $90^\\\\circ$, then bisect."], final_answer: "$45^\\\\circ$" },
+                    { question: "Construct a $45^\\\\circ$ angle and bisect it to obtain $22.5^\\\\circ$.", steps: ["Construct $45^\\\\circ$, then bisect."], final_answer: "$22.5^\\\\circ$" }
+                ]
+            },
+            {
+                title: '5. Constructing Perpendicular Lines from Specific Points',
+                content: "## Dropping a Perpendicular\n\nUsed to find the altitude (height) of a shape for area calculations.\n\n## From a Point ON the Line\n\n1. Place the compass on the given point $P$.\n2. Draw arcs on the line on both sides of $P$.\n3. Using these two points as centers, increase the compass width and draw intersecting arcs above $P$.\n4. Join $P$ to the intersection.\n\n## From a Point OUTSIDE the Line\n\n1. Place the compass on the point $P$ outside the line.\n2. Draw a wide arc that cuts the line at two points, $X$ and $Y$.\n3. From $X$ and $Y$, draw intersecting arcs on the opposite side of the line from $P$.\n4. Join $P$ to the intersection.",
+                worked_examples: [
+                    { question: "Draw line $AB = 8\\\\text{ cm}$. Mark $M$, $3\\\\text{ cm}$ from $A$. Construct a perpendicular through $M$.", steps: ["Use point-on-line method: arcs on both sides of $M$, then intersecting arcs above."], final_answer: "Perpendicular through $M$" },
+                    { question: "Construct a perpendicular at the end $Y$ of line $XY = 5\\\\text{ cm}$.", steps: ["Use point-on-line method at $Y$."], final_answer: "Perpendicular at $Y$" },
+                    { question: "Draw $\\\\triangle ABC$ where $AB = 6\\\\text{ cm}$. Drop a perpendicular from $C$ to base $AB$.", steps: ["Use point-outside-line method from $C$ to $AB$."], final_answer: "Altitude from $C$ to $AB$" }
+                ]
+            },
+            {
+                title: '6. Construction of Triangles',
+                content: "## Methods\n\nA unique triangle requires sufficient data: **SSS**, **SAS**, or **ASA**.\n\n**SSS (Side-Side-Side)**: Draw the base. Use the compass to draw an arc of the second side length from one end, and an arc of the third side length from the other. The vertex is the intersection.\n\n**SAS (Side-Angle-Side)**: Draw the base and construct the angle. Use the compass to mark the length of the second side along the angle's arm. (Measurement with a ruler alone is penalized.)\n\n**ASA (Angle-Side-Angle)**: Draw the base and construct the required angles at both endpoints. The vertex is where the arms intersect.\n\n## Verification Checklist\n\n- All side lengths within $\\\\pm 2\\\\text{ mm}$\n- Angles sum to $180^\\\\circ$ (within $\\\\pm 2^\\\\circ$)\n- Construction arcs visible and sharp",
+                worked_examples: [
+                    { question: "Construct $\\\\triangle PQR$ where $PQ = 7\\\\text{ cm}$, $QR = 5\\\\text{ cm}$, $PR = 6\\\\text{ cm}$ (SSS).", steps: ["Base $PQ = 7\\\\text{ cm}$; arc $6\\\\text{ cm}$ from $P$, arc $5\\\\text{ cm}$ from $Q$; join intersections."], final_answer: "$\\\\triangle PQR$ complete" },
+                    { question: "Construct $\\\\triangle ABC$ where $AB = 6\\\\text{ cm}$, $\\\\angle A = 60^\\\\circ$, $AC = 5\\\\text{ cm}$ (SAS).", steps: ["Base $AB$, construct $60^\\\\circ$ at $A$, mark $5\\\\text{ cm}$ on arm, join to $B$."], final_answer: "$\\\\triangle ABC$ complete" },
+                    { question: "Construct $\\\\triangle XYZ$ where $XY = 8\\\\text{ cm}$, $\\\\angle X = 45^\\\\circ$, $\\\\angle Y = 60^\\\\circ$ (ASA).", steps: ["Base $XY$, construct angles at both ends, join where arms meet."], final_answer: "$\\\\triangle XYZ$ complete" },
+                    { question: "Construct an equilateral triangle with sides of $5.5\\\\text{ cm}$.", steps: ["SSS with all three sides $5.5\\\\text{ cm}$."], final_answer: "Equilateral $\\\\triangle$" }
+                ]
+            },
+            {
+                title: '7. Introductory Locus',
+                content: "## Definition\n\nA **locus** is a path or region governed by geometric rules. Form 1 introduces this for problem solving (e.g., safety zone around a borehole, boundary between properties).\n\n## Standard Loci\n\n1. **Locus equidistant from two points**: The perpendicular bisector.\n2. **Locus equidistant from a fixed point**: A circle.\n3. **Locus equidistant from two parallel lines**: A line parallel to both, midway between them.",
+                worked_examples: [
+                    { question: "Draw two points $A$ and $B$, $6\\\\text{ cm}$ apart. Construct the locus of points equidistant from $A$ and $B$.", steps: ["Construct the perpendicular bisector of $AB$."], final_answer: "Perpendicular bisector of $AB$" },
+                    { question: "Draw a point $C$. Construct the locus of points $3\\\\text{ cm}$ from $C$.", steps: ["Draw a circle with centre $C$ and radius $3\\\\text{ cm}$."], final_answer: "Circle, centre $C$, radius $3\\\\text{ cm}$" },
+                    { question: "Draw two parallel lines $4\\\\text{ cm}$ apart. Construct the locus of points equidistant from both.", steps: ["Construct a line parallel to both, midway between them."], final_answer: "Parallel line $2\\\\text{ cm}$ from each" }
+                ]
+            },
+            {
+                title: '8. Assessment and Marking Guide',
+                content: "## Mixed Construction Exercise (15 Questions)\n\n1. Construct line $AB = 7.2\\\\text{ cm}$ and bisect it.\n2. Construct an angle of $75^\\\\circ$ at point $P$ (Hint: Bisect the $30^\\\\circ$ between $60^\\\\circ$ and $90^\\\\circ$).\n3. Construct $\\\\triangle ABC$ (SSS) and bisect $\\\\angle A$.\n4. Construct a rectangle $PQRS$ with length $8\\\\text{ cm}$ and width $5\\\\text{ cm}$ using $90^\\\\circ$ constructions.\n5. Draw a circle of radius $4\\\\text{ cm}$ and construct two perpendicular diameters.\n6. Construct an equilateral triangle of side $6\\\\text{ cm}$ and drop a perpendicular from the top vertex to the base.\n7. Draw line $XY = 10\\\\text{ cm}$. Construct point $Z$ such that $XZ = 6\\\\text{ cm}$ and $\\\\angle YXZ = 60^\\\\circ$.\n8. Construct the locus of points $2.5\\\\text{ cm}$ from a fixed point $O$.\n9. Construct $\\\\triangle PQR$ (ASA) with $PQ = 7\\\\text{ cm}$, $\\\\angle P = 60^\\\\circ$, $\\\\angle Q = 45^\\\\circ$.\n10. Construct a rhombus with side $5\\\\text{ cm}$ and one angle of $60^\\\\circ$.\n11. Construct line $AB = 6\\\\text{ cm}$. Shade the region closer to $A$ than $B$ and within $4\\\\text{ cm}$ of $A$.\n12. Construct $\\\\triangle ABC$. Construct the perpendicular bisectors of $AB$ and $BC$. Mark their intersection $O$.\n13. Using point $O$ from question 12, draw a circle passing through $A$, $B$, and $C$.\n14. Construct an angle of $105^\\\\circ$ at point $M$.\n15. Construct a square and its two diagonals. Verify the diagonals bisect each other at $90^\\\\circ$.\n\n## Exam-Style Practical Test (Paper 2)\n\n**Instructions**: Use ruler and compasses only. Show all construction lines.\n\n1. Construct $\\\\triangle ABC$ where $AB = 8.5\\\\text{ cm}$, $BC = 6\\\\text{ cm}$, $AC = 7.5\\\\text{ cm}$. [3]\n2. (a) Construct the locus of points equidistant from $A$ and $B$. [2] (b) Construct the locus of points equidistant from $AB$ and $AC$. [2]\n3. Mark the intersection of these two loci as $P$. [1]\n4. Construct a perpendicular from $P$ to line $AB$. Label the point where it meets $AB$ as $M$. [2]\n5. Draw a circle with centre $P$ and radius $PM$. Measure and state the radius. [2]\n\n## ZIMSEC Marking Scheme\n\n| Item | Mark | Criteria |\n|------|------|----------|\n| Method (M1) | 1 | Correct construction arcs visible |\n| Accuracy (A1) | 1 | Final line/point within $\\\\pm 2\\\\text{ mm}$ or $\\\\pm 2^\\\\circ$ |\n| Neatness | 1 | Sharp, single lines; no rubbing out arcs |\n| Labels | 1 | All vertices and loci labeled |\n\n**Memo Q1**: Base $AB$ drawn $8.5\\\\text{ cm}$ (1). Arcs $6\\\\text{ cm}$ from $B$ and $7.5\\\\text{ cm}$ from $A$ intersecting (1). Triangle completed (1).\n\n**Memo Q2a**: Arcs of equal radius from $A$ and $B$ above and below (1). Straight line through intersections (1).\n\n**Memo Q5**: Circle drawn neatly (1). Radius $PM \\\\approx 2.1\\\\text{ cm}$ $\\\\pm 0.1\\\\text{ cm}$ (1)."
+            }
+        ],
+        key_points: [
+            "Use ruler and compasses only; never erase construction arcs",
+            "Tolerance: $\\\\pm 2\\\\text{ mm}$ for lengths, $\\\\pm 2^\\\\circ$ for angles",
+            "$60^\\\\circ$: same compass width for base and intersecting arc",
+            "Perpendicular bisector: arcs from both endpoints, join intersections",
+            "Angle bisector: arc from vertex, then two intersecting arcs in interior",
+            "SSS, SAS, ASA determine a unique triangle",
+            "Locus: perpendicular bisector (equidistant from 2 points), circle (fixed distance from point)"
+        ],
+        exam_tips: [
+            "Keep pencil sharp (2H or H grade).",
+            "Leave all construction arcs visible for Method Marks.",
+            "Label all vertices as specified in the question.",
+            "Use compass to mark lengths on angle arms—not ruler alone.",
+            "Check compass width stays constant during each construction step."
+        ],
+        visual_descriptions: [
+            "Perpendicular bisector with construction arcs",
+            "Angle bisector construction",
+            "Triangle construction with SSS arcs",
+            "Locus as circle and perpendicular bisector"
+        ]
+    },
+
+    // ============================================
     // TOPIC 18: SETS (Form 2-4)
     // ============================================
     'Sets': {
@@ -3517,6 +3739,263 @@ export const oLevelMathNotes: Record<string, MathTopicNotes> = {
         visual_descriptions: [
             "Timeline showing compound interest growth",
             "Comparison chart of SI vs CI"
+        ]
+    },
+
+    // ============================================
+    // TOPIC 21: FUNCTIONAL GRAPHS (Form 1)
+    // ============================================
+    'Functional Graphs': {
+        topic: 'Functional Graphs',
+        subject: 'Mathematics',
+        grade_level: 'O-Level',
+        summary: "Functional graphs are strategic tools for investigating numerical and spatial relationships. At Form 1 level, a function is a relationship where the dependent variable ($y$) changes based on the independent variable ($x$). This topic covers the coordinate plane, plotting points, constructing tables of values, linear and non-linear graphs, travel graphs, and graphical analysis.",
+        sections: [
+            {
+                title: '1. Introduction to the Coordinate Plane and Functional Relationships',
+                content: "## The Heritage-Based Mathematics Syllabus\n\nIn the Heritage-based Mathematics Syllabus B (2024-2030), functional graphs are not merely abstract drawings but strategic tools for investigating the numerical and spatial relationships that exist in our world. Aligning with the spirit of Unhu/Ubuntu/Vumunhu, this unit encourages learners to collaborate and persevere in solving real-world problems.\n\n## What is a Function?\n\nAt Form 1 level, a **function** is a relationship where one quantity, the **dependent variable** ($y$), changes based on the value of another, the **independent variable** ($x$). We visualize this on the **Cartesian plane**, a flat surface defined by two perpendicular number lines.\n\n- The horizontal line is the **$x$-axis**\n- The vertical line is the **$y$-axis**\n- They meet at the **origin**, denoted as $(0, 0)$\n- Every location is identified by an **ordered pair** $(x, y)$, which serves as a unique address on the grid\n\n## Step-by-Step Guide: Plotting Points\n\n1. **Start at the origin**: Always begin your count at $(0, 0)$.\n2. **Move along the $x$-axis**: Move right for positive values and left for negative values. This is the horizontal shift.\n3. **Move parallel to the $y$-axis**: From your new horizontal position, move up for positive values and down for negative values.\n4. **Mark the point**: Use a small, sharp 'x' to mark the exact intersection.\n\n## Common Error\n\nA frequent mistake is reversing $x$ and $y$ coordinates. Remember: Always \"crawl\" (horizontal) before you \"climb\" (vertical). Plotting $(1, 4)$ as $(4, 1)$ will completely change the function's meaning.",
+                worked_examples: [
+                    {
+                        question: "Plot $(4, 2)$.",
+                        steps: ["Move 4 units right on the $x$-axis, then 2 units up. The point is correctly positioned on the plane."],
+                        final_answer: "Point at $(4, 2)$"
+                    },
+                    {
+                        question: "Plot $(-3, 5)$.",
+                        steps: ["Move 3 units left on the $x$-axis, then 5 units up. The point is correctly positioned on the plane."],
+                        final_answer: "Point at $(-3, 5)$"
+                    },
+                    {
+                        question: "Plot $(2, -4)$.",
+                        steps: ["Move 2 units right on the $x$-axis, then 4 units down. The point is correctly positioned on the plane."],
+                        final_answer: "Point at $(2, -4)$"
+                    },
+                    {
+                        question: "Plot $(-5, -1)$.",
+                        steps: ["Move 5 units left on the $x$-axis, then 1 unit down. The point is correctly positioned on the plane."],
+                        final_answer: "Point at $(-5, -1)$"
+                    },
+                    {
+                        question: "Plot $(0, 3)$.",
+                        steps: ["Stay at the origin horizontally, then move 3 units up. The point is correctly positioned on the plane."],
+                        final_answer: "Point at $(0, 3)$"
+                    },
+                    {
+                        question: "Plot $(-4, 0)$.",
+                        steps: ["Move 4 units left on the $x$-axis, then stay at that vertical level. The point is correctly positioned on the plane."],
+                        final_answer: "Point at $(-4, 0)$"
+                    },
+                    {
+                        question: "Plot $(1.5, 2)$.",
+                        steps: ["Move 1.5 units right, then 2 units up. The point is correctly positioned on the plane."],
+                        final_answer: "Point at $(1.5, 2)$"
+                    },
+                    {
+                        question: "Plot $(-2, -3.5)$.",
+                        steps: ["Move 2 units left, then 3.5 units down. The point is correctly positioned on the plane."],
+                        final_answer: "Point at $(-2, -3.5)$"
+                    }
+                ]
+            },
+            {
+                title: '2. The Architecture of Data: Constructing Tables of Values',
+                content: "## Why Tables Matter\n\nA structured table of values is the essential blueprint for any accurate graph. It serves as a systematic record of the function's behavior, ensuring that every point plotted adheres to the specific mathematical rule.\n\n## Methodology: Completing the Table Using Substitution\n\n**Substitution** is the process of replacing the algebraic variable $x$ with a numerical value to find $y$. To ensure accuracy and intellectual honesty, you must show all steps.\n\n## Calculation Standard (Three Steps)\n\n1. State the original rule.\n2. Show the substitution step using brackets.\n3. State the final $y$ value.\n\nExample for $y = x + 4$ when $x = -2$:\n\n1. $y = x + 4$\n2. $y = (-2) + 4$\n3. $y = 2$",
+                worked_examples: [
+                    {
+                        question: "Complete the table for $y = x + 4$ with $x = -2, -1, 0, 1, 2$.",
+                        steps: [
+                            "For $x = -2$: $y = (-2) + 4 = 2$",
+                            "For $x = -1$: $y = (-1) + 4 = 3$",
+                            "For $x = 0$: $y = (0) + 4 = 4$",
+                            "For $x = 1$: $y = (1) + 4 = 5$",
+                            "For $x = 2$: $y = (2) + 4 = 6$"
+                        ],
+                        final_answer: "$y$ values: $2, 3, 4, 5, 6$"
+                    },
+                    {
+                        question: "Complete the table for $y = 3x - 2$ with $x = 0, 1, 2, 3, 4$.",
+                        steps: [
+                            "For $x = 0$: $y = 3(0) - 2 = -2$",
+                            "For $x = 1$: $y = 3(1) - 2 = 1$",
+                            "For $x = 2$: $y = 3(2) - 2 = 4$",
+                            "For $x = 3$: $y = 3(3) - 2 = 7$",
+                            "For $x = 4$: $y = 3(4) - 2 = 10$"
+                        ],
+                        final_answer: "$y$ values: $-2, 1, 4, 7, 10$"
+                    },
+                    {
+                        question: "Complete the table for $y = \\\\frac{1}{2}x + 2$ with $x = 0, 2, 4, 6, 8$.",
+                        steps: [
+                            "For $x = 0$: $y = \\\\frac{1}{2}(0) + 2 = 2$",
+                            "For $x = 2$: $y = \\\\frac{1}{2}(2) + 2 = 3$",
+                            "For $x = 4$: $y = \\\\frac{1}{2}(4) + 2 = 4$",
+                            "For $x = 6$: $y = \\\\frac{1}{2}(6) + 2 = 5$",
+                            "For $x = 8$: $y = \\\\frac{1}{2}(8) + 2 = 6$"
+                        ],
+                        final_answer: "$y$ values: $2, 3, 4, 5, 6$"
+                    },
+                    {
+                        question: "Complete the table for $y = -x$ with $x = -2, -1, 0, 1, 2$.",
+                        steps: [
+                            "For $x = -2$: $y = -(-2) = 2$",
+                            "For $x = -1$: $y = -(-1) = 1$",
+                            "For $x = 0$: $y = -(0) = 0$",
+                            "For $x = 1$: $y = -(1) = -1$",
+                            "For $x = 2$: $y = -(2) = -2$"
+                        ],
+                        final_answer: "$y$ values: $2, 1, 0, -1, -2$"
+                    }
+                ]
+            },
+            {
+                title: '3. Linear Graphs: The Geometry of Straight Lines',
+                content: "## Linear Equations\n\nLinear equations, written in the form $y = mx + c$, are the building blocks of mathematical modeling. They represent relationships with a constant rate of change.\n\n## ZIMSEC Step-by-Step Drawing Process\n\n1. **Construct the table of values**: Calculate at least 5 points to ensure accuracy.\n2. **Choose a suitable scale**: Use a scale that fills the graph paper. Standard exam instructions often specify 2 cm to represent 1 unit or 2 cm to represent 5 units.\n3. **Plot the points accurately**: Mark each coordinate from your table with a sharp 'x'.\n4. **Draw the straight line**: Connect the points using a ruler. The line must extend through all points.\n\n## Key Definitions\n\n- **Gradient** ($m$): The measure of steepness. A larger $m$ value means the line is steeper.\n- **Intercept** ($c$): The point where the line crosses the $y$-axis.\n\n## Common Errors\n\n- **Uneven scales**: If 2 cm represents 1 unit on the left of the origin, it must represent 1 unit on the right. Uneven spacing creates broken lines.\n- **Wavy lines**: Never join linear points free-hand. A functional straight line requires a ruler.",
+                worked_examples: [
+                    {
+                        question: "Draw the graph of $y = x$.",
+                        steps: ["Table: $x \\\\in \\\\{-2, 0, 2\\\\}$, $y \\\\in \\\\{-2, 0, 2\\\\}$. Ordered pairs: $(-2, -2)$, $(0, 0)$, $(2, 2)$. This line passes through the origin. Gradient is 1."],
+                        final_answer: "Straight line through the origin with gradient 1"
+                    },
+                    {
+                        question: "Draw the graph of $y = 3x$.",
+                        steps: ["Table: $x \\\\in \\\\{0, 1, 2\\\\}$, $y \\\\in \\\\{0, 3, 6\\\\}$. Ordered pairs: $(0, 0)$, $(1, 3)$, $(2, 6)$. This line is steeper than $y = x$. Gradient is 3."],
+                        final_answer: "Steeper line through the origin"
+                    },
+                    {
+                        question: "Draw the graph of $y = x + 3$.",
+                        steps: ["Table: $x \\\\in \\\\{0, 1, 2\\\\}$, $y \\\\in \\\\{3, 4, 5\\\\}$. Ordered pairs: $(0, 3)$, $(1, 4)$, $(2, 5)$. The line crosses the vertical axis at 3. $y$-intercept is 3."],
+                        final_answer: "Line with gradient 1 and $y$-intercept 3"
+                    },
+                    {
+                        question: "Draw the graph of $y = 2x - 2$.",
+                        steps: ["Table: $x \\\\in \\\\{0, 1, 2\\\\}$, $y \\\\in \\\\{-2, 0, 2\\\\}$. Ordered pairs: $(0, -2)$, $(1, 0)$, $(2, 2)$. Gradient is 2, $y$-intercept is $-2$."],
+                        final_answer: "Line with gradient 2 and $y$-intercept $-2$"
+                    },
+                    {
+                        question: "Draw the graph of $y = -x$.",
+                        steps: ["Table: $x \\\\in \\\\{-1, 0, 1\\\\}$, $y \\\\in \\\\{1, 0, -1\\\\}$. Ordered pairs: $(-1, 1)$, $(0, 0)$, $(1, -1)$. The line slopes downwards. Gradient is $-1$."],
+                        final_answer: "Line sloping downwards through the origin"
+                    },
+                    {
+                        question: "Draw the graph of $y = 4$.",
+                        steps: ["Table: $x \\\\in \\\\{-1, 0, 1\\\\}$, $y \\\\in \\\\{4, 4, 4\\\\}$. Ordered pairs: $(-1, 4)$, $(0, 4)$, $(1, 4)$. A horizontal line. Gradient is 0."],
+                        final_answer: "Horizontal line at $y = 4$"
+                    }
+                ]
+            },
+            {
+                title: '4. Graphical Analysis: Reading and Estimating Information',
+                content: "## The Power of Visualization\n\nThe strategic value of a graph lies in its ability to provide information beyond the specific points we calculated. This is achieved through **interpolation** (reading values within our data range) and **extrapolation** (estimating values beyond our range).\n\nA table might show the cost of 1 kg and 2 kg of maize. But what if a farmer needs to know the cost of 1.75 kg? We don't need a new calculation; we simply \"read\" the graph.\n\n## How to Read a Graph\n\n- **Finding $y$ given $x$**: Locate the $x$ value on the horizontal axis. Move vertically to touch the line, then move horizontally to the $y$-axis to read the result.\n- **Finding $x$ given $y$**: Locate the $y$ value on the vertical axis. Move horizontally to touch the line, then move vertically down to the $x$-axis to read the result.\n- **Estimating**: If a point falls between two marked values, use the scale to determine the precise decimal value.",
+                worked_examples: [
+                    {
+                        question: "On a graph of $y = x + 4$, find $y$ when $x = 1.5$.",
+                        steps: ["Tracing from 1.5 up and across gives $y = 5.5$."],
+                        final_answer: "$y = 5.5$"
+                    },
+                    {
+                        question: "On a graph of $y = 2x$, find $x$ when $y = 5$.",
+                        steps: ["Tracing from 5 across and down gives $x = 2.5$."],
+                        final_answer: "$x = 2.5$"
+                    },
+                    {
+                        question: "Use a graph of $y = 3x - 1$ to find the value of $y$ when $x = 0$.",
+                        steps: ["The line crosses at $y = -1$."],
+                        final_answer: "$y = -1$"
+                    },
+                    {
+                        question: "On a graph of $y = 10 - x$, estimate $x$ when $y = 7.5$.",
+                        steps: ["Tracing gives $x = 2.5$."],
+                        final_answer: "$x = 2.5$"
+                    }
+                ]
+            },
+            {
+                title: '5. Travel Graphs: Interpreting Distance-Time Relationships',
+                content: "## Key Features of Distance-Time Graphs\n\n- **The slope**: The steepness represents speed. A steeper slope indicates the object is moving faster.\n- **Horizontal lines**: A flat line means the distance is not changing as time passes. The object is **stationary** or at rest.\n- **Constant speed**: A straight, sloping line indicates the object is moving at a steady speed.\n\n## Relationship\n\n$$\\\\text{Speed} = \\\\frac{\\\\text{Distance}}{\\\\text{Time}}$$",
+                worked_examples: [
+                    {
+                        question: "A cyclist travels at a constant speed, covering 60 km in 3 hours. Draw the graph and find the speed.",
+                        steps: ["Table: Time 0, 1, 2, 3 h; Distance 0, 20, 40, 60 km. Speed $= 60 \\\\div 3 = 20$ km/h."],
+                        final_answer: "Speed $= 20$ km/h"
+                    },
+                    {
+                        question: "A car covers 100 km in 2 hours, stops for 1 hour, then covers 50 km in 1 hour. Describe the graph.",
+                        steps: ["Table: Time 0, 1, 2, 3, 4 h; Distance 0, 50, 100, 100, 150 km. The horizontal section is between Hour 2 and Hour 3 (rest period)."],
+                        final_answer: "Sloped line, then horizontal, then sloped again"
+                    },
+                    {
+                        question: "Find the speed of a runner who covers 10 km in 0.5 hours.",
+                        steps: ["Speed $= 10 \\\\div 0.5 = 20$ km/h."],
+                        final_answer: "Speed $= 20$ km/h"
+                    },
+                    {
+                        question: "A bus travels from Harare to a point 80 km away in 1 hour. Find the speed.",
+                        steps: ["Speed $= 80 \\\\div 1 = 80$ km/h."],
+                        final_answer: "Speed $= 80$ km/h"
+                    }
+                ]
+            },
+            {
+                title: '6. Exploration of Simple Non-Linear and Scaled Graphs',
+                content: "## Introduction to Curves: $y = x^2$\n\nThe rule $y = x^2$ (read as \"$y$ equals $x$ squared\") means we multiply the $x$ value by itself. Unlike linear graphs, the steepness of a curve changes at every point.\n\n## Scale Choice in Detail\n\n- **2 cm to 1 unit**: Use when values are small (e.g., $x$ from $-3$ to $3$). It makes the graph clear and easy to read.\n- **1 cm to 5 units**: Use when values are large (e.g., $y$ going up to 50 or 100). This ensures the entire graph fits on one page.\n\n## Common Errors\n\n- **Sign errors**: $(-3)^2$ is positive 9, not negative 9. A negative multiplied by a negative is always positive.\n- **Linear confusion**: Never use a ruler to join points on a curve like $y = x^2$. Use a free-hand, steady arc.",
+                worked_examples: [
+                    {
+                        question: "Complete the table for $y = x^2$ with $x = -2, -1, 0, 1, 2$.",
+                        steps: [
+                            "$y = (-2)^2 = (-2) \\\\times (-2) = 4$",
+                            "$y = (-1)^2 = 1$, $y = (0)^2 = 0$, $y = (1)^2 = 1$, $y = (2)^2 = 4$"
+                        ],
+                        final_answer: "$y$ values: $4, 1, 0, 1, 4$"
+                    },
+                    {
+                        question: "Calculate $y$ for $y = x^2 + 1$ when $x = 3$.",
+                        steps: ["$y = (3)^2 + 1 = 9 + 1 = 10$"],
+                        final_answer: "$y = 10$"
+                    },
+                    {
+                        question: "Compare $y = 2x$ and $y = x^2$ at $x = 4$.",
+                        steps: ["Linear: $y = 2(4) = 8$. Curve: $y = (4)^2 = 16$."],
+                        final_answer: "Linear gives 8; curve gives 16"
+                    },
+                    {
+                        question: "Calculate $y = x^2$ for $x = -5$.",
+                        steps: ["$y = (-5)^2 = 25$. Note the positive result."],
+                        final_answer: "$y = 25$"
+                    }
+                ]
+            },
+            {
+                title: '7. Comprehensive Assessment and Mastery Revision',
+                content: "## Mixed Revision Exercise\n\n### Plotting and Coordinates\n1. Plot $A(2, 5)$ and $B(-3, -4)$.\n2. Give the coordinates of the point 5 units left and 2 units up from the origin.\n3. What is the $y$-coordinate of any point on the $x$-axis?\n4. In which quadrant do both $x$ and $y$ have negative values?\n5. Plot the points $K(0, 2)$, $L(2, 0)$, $M(0, -2)$, $N(-2, 0)$. Join them in order.\n\n### Tables of Values\n6. Complete the table for $y = 2x + 4$ for $x = -2, 0, 2$.\n7. Complete the table for $y = 5 - x$ for $x = 0, 1, 2, 3$.\n8. Find $y$ when $x = -4$ for the rule $y = x + 10$.\n9. Complete the table for $y = 3x$ for $x = -1, 0, 1$.\n10. If $y = \\\\frac{1}{2}x + 3$, find $y$ for $x = 4$.\n\n### Drawing Linear Graphs\n11. Draw the graph of $y = x + 1$ for $x = -3$ to $3$ (Scale: 2 cm to 1 unit).\n12. Draw $y = 2x$ on the same axes.\n13. State the gradient of the line $y = 4x - 5$.\n14. Draw $y = -2x + 4$ and identify its $y$-intercept.\n15. Draw $y = 3$ and describe the line.\n16. Draw $x = -1$ and describe the line.\n17. Find the point where $y = x$ and $y = 2$ intersect.\n18. Draw $y = 2x - 3$ using a scale of 2 cm to 2 units.\n19. Determine if $(2, 5)$ lies on the line $y = 2x + 1$.\n20. Draw $y = \\\\frac{1}{3}x + 1$ for $x = 0, 3, 6$.\n\n### Reading Graphs\n21. From a graph of $y = 2x$, find $y$ when $x = 1.2$.\n22. From a graph of $y = x + 5$, find $x$ when $y = 8$.\n23. Estimate the $y$-intercept of a line passing through $(1, 3)$ and $(2, 4)$.\n24. Find $x$ when $y = -2$ for the graph of $y = x - 5$.\n25. Use a graph to find $y$ at $x = 0.5$ for $y = 4x$.\n\n### Distance-Time Problems\n26. A truck covers 180 km in 3 hours. Draw the graph and find the speed.\n27. A person walks at 6 km/h for 1.5 hours. Calculate the distance.\n28. Draw a travel graph for: 2 hours at 40 km/h, 1 hour rest, 1 hour at 60 km/h.\n29. Calculate the speed from a graph where a car moves 10 km in 10 minutes.\n30. How long does a car travelling at a constant speed of 80 km/h take to cover 40 km?\n\n## Exam-Style Structured Test\n\n### Section A (10 Marks)\n1. Define the term Ordered Pair.\n2. State the $y$-intercept of the line $y = 3x + 8$.\n3. If $y = 2x - 3$, find $y$ when $x = -2$.\n4. Calculate the speed if a cyclist covers 30 km in 1.5 hours.\n5. What is the gradient of a horizontal line?\n6. Calculate $(-6)^2$.\n7. Identify the dependent variable in the equation $y = mx + c$.\n8. Sketch a distance-time graph for a stationary object.\n9. If 2 cm represents 10 units, how many cm represent 50 units?\n10. Find the $y$ value when $x = 0$ for $y = 5x - 4$.\n\n### Section B (Structured Question)\n(a) Complete the table for the rule $y = x + 2$: $x = -2, -1, 0, 1, 2$.\n(b) Using a scale of 2 cm to 1 unit on both axes, draw the graph of $y = x + 2$.\n(c) From your graph, find the value of $y$ when $x = 0.5$.\n(d) State the gradient of the line."
+            },
+            {
+                title: '8. Marking Memorandum - Solutions',
+                content: "## Mixed Revision Exercise Solutions\n\n1. Points $A$ (2 right, 5 up) and $B$ (3 left, 4 down).\n2. $(-5, 2)$.\n3. $0$.\n4. Third Quadrant.\n5. Square/diamond shape.\n\n**Tables:**\n6. $y$ values: $2(-2)+4=0$; $2(0)+4=4$; $2(2)+4=8$. Answer: $\\\\{0, 4, 8\\\\}$.\n7. $y$ values: $\\\\{5, 4, 3, 2\\\\}$.\n8. $y = (-4)+10 = 6$.\n9. $y$ values: $\\\\{-3, 0, 3\\\\}$.\n10. $y = \\\\frac{1}{2}(4)+3 = 5$.\n\n**Linear Graphs:**\n11. Straight line through $(-3, -2)$, $(0, 1)$, $(3, 4)$.\n12. Steeper line through $(-1, -2)$, $(0, 0)$, $(1, 2)$.\n13. Gradient $= 4$.\n14. $y$-intercept $= 4$.\n15. Horizontal line passing through $y = 3$.\n16. Vertical line passing through $x = -1$.\n17. Intersection at $(2, 2)$.\n18. Line through $(0, -3)$, $(2, 1)$, $(4, 5)$.\n19. $y = 2(2)+1 = 5$. Yes, it lies on the line.\n20. Line through $(0, 1)$, $(3, 2)$, $(6, 3)$.\n\n**Reading Graphs:**\n21. $y = 2.4$.\n22. $x = 3$.\n23. $y$-intercept $= 2$.\n24. $-2 = x - 5 \\\\implies x = 3$.\n25. $y = 2$.\n\n**Distance-Time:**\n26. Speed $= 180 \\\\div 3 = 60$ km/h.\n27. Distance $= 6 \\\\times 1.5 = 9$ km.\n28. Graph: $(0,0)$ to $(2, 80)$, then horizontal to $(3, 80)$, then to $(4, 140)$.\n29. Speed $= 10 \\\\div \\\\frac{10}{60} = 60$ km/h.\n30. Time $= 40 \\\\div 80 = 0.5$ hours (30 minutes).\n\n## Exam-Style Test Solutions\n\n**Section A:**\n1. A pair of coordinates $(x, y)$ where order matters.\n2. $8$.\n3. $y = 2(-2)-3 = -7$.\n4. $20$ km/h.\n5. $0$.\n6. $36$.\n7. $y$.\n8. A horizontal line parallel to the $x$-axis.\n9. 10 cm.\n10. $-4$.\n\n**Section B:**\n(a) $y$ values: $0, 1, 2, 3, 4$.\n(b) A straight line passing through points $(-2, 0)$, $(-1, 1)$, $(0, 2)$, $(1, 3)$, $(2, 4)$.\n(c) At $x = 0.5$, $y = 2.5$.\n(d) Gradient $= 1$."
+            }
+        ],
+        key_points: [
+            "Origin: $(0, 0)$. Always crawl (horizontal) before climb (vertical).",
+            "Ordered pair $(x, y)$: $x$ is independent, $y$ is dependent.",
+            "Substitution: show three steps—rule, substitute, answer.",
+            "Linear form: $y = mx + c$; $m$ = gradient, $c$ = $y$-intercept.",
+            "Use a ruler for straight lines; smooth curve for $y = x^2$.",
+            "Speed $= \\\\frac{\\\\text{Distance}}{\\\\text{Time}}$.",
+            "Horizontal line on distance-time graph: object stationary.",
+            "$(-a)^2$ is positive; e.g. $(-6)^2 = 36$."
+        ],
+        exam_tips: [
+            "Always use a suitable scale that fills the graph paper.",
+            "Plot at least 5 points for linear graphs to ensure accuracy.",
+            "Never join curve points with a ruler—use free-hand.",
+            "Check that scales are even on both sides of the origin.",
+            "Show all substitution steps for full marks.",
+            "Label axes clearly and use a sharp pencil."
+        ],
+        visual_descriptions: [
+            "Cartesian plane with origin and four quadrants",
+            "Straight line graph showing gradient and y-intercept",
+            "Distance-time graph with slope and horizontal rest period",
+            "Parabola curve for y = x²"
         ]
     }
 };

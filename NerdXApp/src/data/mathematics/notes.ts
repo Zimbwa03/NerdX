@@ -1507,10 +1507,885 @@ const mensurationForm1Notes: MathTopicNotes = {
   ],
 };
 
+const travelGraphsForm1Notes: MathTopicNotes = {
+  topic: 'Travel Graphs',
+  subject: 'Mathematics',
+  grade_level: 'Form 1',
+  summary:
+    'Comprehensive Form 1 Mathematics notes on Travel Graphs (ZIMSEC Syllabus B, 2024–2030). Distance–Time graphs transform numerical motion data into visual narratives. Covers axes and scales, construction, interpreting motion, calculating speed, total distance, and ZIMSEC-style word problems. Aligns with Assessment Objective 9.1.1.',
+  sections: [
+    {
+      title: '1. Introduction to Travel Graphs',
+      content:
+        'In the ZIMSEC Form 1 Mathematics syllabus (Syllabus B, 2024–2030), travel graphs serve as a strategic bridge between algebraic reasoning and visual data interpretation. These graphs, specifically referred to as **Distance–Time graphs**, transform raw numerical data regarding motion into visual narratives. By representing a journey on a Cartesian plane, students observe the relationship between the distance covered and the time elapsed, making abstract concepts of movement tangible. This mastery aligns with Assessment Objective 9.1.1, requiring learners to recognize and use mathematical terms and definitions correctly.\n\nA **Travel Graph** is a coordinate-based representation where time is the independent variable and distance is the dependent variable. In accordance with mathematical conventions:\n\n- **Horizontal axis (x-axis):** Independent variable — Time\n- **Vertical axis (y-axis):** Dependent variable — Distance\n\nStandardized units—kilometres (km), metres (m), hours (h), and minutes (min)—are essential. Selecting a correct, consistent scale is critical; improper scaling distorts the steepness of the graph, leading to a false interpretation of speed and rendering the graph mathematically invalid for examination purposes.\n\n**Analytical Task: The Logic of the Axes**\n\nWe place time on the horizontal axis because it progresses at a constant rate regardless of the distance travelled. If we were to use inconsistent increments on the axes, a car moving at a steady $60\\ \\text{km/h}$ might appear to be accelerating or slowing down visually. This would violate the principle of accurate data representation required in ZIMSEC Paper 2.',
+    },
+    {
+      title: '2. Worked Examples: Identifying Axes and Scales',
+      content:
+        '| Example | Scenario | x-axis | y-axis | Scale (x) | Scale (y) |\n| :--- | :--- | :--- | :--- | :--- | :--- |\n| 1 | Student walks 1,2 km in 15 min | Time (min) | Distance (m) | 2 cm = 5 min | 2 cm = 400 m |\n| 2 | Bus Harare–Bulawayo 440 km in 6 h | Time (h) | Distance (km) | 2 cm = 1 h | 1 cm = 50 km |\n| 3 | Sprinter 100 m in 12 s | Time (s) | Distance (m) | 2 cm = 2 s | 2 cm = 10 m |\n| 4 | Delivery van 45 min in suburb | Time (min) | Distance (km) | 1 cm = 5 min | 1 cm = 1 km |\n| 5 | Airplane Harare–Johannesburg 1 h 45 min | Time (min) | Distance (km) | 1 cm = 15 min | 1 cm = 100 km |\n| 6 | Cyclist 60 km in 3 h | Time (h) | Distance (km) | 2 cm = 0,5 h | 1 cm = 5 km |\n| 7 | Snail 50 cm in 10 min | Time (min) | Distance (cm) | 1 cm = 1 min | 1 cm = 5 cm |\n| 8 | Hiker 15 km in 5 h with breaks | Time (h) | Distance (km) | 1 cm = 1 h | 1 cm = 2 km |\n\n**Formative Assessment 1**\n\n1. On which axis must the independent variable (time) always be placed?\n2. Why is a non-linear scale (e.g. jumping from 5 to 20 to 25) prohibited in ZIMSEC exams?\n3. If a journey covers 800 km, is a scale of 1 cm to 1 km practical for a standard A4 page? Explain.\n4. Name the standard SI unit for time used in high-speed racing graphs.\n5. Identify the coordinates $(t, d)$ of the origin on a travel graph and state what they represent.',
+    },
+    {
+      title: '3. Constructing Distance–Time Graphs',
+      content:
+        'Construction begins with a **Table of Values**, a structured organisation of data points that serves as the blueprint for the Cartesian plane.\n\n**Plotting:** Locate coordinates (Time, Distance). Connect points by line segments.\n\n- **Straight sloped line:** Constant speed\n- **Horizontal line:** Stationary (time passes, distance unchanged)\n- **Line sloping back toward x-axis:** Return journey\n- **Curved line:** Changing speed (acceleration or deceleration)\n\n**Analytical Task: Contrasting Motion States**\n\n- **Moving away:** Line rises from left to right\n- **Returning:** Line falls toward the x-axis\n- **Horizontal:** Zero speed. Since $S = D \\div T$, if $\\Delta D = 0$ over a duration, speed $= 0$.\n\n**Worked Examples: Tables and Plotting**\n\n**Example 1 – Constant Speed:** Time (h): 0, 1, 2, 3 | Distance (km): 0, 50, 100, 150. Plot $(0,0)$, $(1,50)$, $(2,100)$, $(3,150)$; connect with one straight line. Straight slope confirms constant speed of $50\\ \\text{km/h}$.\n\n**Example 2 – Rest Stop:** Time (min): 0, 10, 20, 30 | Distance (m): 0, 400, 400, 800. Rise to $(10,400)$, horizontal to $(20,400)$, then slope up to $(30,800)$. Horizontal segment shows stationary for 10 minutes.\n\n**Example 3 – Two Legs:** Time (h): 0, 2, 3, 4 | Distance (km): 0, 40, 100, 120. Segment $(2,40)$ to $(3,100)$ is steeper than $(0,0)$ to $(2,40)$; faster in third hour.\n\n**Example 4 – Return Journey:** Time (h): 0, 1, 2 | Distance (km): 0, 60, 0. Rise to $(1,60)$, drop to $(2,0)$. Returned to start at 2 hours.\n\n**Example 5 – Multiple Stops:** Time (min): 0, 5, 10, 15, 20 | Distance (m): 0, 100, 100, 250, 250. Two horizontal segments at $y = 100$ and $y = 250$.\n\n**Example 6 – Walking to Shop:** Time (min): 0, 8, 15 | Distance (m): 0, 600, 600. Steady climb to $(8,600)$, horizontal to $(15,600)$; at shop for 7 minutes.\n\n**Example 7 – Acceleration:** Time (s): 0, 2, 4, 6 | Distance (m): 0, 4, 16, 36. Smooth curve getting steeper; object accelerating.\n\n**Example 8 – Long Haul with Break:** Time (h): 0, 4, 6, 10 | Distance (km): 0, 320, 320, 800. Slope to $(4,320)$, 2 h flat line, steeper slope to $(10,800)$.\n\n**Common Errors:** Axis swapping; inconsistent increments; using curved line for constant speed or jagged line for rest.',
+    },
+    {
+      title: '4. Formative Assessment 2 and Common Errors',
+      content:
+        '**Formative Assessment 2**\n\n1. Draw a table of values for a vehicle travelling at $60\\ \\text{km/h}$ for 2,5 hours.\n2. If a graph shows a horizontal line from $(3, 10)$ to $(5, 10)$, how long was the object stationary?\n3. Describe the visual difference between a journey at $20\\ \\text{km/h}$ and one at $80\\ \\text{km/h}$.\n4. Why is a vertical line (straight up) impossible on a travel graph? (Hint: Think about time.)\n\n**Common Errors in Construction**\n\n- **Axis Swapping:** Plotting Time on the y-axis; violates independent variable logic.\n- **Inconsistent Increments:** Jumping from 10 to 20 and then to 50 on a single axis.\n- **Line Style Confusion:** Using a curved line for constant speed or a jagged line for a rest stop.',
+    },
+    {
+      title: '5. Interpreting Motion and Reading Values',
+      content:
+        'A travel graph is a "snapshot" of a journey. By analysing gradients and coordinate pairs, we identify when an object was moving at high velocity or at rest (Assessment Objective 9.1.9).\n\n**Key cues:** The gradient (steepness). A steeper line indicates higher speed. To read a value: identify a point on the x-axis (time), move vertically to the line, then horizontally to the y-axis for distance.\n\n**Analytical Task:** When comparing two segments, the segment with the greater vertical rise over the same horizontal run represents higher velocity, because the gradient $\\dfrac{\\text{rise}}{\\text{run}}$ is the rate of travel.\n\n**Worked Examples: Reading the Graph**\n\n1. Line connects $(1, 40)$ and $(2, 80)$. At $t = 1{,}5\\ \\text{h}$, distance $= 60\\ \\text{km}$.\n2. Line reaches $y = 100$ at $x = 5$; time to travel 100 m is 5 s.\n3. Horizontal from $(12, 5)$ to $(15, 5)$; stop lasted $15 - 12 = 3$ minutes.\n4. Graph peaks at $(4, 200)$; furthest point was 200 km.\n5. Horizontal at $y = 500$ from $t = 2$ to $t = 6$; at $t = 4$ min, distance $= 500$ m.\n6. Segment A $(0,0)$ to $(2, 20)$ vs Segment B $(2, 20)$ to $(3, 60)$; B steeper, faster in final hour.\n7. Line intersects x-axis at $(8, 0)$; return completed at 8 hours.\n8. Line $(0,0)$ to $(40, 200)$; midpoint $t = 20$ gives distance $= 100$ m.',
+    },
+    {
+      title: '6. Formative Assessment 3',
+      content:
+        '1. If a line is perfectly horizontal, what is the speed?\n2. A graph shows a person at 12 km at $t = 4$ and 12 km at $t = 5$. What occurred?\n3. How do we identify the "fastest" leg of a journey visually?\n4. Find the distance at $t = 2$ for a line connecting $(0,0)$ and $(4, 100)$.\n5. At what time does a traveller return home if the line hits the x-axis at $t = 10{,}5$?',
+    },
+    {
+      title: '7. Calculating Speed from the Graph',
+      content:
+        'The mathematical transition from observation to calculation uses the speed formula. In ZIMSEC Mathematics, **speed is the gradient** of the distance–time graph.\n\n**Core formula:**\n$$S = \\frac{D}{T} \\quad \\text{or} \\quad S = D \\div T$$\n\nUse **Step-by-Step Substitution** for full marks in Paper 1 and 2.\n\n**Worked Examples**\n\n1. **Basic:** $S = 150 \\div 3 = 50\\ \\text{km/h}$\n2. **Walking:** $S = 400 \\div 8 = 50\\ \\text{m/min}$\n3. **Gradient:** Points $(2, 60)$ to $(4, 180)$. $\\Delta D = 120$, $\\Delta T = 2$. $S = 120 \\div 2 = 60\\ \\text{km/h}$\n4. **Unit conversion:** 20 km in 30 min. $30 \\div 60 = 0{,}5\\ \\text{h}$. $S = 20 \\div 0{,}5 = 40\\ \\text{km/h}$\n5. **Sprint:** $S = 100 \\div 10 = 10\\ \\text{m/s}$\n6. **Stationary:** $S = 0 \\div 15 = 0\\ \\text{km/h}$\n7. **High speed:** $(0,0)$ to $(0{,}5, 50)$: $S = 50 \\div 0{,}5 = 100\\ \\text{km/h}$\n8. **Complex conversion:** 6 km in 45 min. $45 \\div 60 = 0{,}75\\ \\text{h}$. $S = 6 \\div 0{,}75 = 8\\ \\text{km/h}$\n\n**Common Errors:** Formula inversion ($T \\div D$); mixing units (km ÷ min but labelling km/h).',
+      worked_examples: [
+        {
+          question: 'Calculate speed from points $(2, 60)$ to $(4, 180)$.',
+          steps: [
+            'Change in D: $180 - 60 = 120$; Change in T: $4 - 2 = 2$',
+            'Substitution: $S = 120 \\div 2$',
+          ],
+          final_answer: '$60\\ \\text{km/h}$',
+        },
+        {
+          question: '20 km in 30 minutes. Find speed in km/h.',
+          steps: [
+            'Conversion: $30 \\div 60 = 0{,}5\\ \\text{h}$',
+            'Substitution: $S = 20 \\div 0{,}5 = 40$',
+          ],
+          final_answer: '$40\\ \\text{km/h}$',
+        },
+      ],
+    },
+    {
+      title: '8. Formative Assessment 4',
+      content:
+        'Calculate speed for:\n\n1. $D = 240\\ \\text{km}$, $T = 4\\ \\text{h}$\n2. $D = 1000\\ \\text{m}$, $T = 200\\ \\text{s}$\n3. Points $(0,0)$ to $(3, 15)$\n4. $D = 15\\ \\text{km}$, $T = 15\\ \\text{min}$ (Answer in km/h)\n5. $D = 45\\ \\text{km}$, $T = 1{,}5\\ \\text{h}$\n6. Points $(1, 20)$ to $(2, 20)$',
+    },
+    {
+      title: '9. Total Distance Travelled',
+      content:
+        'Analysing a full journey involves summing all movements. **Total Distance** = entire path taken. **Displacement** = final gap between start and end (ZIMSEC Objective 9.1.13).\n\n**Distance vs Displacement:** In a return journey, total distance increases (adding return km). Displacement decreases (moving toward $y = 0$).\n\n**Worked Examples**\n\n1. 80 km out, 80 km back: $80 + 80 = 160\\ \\text{km}$\n2. 3 km, stop, 2 km more: $3 + 0 + 2 = 5\\ \\text{km}$\n3. Mutare–Rusape 90 km, then 80 km to Marondera: $90 + 80 = 170\\ \\text{km}$\n4. Graph rises to 30 km, flat 1 h, falls to 0: $30 + 0 + 30 = 60\\ \\text{km}$\n5. 5 laps of 400 m track: $5 \\times 400 = 2000\\ \\text{m}$\n6. 12 km out, 2 km stop, 5 km out, 17 km return: $12 + 5 + 17 = 34\\ \\text{km}$\n7. Points $(0,0)$, $(2, 40)$, $(3, 40)$, $(5, 90)$: segments 40 km, 0 km, 50 km $\\Rightarrow 40 + 50 = 90\\ \\text{km}$\n8. Van: 4 km to A, 3 km to B, 7 km back: $4 + 3 + 7 = 14\\ \\text{km}$',
+    },
+    {
+      title: '10. Formative Assessment 5',
+      content:
+        '1. Graph points $(0,0)$, $(1, 50)$, $(2, 50)$, $(3, 0)$. Calculate total distance.\n2. In Question 1, what is the final displacement?\n3. If a traveller ends exactly where they started, is the distance always double the furthest point? Explain.\n4. Why does a stop (horizontal line) add zero to the total distance?\n5. A cyclist goes 20 km North and 15 km South. Total distance?',
+    },
+    {
+      title: '11. ZIMSEC-Style Word Problems and Keyword Map',
+      content:
+        'Success in ZIMSEC Paper 2 requires **Inference and Manipulation** (Objectives 9.1.11 & 9.1.12). Deconstruct narratives into coordinates.\n\n**Keyword-to-Math Map**\n\n- "Stopped/Rested" $\\rightarrow$ Horizontal line ($y$-value stays same)\n- "Back to the start" $\\rightarrow$ $y$-coordinate returns to 0\n- "Constant speed" $\\rightarrow$ Straight sloped line\n- "At the same time" $\\rightarrow$ Intersection of two lines\n\n**Worked Examples**\n\n**Example 1 – The Commute:** Farai walks 2 km in 30 min, stays 4 h, walks home in 45 min. (a) $30\\ \\text{min} = 0{,}5\\ \\text{h}$. Speed to work $= 2 \\div 0{,}5 = 4\\ \\text{km/h}$. (b) Total distance $= 2 + 2 = 4\\ \\text{km}$.\n\n**Example 2 – Bus Journey:** Leaves 07:00, 120 km by 09:00, stops 1 h, 60 km in 1 h. (a) First leg speed $= 120 \\div 2 = 60\\ \\text{km/h}$. (b) Arrival: $09{:}00 + 1\\ \\text{h} + 1\\ \\text{h} = 11{:}00$.\n\n**Example 3 – "Hence determine":** Car at 80 km/h for 40 km. $T = D \\div S = 40 \\div 80 = 0{,}5\\ \\text{h}$ (30 min).\n\n**Example 4 – Coordinate Logic:** Points $(0,0)$, $(1, 60)$, $(2, 60)$, $(4, 0)$. Return speed $= 60 \\div (4-2) = 30\\ \\text{km/h}$.\n\n**Example 5 – Mixed Units:** 15 km in 20 min. $20 \\div 60 = 0{,}333\\ \\text{h}$. $15 \\div 0{,}333 \\approx 45\\ \\text{km/h}$.\n\n**Example 6 – Relative Speed:** Runner A: 10 km in 1 h. Runner B: 10 km in 50 min. B: $10 \\div \\frac{50}{60} = 12\\ \\text{km/h}$. B faster by 2 km/h.\n\n**Example 7 – Broken Path:** 20 km, rest, 15 km. Total time 3 h. Average speed $= 35 \\div 3 \\approx 11{,}67\\ \\text{km/h}$.\n\n**Example 8 – Arrival:** Departs 14:00, 150 km at 75 km/h. $T = 150 \\div 75 = 2\\ \\text{h}$. Arrival at 16:00.',
+    },
+    {
+      title: '12. Comprehensive Revision (25 Questions)',
+      content:
+        '1. Define a distance–time graph.\n2. Which variable goes on the x-axis?\n3. What does a slope represent?\n4. How is "rest" shown?\n5. State the speed formula.\n6. Calculate speed: $D = 300\\ \\text{km}$, $T = 5\\ \\text{h}$.\n7. What does coordinate $(2, 100)$ mean?\n8. If line A is steeper than line B, which is faster?\n9. Convert 15 min to hours.\n10. Distance out $= 10$, return $= 10$. Total distance?\n11. If $D = 0$, what is the speed?\n12. Find $D$: $S = 80\\ \\text{km/h}$, $T = 2\\ \\text{h}$.\n13. Describe a "return" line.\n14. Why use a consistent scale?\n15. Draw a 30-min stop if 2 cm = 1 hour.\n16. Find $T$: $D = 60$, $x = 2$.\n17. Speed: $(0,0)$ to $(4, 160)$.\n18. Total distance: $(0,0)$ to $(2, 50)$ to $(3, 50)$ to $(4, 0)$.\n19. Units for speed if $D$ in metres and $T$ in seconds?\n20. Meaning of $(0,0)$?\n21. Estimate $D$ at $t = 0{,}5$ if $t = 1$ gives 100.\n22. True/False: Gradient $=$ Speed.\n23. Speed: $D = 20\\ \\text{km}$, $T = 15\\ \\text{min}$ in km/h.\n24. Distance: 10 km out, 0 stop, 4 km out.\n25. Average speed for 200 km in 4 hours?',
+    },
+    {
+      title: '13. Exam-Style Structured Test',
+      content:
+        '**Question 1 (10 marks):** A cyclist travels 12 km to a friend\'s house in 45 minutes. They stay for 30 minutes and cycle back in 1 hour. (a) Draw a table of values for this journey. (4) (b) Calculate the outward speed in km/h. (3) (c) Calculate the total distance. (3)\n\n**Question 2 (10 marks):** Draw a travel graph: x-axis 2 cm = 1 h; y-axis 1 cm = 10 km. Data: $(0,0)$, $(2, 40)$, $(3, 40)$, $(5, 0)$. (a) Find the speed between $t = 0$ and $t = 2$. (3) (b) How long was the rest? (2) (c) Calculate the return speed. (5)\n\n**Question 3 (5 marks):** A train travels 450 km at 90 km/h. It starts at 05:30. Find the arrival time.\n\n**Question 4 (5 marks):** Contrast total distance and displacement for a car that moves 100 km and returns 100 km.\n\n**Question 5 (5 marks):** List three common errors in travel graph construction.',
+    },
+    {
+      title: '14. Complete Marking Memo',
+      content:
+        '**Revision Exercise Solutions**\n\n1. A visual representation of distance against time.\n2. Time.\n3. Speed.\n4. Horizontal line.\n5. $S = D \\div T$ or $\\text{Speed} = \\dfrac{\\text{Distance}}{\\text{Time}}$.\n6. $300 \\div 5 = 60\\ \\text{km/h}$.\n7. At 2 hours, the distance is 100 km.\n8. Line A.\n9. $15 \\div 60 = 0{,}25\\ \\text{h}$.\n10. $10 + 10 = 20\\ \\text{km}$.\n11. 0.\n12. $80 \\times 2 = 160\\ \\text{km}$.\n13. Slopes down to the x-axis.\n14. To prevent data distortion.\n15. A 1 cm horizontal line.\n16. 2 hours.\n17. $160 \\div 4 = 40\\ \\text{km/h}$.\n18. $50 + 50 = 100\\ \\text{km}$.\n19. m/s.\n20. Start of journey.\n21. 50 km.\n22. True.\n23. $15 \\div 60 = 0{,}25\\ \\text{h}$; $20 \\div 0{,}25 = 80\\ \\text{km/h}$.\n24. $10 + 4 = 14\\ \\text{km}$.\n25. $200 \\div 4 = 50\\ \\text{km/h}$.\n\n**Exam-Style Test Solutions**\n\n- **Q1a:** Time (h): 0, 0,75, 1,25, 2,25 | Dist (km): 0, 12, 12, 0\n- **Q1b:** $S = 12 \\div 0{,}75 = 16\\ \\text{km/h}$\n- **Q1c:** $12 + 12 = 24\\ \\text{km}$\n- **Q2a:** $S = 40 \\div 2 = 20\\ \\text{km/h}$\n- **Q2b:** $3 - 2 = 1$ hour rest\n- **Q2c:** $S = 40 \\div (5 - 3) = 20\\ \\text{km/h}$\n- **Q3:** $T = 450 \\div 90 = 5\\ \\text{h}$. $05{:}30 + 5\\ \\text{h} = 10{:}30$\n- **Q4:** Distance $= 100 + 100 = 200\\ \\text{km}$. Displacement $= 0\\ \\text{km}$\n- **Q5:** Axis swapping, non-linear scales, missing units.',
+    },
+  ],
+  key_points: [
+    'Time on x-axis, distance on y-axis. Consistent, linear scale required.',
+    'Straight slope $\\Rightarrow$ constant speed; horizontal $\\Rightarrow$ stationary; downward slope $\\Rightarrow$ return.',
+    'Speed $S = \\dfrac{D}{T}$; gradient of distance–time graph $=$ speed.',
+    'Total distance $=$ sum of all segments; displacement $=$ final position minus start.',
+    'Stopped/rested $\\Rightarrow$ horizontal line; "back to start" $\\Rightarrow$ $y = 0$.',
+  ],
+  exam_tips: [
+    'Use Step-by-Step Substitution for speed calculations to secure method marks.',
+    'Convert units (e.g. min $\\rightarrow$ h) before calculating speed when answer must be in km/h.',
+    'Avoid axis swapping, non-linear scales, and formula inversion ($T \\div D$).',
+    'Show table of values before plotting; label axes with units.',
+  ],
+  visual_descriptions: [
+    'Distance–Time graph: time horizontal, distance vertical; steeper $=$ faster.',
+    'Horizontal segment = rest; downward slope = return to origin.',
+    'Gradient = rise over run = speed (e.g. km/h or m/s).',
+  ],
+};
+
+const symbolicExpressionsForm1Notes: MathTopicNotes = {
+  topic: 'Mastering Symbolic Expressions',
+  subject: 'Mathematics',
+  grade_level: 'Form 1',
+  summary:
+    'Form 1 Mathematics: Mastering Symbolic Expressions (ZIMSEC Syllabus B). Algebra serves as the primary language of the Heritage-based Mathematics syllabus—a practical tool for modelling systems to produce goods and services. Covers variables, constants, terms, expressions, translating words to symbols, simplifying like terms, index laws, substitution, expanding brackets, factorisation, and forming expressions from word problems.',
+  sections: [
+    {
+      title: '1. Foundations of Algebra: Introduction to Algebraic Symbols',
+      content:
+        'Algebra serves as the primary language of the Heritage-based Mathematics syllabus, acting as a critical engine for industrialisation and entrepreneurship. Within the ZIMSEC Rationale, algebra is positioned not as an abstract theory, but as a practical tool for modelling systems to produce goods and services. By moving from specific numbers to general symbols, learners develop the capacity for innovation—allowing engineers, farmers, and business owners to solve complex, multi-variable problems that drive national development.\n\n**Definitions and Concepts**\n\nTo communicate effectively in the language of algebra, we must define its building blocks:\n\n- **Variable:** A letter (e.g. $x$, $y$, $n$) representing an unknown quantity or a value that can vary.\n- **Constant:** A fixed numerical value that never changes, such as $7$, $-5$, or $0{,}25$.\n- **Term:** A single mathematical component, which can be a number, a variable, or a product of both (e.g. $4$, $x$, $5y$).\n- **Expression:** A collection of terms joined by operators ($+$, $-$, $\\times$, $\\div$). It does not contain an equals sign (e.g. $3x + 4$).\n\n**The "So What?" Layer: Expression vs. Equation**\n\nA Senior Specialist\'s most critical observation is the strategic difference between an expression and an equation. An **expression** is a mathematical "phrase" that represents a value. An **equation** is a mathematical "sentence" that states a relationship of equality between two expressions.\n\n**Strategic Difference:** You can simplify or evaluate an expression, but you cannot "solve" it because there is no balance established. Confusing these two leads to the **"Ghost Equals Sign" error**, where students incorrectly assume every algebraic statement must equal zero.\n\n**Translating Words to Symbols**\n\nIn professional fields like engineering and ICT, problems begin as verbal requirements. In digital spreadsheets, for example, variables are represented by cell references (like A1 or B2).\n\n| Word Statement | Symbolic Expression |\n|----------------|--------------------|\n| Five more than $x$ | $x + 5$ |\n| The product of 3 and $y$ | $3y$ |\n| A number $n$ decreased by 10 | $n - 10$ |\n| Half of $z$ | $\\frac{z}{2}$ |\n| $k$ shared equally among 4 people | $\\frac{k}{4}$ |',
+      worked_examples: [
+        {
+          question: 'Write an expression for "the sum of $a$ and $b$".',
+          steps: ['Sum means addition'],
+          final_answer: '$a + b$',
+        },
+        {
+          question: 'Translate "twice the value of $w$".',
+          steps: ['Twice means multiply by 2'],
+          final_answer: '$2w$',
+        },
+        {
+          question: 'Express "7 less than $p$".',
+          steps: ['7 less than $p$ means subtract 7 from $p$'],
+          final_answer: '$p - 7$',
+        },
+        {
+          question: 'A technician has $x$ metres of cable. If 12 metres are used, how many remain?',
+          steps: ['Remaining $=$ total $-$ used'],
+          final_answer: '$x - 12$',
+        },
+        {
+          question: 'Represent "the quotient of $m$ and 8".',
+          steps: ['Quotient means division'],
+          final_answer: '$\\frac{m}{8}$',
+        },
+        {
+          question: 'Write an expression for the total cost of $n$ items at $\\$15$ each.',
+          steps: ['Total cost $=$ cost per item $\\times$ number of items'],
+          final_answer: '$15n$',
+        },
+      ],
+    },
+    {
+      title: 'Common Error: The Ghost Equals Sign',
+      content:
+        '**Never add "$= 0$" to an expression.** $4x + 7$ is a value. It is not "equal" to anything until a relationship is specified. Attempting to "solve" $4x + 7$ is a fundamental logical error.\n\n**Practice Exercise 1.1**\n\n1. Identify the variable and the constant in: $12y - 5$.\n2. Translate into symbols: "The product of 9 and $k$."\n3. Translate into symbols: "15 more than $t$."\n4. State the number of terms in: $3x + 2y - 7z + 1$.\n5. A farmer has $g$ goats. Write an expression for the number of goats if the herd doubles.',
+    },
+    {
+      title: '2. Simplifying Algebraic Expressions: The Logic of Like Terms',
+      content:
+        'Simplification is the process of reducing complexity to ensure clear communication in technical fields. In engineering and business, streamlined expressions reduce the risk of calculation errors and improve computational efficiency.\n\n**The Logic of Like Terms (The "Why")**\n\nWe only combine terms that are "like"—meaning they share the same variables raised to the same powers.\n\n**Analogy:** 3 cows and 2 cows make 5 cows. However, 3 cows and 2 goats cannot be combined; they remain "3 cows and 2 goats." In algebra, $3x + 2x = 5x$, but $3x + 2y$ cannot be simplified further.\n\n**Sub-Section: Algebraic Expressions in Index Form (Syllabus 8.6)**\n\nWhen we multiply a variable by itself, we use indices (powers).\n\n- $x \\times x = x^2$\n- **Law 1:** $x^a \\times x^b = x^{a+b}$\n- **Law 2:** $x^a \\div x^b = x^{a-b}$\n- **Law 3:** $x^0 = 1$',
+      worked_examples: [
+        {
+          question: 'Simplify $5a + 8a$',
+          steps: ['$(5 + 8)a$'],
+          final_answer: '$\\boxed{13a}$',
+        },
+        {
+          question: 'Simplify $12x - 4x + x$',
+          steps: ['$8x + x$'],
+          final_answer: '$\\boxed{9x}$',
+        },
+        {
+          question: 'Simplify $6p + 2q - p + 5q$',
+          steps: ['$6p - p + 2q + 5q = 5p + 7q$'],
+          final_answer: '$\\boxed{5p + 7q}$',
+        },
+        {
+          question: 'Simplify $b^3 \\times b^2$',
+          steps: ['$b^{3+2}$'],
+          final_answer: '$\\boxed{b^5}$',
+        },
+        {
+          question: 'Simplify $15m^6 \\div 3m^2$',
+          steps: ['$(15 \\div 3)m^{6-2}$'],
+          final_answer: '$\\boxed{5m^4}$',
+        },
+        {
+          question: 'Simplify $3a \\times 4b$',
+          steps: ['$(3 \\times 4) \\times a \\times b$'],
+          final_answer: '$\\boxed{12ab}$',
+        },
+        {
+          question: 'Simplify $4x + 7 - 2x + 3$',
+          steps: ['$4x - 2x + 7 + 3$'],
+          final_answer: '$\\boxed{2x + 10}$',
+        },
+        {
+          question: 'Simplify $x^2 + 3x + 2x^2$',
+          steps: ['$x^2 + 2x^2 + 3x$'],
+          final_answer: '$\\boxed{3x^2 + 3x}$',
+        },
+      ],
+    },
+    {
+      title: 'Common Error: Mixing Unlike Terms',
+      content:
+        'A frequent mistake is writing $4x + 3y = 7xy$. This is incorrect. $x$ and $y$ are different categories. The expression $4x + 3y$ is already in its simplest form.\n\n**Practice Exercise 2.1**\n\nSimplify the following:\n\n1. $9k + 2k$\n2. $15n - 6n$\n3. $y + y + y + y$\n4. $8a + 3b - 2a + b$\n5. $x^4 \\times x^3$\n6. $10m^5 \\div 2m^2$\n7. $4p \\times 5q$\n8. $12x + 5 - 3x - 8$',
+    },
+    {
+      title: '3. Substitution and Evaluation',
+      content:
+        'Substitution transforms a general algebraic model into a specific numerical solution. This is essential for using ICT tools, where formulas calculate results based on variable inputs.\n\n**The Golden Rules of Substitution**\n\n1. Always use brackets when replacing a letter with a number (e.g. replace $x$ with $(-2)$).\n2. Follow **Precedence (BODMAS):** Brackets, Orders (Indices), Division/Multiplication, then Addition/Subtraction.',
+      worked_examples: [
+        {
+          question: 'Evaluate $x + 12$ when $x = 5$.',
+          steps: ['$= (5) + 12$'],
+          final_answer: '\\boxed{17}',
+        },
+        {
+          question: 'Evaluate $5y$ when $y = -3$.',
+          steps: ['$= 5(-3)$'],
+          final_answer: '\\boxed{-15}',
+        },
+        {
+          question: 'Find $2a + 4b$ if $a = 3$, $b = 2$.',
+          steps: ['$= 2(3) + 4(2) = 6 + 8$'],
+          final_answer: '\\boxed{14}',
+        },
+        {
+          question: 'Evaluate $n^2$ when $n = -4$.',
+          steps: ['$= (-4)^2 = (-4) \\times (-4)$'],
+          final_answer: '\\boxed{16}',
+        },
+        {
+          question: 'Evaluate $2(x - 5)$ when $x = 12$.',
+          steps: ['$= 2((12) - 5) = 2(7)$'],
+          final_answer: '\\boxed{14}',
+        },
+        {
+          question: 'Evaluate $\\frac{20}{m} + 3$ when $m = 5$.',
+          steps: ['$= \\frac{20}{(5)} + 3 = 4 + 3$'],
+          final_answer: '\\boxed{7}',
+        },
+        {
+          question: 'Area of a square is $s^2$. If $s = 6\\ \\text{cm}$, find the area.',
+          steps: ['$= (6)^2$'],
+          final_answer: '\\boxed{36\\ \\text{cm}^2}',
+        },
+        {
+          question: 'Evaluate $ab - c$ when $a=4$, $b=-2$, $c=5$.',
+          steps: ['$= (4)(-2) - (5) = -8 - 5$'],
+          final_answer: '\\boxed{-13}',
+        },
+      ],
+    },
+    {
+      title: 'Common Error: Forgetting Brackets',
+      content:
+        'If $x = -2$, then $x^2$ is $(-2)^2 = 4$. Without brackets, many calculate $-2^2 = -4$. Always use brackets to protect the negative sign.\n\n**Practice Exercise 3.1**\n\nIf $x = 4$, $y = -3$, and $z = 2$, evaluate:\n\n1. $x + z$\n2. $3y$\n3. $x + y$\n4. $z^2$\n5. $2x - 3z$\n6. $5(x + y)$',
+    },
+    {
+      title: '4. Expanding Brackets: The Distributive Law',
+      content:
+        'The Distributive Law is used to remove brackets, which act as "barriers" to simplification. In complex engineering formulas, expanding brackets is a necessary step before terms can be grouped and reduced.\n\n**The Logic of Distribution (The "Why")**\n\nWhen we see $4(x + 3)$, it means we have four identical groups of $(x + 3)$. This is $x+3 + x+3 + x+3 + x+3$, which equals $4x + 12$. The logic is that the multiplier outside must be distributed to every term inside.',
+      worked_examples: [
+        {
+          question: 'Expand $5(x + 2)$',
+          steps: ['The term 5 multiplies $x$ and then multiplies 2.', '$= 5(x) + 5(2)$'],
+          final_answer: '\\boxed{5x + 10}',
+        },
+        {
+          question: 'Expand $a(b - 4)$',
+          steps: ['The term $a$ multiplies $b$ and then multiplies $-4$.', '$= a(b) + a(-4)$'],
+          final_answer: '\\boxed{ab - 4a}',
+        },
+        {
+          question: 'Expand $3(2m + 5)$',
+          steps: ['$= 3(2m) + 3(5)$'],
+          final_answer: '\\boxed{6m + 15}',
+        },
+        {
+          question: 'Expand $-2(y + 6)$',
+          steps: ['$= (-2)(y) + (-2)(6)$'],
+          final_answer: '\\boxed{-2y - 12}',
+        },
+        {
+          question: 'Expand $-3(k - 5)$',
+          steps: ['$= (-3)(k) + (-3)(-5)$'],
+          final_answer: '\\boxed{-3k + 15}',
+        },
+        {
+          question: 'Expand $x(x + 3)$',
+          steps: ['$= x(x) + x(3)$'],
+          final_answer: '\\boxed{x^2 + 3x}',
+        },
+        {
+          question: 'Expand $4(3a - 2b)$',
+          steps: ['$= 4(3a) - 4(2b)$'],
+          final_answer: '\\boxed{12a - 8b}',
+        },
+        {
+          question: 'Expand $-(p - q)$',
+          steps: ['$= -1(p) - 1(-q)$'],
+          final_answer: '\\boxed{-p + q}',
+        },
+      ],
+    },
+    {
+      title: 'Common Error: Dropping Negative Signs',
+      content:
+        'In $-4(x - 2)$, remember that $(-4) \\times (-2) = +8$. Many students incorrectly write $-4x - 8$.\n\n**Practice Exercise 4.1**\n\nExpand the following:\n\n1. $2(a + 5)$\n2. $6(3x - 1)$\n3. $k(k + 4)$\n4. $-5(m + 2)$\n5. $-2(n - 7)$\n6. $3(4x + 5y)$\n7. $x(2x - 5)$\n8. $-1(a + b)$',
+    },
+    {
+      title: '5. Introductory Factorisation: Finding Common Ground',
+      content:
+        'Factorisation is the reverse of expansion. It involves breaking an expression into its constituent factors, identifying the "common ground" shared by terms. This is vital for simplifying algebraic fractions and analysing structural models.\n\n**The HCF Method**\n\n1. Identify the Highest Common Factor (HCF) of all terms.\n2. Write the HCF outside a set of brackets.\n3. Divide each original term by the HCF to find the terms inside the bracket.\n4. **Verification:** Always expand your answer. If it returns the original expression, your factorisation is correct.',
+      worked_examples: [
+        {
+          question: 'Factorise $5x + 10$',
+          steps: ['HCF of 5 and 10 is 5.', '$= 5(x + 2)$'],
+          final_answer: '\\boxed{5(x + 2)}',
+        },
+        {
+          question: 'Factorise $4y - 12$',
+          steps: ['HCF of 4 and 12 is 4.', '$= 4(y - 3)$'],
+          final_answer: '\\boxed{4(y - 3)}',
+        },
+        {
+          question: 'Factorise $mx + my$',
+          steps: ['HCF is $m$.'],
+          final_answer: '\\boxed{m(x + y)}',
+        },
+        {
+          question: 'Factorise $a^2 + 5a$',
+          steps: ['HCF is $a$.'],
+          final_answer: '\\boxed{a(a + 5)}',
+        },
+        {
+          question: 'Factorise $12k - 18$',
+          steps: ['HCF of 12 and 18 is 6.', '$= 6(2k - 3)$'],
+          final_answer: '\\boxed{6(2k - 3)}',
+        },
+        {
+          question: 'Factorise $8ab + 12ac$',
+          steps: ['HCF is $4a$.'],
+          final_answer: '\\boxed{4a(2b + 3c)}',
+        },
+        {
+          question: 'Factorise $x^2 - x$',
+          steps: ['HCF is $x$.'],
+          final_answer: '\\boxed{x(x - 1)}',
+        },
+        {
+          question: 'Factorise $15p + 20q$',
+          steps: ['HCF of 15 and 20 is 5.', '$= 5(3p + 4q)$'],
+          final_answer: '\\boxed{5(3p + 4q)}',
+        },
+      ],
+    },
+    {
+      title: 'Practice Exercise 5.1',
+      content:
+        'Factorise the following:\n\n1. $3a + 9$\n2. $10x - 20$\n3. $xy + xz$\n4. $n^2 + 6n$\n5. $14m - 21$\n6. $18x + 24y$',
+    },
+    {
+      title: '6. Forming Expressions from Word Problems',
+      content:
+        'Algebraic modelling allows us to solve everyday problems. In the spirit of Unhu/Ubuntu, mathematics is used to manage community resources, cooperative ventures, and family budgets.',
+      worked_examples: [
+        {
+          question: 'A community cooperative has $k$ bags of maize. They receive 15 more bags.',
+          steps: [],
+          final_answer: '$k + 15$',
+        },
+        {
+          question: 'Chipo is $x$ years old. Her sister is 5 years younger. (a) Express the sister\'s age. (b) Express their total age.',
+          steps: ['(a) Sister: $x - 5$', '(b) Total: $x + (x - 5) = 2x - 5$'],
+          final_answer: '(a) $x - 5$ (b) $2x - 5$',
+        },
+        {
+          question: 'A local entrepreneur produces $n$ solar lamps. She sells them for $\\$20$ each.',
+          steps: ['Total revenue $=$ price $\\times$ quantity'],
+          final_answer: '$20n$',
+        },
+        {
+          question: 'A rectangular community garden has width $w$ metres. The length is double the width. (a) Express length. (b) Express perimeter.',
+          steps: ['(a) Length: $2w$', '(b) Perimeter: $2(w) + 2(2w) = 2w + 4w = 6w$'],
+          final_answer: '(a) $2w$ (b) $6w$',
+        },
+        {
+          question: 'Five friends share $\\$m$ equally.',
+          steps: [],
+          final_answer: '$\\frac{m}{5}$',
+        },
+        {
+          question: 'A bus starts with $x$ passengers. At a stop, 4 get off and 7 get on.',
+          steps: ['$x - 4 + 7 = x + 3$'],
+          final_answer: '$x + 3$',
+        },
+      ],
+    },
+    {
+      title: 'Practice Exercise 6.1',
+      content:
+        '1. Munyaradzi has $y$ cattle. His neighbour has 12 more. Write an expression for the neighbour\'s cattle.\n2. A school receives $b$ books and distributes them equally among 10 classes. Write an expression for books per class.\n3. The cost of a bread loaf is $\\$x$. The cost of a litre of milk is $\\$y$. Write an expression for the cost of 2 loaves and 3 milks.\n4. A boy is $n$ years old now. How old was he 4 years ago?\n5. A poultry project has $x$ chickens. If the number of chickens triples, write the new total.',
+    },
+    {
+      title: '7. Comprehensive Assessment and Revision',
+      content:
+        '**Mixed Revision Exercise**\n\n1. Identify the constant in $5x - 8$.\n2. Simplify $4a + 5a - 2a$.\n3. Simplify $6x + 2y - 4x + y$.\n4. Simplify $m^2 \\times m^5$.\n5. Simplify $20p^8 \\div 4p^2$.\n6. Evaluate $x + 10$ if $x = -4$.\n7. Evaluate $3n - 5$ if $n = 4$.\n8. Evaluate $a^2 + 2$ if $a = -3$.\n9. Expand $3(x + 4)$.\n10. Expand $-2(y - 5)$.\n11. Expand $x(x + 6)$.\n12. Factorise $4x + 12$.\n13. Factorise $5y - 25$.\n14. Factorise $a^2 + 7a$.\n15. Factorise $12m + 18n$.\n16. If $a=2$, $b=3$, $c=4$, evaluate $abc$.\n17. Simplify $10k - 12k$.\n18. Expand $-(2x + 3)$.\n19. Factorise $8ab - 4a$.\n20. Express "10 less than $x$."\n21. Simplify $x \\times x \\times x$.\n22. Simplify $4a \\times 3b$.\n23. Evaluate $2(x + 5)$ if $x = -2$.\n24. A bag has $n$ marbles. If 5 are lost, how many remain?\n25. Simplify $5x^2 + 2x + x^2$.\n\n**Exam-Style Structured Test**\n\n**Question 1** (a) Simplify $8x + 5y - 3x + y$. [2] (b) Hence, evaluate your answer if $x = 2$ and $y = -1$. [2]\n\n**Question 2** (a) Expand and simplify: $4(a + 2) + 3(a - 1)$. [3] (b) Factorise the result of part (a). [1]\n\n**Question 3** A local youth group produces $x$ bricks per day. (a) Write an expression for the bricks produced in 5 days. [1] (b) If they sell each brick for $\\$0{,}50$, write an expression for their 5-day revenue. [2]\n\n**Question 4** (a) Simplify $\\frac{12x^5}{3x^2}$. [2] (b) Factorise $x^2 - 9x$. [1]',
+    },
+    {
+      title: '8. Complete Memorandum (The Memo)',
+      content:
+        '**Practice Exercise 1.1**\n1. Variable: $y$; Constant: $-5$\n2. $9k$\n3. $t + 15$\n4. 4 terms\n5. $2g$\n\n**Practice Exercise 2.1**\n1. $9k + 2k = 11k$ \\quad \\boxed{11k}\n2. $15n - 6n = 9n$ \\quad \\boxed{9n}\n3. $y + y + y + y = 4y$ \\quad \\boxed{4y}\n4. $8a - 2a + 3b + b = 6a + 4b$ \\quad \\boxed{6a + 4b}\n5. $x^{4+3} = x^7$ \\quad \\boxed{x^7}\n6. $(10 \\div 2)m^{5-2} = 5m^3$ \\quad \\boxed{5m^3}\n7. $(4 \\times 5) \\times p \\times q = 20pq$ \\quad \\boxed{20pq}\n8. $12x - 3x + 5 - 8 = 9x - 3$ \\quad \\boxed{9x - 3}\n\n**Practice Exercise 3.1**\n1. $(4) + (2) = 6$ \\quad \\boxed{6}\n2. $3(-3) = -9$ \\quad \\boxed{-9}\n3. $(4) + (-3) = 1$ \\quad \\boxed{1}\n4. $(2)^2 = 4$ \\quad \\boxed{4}\n5. $2(4) - 3(2) = 8 - 6 = 2$ \\quad \\boxed{2}\n6. $5(4 + (-3)) = 5(1) = 5$ \\quad \\boxed{5}\n\n**Practice Exercise 4.1**\n1. $2(a) + 2(5) = 2a + 10$ \\quad \\boxed{2a + 10}\n2. $6(3x) - 6(1) = 18x - 6$ \\quad \\boxed{18x - 6}\n3. $k(k) + k(4) = k^2 + 4k$ \\quad \\boxed{k^2 + 4k}\n4. $-5(m) + (-5)(2) = -5m - 10$ \\quad \\boxed{-5m - 10}\n5. $-2(n) + (-2)(-7) = -2n + 14$ \\quad \\boxed{-2n + 14}\n6. $3(4x) + 3(5y) = 12x + 15y$ \\quad \\boxed{12x + 15y}\n7. $x(2x) + x(-5) = 2x^2 - 5x$ \\quad \\boxed{2x^2 - 5x}\n8. $-1(a) + (-1)(b) = -a - b$ \\quad \\boxed{-a - b}\n\n**Practice Exercise 5.1**\n1. HCF $= 3$ \\quad $3(a + 3)$ \\quad \\boxed{3(a + 3)}\n2. HCF $= 10$ \\quad $10(x - 2)$ \\quad \\boxed{10(x - 2)}\n3. HCF $= x$ \\quad $x(y + z)$ \\quad \\boxed{x(y + z)}\n4. HCF $= n$ \\quad $n(n + 6)$ \\quad \\boxed{n(n + 6)}\n5. HCF $= 7$ \\quad $7(2m - 3)$ \\quad \\boxed{7(2m - 3)}\n6. HCF $= 6$ \\quad $6(3x + 4y)$ \\quad \\boxed{6(3x + 4y)}\n\n**Practice Exercise 6.1**\n1. $y + 12$\n2. $\\frac{b}{10}$\n3. $2x + 3y$\n4. $n - 4$\n5. $3x$\n\n**Mixed Revision Exercise Solutions**\n1. $-8$ | 2. $7a$ | 3. $2x + 3y$ | 4. $m^7$ | 5. $5p^6$ | 6. $(-4) + 10 = 6$ | 7. $3(4) - 5 = 7$ | 8. $(-3)^2 + 2 = 11$ | 9. $3x + 12$ | 10. $-2y + 10$ | 11. $x^2 + 6x$ | 12. $4(x + 3)$ | 13. $5(y - 5)$ | 14. $a(a + 7)$ | 15. $6(2m + 3n)$ | 16. $(2)(3)(4) = 24$ | 17. $-2k$ | 18. $-2x - 3$ | 19. $4a(2b - 1)$ | 20. $x - 10$ | 21. $x^3$ | 22. $12ab$ | 23. $2((-2) + 5) = 2(3) = 6$ | 24. $n - 5$ | 25. $6x^2 + 2x$\n\n**Exam-Style Test Solutions**\n\n**Question 1** (a) $8x - 3x + 5y + y = 5x + 6y$ \\quad \\boxed{5x + 6y} (b) $5(2) + 6(-1) = 10 - 6 = 4$ \\quad \\boxed{4}\n\n**Question 2** (a) $(4a + 8) + (3a - 3) = 4a + 3a + 8 - 3 = 7a + 5$ \\quad \\boxed{7a + 5} (b) HCF of 7 and 5 is 1. \\quad \\boxed{7a + 5}\n\n**Question 3** (a) $5 \\times x = 5x$ \\quad \\boxed{5x} (b) $0{,}50 \\times 5x = 2{,}50x$ \\quad \\boxed{2{,}50x}\n\n**Question 4** (a) $(12 \\div 3)x^{5-2} = 4x^3$ \\quad \\boxed{4x^3} (b) HCF is $x$: $x(x - 9)$ \\quad \\boxed{x(x - 9)}',
+    },
+  ],
+  key_points: [
+    'Variable: letter representing unknown/varying quantity; Constant: fixed number; Term: single component; Expression: terms joined by operators, no equals sign.',
+    'Expression vs Equation: expression is a phrase (simplify/evaluate); equation is a sentence (solve). Never add $=0$ to an expression.',
+    'Like terms: same variables, same powers. Only combine like terms. $3x + 2y$ cannot become $5xy$.',
+    'Index laws: $x^a \\times x^b = x^{a+b}$, $x^a \\div x^b = x^{a-b}$, $x^0 = 1$.',
+    'Substitution: always use brackets for negatives; follow BODMAS.',
+    'Expansion: distribute the outside term to every term inside the bracket. $-4 \\times (-2) = +8$.',
+    'Factorisation: find HCF, write outside bracket, divide each term by HCF. Verify by expanding.',
+  ],
+  exam_tips: [
+    'Never "solve" an expression; only equations can be solved.',
+    'Use brackets when substituting negative values, e.g. $(-2)^2 = 4$, not $-2^2 = -4$.',
+    'Do not write $4x + 3y = 7xy$; unlike terms stay separate.',
+    'In $-4(x-2)$, $(-4)\\times(-2) = +8$; many students wrongly write $-8$.',
+  ],
+  visual_descriptions: [
+    'Variable vs constant identification in $12y - 5$.',
+    'Like terms analogy: 3 cows + 2 cows vs 3 cows + 2 goats.',
+    'Index laws: $x^a \\times x^b = x^{a+b}$.',
+  ],
+};
+
+const algebraicManipulationForm1Notes: MathTopicNotes = {
+  topic: 'Algebraic Manipulation',
+  subject: 'Mathematics',
+  grade_level: 'Form 1',
+  summary:
+    'Comprehensive Form 1 Mathematics notes on Algebraic Manipulation (ZIMSEC Heritage-Based Syllabus B). Algebra is the "mathematical language" for solving everyday problems. Covers simplifying expressions, like/unlike terms, expanding brackets, factorisation, solving linear equations, changing the subject of a formula, and ZIMSEC-style word problems.',
+  sections: [
+    {
+      title: '1. Foundational Concepts: Revising Algebraic Expressions',
+      content:
+        'As specified in the ZIMSEC Heritage-Based Mathematics Syllabus B Preamble (1.1), Algebra is the strategic "mathematical language" that empowers us to solve everyday life problems. It allows us to translate complex real-world situations into symbols, facilitating critical thinking and industrial innovation. In our classrooms, we often use concrete aids like bottle tops or counters to represent these symbols, helping to bridge the gap between physical objects and abstract thought.\n\n**Key Terms and the "So What?" Layer**\n\n- **Variables:** Letters (e.g. $x$, $a$, $y$) used to represent unknown quantities. Their value is not fixed; they represent the "missing piece" in our industrial or commercial models.\n- **Coefficients:** The number multiplying a variable (e.g. in $7x$, the $7$ is the coefficient). Think of this as the "scale" or the quantity of "bottle tops" we are grouping together.\n- **Terms:** The building blocks of expressions, separated by $+$ or $-$ signs. Understanding terms allows us to break down complex problems into manageable units.\n\n**Like Terms vs. Unlike Terms**\n\nIn Algebra, we can only combine items that are identical in nature.\n\n- **Like Terms:** Terms containing the exact same variable raised to the exact same power. Example: $5x$ and $12x$ are like terms. Why combine? They represent the same category of object (e.g. 5 bags of maize and 12 bags of maize).\n- **Unlike Terms:** Terms with different variables or different powers. Example: $5x$ and $5y$, or $x$ and $x^2$, are unlike terms. Why not combine? You cannot add "3 cattle and 2 goats" to get "5 cattle-goats"; they must remain separate.\n\n**Common Errors:** A frequent mistake is failing to recognise that the sign ($+$ or $-$) belongs to the term immediately following it. If you have $10 - 2x$, the negative sign is "glued" to the $2x$. When rearranging terms, you must carry the sign with its term.',
+    },
+    {
+      title: '2. Worked Examples: Simplifying Expressions',
+      content:
+        '**Example 1:** $4a + 9a = (4 + 9)a = 13a$. Therefore $13a$.\n\n**Example 2:** $15x - 6x = (15 - 6)x = 9x$. Therefore $9x$.\n\n**Example 3:** $2y + 8y + y = (2 + 8 + 1)y = 11y$. Therefore $11y$.\n\n**Example 4:** $12b - 5b + 2b = (12 - 5 + 2)b = 9b$. Therefore $9b$.\n\n**Example 5:** $5x + 4y + 3x + 2y$. Group like terms: $(5x + 3x) + (4y + 2y) = 8x + 6y$. Therefore $8x + 6y$.\n\n**Example 6:** $10m - 3n - 4m + 8n$. Group like terms: $(10m - 4m) + (-3n + 8n) = 6m + 5n$. Therefore $6m + 5n$.\n\n**Example 7:** $15ab + 7 - 4ab + 3$. Group like terms: $(15ab - 4ab) + (7 + 3) = 11ab + 10$. Therefore $11ab + 10$.\n\n**Example 8:** $x + 3x + y - x$. Group like terms: $(1x + 3x - 1x) + y = 3x + y$. (Note: We write $3x + y$ instead of $3x + 1y$ because the coefficient $1$ is implied.) Therefore $3x + y$.',
+      worked_examples: [
+        { question: 'Simplify $5x + 4y + 3x + 2y$', steps: ['Group like terms: $(5x + 3x) + (4y + 2y)$', 'Add: $8x + 6y$'], final_answer: '$8x + 6y$' },
+        { question: 'Simplify $10m - 3n - 4m + 8n$', steps: ['Group: $(10m - 4m) + (-3n + 8n)$', 'Simplify: $6m + 5n$'], final_answer: '$6m + 5n$' },
+      ],
+    },
+    {
+      title: '3. The Logic of Distribution: Expanding Brackets',
+      content:
+        'Expanding brackets is a strategic operation used to remove mathematical barriers. By distributing a multiplier across the terms inside a bracket, we simplify the expression to a form where terms can finally be combined or solved.\n\n**The "Why": The Law of Equality**\n\nDistribution ensures that every component inside the bracket is treated equally by the external factor. If a local entrepreneur triples a "package" containing 2 bags of mealie-meal and 1 bottle of oil, they must triple both: $3(2m + 1o) = 6m + 3o$.\n\n**Common Errors: The Negative Trap**\n\nThe most dangerous pitfall in expansion is failing to change the sign of the second term when multiplying by a negative number. Remember: a negative multiplied by a negative results in a positive ($- \\times - = +$).',
+    },
+    {
+      title: '4. Worked Examples: Expand and Simplify',
+      content:
+        '**Example 1:** $3(x + 6) = 3 \\times x + 3 \\times 6 = 3x + 18$. Therefore $3x + 18$.\n\n**Example 2:** $4(2a - 5) = 4 \\times 2a + 4 \\times (-5) = 8a - 20$. Therefore $8a - 20$.\n\n**Example 3:** $6(3y + 2z) = 18y + 12z$. Therefore $18y + 12z$.\n\n**Example 4:** $m(n + 5) = m \\times n + m \\times 5 = mn + 5m$. Therefore $mn + 5m$.\n\n**Example 5:** $-2(x + 4) = -2 \\times x + (-2) \\times 4 = -2x - 8$. Therefore $-2x - 8$.\n\n**Example 6:** $-5(2y - 3) = -5 \\times 2y + (-5) \\times (-3) = -10y + 15$. Therefore $-10y + 15$.\n\n**Example 7:** $-3(4a + b) = -12a - 3b$. Therefore $-12a - 3b$.\n\n**Example 8:** $-(2x - 9) = -1 \\times 2x + (-1) \\times (-9) = -2x + 9$. Therefore $-2x + 9$.',
+      worked_examples: [
+        { question: 'Expand $-5(2y - 3)$', steps: ['$-5 \\times 2y = -10y$', '$(-5) \\times (-3) = +15$'], final_answer: '$-10y + 15$' },
+        { question: 'Expand $-(2x - 9)$', steps: ['$-1 \\times 2x = -2x$', '$(-1) \\times (-9) = +9$'], final_answer: '$-2x + 9$' },
+      ],
+    },
+    {
+      title: '5. Reverse Engineering: Introductory Factorisation',
+      content:
+        'Factorisation is the process of "unpacking" an expression into its original factors. This skill is critical for industrial efficiency and simplifying complex algebraic structures in higher-level technical vocational training.\n\n**The HCF Method**\n\nTo factorise, identify the **Highest Common Factor (HCF)**:\n\n1. The largest number that divides into all coefficients.\n2. The highest power of a letter present in all terms. For example, in $x^3 + x^2$, the highest power common to both is $x^2$.\n\n**Common Errors:** Taking out any common factor is not enough; you must take out the **Highest** Common Factor. If you factorise $12x + 24$ as $2(6x + 12)$, you have failed—$6$ is still a common factor inside. Always double-check your brackets.',
+    },
+    {
+      title: '6. Worked Examples: Factorise',
+      content:
+        '**Example 1:** $4x + 12$. HCF is 4. $= 4(x + 3)$. Check: $4(x) + 4(3) = 4x + 12$ ✓.\n\n**Example 2:** $15y - 20$. HCF is 5. $= 5(3y - 4)$. Check: $5(3y) + 5(-4) = 15y - 20$ ✓.\n\n**Example 3:** $x^2 + 7x$. HCF is $x$. $= x(x + 7)$. Check: $x(x) + x(7) = x^2 + 7x$ ✓.\n\n**Example 4:** $6a^2 - 9a$. HCF is $3a$. $= 3a(2a - 3)$. Check: $3a(2a) - 3a(3) = 6a^2 - 9a$ ✓.\n\n**Example 5:** $10ab + 15ac$. HCF is $5a$. $= 5a(2b + 3c)$.\n\n**Example 6:** $x^3 + x^2$. HCF is $x^2$. $= x^2(x + 1)$.\n\n**Example 7:** $8m^2n - 12mn$. HCF is $4mn$. $= 4mn(2m - 3)$.\n\n**Example 8:** $7pqr + 14pq$. HCF is $7pq$. $= 7pq(r + 2)$.',
+      worked_examples: [
+        { question: 'Factorise $6a^2 - 9a$', steps: ['HCF of coefficients: 3; HCF of letters: $a$', '$3a(2a - 3)$'], final_answer: '$3a(2a - 3)$' },
+        { question: 'Factorise $x^3 + x^2$', steps: ['Highest power common to both: $x^2$', '$x^2(x + 1)$'], final_answer: '$x^2(x + 1)$' },
+      ],
+    },
+    {
+      title: '7. Multi-Step Complexity: Expand and Simplify',
+      content:
+        'In accordance with Syllabus Topic 1.1, the Order of Operations governs compound algebraic structures. When dealing with multiple brackets, expand each set individually before grouping like terms.\n\n**Common Errors: Sign Dropping**\n\nWhen expanding the second bracket, many learners drop the sign. In $3(x + 2) - 2(x - 5)$, the $-2$ must be multiplied by both $x$ and $-5$. Forgetting that $-2 \\times (-5) = +10$ is a fatal error in ZIMSEC examinations.',
+    },
+    {
+      title: '8. Worked Examples: Expand and Simplify (Multi-Step)',
+      content:
+        '**Example 1:** $2(x + 5) + 3(x + 2) = 2x + 10 + 3x + 6 = 5x + 16$.\n\n**Example 2:** $5(a + 4) - 2(a + 3) = 5a + 20 - 2a - 6 = 3a + 14$.\n\n**Example 3:** $4(y - 1) + 2(3y + 5) = 4y - 4 + 6y + 10 = 10y + 6$.\n\n**Example 4:** $3(x + 2) - 2(x - 5) = 3x + 6 - 2x + 10 = x + 16$.\n\n**Example 5:** $x(x + 3) + 4(x - 2) = x^2 + 3x + 4x - 8 = x^2 + 7x - 8$.\n\n**Example 6:** $5(2m - 1) - 3(m - 4) = 10m - 5 - 3m + 12 = 7m + 7$.\n\n**Example 7:** $2a(b + 4) - b(a - 2) = 2ab + 8a - ab + 2b = ab + 8a + 2b$.\n\n**Example 8:** $-(x + 3) + 5(x - 2) = -x - 3 + 5x - 10 = 4x - 13$.',
+    },
+    {
+      title: '9. The Balancing Act: Solving Simple Linear Equations',
+      content:
+        'An equation represents a state of perfect equality. To solve it, we use the **Balancing Method**: whatever we do to the left side, we must do to the right side to keep the "scales" even.\n\n**The Three-Stage Process**\n\n1. **Collect Like Terms:** Move all variables to one side and constants to the other.\n2. **Isolate the Variable:** Use inverse operations.\n3. **Solve:** Identify the specific value of the variable.\n\n**Common Errors:** A common mistake is dividing only the variable term and not the constant. If you divide one side of the equation by a number, you must divide the **entire** other side by that same number.',
+    },
+    {
+      title: '10. Worked Examples: Solve for $x$',
+      content:
+        '**Example 1:** $x + 7 = 15 \\Rightarrow x = 15 - 7 = 8$. Check: $8 + 7 = 15$ ✓.\n\n**Example 2:** $x - 9 = 4 \\Rightarrow x = 4 + 9 = 13$.\n\n**Example 3:** $5x = 35 \\Rightarrow x = 35 \\div 5 = 7$.\n\n**Example 4:** $\\frac{x}{4} = 6 \\Rightarrow x = 6 \\times 4 = 24$.\n\n**Example 5:** $3x + 4 = 19 \\Rightarrow 3x = 15 \\Rightarrow x = 5$.\n\n**Example 6:** $2x - 8 = 10 \\Rightarrow 2x = 18 \\Rightarrow x = 9$.\n\n**Example 7:** $4x + 5 = x + 17 \\Rightarrow 4x - x = 17 - 5 \\Rightarrow 3x = 12 \\Rightarrow x = 4$.\n\n**Example 8:** $6x - 2 = 2x + 18 \\Rightarrow 6x - 2x = 18 + 2 \\Rightarrow 4x = 20 \\Rightarrow x = 5$.',
+      worked_examples: [
+        { question: 'Solve $3x + 4 = 19$', steps: ['Subtract 4: $3x = 15$', 'Divide by 3: $x = 5$'], final_answer: '$x = 5$' },
+        { question: 'Solve $6x - 2 = 2x + 18$', steps: ['Collect terms: $6x - 2x = 18 + 2$', '$4x = 20 \\Rightarrow x = 5$'], final_answer: '$x = 5$' },
+      ],
+    },
+    {
+      title: '11. Changing the Subject of a Formula',
+      content:
+        'In technical and vocational categories such as engineering and construction (Syllabus Rationale 1.2), we often need to rearrange a formula. If a builder knows the Volume $(V)$ and the area of the base $(LB)$, they must rearrange $V = LBH$ to find the Height $(H)$.\n\n**The Logic of the Inverse**\n\nTo "move" a term to the other side of the equal sign, perform its inverse operation:\n\n- $+$ moves as $-$\n- $-$ moves as $+$\n- $\\times$ moves as $\\div$\n- $\\div$ moves as $\\times$',
+    },
+    {
+      title: '12. Worked Examples: Make [variable] the Subject',
+      content:
+        '**Example 1:** $P = 4s$. Make $s$ the subject: $s = \\frac{P}{4}$.\n\n**Example 2:** $V = LBH$. Make $H$ the subject: $H = \\frac{V}{LB}$.\n\n**Example 3:** $y = mx + c$. Make $x$ the subject: $y - c = mx \\Rightarrow x = \\frac{y - c}{m}$.\n\n**Example 4:** $A = L + W$. Make $L$ the subject: $L = A - W$.\n\n**Example 5:** $C = 2\\pi r$. Make $r$ the subject: $r = \\frac{C}{2\\pi}$.\n\n**Example 6:** $v = u + at$. Make $u$ the subject: $u = v - at$.\n\n**Example 7:** $A = \\frac{1}{2}bh$. Make $h$ the subject: $2A = bh \\Rightarrow h = \\frac{2A}{b}$.\n\n**Example 8:** $z = 3x - 4$. Make $x$ the subject: $z + 4 = 3x \\Rightarrow x = \\frac{z + 4}{3}$.',
+    },
+    {
+      title: '13. Real-World Translation: Word Problems',
+      content:
+        'The "Heritage-based" goal of our syllabus is to empower you to translate the language of the Zimbabwean marketplace and industry into solvable mathematical models.\n\n**Translation Key**\n\n| Everyday Language | Algebraic Symbol |\n| :--- | :--- |\n| "sum of" / "total" / "combined" | $+$ |\n| "difference" / "less than" | $-$ |\n| "product of" / "times" | $\\times$ |\n| "is" / "results in" / "costs" | $=$ |',
+    },
+    {
+      title: '14. Worked Examples: ZIMSEC-Style Word Problems',
+      content:
+        '**Example 1:** The sum of a certain number and 8 is 20. Let $x$ be the number. Equation: $x + 8 = 20$. Solution: $x = 12$.\n\n**Example 2:** At a Gweru market stall, a bag of "Mhunga" (millet) costs $x$ ZiG. Buy 4 bags, pay 100 ZiG, change is 20 ZiG. Equation: $4x + 20 = 100 \\Rightarrow 4x = 80 \\Rightarrow x = 20$ ZiG.\n\n**Example 3:** Tariro is $a$ years old; brother is 5 years older. Total age 31. Equation: $a + (a + 5) = 31 \\Rightarrow 2a + 5 = 31 \\Rightarrow a = 13$.\n\n**Example 4:** Rectangular garden perimeter 60 m, width 10 m, length $L$. Equation: $2L + 2(10) = 60 \\Rightarrow 2L = 40 \\Rightarrow L = 20$ m.\n\n**Example 5:** Triple a number $n$ and subtract 7 to get 14. Equation: $3n - 7 = 14 \\Rightarrow n = 7$.\n\n**Example 6:** Farmer harvests $y$ bags; sells 15, has 45 left. Equation: $y - 15 = 45 \\Rightarrow y = 60$.\n\n**Example 7:** Product of 5 and a number is 45. Equation: $5x = 45 \\Rightarrow x = 9$.\n\n**Example 8:** Two more than four times a number is 26. Equation: $4x + 2 = 26 \\Rightarrow x = 6$.',
+    },
+    {
+      title: '15. Practice Exercises',
+      content:
+        '**Topic 1 – Simplifying:** 1. Simplify $6b + 3b - b$. 2. Simplify $4x + 5y + 2x + y$. 3. Simplify $12m - 8m + 3n$. 4. Simplify $9ab - 4ab + 10$. 5. Simplify $y + y + x - y$.\n\n**Topic 2 – Expanding:** 1. Expand $4(x + 5)$. 2. Expand $3(2a - 4)$. 3. Expand $-2(y + 6)$. 4. Expand $-5(3x - 2)$. 5. Expand $x(y + z)$.\n\n**Topic 3 – Factorisation:** 1. Factorise $6x + 18$. 2. Factorise $10a - 25$. 3. Factorise $y^2 + 4y$. 4. Factorise $8mn + 12mp$. 5. Factorise $a^3 + a^2$.\n\n**Topic 4 – Multi-Step:** 1. Expand and simplify $3(x + 2) + 2(x + 5)$. 2. Expand and simplify $5(a + 3) - 3(a + 1)$. 3. Expand and simplify $4(y - 2) + 2(y + 4)$. 4. Expand and simplify $2(x + 6) - (x - 3)$. 5. Expand and simplify $3(2m + 4) - 2(m - 1)$.\n\n**Topic 5 – Equations:** 1. Solve $x + 9 = 21$. 2. Solve $4x = 32$. 3. Solve $3x - 7 = 14$. 4. Solve $5x + 3 = 23$. 5. Solve $6x - 4 = 2x + 12$.\n\n**Topic 6 – Changing Subject:** 1. Make $m$ the subject: $F = ma$. 2. Make $x$ the subject: $y = 5x$. 3. Make $w$ the subject: $V = Lwh$. 4. Make $a$ the subject: $v = u + at$. 5. Make $x$ the subject: $y = 4x - 7$.\n\n**Topic 7 – Word Problems:** 1. The sum of $x$ and 15 is 40. Find $x$. 2. Five times a number $n$ is 50. Find $n$. 3. A soda costs $x$ ZiG and a pie costs $x+10$ ZiG. Total cost 30 ZiG. Find $x$. 4. Subtract 8 from $y$ to get 12. Find $y$. 5. A mother is 4 times as old as her daughter $(d)$. Total age 50. Find $d$.',
+    },
+    {
+      title: '16. Full Worked Solutions',
+      content:
+        '**Topic 1:** 1. $8b$. 2. $6x + 6y$. 3. $4m + 3n$. 4. $5ab + 10$. 5. $y + x$.\n\n**Topic 2:** 1. $4x + 20$. 2. $6a - 12$. 3. $-2y - 12$. 4. $-15x + 10$. 5. $xy + xz$.\n\n**Topic 3:** 1. $6(x + 3)$. 2. $5(2a - 5)$. 3. $y(y + 4)$. 4. $4m(2n + 3p)$. 5. $a^2(a + 1)$.\n\n**Topic 4:** 1. $5x + 16$. 2. $2a + 12$. 3. $6y$. 4. $x + 15$. 5. $4m + 14$.\n\n**Topic 5:** 1. $x = 12$. 2. $x = 8$. 3. $x = 7$. 4. $x = 4$. 5. $x = 4$.\n\n**Topic 6:** 1. $m = \\frac{F}{a}$. 2. $x = \\frac{y}{5}$. 3. $w = \\frac{V}{Lh}$. 4. $a = v - u$ (for $v = u + a$). 5. $x = \\frac{y + 7}{4}$.\n\n**Topic 7:** 1. $x = 25$. 2. $n = 10$. 3. $x = 10$ ZiG. 4. $y = 20$. 5. $d = 10$.',
+    },
+  ],
+  key_points: [
+    'Like terms: same variable, same power—combine; unlike terms—keep separate.',
+    'Coefficient is the number multiplying the variable; the sign belongs to the term following it.',
+    'Expand: multiply each term inside the bracket by the factor outside.',
+    'Negative outside bracket: $-a(b - c) = -ab + ac$ (negative $\\times$ negative $= +$).',
+    'Factorise: take out the HCF (number and highest power of common letter).',
+    'Solve equations: balance both sides; use inverse operations.',
+    'Change subject: move terms using inverse operations (+ $\\leftrightarrow$ $-$; $\\times$ $\\leftrightarrow$ $\\div$).',
+  ],
+  exam_tips: [
+    'Carry the sign with its term when rearranging; $-2x$ means the whole term is negative.',
+    'When expanding $-2(x - 5)$, both $x$ and $-5$ get multiplied by $-2$: $-2x + 10$.',
+    'Always take out the HCF when factorising—check that nothing common remains inside.',
+    'In word problems, define the variable clearly and translate key phrases into symbols.',
+  ],
+  visual_descriptions: [
+    'Like terms: 5x + 12x = 17x (same "bottle tops"); unlike: 5x + 5y stays as is.',
+    'Brackets: 3(2m + o) = 6m + 3o—triple each item inside.',
+    'Balance: equation as scales; add/subtract same amount on both sides.',
+  ],
+};
+
+const translationForm1Notes: MathTopicNotes = {
+  topic: 'Translation',
+  subject: 'Mathematics',
+  grade_level: 'Form 1',
+  summary:
+    'Comprehensive Form 1 Mathematics notes on Translation (Transformations) for ZIMSEC Heritage-Based Syllabus B (2024–2030). Translation is the simplest transformation—a slide that preserves size, shape, and orientation. Covers coordinate movement, translation vectors, object-to-image mapping, plotting conventions, and exam-style problems.',
+  sections: [
+    {
+      title: '1. Introduction to the Geometry of Translation',
+      content:
+        'In the ZIMSEC Heritage-based Mathematics Syllabus B (2024–2030), Transformations serve as a critical bridge between algebraic operations and spatial reasoning. As outlined in the Syllabus Rationale (1.2), Mathematics is the engine of innovation and industrialisation. Translation, the simplest form of transformation, is foundational to Zimbabwean heritage and industry—from the repeating chevron patterns on the walls of Great Zimbabwe to the precision-shifted components in modern civil engineering and textile manufacturing.\n\nA **Transformation** is a mathematical process that maps an original figure (the **Object**) onto a new figure (the **Image**). Specifically, a **Translation** is a transformation that "slides" every point of a shape the same distance in a specific direction. Unlike reflection or rotation, a translation moves the object without flipping it, turning it, or changing its size.\n\n**Property Analysis: Isometry and Invariance**\n\nTranslation is an **isometry**, meaning the "sliding" process preserves the geometric integrity of the shape.\n\n- **Size and Shape Invariance:** The lengths of sides, internal angles, and total area remain constant. The Object and Image are therefore congruent.\n- **Orientation Invariance:** The Image remains "upright" relative to the Object; it does not rotate.\n- **Directional Precision:** Every vertex of the shape moves along parallel paths.',
+    },
+    {
+      title: '2. Navigation on the Coordinate Plane',
+      content:
+        'To calculate the new position of a shape, we use the Cartesian plane to measure displacement along the horizontal ($x$) and vertical ($y$) axes.\n\n**The Mechanics of Movement**\n\n- **Horizontal Movement ($x$):** Moving Right is a positive change ($+$); moving Left is a negative change ($-$).\n- **Vertical Movement ($y$):** Moving Up is a positive change ($+$); moving Down is a negative change ($-$).\n\nTo find the Image, add the movement directive to the original coordinates $(x, y)$.\n\n**Worked Examples: Moving Points**\n\n1. Original $(2, 3)$: Move 3 units right, 2 units up. $(2+3, 3+2) = (5, 5)$.\n2. Original $(5, 1)$: Move 4 units left, 1 unit down. $(5-4, 1-1) = (1, 0)$.\n3. Original $(-2, 4)$: Move 5 units right, 3 units down. $(-2+5, 4-3) = (3, 1)$.\n4. Original $(0, 0)$: Move 6 units left, 2 units up. $(0-6, 0+2) = (-6, 2)$.\n5. Original $(1, -3)$: Move 2 units right, 4 units up. $(1+2, -3+4) = (3, 1)$.\n6. Original $(-4, -2)$: Move 3 units left, 5 units down. $(-4-3, -2-5) = (-7, -7)$.\n7. Original $(6, -1)$: Move 1 unit left, 6 units up. $(6-1, -1+6) = (5, 5)$.\n8. Original $(-3, 0)$: Move 4 units right, 4 units down. $(-3+4, 0-4) = (1, -4)$.\n\n**Common Errors: The "Walk Before You Climb" Strategy**\n\nA frequent mistake is mixing up $x$ and $y$. Always handle the horizontal change (the walk) before the vertical change (the climb). Use a coordinate table to separate the calculations.\n\n**Quick Check Practice**\n\n1. Move point $(4, 2)$ 2 units left and 3 units up.\n2. Move point $(-1, 5)$ 4 units right and 6 units down.\n3. Move point $(0, -2)$ 3 units left and 2 units up.\n4. Move point $(7, 7)$ 7 units left and 7 units down.\n5. Move point $(-3, -3)$ 5 units right and 1 unit down.',
+    },
+    {
+      title: '3. The Mechanics of Translation Vectors',
+      content:
+        'As per ZIMSEC Assessment Objective 9.1.1, we must use formal mathematical symbols. We represent a translation using a **Column Vector** $\\begin{pmatrix} a \\\\ b \\end{pmatrix}$.\n\n**Vector Components**\n\n- **$a$ (Top):** Horizontal displacement (Positive $=$ Right; Negative $=$ Left).\n- **$b$ (Bottom):** Vertical displacement (Positive $=$ Up; Negative $=$ Down).\n\n**Worked Examples: State the Vector or Image Point**\n\n1. Vector for "5 units left, 2 units up": Left is $-5$, Up is $+2$. Therefore $\\begin{pmatrix} -5 \\\\ 2 \\end{pmatrix}$.\n2. Vector for "3 units right, 4 units down": Right is $+3$, Down is $-4$. Therefore $\\begin{pmatrix} 3 \\\\ -4 \\end{pmatrix}$.\n3. Vector for "6 units right only": Right is $+6$, No vertical movement is $0$. Therefore $\\begin{pmatrix} 6 \\\\ 0 \\end{pmatrix}$.\n4. Vector for "2 units down only": No horizontal is $0$, Down is $-2$. Therefore $\\begin{pmatrix} 0 \\\\ -2 \\end{pmatrix}$.\n5. Apply $\\begin{pmatrix} -2 \\\\ 5 \\end{pmatrix}$ to $(3, 1)$: $(3-2, 1+5) = (1, 6)$.\n6. Apply $\\begin{pmatrix} 4 \\\\ -3 \\end{pmatrix}$ to $(-1, 0)$: $(-1+4, 0-3) = (3, -3)$.\n7. Apply $\\begin{pmatrix} -5 \\\\ -5 \\end{pmatrix}$ to $(2, 2)$: $(2-5, 2-5) = (-3, -3)$.\n8. Apply $\\begin{pmatrix} 0 \\\\ 7 \\end{pmatrix}$ to $(4, -2)$: $(4+0, -2+7) = (4, 5)$.\n\n**Vector vs. Coordinate:** A coordinate $(x, y)$ is a location on a map. A vector $\\begin{pmatrix} a \\\\ b \\end{pmatrix}$ is an instruction to move. Writing a vector as $(a, b)$ is a common error that loses marks in ZIMSEC Paper 1.\n\n**Practice Exercise: Vector Conversion**\n\nState the following as column vectors: 1. 8 units right, 3 units up. 2. 4 units left, 9 units down. 3. 10 units left, 1 unit up. 4. 7 units down. 5. 12 units right. 6. 2 units left, 2 units up. 7. 1 unit right, 5 units down. 8. No movement.',
+    },
+    {
+      title: '4. Describing a Translation: From Diagram to Vector',
+      content:
+        'In ZIMSEC Paper 2, you are often asked to "Describe fully the single transformation." For a translation, you must provide the name (Translation) and the vector.\n\n**Formula:** Image $-$ Object $=$ Vector. For Object at $(x_1, y_1)$ and Image at $(x_2, y_2)$: $\\begin{pmatrix} x_2 - x_1 \\\\ y_2 - y_1 \\end{pmatrix}$\n\n**Worked Examples: Describe the Transformation**\n\n1. Object $A$ at $(1, 1)$ to Image $A\'$ at $(5, 6)$: $x$: $5-1 = 4$ (Right); $y$: $6-1 = 5$ (Up). Translation with vector $\\begin{pmatrix} 4 \\\\ 5 \\end{pmatrix}$.\n2. Object $B$ at $(0, 4)$ to Image $B\'$ at $(-2, 1)$: $x$: $-2-0 = -2$ (Left); $y$: $1-4 = -3$ (Down). Translation with vector $\\begin{pmatrix} -2 \\\\ -3 \\end{pmatrix}$.\n3. Object $C$ at $(-3, -2)$ to Image $C\'$ at $(1, -2)$: $x$: $1-(-3) = 4$ (Right); $y$: $-2-(-2) = 0$. Translation with vector $\\begin{pmatrix} 4 \\\\ 0 \\end{pmatrix}$.\n4. Object $D$ at $(5, 0)$ to Image $D\'$ at $(2, 4)$: $x$: $2-5 = -3$ (Left); $y$: $4-0 = 4$ (Up). Translation with vector $\\begin{pmatrix} -3 \\\\ 4 \\end{pmatrix}$.\n5. Object $E$ at $(-1, 2)$ to Image $E\'$ at $(-1, 6)$: $x$: $0$; $y$: $6-2 = 4$ (Up). Translation with vector $\\begin{pmatrix} 0 \\\\ 4 \\end{pmatrix}$.\n6. Object $F$ at $(7, -3)$ to Image $F\'$ at $(0, 0)$: $x$: $0-7 = -7$ (Left); $y$: $0-(-3) = 3$ (Up). Translation with vector $\\begin{pmatrix} -7 \\\\ 3 \\end{pmatrix}$.\n\n**Practice Exercise:** Describe the translation for: $(2, 2) \\rightarrow (5, 5)$; $(0, 0) \\rightarrow (-3, 4)$; $(-1, -1) \\rightarrow (1, -1)$; $(4, 10) \\rightarrow (4, 2)$; $(-5, 2) \\rightarrow (0, -3)$.',
+    },
+    {
+      title: '5. Object and Image: Plotting and Labeling Conventions',
+      content:
+        'To ensure full marks in geometric construction, use **Prime Notation**. If the Object is triangle $ABC$, the Image must be labeled $A\'B\'C\'$.\n\n**Worked Examples: Polygon Translation**\n\n1. **Triangle PQR:** $P(1,1)$, $Q(3,1)$, $R(1,3)$ by vector $\\begin{pmatrix} 2 \\\\ 2 \\end{pmatrix}$. $P\'(3,3)$, $Q\'(5,3)$, $R\'(3,5)$.\n2. **Rectangle DEFG:** $D(0,0)$, $E(2,0)$, $F(2,1)$, $G(0,1)$ by $\\begin{pmatrix} -1 \\\\ 4 \\end{pmatrix}$. $D\'(-1,4)$, $E\'(1,4)$, $F\'(1,5)$, $G\'(-1,5)$.\n3. **Triangle XYZ:** $X(-2,-2)$, $Y(0,-2)$, $Z(-1,0)$ by $\\begin{pmatrix} 4 \\\\ -1 \\end{pmatrix}$. $X\'(2,-3)$, $Y\'(4,-3)$, $Z\'(3,-1)$.\n4. **L-Shape ABCD:** $A(1,1)$, $B(4,1)$, $C(4,2)$, $D(1,2)$ by $\\begin{pmatrix} -3 \\\\ -2 \\end{pmatrix}$. $A\'(-2,-1)$, $B\'(1,-1)$, $C\'(1,0)$, $D\'(-2,0)$.\n5. **Trapezium JKLM:** $J(0,0)$, $K(4,0)$, $L(3,2)$, $M(1,2)$ by $\\begin{pmatrix} 2 \\\\ 3 \\end{pmatrix}$. $J\'(2,3)$, $K\'(6,3)$, $L\'(5,5)$, $M\'(3,5)$.\n6. **Triangle STU:** $S(-4,1)$, $T(-1,1)$, $U(-4,4)$ by $\\begin{pmatrix} 5 \\\\ -4 \\end{pmatrix}$. $S\'(1,-3)$, $T\'(4,-3)$, $U\'(1,0)$.',
+    },
+    {
+      title: '6. ZIMSEC Exam-Style Structured Problems',
+      content:
+        '1. **Paper 1:** Point $M(4, -7)$ translated by $\\begin{pmatrix} -2 \\\\ 10 \\end{pmatrix}$. Image: $(4-2, -7+10) = (2, 3)$.\n2. **Paper 1:** Translation maps $(3, 3)$ onto $(0, 5)$. Vector: $\\begin{pmatrix} 0-3 \\\\ 5-3 \\end{pmatrix} = \\begin{pmatrix} -3 \\\\ 2 \\end{pmatrix}$.\n3. **Paper 2:** Triangle $ABC$ with $A(1,2)$, $B(1,5)$, $C(3,2)$ translated so $A\'$ is $(5, 0)$. (a) Vector: $\\begin{pmatrix} 4 \\\\ -2 \\end{pmatrix}$. (b) $B\'(5, 3)$, $C\'(7, 0)$.\n4. **Paper 2:** Describe transformation mapping $P(-2, -2)$ to $P\'(0, 0)$. Translation with vector $\\begin{pmatrix} 2 \\\\ 2 \\end{pmatrix}$.\n5. **Paper 1:** Find $k$ if $\\begin{pmatrix} k \\\\ -4 \\end{pmatrix}$ moves $(2, 5)$ to $(10, 1)$. $2+k=10 \\Rightarrow k=8$.\n6. **Paper 2:** Square side 2, bottom-left at $(0,0)$, translated by $\\begin{pmatrix} 3 \\\\ 3 \\end{pmatrix}$. Image vertices: $(3,3)$, $(5,3)$, $(5,5)$, $(3,5)$.\n7. **Paper 1:** Translate $(-5, -5)$ by $\\begin{pmatrix} 5 \\\\ 5 \\end{pmatrix}$. Image: $(0, 0)$.\n8. **Paper 2:** Two consecutive translations $\\begin{pmatrix} 1 \\\\ 2 \\end{pmatrix}$ and $\\begin{pmatrix} 2 \\\\ 1 \\end{pmatrix}$ are equivalent to single translation $\\begin{pmatrix} 3 \\\\ 3 \\end{pmatrix}$. (Add vectors: $x+1+2 = x+3$, $y+2+1 = y+3$.)',
+    },
+    {
+      title: '7. Mixed Revision Exercise',
+      content:
+        '**Identification & Logic:** 1. Does translation change the area of a shape? (No.) 2. What is the top number in a column vector? (Horizontal movement.) 3. If vector is $\\begin{pmatrix} 0 \\\\ -4 \\end{pmatrix}$, which direction? (Down.) 4. If shape moves 5 units left, what is $a$? ($-5$.) 5. Are Object and Image congruent? (Yes.) 6. What notation distinguishes Image point from Object point $A$? ($A\'$.)\n\n**Vector Notation (7–12):** 7. 10 units up. 8. 3 units left. 9. 4 units right, 4 units down. 10. 1 unit left, 6 units up. 11. 2 units right, 8 units down. 12. 5 units left, 5 units up.\n\n**Coordinate Calculation (13–18):** 13. $(0, 5)$ by $\\begin{pmatrix} 2 \\\\ -2 \\end{pmatrix}$. 14. $(-3, -1)$ by $\\begin{pmatrix} 3 \\\\ 1 \\end{pmatrix}$. 15. $(10, 10)$ by $\\begin{pmatrix} -10 \\\\ -10 \\end{pmatrix}$. 16. $(4, -2)$ by $\\begin{pmatrix} -4 \\\\ 2 \\end{pmatrix}$. 17. $(-1, 6)$ by $\\begin{pmatrix} 5 \\\\ 0 \\end{pmatrix}$. 18. $(7, 0)$ by $\\begin{pmatrix} 0 \\\\ -7 \\end{pmatrix}$.\n\n**Describing Translations (19–25):** 19. $(1, 1) \\rightarrow (2, 2)$. 20. $(5, 0) \\rightarrow (0, 5)$. 21. $(-2, -3) \\rightarrow (1, 1)$. 22. $(4, 4) \\rightarrow (8, 0)$. 23. $(0, -6) \\rightarrow (0, 0)$. 24. $(-1, -1) \\rightarrow (-5, -5)$. 25. $(3, 2) \\rightarrow (1, 5)$.',
+    },
+    {
+      title: '8. Exam-Style Structured Test',
+      content:
+        '1. Define "Translation" using the term "Isometry". 2. State the vector for a shift 5 units left and 3 units down. 3. Point $A(2, 3)$ moved to $A\'(5, 1)$. State the vector. 4. If $B\'(0, 0)$ is the image of $B(4, -2)$, find the translation vector. 5. Translate $(-2, 4)$ using vector $\\begin{pmatrix} 6 \\\\ -6 \\end{pmatrix}$. 6. Triangle $ABC$ has vertices $(0,0)$, $(2,0)$, $(0,3)$. Find $A\'B\'C\'$ under $\\begin{pmatrix} -2 \\\\ 1 \\end{pmatrix}$. 7. True or False: Translation $\\begin{pmatrix} 3 \\\\ 2 \\end{pmatrix}$ followed by $\\begin{pmatrix} -3 \\\\ -2 \\end{pmatrix}$ returns to original position. 8. Describe the transformation mapping $P(x, y)$ to $P\'(x-4, y+2)$. 9. Square vertices $(1,1)$, $(3,1)$, $(3,3)$, $(1,3)$ translated by $\\begin{pmatrix} -2 \\\\ -2 \\end{pmatrix}$. State new vertices. 10. If vector $\\begin{pmatrix} k \\\\ 2k \\end{pmatrix}$ moves $(1, 1)$ to $(3, 5)$, find $k$. 11. Point $Z(5, 5)$ is the Image; vector was $\\begin{pmatrix} 2 \\\\ 3 \\end{pmatrix}$. Find the Object point. 12. Describe fully the transformation mapping the origin to $(-5, 10)$. 13. Explain why the orientation of a shape remains invariant during translation. 14. A triangle is translated by $\\begin{pmatrix} 4 \\\\ 0 \\end{pmatrix}$ then by $\\begin{pmatrix} 0 \\\\ 4 \\end{pmatrix}$. What is the single equivalent vector? 15. Draw triangle $LMN$ with $L(1,1)$, $M(2,1)$, $N(1,2)$. Translate by $\\begin{pmatrix} 2 \\\\ 1 \\end{pmatrix}$ and label $L\'M\'N\'$.',
+    },
+    {
+      title: '9. Marking Memo (Full Solutions)',
+      content:
+        '**Quick Check:** 1. $(2, 5)$. 2. $(3, -1)$. 3. $(-3, 0)$. 4. $(0, 0)$. 5. $(2, -4)$.\n\n**Vector Practice:** 1. $\\begin{pmatrix} 8 \\\\ 3 \\end{pmatrix}$. 2. $\\begin{pmatrix} -4 \\\\ -9 \\end{pmatrix}$. 3. $\\begin{pmatrix} -10 \\\\ 1 \\end{pmatrix}$. 4. $\\begin{pmatrix} 0 \\\\ -7 \\end{pmatrix}$. 5. $\\begin{pmatrix} 12 \\\\ 0 \\end{pmatrix}$. 6. $\\begin{pmatrix} -2 \\\\ 2 \\end{pmatrix}$. 7. $\\begin{pmatrix} 1 \\\\ -5 \\end{pmatrix}$. 8. $\\begin{pmatrix} 0 \\\\ 0 \\end{pmatrix}$.\n\n**Formal Test Solutions:** 1. Translation is an isometry because it preserves size and shape. 2. $\\begin{pmatrix} -5 \\\\ -3 \\end{pmatrix}$. 3. Vector $\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}$. 4. Vector $\\begin{pmatrix} -4 \\\\ 2 \\end{pmatrix}$. 5. Image $(4, -2)$. 6. $A\'(-2, 1)$, $B\'(0, 1)$, $C\'(-2, 4)$. 7. True. 8. Translation with vector $\\begin{pmatrix} -4 \\\\ 2 \\end{pmatrix}$. 9. $(-1,-1)$, $(1,-1)$, $(1,1)$, $(-1,1)$. 10. $k = 2$. 11. Object $(3, 2)$. 12. Translation with vector $\\begin{pmatrix} -5 \\\\ 10 \\end{pmatrix}$. 13. Every point moves the same distance in the same direction; no rotation occurs. 14. $\\begin{pmatrix} 4 \\\\ 4 \\end{pmatrix}$. 15. $L\'(3,2)$, $M\'(4,2)$, $N\'(3,3)$.\n\n**Exam Tip:** Always write out the full addition for each vertex to avoid arithmetic slips.',
+    },
+  ],
+  key_points: [
+    'Translation is an isometry: preserves size, shape, and orientation; Object and Image are congruent.',
+    'Column vector $\\begin{pmatrix} a \\\\ b \\end{pmatrix}$: $a$ = horizontal (right $+$, left $-$); $b$ = vertical (up $+$, down $-$).',
+    'New position: add vector to original coordinates. Vector from diagram: Image $-$ Object.',
+    'Use prime notation: Object $ABC \\rightarrow$ Image $A\'B\'C\'$.',
+    'Vector is instruction to move; coordinate is a location. Do not write vector as $(a, b)$.',
+  ],
+  exam_tips: [
+    'Handle horizontal ($x$) before vertical ($y$)—"walk before you climb."',
+    'Use column vector form; writing $(a, b)$ instead of $\\begin{pmatrix} a \\\\ b \\end{pmatrix}$ loses marks.',
+    'For "describe fully": state "Translation" and give the vector.',
+    'Write out full addition for each vertex to secure method marks.',
+  ],
+  visual_descriptions: [
+    'Translation slides a shape; all points move parallel and equal distance.',
+    'Column vector: top = horizontal, bottom = vertical.',
+    'Object $ABC$ and Image $A\'B\'C\'$ are congruent and same orientation.',
+  ],
+};
+
+const dataRepresentationForm1Notes: MathTopicNotes = {
+  topic: 'Data Representation',
+  subject: 'Mathematics',
+  grade_level: 'Form 1',
+  summary:
+    'Comprehensive Form 1 Mathematics notes on Data Representation for ZIMSEC Syllabus B (2024–2030). Data representation is the process of organising and displaying collected information in visual formats. Covers frequency tables (tally method), pictograms, bar graphs, line graphs, pie charts, and interpreting represented data. Essential for agriculture, mining, and small-scale business decision-making.',
+  sections: [
+    {
+      title: '1. Introduction to Data Representation',
+      content:
+        'Within the framework of the ZIMSEC Mathematics Syllabus B (2024–2030), data representation is a strategic competency that transitions learners from basic numeracy to advanced statistical analysis. This Heritage-based curriculum is designed to empower learners with critical thinking and problem-solving skills necessary to solve everyday life problems in Zimbabwe. By mastering how to visualise information, students learn to communicate mathematical ideas successfully and develop the ability to think clearly and work carefully.\n\n**Data Representation** is the process of organising and displaying collected information (data) in a visual format. Presenting data clearly is vital because it allows for the rapid identification of patterns, relationships, and anomalies that raw numbers might hide. According to the syllabus rationale, these skills are fundamental for driving innovation, entrepreneurship, and industrialisation. Choosing the appropriate method of representation ensures that information is accessible to diverse audiences, facilitating effective decision-making in vital sectors such as agriculture, mining, and small-scale business enterprises.\n\n**Form 1 syllabus covers:** Frequency Tables; Pictograms; Bar Graphs; Line Graphs; Pie Charts.',
+    },
+    {
+      title: '2. Frequency Tables: The Foundation of Organisation',
+      content:
+        'Frequency tables are the primary tool for transforming raw statistical data into meaningful information. In the context of Zimbabwean industrialisation, being able to organise raw data—such as daily production outputs or regional rainfall figures—is the first step toward professional analysis.\n\n**The Tally Method**\n\n1. **List Categories:** Identify the distinct values or categories in the data set.\n2. **Tally:** For every data point, place a vertical mark (|) in the corresponding category row.\n3. **Group by Fives:** The fifth tally mark is drawn diagonally across the previous four (||||).\n4. **Calculate Frequency:** Count the total tally marks for each category and record the number.\n\n**Worked Examples**\n\n**Example 1:** Maize bags per hectare by 20 farmers in Bindura: 5, 6, 5, 7, 8, 5, 6, 5, 9, 5, 6, 7, 5, 8, 5, 6, 5, 7, 5, 6. Most common yield (5 bags) has frequency 9.\n\n**Example 2:** Bucket sales at Mbare market over 15 days: 10, 12, 10, 15, 12, 10, 10, 12, 15, 10, 12, 10, 10, 12, 15. Frequency of selling 10 buckets is 7.\n\n**Example 3:** Cattle owned by 18 households in Gutu. Frequency of households with 4 cattle is 9.\n\n**Example 4:** Transport methods of 20 workers in Bulawayo (Bus, Kombi, Walk). Frequency for Bus is 11.\n\n**Example 5:** Form 1 class attendance in Mutare over 10 days (38, 39, 40). Frequency of 38 attending is 5.\n\n**Example 6:** Crops preferred by 15 farmers in Chinhoyi (Maize, Tobacco, Cotton). Frequency for Maize is 8.\n\n**Example 7:** Shoe sizes of 12 students. Frequency for size 5 is 5.\n\n**Example 8:** ZESA units bought by 10 neighbours (100, 150, 200). Frequency for 100 units is 5.\n\n**Common Errors:** Missing tally marks; miscounting totals; lack of clear table headers.\n\n**Practice Exercise:** Tabulate: (1) Ages 12–14; (2) Bread crates; (3) Grades A, B, C; (4) Siblings 0–4; (5) Rainfall in Chipinge.',
+    },
+    {
+      title: '3. Pictograms: Visualising Data with Symbols',
+      content:
+        'Pictograms provide high visual impact, making them ideal for reports in agricultural or industrial settings where quick interpretation is necessary.\n\n**Drawing Method**\n\n1. **Select a Symbol:** Choose an icon relevant to the context (e.g. maize cob).\n2. **Determine a Suitable Key:** Choose a ratio where one symbol represents a specific number (e.g. 1 symbol $= 10$ bags).\n3. **Represent Partial Values:** Use half-symbols for values that are half the key\'s value.\n\n**Worked Examples**\n\n1. GMB maize: Farmer A (40), Farmer B (20). Key: 1 symbol $= 10$ bags. A $= 4$ symbols; B $= 2$ symbols.\n2. Cattle: Village X (15), Village Y (30). Key: 1 symbol $= 10$ cattle. X $= 1{,}5$ symbols; Y $= 3$ symbols.\n3. Desks repaired: Mon (12), Tue (6). Key: 1 symbol $= 3$ desks. Mon $= 4$ symbols; Tue $= 2$.\n4. Bicycles: Red (25), Blue (50). Key: 1 symbol $= 25$. Red $= 1$; Blue $= 2$.\n5. Eggs: Pen 1 (50), Pen 2 (75). Key: 1 symbol $= 25$ eggs.\n6. Tree seedlings: Site A (100), Site B (150). Key: 1 symbol $= 50$ trees.\n7. Bus trips: Operator A (8), Operator B (12). Key: 1 symbol $= 4$ trips.\n\n**Common Errors:** Inconsistent symbol sizes; missing keys; incorrect symbol-to-value ratios.\n\n**Practice:** Cotton bales Sanyati (60), Kadoma (90). Key: 1 symbol $= 30$ bales. ZUM passengers Morning (200), Evening (300). Honey Jan (15), Feb (10).',
+    },
+    {
+      title: '4. Bar Graphs: Comparative Analysis',
+      content:
+        'Bar graphs are strategically used for comparing distinct categories. Accuracy in scale and labelling is critical for success in ZIMSEC national assessments.\n\n**Plotting Process**\n\n1. **Choose a Suitable Scale:** The scale must ensure the graph occupies at least 75% of the grid (typically 10 cm–15 cm on the axis).\n2. **Label Axes:** Category name on the $x$-axis; frequency with units on the $y$-axis.\n3. **Draw Bars:** Use a ruler. Bars must have equal width and equal gaps between them.\n\n**Worked Examples**\n\n1. Agricultural yields (Maize: 45 t, Wheat: 30 t). Scale 2 cm $= 10$ units. Axis labels: Horizontal: Crop Type; Vertical: Yield (tonnes).\n2. ZESA units (House A: 200, House B: 350). Scale 2 cm $= 50$ units.\n3. Rainfall Mutare (Jan: 120 mm, Feb: 150 mm). Scale 1 cm $= 10$ mm.\n4. Market sales (Mon: $60, Tue: $40). Scale 2 cm $= \\$10$.\n5. Club members (Drama: 40, Debate: 25). Scale 2 cm $= 5$ units.\n6. Village population (A: 550, B: 700). Scale 2 cm $= 100$.\n7. Cattle per kraal (Kraal 1: 18, Kraal 2: 12).\n8. Bread crates (Shop A: 15, Shop B: 25). Scale 2 cm $= 5$ crates.\n\n**Common Errors:** Joining of bars (bars MUST NOT touch—touching indicates continuous data/histogram); missing units on vertical axis.',
+    },
+    {
+      title: '5. Line Graphs: Tracking Trends',
+      content:
+        'Line graphs are used for continuous data, identifying patterns and trends over time, such as daily temperature changes or crop growth.\n\n**Correct Labelling and Technique**\n\n1. **Scale:** Must be consistent and allow for precise point placement.\n2. **Plotting:** Mark points with a neat "x" or small dot.\n3. **Joining:** Use a ruler to join points sequentially to show the trend.\n\n**Worked Examples**\n\n1. Temperature Gweru: 8 am (18°C), 10 am (24°C), 12 pm (30°C). Trend: increasing.\n2. Maize height: Week 1 (10 cm), Week 2 (25 cm). Trend: increasing.\n3. Dam water level: June (10 m), July (8 m). Trend: decreasing.\n4. Business asset: Year 1 ($500), Year 2 ($450). Trend: decreasing.\n5. Milk production: Day 1 (40 L), Day 2 (40 L). Trend: constant.\n6. Bus speed: 1 min (40 km/h), 2 min (60 km/h). Trend: increasing.\n\n**Common Errors:** Incorrect point placement; using line graph for categorical data (e.g. "Favorite Subject").',
+    },
+    {
+      title: '6. Pie Charts: Proportional Representation',
+      content:
+        'Pie charts visualise the relationship between a part and a whole. In ZIMSEC exams, the calculation of angles is the most critical step.\n\n**Formula**\n$$\\text{Angle} = \\frac{\\text{Category Frequency}}{\\text{Total Frequency}} \\times 360°$$\n\n**Construction Steps**\n\n1. Calculate angles using a 3-column table (Category, Frequency, Angle).\n2. Draw circle with compass.\n3. Use protractor to measure angles from a starting radius.\n4. Label sectors with names and percentages if possible.\n\n**Worked Examples**\n\n1. Livestock (Cattle: 15, Goats: 5). Total 20. Cattle: $\\frac{15}{20} \\times 360 = 270°$; Goats: $\\frac{5}{20} \\times 360 = 90°$.\n2. School budget (Stationery: $3, Sports: $1). Total 4. Stationery: 270°; Sports: 90°.\n3. Village vote (A: 120, B: 60). Total 180. A: $\\frac{120}{180} \\times 360 = 240°$; B: 120°.\n4. Land use (Crops: 60 ha, Grazing: 40 ha). Total 100. Crops: 216°; Grazing: 144°.\n5. Daily time (Work: 8 h, Sleep: 8 h, Other: 8 h). Each: 120°.\n6. Fruit (Mangoes: 25, Oranges: 25). Each: 180°.\n7. Poultry (Broilers: 200, Layers: 100). Total 300. Broilers: 240°; Layers: 120°.\n8. Transport (Bus: 4, Kombi: 1). Total 5. Bus: 288°; Kombi: 72°.',
+    },
+    {
+      title: '7. Interpreting Represented Data: Drawing Inferences',
+      content:
+        'The goal is to "deduce and draw inferences through manipulation of statistical data" (ZIMSEC Objective 9.1.12).\n\n**Worked Examples**\n\n1. Bar graph: Maize 80 t, Cotton 20 t. Total $= 80 + 20 = 100$ tonnes.\n2. Pie chart: Rent sector $90°$. Fraction $= \\frac{90}{360} = \\frac{1}{4}$.\n3. Line graph: ZESA units drop 400 to 100 over 4 days. Trend: consumption decreasing.\n4. Pictogram: 5 symbols for cattle, key 1 symbol $= 20$. Total $= 5 \\times 20 = 100$ cattle.\n5. Frequency table: Grade A (12), Grade U (2). Least common: Grade U.\n6. Bar graph: Shop X (10 units), Shop Y (5 units). Shop X sold 5 more units.\n7. Pie chart: Agriculture 180°, Mining 180°. Both sectors contribute equally.\n8. Line graph: horizontal at 25°C for 5 h. Temperature remained constant.',
+    },
+    {
+      title: '8. Mixed Revision Exercise',
+      content:
+        '1. Frequency table: 10, 15, 10, 20, 15, 10, 10, 20. 2. Pictogram for 50 trees (Key: 1 symbol $= 10$). 3. Angle for $f = 30$, total $= 120$. 4. Bar graph: Harare 40 mm, Bulawayo 20 mm. 5. Line graph (1, 5) and (2, 10): describe trend. 6. Coin toss 20 times: tabulate H and T. 7. 1 symbol $= 50$ bags; 175 bags $=?$ symbols. 8. Other $= \\$125$, Total $= \\$500$: angle for Other. 9. Bar scale 2 cm $= 10$ units; bar for 35 units $=?$ cm. 10. Line falls 100 to 20: describe trend. 11. "MATHS IS VITAL FOR NATION BUILDING": frequency table of letters per word. 12. Pictogram cars: White (15), Silver (10). Key: 1 symbol $= 5$. 13. Pie angle 120°: percentage? 14. Bar graph Grade A (15), Grade B (25): total frequency. 15. Points (1, 2) and (2, 8): trend. 16–25: shoe sizes; 70 people at 1 symbol $= 20$; angle $f = 10$, total 60; scale for max 80, axis 16 cm; line up then down; crop types; 5 cows at 1 cow $= 10$; pie total 200, category 50; bar 1 cm $= 5$ units, height for 30; define Data Representation.',
+    },
+    {
+      title: '9. Exam-Style Structured Test',
+      content:
+        '**Section A:** 1. Define "Frequency Table". 2. State the formula for pie chart sector angle. 3. Pictogram key 1 symbol $= 50$ cattle; 125 cattle $=?$ symbols. 4. Why must bars have equal gaps? 5. Line graph 10, 10, 10: trend?\n\n**Section B:** 6. Rainfall 40, 50, 40, 60, 50, 40, 40, 50. (a) Frequency table. (b) Angle for "40 mm" in pie chart. 7. Sales Fruit (20), Vegetables (60). (a) Bar graph, scale 2 cm $= \\$10$. (b) Angle for Vegetables. 8. Crop growth Week 1 (5 cm), Week 2 (15 cm), Week 3 (20 cm). (a) Line graph, scale 2 cm $= 5$ cm. (b) Describe trend. 9. Pictogram 1 symbol $= 200$ units: Jan (500), Feb (300). 10. Budget 120: Food (60), Rent (30), Transport (30). (a) 3-column table for angles. (b) Which two categories have equal angles? 11–15: Define Objective 9.1.12; half-symbols purpose; total frequency from Grade A (10), B (15), C (5); sum of pie angles; bar 12 cm at 2 cm $= 10$ units.',
+    },
+    {
+      title: '10. Full Memo and Worked Solutions',
+      content:
+        '**Frequency Tables Practice:** 1. 12: 5; 13: 4; 14: 3. 2. 5: 5; 6: 3; 7: 1; 8: 1. 3. A: 5; B: 6; C: 3. 4. 0: 2; 1: 6; 2: 4; 3: 2; 4: 1. 5. 10: 4; 12: 2; 15: 2.\n\n**Pictograms:** Sanyati 2 symbols; Kadoma 3. Morning 2; Evening 3. Jan 3; Feb 2.\n\n**Pie Charts:** Sport $\\frac{40}{60} \\times 360 = 240°$; Clubs $120°$.\n\n**Mixed Revision:** 1. 10: 4; 15: 2; 20: 2. 2. 5 symbols. 3. $\\frac{30}{120} \\times 360 = 90°$. 4. Harare 8 cm; Bulawayo 4 cm. 5. Increasing. 6. H: 10; T: 10. 7. 2{,}5 symbols. 8. $\\frac{125}{500} \\times 360 = 90°$. 9. 7 cm. 10. Decreasing. 11. $33{,}3\\%$. 12. $\\frac{10}{60} \\times 360 = 60°$. 13. 2 cm $= 10$ units. 14. 6 cm.\n\n**Exam Test:** 1. Organised display using tallies and counts. 2. Angle $= \\frac{f}{\\text{Total}} \\times 360°$. 3. 2{,}5 symbols. 4. To visually separate distinct categories. 5. Constant. 6a) 40: 4; 50: 3; 60: 1. 6b) $\\frac{4}{8} \\times 360 = 180°$. 7a) Fruit 4 cm; Veg 12 cm. 7b) $270°$. 8a) Points (1, 5), (2, 15), (3, 20). 8b) Increasing. 9a) Food 180°; Rent 90°; Transport 90°. 9b) Rent and Transport. 10. 360°. 11. 60 units.',
+    },
+  ],
+  key_points: [
+    'Frequency table: list categories, tally, group by fives, count frequency.',
+    'Pictogram: choose symbol, fix key (1 symbol $= n$ units), use half-symbols for half values.',
+    'Bar graph: equal gaps, bars do not touch; label axes with units.',
+    'Line graph: for continuous data over time; join points to show trend.',
+    'Pie chart: Angle $= \\frac{f}{\\text{Total}} \\times 360°$; angles sum to 360°.',
+  ],
+  exam_tips: [
+    'Always include a key for pictograms—without it the graph is meaningless.',
+    'Bars in a bar graph must NOT touch; touching bars suggest a histogram (continuous data).',
+    'For pie charts, use a 3-column table: Category, Frequency, Angle.',
+    'Check total frequency matches original data count in frequency tables.',
+  ],
+  visual_descriptions: [
+    'Frequency table: categories | tally | frequency columns.',
+    'Pictogram: rows of identical symbols; key at top or bottom.',
+    'Bar graph: separate bars, equal width and gaps; line graph: points joined by ruler.',
+    'Pie chart: circle divided into sectors; protractor for angles.',
+  ],
+};
+
+const symmetryForm1Notes: MathTopicNotes = {
+  topic: 'Symmetry',
+  subject: 'Mathematics',
+  grade_level: 'Form 1',
+  summary:
+    'Comprehensive Form 1 Mathematics notes on Symmetry for ZIMSEC Heritage-based Syllabus B (2024–2030). Symmetry is the property where a shape remains invariant under specific transformations. Covers line symmetry (reflection), rotational symmetry, polygon properties, reflection on the coordinate plane, and heritage/industrial applications (Great Zimbabwe, basketry, car wheels).',
+  sections: [
+    {
+      title: '1. Introduction to Geometric Symmetry',
+      content:
+        'Within the framework of the Heritage-based Mathematics Syllabus B (2024–2030), symmetry occupies a position of strategic importance. As outlined in the syllabus Rationale (Section 1.2), the study of mathematics is fundamental to driving innovation, entrepreneurship, and industrialisation. Mastery of spatial relationships through symmetry is a critical prerequisite for professional success in fields such as engineering, construction, and architectural design.\n\nIn mathematical terms, **Symmetry** is defined as the property where a geometric shape remains **invariant**—meaning it appears unchanged—under specific transformations. This conceptual understanding begins with the most visible and tactile form of geometric balance: **Line Symmetry**.',
+    },
+    {
+      title: '2. Line Symmetry (Reflection Symmetry)',
+      content:
+        'Identifying lines of symmetry is a foundational competency for Geometric Research Projects (Objective 4.8) and advanced spatial visualisation. In technical trades, the ability to recognise a "mirror image" ensures structural integrity and aesthetic precision.\n\n**Formal Definition**\n\nA **Line of Symmetry** (Mirror Line) is an imaginary line that passes through a shape and divides it into two identical halves. These halves are reflections of one another; if the shape were folded along this line, the two parts would coincide exactly.\n\n**Orientations of Symmetry**\n\n| Orientation | Description |\n| :--- | :--- |\n| Vertical | Runs perpendicular to the horizon (up and down), dividing into left and right |\n| Horizontal | Runs parallel to the horizon (left to right), dividing into top and bottom |\n| Diagonal | Runs at an angle (oblique), often connecting opposite vertices or side midpoints |\n\n**Common Error:** A frequent mistake in ZIMSEC examinations is assuming that the **diagonals of a rectangle** are lines of symmetry. While a diagonal divides a rectangle into two equal areas, folding along it results in the corners not meeting. Thus a rectangle has only **2** lines of symmetry, not 4.',
+    },
+    {
+      title: '3. Worked Examples: Line Symmetry',
+      content:
+        '**Example 1 – Isosceles Triangle:** One line from apex to midpoint of base. Therefore **1** line of symmetry.\n\n**Example 2 – Rectangle:** Two lines through perpendicular bisectors of opposite sides (one vertical, one horizontal). Therefore **2** lines of symmetry.\n\n**Example 3 – Kite:** Single diagonal between the two pairs of equal sides. Therefore **1** line of symmetry.\n\n**Example 4 – Parallelogram (General):** Folding along any axis fails to produce coinciding edges. Therefore **0** lines of symmetry.\n\n**Example 5 – Circle:** Any diameter divides into two identical semicircles. Therefore **infinite** lines of symmetry.\n\n**Example 6 – Letter "M":** Vertical line through centre. Therefore **1** line of symmetry.\n\n**Example 7 – Letter "X":** One vertical and one horizontal. Therefore **2** lines of symmetry.\n\n**Example 8 – Letter "G":** Asymmetrical "tail" prevents identical halves. Therefore **0** lines of symmetry.\n\n**Practice Exercise 2.1:** State the number of line(s) of symmetry for: (1) Equilateral Triangle, (2) Rhombus, (3) Regular Pentagon, (4) Letter "E", (5) Scalene Triangle.',
+    },
+    {
+      title: '4. Rotational Symmetry and Order of Rotation',
+      content:
+        'Rotational symmetry is vital in mechanical systems and is linked to Measures of Time (Section 8.4). In engineering, components like turbines rely on rotational invariance to function efficiently.\n\n**Definitions**\n\n- **Rotational Symmetry:** A shape has this property if it looks exactly the same more than once during a $360°$ turn.\n- **Order of Rotational Symmetry:** The number of times the shape fits onto itself during a full $360°$ rotation.\n\n**Formula**\n$$\\text{Angle of Rotation} = 360° \\div \\text{Order}$$\n\n**Worked Examples**\n\n1. **Square:** Order 4. Angle $= 360° \\div 4 = 90°$.\n2. **Equilateral Triangle:** Order 3. Angle $= 360° \\div 3 = 120°$.\n3. **Letter "S":** Order 2. Angle $= 180°$.\n4. **Regular Hexagon:** Order 6. Angle $= 60°$.\n5. **Letter "H":** Order 2. Angle $= 180°$.\n6. **Rhombus:** Order 2. Angle $= 180°$.\n7. **Regular Octagon:** Order 8. Angle $= 45°$.\n8. **Letter "N":** Order 2. Angle $= 180°$.\n\n**Common Errors:** Order of 1 implies no rotational symmetry (only fits after full $360°$). Avoid dividing order by 360; the order is always the **divisor**.\n\n**Practice 3.1:** (1) Order of regular decagon. (2) Angle for decagon. (3) Order for letter "Z". (4) Angle for order 5. (5) Order if angle is $120°$.',
+    },
+    {
+      title: '5. Symmetry Properties in Polygons',
+      content:
+        'The relationship between a polygon\'s regularity and its symmetry is absolute. A polygon\'s regularity—defined by equal side lengths and equal interior angles—maximises its symmetry count.\n\n**Regular Polygon Rule:** A regular $n$-gon has $n$ lines of symmetry and order of rotational symmetry $n$.\n\n**Symmetry Profile**\n\n| Regular Polygon | Sides $(n)$ | Lines | Order |\n| :--- | :--- | :--- | :--- |\n| Equilateral Triangle | 3 | 3 | 3 |\n| Square | 4 | 4 | 4 |\n| Regular Pentagon | 5 | 5 | 5 |\n| Regular Hexagon | 6 | 6 | 6 |\n\n**Non-Regular Examples:** Scalene triangle: 0 lines, order 1. Isosceles trapezium: 1 line, order 1. Rhombus: 2 lines (diagonals), order 2.\n\n**Practice 4.1:** (1) Justify why regular heptagon has 7 lines. (2) Lines in non-isosceles trapezium. (3) Compare rectangle vs square. (4) Regular nonagon. (5) Angle for regular pentagon.',
+    },
+    {
+      title: '6. Reflection on the Coordinate Plane',
+      content:
+        'Per Syllabus Section 9.1.13, Form 1 learners focus on point mapping logic as prerequisite for full figure transformations in Form 2.\n\n**Rules for Reflection**\n\n1. Across $x$-axis: $(x, y) \\rightarrow (x, -y)$\n2. Across $y$-axis: $(x, y) \\rightarrow (-x, y)$\n3. Across line $y = x$: $(x, y) \\rightarrow (y, x)$\n\n**Worked Examples (Mapping)**\n\n| Pre-image | Rule | Image |\n| :--- | :--- | :--- |\n| $A(2, 5)$ | $x$-axis | $A\'(2, -5)$ |\n| $B(-3, 4)$ | $y$-axis | $B\'(3, 4)$ |\n| $C(1, -6)$ | $y=x$ | $C\'(-6, 1)$ |\n| $D(0, 3)$ | $x$-axis | $D\'(0, -3)$ |\n| $E(-2, -2)$ | $y$-axis | $E\'(2, -2)$ |\n| $F(4, 4)$ | $y=x$ | $F\'(4, 4)$ |\n| $G(7, -1)$ | $x$-axis | $G\'(7, 1)$ |\n| $H(-5, 0)$ | $y=x$ | $H\'(0, -5)$ |\n\n**Common Error:** When reflecting in the $y$-axis, only the $x$-coordinate changes sign. Beginners often change both. The axis of reflection remains "constant."\n\n**Practice 5.1:** (1) Reflect $P(8, 2)$ in $x$-axis. (2) Reflect $Q(-5, -3)$ in $y$-axis. (3) Describe $(3, 9) \\rightarrow (9, 3)$. (4) Reflect $S(0, -4)$ in $y=x$. (5) $T\' = (4, -7)$ after $x$-axis reflection; find $T$.',
+    },
+    {
+      title: '7. Symmetry in Real-Life Objects',
+      content:
+        'In the spirit of Unhu/Ubuntu/Vumunhu (Section 3.6), observing symmetry fosters appreciation for national order.\n\n**Heritage and Industrial Applications**\n\n- **Great Zimbabwe Conical Tower:** Displays infinite rotational symmetry about its vertical axis, symbolising stability and architectural mastery.\n- **Traditional Basketry (Sengere/Rusero):** Patterns use rotational and line symmetry for balanced, durable weaves.\n- **Car Wheel:** High rotational symmetry ensures uniform mass distribution, preventing mechanical vibrations.\n\n**Worked Examples**\n\n1. **Why is rotational symmetry critical for a car wheel?** Uneven weight distribution would cause centrifugal imbalance, leading to safety hazards and mechanical failure.\n2. **Symmetry of a standard brick:** 3 lines (Vertical, Horizontal, Longitudinal) allowing multiple orientations while maintaining structural alignment.\n\n**Practice 6.1:** (1) Letter with only rotational symmetry in a shop sign. (2) Symmetry of a traditional Zimbabwe shield.',
+    },
+    {
+      title: '8. Mixed Revision Exercise',
+      content:
+        '1. Define "Line of Symmetry". 2. Lines in equilateral triangle? 3. Order for square? 4. Angle for regular pentagon? 5. Reflect $(5, -2)$ in $y$-axis. 6. Which letter has both horizontal and vertical: A, B, or H? 7. Quadrilateral with exactly 2 lines? 8. Order 12: angle? 9. Reflect $(-3, -7)$ in $y=x$. 10. Lines in regular octagon? 11. Order for regular hexagon? 12. Image of $(0, 5)$ in $x$-axis? 13. Symmetry of a circle? 14. Regular $n$-gon has 20 lines: find $n$. 15. Angle for order 2? 16. Does scalene triangle have rotational symmetry? 17. Reflect $(-2, 4)$ in $x$-axis, then in $y$-axis. 18. Mirror line mapping $(2, 3)$ to $(3, 2)$? 19. Lines in a kite? 20. Order of rectangle? 21. Angle for regular nonagon? 22. Reflect $(4, 4)$ in $y=x$. 23. Lines in letter "S"? 24. $P(x, y)$ reflected to $P\'(2, 5)$ in $y$-axis: find $x$, $y$. 25. Why does a parallelogram have order 2 but 0 lines?',
+    },
+    {
+      title: '9. Exam-Style Structured Test',
+      content:
+        '**Section A:** 1. Order of regular hexagon. 2. Image of $(6, -3)$ in $x$-axis. 3. Lines in rhombus. 4. Angle for regular octagon. 5. Reflect $A(-2, 5)$ in $y=x$. 6. Polygon with angle $60°$. 7. Lines in semicircle? 8. Order for letter "N". 9. Reflect $(4, 0)$ in $y$-axis. 10. Rhombus vs rectangle: more lines? 11. Lines in regular decagon. 12. Image of $(-3, -3)$ in $y=x$.\n\n**Section B:** 13. (a) Why is square more symmetrical than rectangle? (b) Angle for both. 14. (a) Plot $A(1,1)$, $B(4,1)$, $C(4,3)$. (b) Reflect in $x$-axis; state $A\'B\'C\'$. 15. (a) Wheel with 5 spokes: order? (b) Angle? (c) Industrial importance?',
+    },
+    {
+      title: '10. Full Memo and Worked Solutions',
+      content:
+        '**Practice 2.1:** 1. Equilateral triangle: 3. 2. Rhombus: 2. 3. Regular pentagon: 5. 4. Letter E: 1. 5. Scalene triangle: 0.\n\n**Practice 3.1:** 1. Order 10. 2. Angle $360° \\div 10 = 36°$. 3. Letter Z: 2. 4. $360° \\div 5 = 72°$. 5. $360° \\div 120 = 3$ (Order 3).\n\n**Practice 5.1:** 1. $P\'(8, -2)$. 2. $Q\'(5, -3)$. 3. Reflection in $y = x$. 4. $S\'(-4, 0)$. 5. $T(4, 7)$.\n\n**Mixed Revision (selected):** 1. Line dividing shape into two identical halves. 2. Reflect $(5, -2)$ in $y$-axis: $(-5, -2)$. 3. $360° \\div 12 = 30°$. 4. $360° \\div 2 = 180°$. 5. Parallelogram: fits onto itself twice when spun, but folding leaves edges unmatched.\n\n**Exam Test:** 1. Hexagon order: 6. 2. $(6, 3)$. 3. Rhombus: 2 lines. 4. $45°$. 5. $A\'(5, -2)$. 6. Regular hexagon. 7. Semicircle: 1 line. 14b) $A\'(1, -1)$, $B\'(4, -1)$, $C\'(4, -3)$. 15a) 5. 15b) $72°$. 15c) Ensures balanced weight distribution and smooth motion in machines.',
+    },
+  ],
+  key_points: [
+    'Line of symmetry: divides shape into two identical halves (mirror image).',
+    'Rectangle has 2 lines (through midpoints), NOT 4—diagonals are not symmetry lines.',
+    'Regular $n$-gon: $n$ lines and order $n$; angle $= 360° \\div n$.',
+    'Reflection rules: $x$-axis $(x,y)\\rightarrow(x,-y)$; $y$-axis $(-x,y)$; $y=x$ $(y,x)$.',
+    'Order of 1 $=$ no rotational symmetry; order is always the divisor in the formula.',
+  ],
+  exam_tips: [
+    'Rectangle diagonals: equal area but corners do not meet when folded—not lines of symmetry.',
+    'For $y$-axis reflection, only the $x$-coordinate changes sign.',
+    'Regular polygon: lines $=$ order $=$ number of sides.',
+  ],
+  visual_descriptions: [
+    'Line symmetry: fold test—halves coincide. Vertical, horizontal, diagonal orientations.',
+    'Rotational symmetry: spin $360°$, count how many times shape fits onto itself.',
+    'Reflection: $x$-axis flips $y$; $y$-axis flips $x$; $y=x$ swaps coordinates.',
+  ],
+};
+
+const circlesForm1Notes: MathTopicNotes = {
+  topic: 'Circles',
+  subject: 'Mathematics',
+  grade_level: 'Form 1',
+  summary:
+    'Comprehensive Form 1 Mathematics notes on Circles for ZIMSEC Syllabus B (2024–2030). Covers parts of a circle (centre, radius, diameter, circumference, chord, arc, sector, tangent), circumference formula $C = 2\\pi r = \\pi d$, area $A = \\pi r^2$, rearrangement, arcs and sectors, and real-life contexts (Great Zimbabwe, center-pivot irrigation, scotch cart, kraals).',
+  sections: [
+    {
+      title: '1. Introduction to the Geometry of Circles',
+      content:
+        'In the ZIMSEC Syllabus B (2024–2030) framework, the study of circles is a strategic cornerstone of both the Geometry and Measures and Mensuration strands. Understanding circular properties is the essential foundation for engineering, architecture, and innovation within Zimbabwe\'s "Heritage-based" education system. From the precision required in building the conical tower at Great Zimbabwe to the design of modern center-pivot irrigation systems in Chiredzi, circular geometry drives our national industrialisation. Mastering these concepts fosters the spirit of Unhu/Ubuntu.\n\n**Parts of a Circle**\n\n- **Centre:** The fixed central point (usually $O$) from which all points on the circle\'s edge are the same distance.\n- **Radius ($r$):** A straight line segment from the centre to any point on the boundary (like a bicycle spoke).\n- **Diameter ($d$):** A straight line passing through the centre, joining two points on the boundary—cuts the circle into two equal halves.\n- **Circumference ($C$):** The total linear distance around the outer boundary (the "fence line" or perimeter).\n- **Chord:** A straight line connecting two points on the boundary that does not necessarily pass through the centre.\n- **Arc:** A section or portion of the curved circumference (a curved "slice" of the boundary).\n- **Sector:** The region enclosed by two radii and an arc (like a slice of pizza or a round-hut floor plan).\n- **Tangent:** A straight line that touches the circle at exactly one point; always perpendicular ($90°$) to the radius at the point of contact.\n\n**Radius–Diameter Relationship**\n\n$$d = 2r \\quad \\text{or} \\quad r = \\frac{d}{2}$$\n\nIdentifying which dimension is provided is the critical first step in selecting the correct formula.',
+    },
+    {
+      title: '2. Calculating Circumference',
+      content:
+        'Circumference is the linear distance of the boundary. In practical Zimbabwean life, this measurement is vital for determining the length of fencing needed for a circular livestock pen or calculating the distance a scotch cart wheel travels in one rotation.\n\n**The Constant $\\pi$ (Pi)**\n\nPer ZIMSEC standards:\n- $\\pi = \\frac{22}{7}$ (Preferred when radius/diameter is a multiple of 7)\n- $\\pi = 3{,}14$ (Preferred for decimal-based dimensions)\n\n**Formulas**\n\n- $C = 2\\pi r$ (when radius is given)\n- $C = \\pi d$ (when diameter is given)\n\nBoth are equivalent because $2r = d$.\n\n**Worked Examples**\n\n1. $r = 7\\ \\text{cm}$, $\\pi = \\frac{22}{7}$: $C = 2 \\times \\frac{22}{7} \\times 7 = 44\\ \\text{cm}$.\n2. $d = 14\\ \\text{m}$, $\\pi = \\frac{22}{7}$: $C = \\frac{22}{7} \\times 14 = 44\\ \\text{m}$.\n3. $r = 10\\ \\text{cm}$, $\\pi = 3{,}14$: $C = 2 \\times 3{,}14 \\times 10 = 62{,}8\\ \\text{cm}$.\n4. $d = 20\\ \\text{mm}$, $\\pi = 3{,}14$: $C = 62{,}8\\ \\text{mm}$.\n5. $r = 21\\ \\text{m}$, $\\pi = \\frac{22}{7}$: $C = 132\\ \\text{m}$.\n6. $d = 3{,}5\\ \\text{cm}$, $\\pi = \\frac{22}{7}$: $C = 11\\ \\text{cm}$.\n7. $r = 1{,}4\\ \\text{m}$, $\\pi = \\frac{22}{7}$: $C = 8{,}8\\ \\text{m}$.\n8. $d = 100\\ \\text{cm}$, $\\pi = 3{,}14$: $C = 314\\ \\text{cm}$.\n\n**Common Error:** Using the diameter in $2\\pi r$ (e.g. $2 \\times \\pi \\times 14$ when 14 is the diameter) doubles your result incorrectly. If you use "2", you must use the radius.\n\n**Practice 2.1:** (1) $r = 14\\ \\text{m}$. (2) $d = 21\\ \\text{cm}$. (3) $r = 5\\ \\text{m}$, $\\pi = 3{,}14$. (4) $d = 70\\ \\text{cm}$. (5) $r = 3{,}5\\ \\text{m}$.',
+    },
+    {
+      title: '3. Area of a Circle',
+      content:
+        'Area measures the amount of flat surface contained within the boundary. This is vital for calculating material costs, such as the amount of cement needed for a hut floor or the land area covered by a center-pivot irrigator.\n\n**Formula**\n$$A = \\pi r^2$$\n\n**Conceptual Layer:** Why squared units (e.g. cm²)? Because area involves two dimensions. When we square the radius ($r \\times r$), we multiply two lengths, creating a square unit.\n\n**Worked Examples**\n\n1. $r = 7\\ \\text{cm}$, $\\pi = \\frac{22}{7}$: $A = \\frac{22}{7} \\times 7^2 = 154\\ \\text{cm}^2$.\n2. $d = 28\\ \\text{m}$: $r = 14$. $A = \\frac{22}{7} \\times 14^2 = 616\\ \\text{m}^2$.\n3. $r = 10\\ \\text{cm}$, $\\pi = 3{,}14$: $A = 314\\ \\text{cm}^2$.\n4. $d = 42\\ \\text{cm}$: $r = 21$. $A = 1386\\ \\text{cm}^2$.\n5. $r = 3{,}5\\ \\text{m}$: $A = 38{,}5\\ \\text{m}^2$.\n6. $d = 20\\ \\text{cm}$: $r = 10$. $A = 314\\ \\text{cm}^2$.\n7. $r = 14\\ \\text{mm}$: $A = 616\\ \\text{mm}^2$.\n8. $r = 0{,}7\\ \\text{m}$: $A = 1{,}54\\ \\text{m}^2$.\n\n**Common Error:** Do not multiply the radius by 2 instead of squaring it. $7^2 = 49$, while $7 \\times 2 = 14$.\n\n**Practice 3.1:** (1) $r = 21\\ \\text{m}$. (2) $d = 14\\ \\text{cm}$. (3) $r = 4\\ \\text{cm}$, $\\pi = 3{,}14$. (4) $d = 70\\ \\text{m}$. (5) $r = 1{,}4\\ \\text{m}$.',
+    },
+    {
+      title: '4. Determining Radius and Diameter through Rearrangement',
+      content:
+        'Often we know $C$ or $A$ and must find the radius. This involves "working backward" using algebraic rearrangement.\n\n**Formulas**\n\n- From $C$: $r = \\frac{C}{2\\pi}$\n- From $A$: $r^2 = \\frac{A}{\\pi}$, so $r = \\sqrt{\\frac{A}{\\pi}}$\n\n**Square Roots:** $\\sqrt{x}$ is the inverse of squaring. If $r^2 = 49$, then $r = 7$. Common: $\\sqrt{64}=8$, $\\sqrt{81}=9$, $\\sqrt{100}=10$, $\\sqrt{121}=11$, $\\sqrt{144}=12$.\n\n**Worked Examples**\n\n1. $C = 44\\ \\text{cm}$: $r = 7\\ \\text{cm}$.\n2. $A = 154\\ \\text{cm}^2$: $r^2 = 49$, $r = 7\\ \\text{cm}$.\n3. $C = 62{,}8\\ \\text{m}$, $\\pi = 3{,}14$: $d = 20\\ \\text{m}$.\n4. "Hence" style: $C = 88\\ \\text{cm}$ $\\Rightarrow$ $r = 14\\ \\text{cm}$, $A = 616\\ \\text{cm}^2$.\n5. $A = 314\\ \\text{m}^2$: $r^2 = 100$, $r = 10\\ \\text{m}$.\n6. $C = 132\\ \\text{mm}$: $d = 42\\ \\text{mm}$.\n\n**Practice 4.1:** (1) $C = 22\\ \\text{cm}$. (2) $A = 38{,}5\\ \\text{m}^2$. (3) Wire 110 cm bent into circle: diameter. (4) $A = 1256\\ \\text{m}^2$, $\\pi = 3{,}14$. (5) $C = 176\\ \\text{mm}$.',
+    },
+    {
+      title: '5. Arcs and Sectors: Proportional Reasoning',
+      content:
+        'Arcs and sectors are "slices" of a whole circle. We use proportional reasoning based on common fractions.\n\n**Conceptual Guide**\n\n- **Arc Length:** A fraction of the whole circumference.\n- **Sector Area:** A fraction of the whole area.\n- **Common Fractions:** Semi-circle $= \\frac{1}{2}$; Quadrant ($90°$) $= \\frac{1}{4}$; Three-quarters $= \\frac{3}{4}$.\n\n**Worked Examples**\n\n1. Semi-circle $r = 7\\ \\text{cm}$: Arc $= \\frac{1}{2} \\times 44 = 22\\ \\text{cm}$.\n2. Quadrant $r = 14\\ \\text{m}$: Sector area $= \\frac{1}{4} \\times 616 = 154\\ \\text{m}^2$.\n3. Semi-circle $d = 21\\ \\text{cm}$: Arc $= 33\\ \\text{cm}$.\n4. Quadrant $r = 10\\ \\text{cm}$, $\\pi = 3{,}14$: Area $= 78{,}5\\ \\text{cm}^2$.\n5. $\\frac{3}{4}$ circle $r = 7\\ \\text{m}$: Arc $= 33\\ \\text{m}$.\n6. $\\frac{3}{4}$ circle $r = 14\\ \\text{cm}$: Sector area $= 462\\ \\text{cm}^2$.\n\n**Common Error:** Do not confuse arc length (cm, m) with sector area (cm², m²).\n\n**Practice 5.1:** (1) Semi-circle $r = 21\\ \\text{cm}$. (2) Quadrant $r = 7\\ \\text{m}$. (3) $90°$ arc, $d = 28\\ \\text{cm}$. (4) Semi-circular rug $d = 20\\ \\text{m}$. (5) $\\frac{3}{4}$ sector $r = 7\\ \\text{cm}$.',
+    },
+    {
+      title: '6. Structured Word Problems and Real-Life Contexts',
+      content:
+        '**Multi-Step Word Problems**\n\n1. **Transport:** Scotch cart wheel $d = 0{,}7\\ \\text{m}$ (Gokwe cotton farm). Distance after 200 rotations? $C = \\frac{22}{7} \\times 0{,}7 = 2{,}2\\ \\text{m}$ per rotation. $200 \\times 2{,}2 = 440\\ \\text{m}$.\n2. **Livestock:** Circular kraal $r = 14\\ \\text{m}$ (Matabeleland North). Wire length $= 2 \\times \\frac{22}{7} \\times 14 = 88\\ \\text{m}$.\n3. **Heritage Architecture:** Round-hut floor $d = 6\\ \\text{m}$ (Masvingo). Area $= \\pi \\times 3^2$ (floor is flat surface being covered).\n4. **Agriculture:** Center-pivot irrigation 70 m long (Chiredzi). Area $= \\frac{22}{7} \\times 70^2$ in one full rotation.\n5. **Comparison:** Plate A $r = 7\\ \\text{cm}$, Plate B $r = 14\\ \\text{cm}$. Plate B is $2^2 = 4$ times larger (area $\\propto r^2$).\n6. **Engineering:** Pipe internal $d = 10\\ \\text{cm}$. Water opening area $= 3{,}14 \\times 25 = 78{,}5\\ \\text{cm}^2$.\n7. **Garden Design:** Flower bed $r = 3{,}5\\ \\text{m}$ (Glen View). Edge length $= 2 \\times \\frac{22}{7} \\times 3{,}5 = 22\\ \\text{m}$.\n8. **Traditional Storage:** Granary floor $d = 2{,}8\\ \\text{m}$ (Matobo). Floor area $= \\frac{22}{7} \\times 1{,}4^2$.',
+    },
+    {
+      title: '7. Mixed Revision Exercise',
+      content:
+        '**Part A: Multiple Choice** 1. Distance from centre to edge: (a) Chord (b) Diameter (c) Radius (d) Arc. 2. If $r = 3{,}5\\ \\text{cm}$, then $d$: (a) 7 cm (b) 1,75 cm (c) 14 cm (d) 10 cm. 3. Best $\\pi$ for $d = 21\\ \\text{m}$: (a) 3,14 (b) 22/7 (c) 3,0 (d) 1/7. 4. Area formula: (a) $\\pi d$ (b) $2\\pi r$ (c) $\\pi r^2$ (d) $2\\pi d$. 5. Line touching at one point: (a) Radius (b) Tangent (c) Chord (d) Sector. 6. $d = 14\\ \\text{cm}$: (a) 88 cm (b) 44 cm (c) 154 cm (d) 22 cm. 7. Semi-circle fraction: (a) 1/4 (b) 1/3 (c) 1/2 (d) 1/8. 8. $r = 10\\ \\text{cm}$, $\\pi = 3{,}14$: (a) 314 cm² (b) 62,8 cm (c) 31,4 (d) 100. 9. Slice bounded by two radii: (a) Arc (b) Segment (c) Sector (d) Chord. 10. $d = 7\\ \\text{m}$: radius (a) 14 m (b) 3,5 m (c) 49 m (d) 1 m.\n\n**Part B: Structured (11–30)** Define chord; $C$ for $r = 21\\ \\text{cm}$; $A$ for $r = 7\\ \\text{m}$; $d$ if $C = 88\\ \\text{m}$; quadrant area $r = 14\\ \\text{cm}$; $r$ if $A = 314\\ \\text{cm}^2$; $d = 3{,}5\\ \\text{m}$ to $r$; $C$ for $d = 100\\ \\text{m}$; $A$ for $r = 1\\ \\text{m}$; wheel $d = 0{,}7\\ \\text{m}$ distance; semi-circle arc $r = 14\\ \\text{cm}$; $A$ for $d = 42\\ \\text{cm}$; $r$ if $C = 132\\ \\text{m}$; $\\frac{3}{4}$ sector $r = 7\\ \\text{cm}$; $C$ for $r = 10{,}5\\ \\text{m}$; $d$ if $r = 0{,}25\\ \\text{m}$; quadrant $r = 21\\ \\text{cm}$; $r$ if $A = 12{,}56\\ \\text{cm}^2$; $90°$ arc $d = 14\\ \\text{cm}$; longest chord?',
+    },
+    {
+      title: '8. ZIMSEC-Style Exam Test',
+      content:
+        '1. (a) State $d$ and $r$ relationship. (b) $C$ for $r = 21\\ \\text{cm}$. 2. Hut floor $d = 14\\ \\text{m}$: (a) Radius. (b) Area. 3. Rearrange $C = \\pi d$ to make $d$ the subject. 4. Bicycle wheel $r = 35\\ \\text{cm}$: (a) Circumference. (b) Rotations to cover 110 m? 5. Quadrant $r = 7\\ \\text{cm}$: (a) Arc length. (b) Area. 6. Pond area $13{,}86\\ \\text{m}^2$: (a) Radius. (b) Hence circumference. 7. Wire 44 cm bent to circle: area? 8. Sector angle $120°$: fraction? 9. Area $d = 20\\ \\text{cm}$, $\\pi = 3{,}14$. 10. Why does a builder need circumference for fencing? 11. Semi-circle $r = 10\\ \\text{cm}$: area. 12. If radius doubled, what happens to circumference? Reason?',
+    },
+    {
+      title: '9. Marking Memorandum (Full Solutions)',
+      content:
+        '**Practice 2.1:** 1. 88 m. 2. 66 cm. 3. 31,4 m. 4. 220 cm. 5. 22 m.\n\n**Practice 3.1:** 1. 1386 m². 2. 154 cm². 3. 50,24 cm². 4. 3850 m². 5. 6,16 m².\n\n**Practice 4.1:** 1. 3,5 cm. 2. 3,5 m. 3. 35 cm. 4. 20 m. 5. 28 mm.\n\n**Practice 5.1:** 1. 66 cm. 2. 38,5 m². 3. 22 cm. 4. 157 m². 5. 115,5 cm².\n\n**Mixed Revision:** 1–10: (c), (a), (b), (c), (b), (b), (c), (a), (c), (b). 11. Chord: straight line joining two points on boundary. 12. 132 cm. 13. 154 m². 14. 28 m. 15. 154 cm². 16. 10 cm. 17. 1,75 m. 18. 314 m. 19. 3,14 m². 20. 2,2 m. 21. 44 cm. 22. 1386 cm². 23. 21 m. 24. 115,5 cm². 25. 66 m. 26. 0,5 m. 27. 346,5 cm². 28. 2 cm. 29. 11 cm. 30. Diameter.\n\n**Exam Test:** 1a) $d = 2r$. 1b) 132 cm. 2a) 7 m. 2b) 154 m². 3) $d = \\frac{C}{\\pi}$. 4a) 220 cm. 4b) 50 rotations. 5a) 11 cm. 5b) 38,5 cm². 6a) $r = 2{,}1\\ \\text{m}$. 6b) 13,2 m. 7) 154 cm². 8) $\\frac{1}{3}$. 9) 314 cm². 10) To buy correct amount of material. 11) 157 cm². 12) It doubles; $C = 2\\pi r$ so $C \\propto r$.',
+    },
+  ],
+  key_points: [
+    'Radius $r$: centre to edge; Diameter $d = 2r$; Circumference $C = 2\\pi r = \\pi d$; Area $A = \\pi r^2$.',
+    'Use $\\pi = \\frac{22}{7}$ when $r$ or $d$ is multiple of 7; $\\pi = 3{,}14$ for decimals.',
+    'Arc = fraction of $C$; Sector = fraction of $A$. Semi-circle $= \\frac{1}{2}$; Quadrant $= \\frac{1}{4}$.',
+    'From $C$: $r = \\frac{C}{2\\pi}$. From $A$: $r = \\sqrt{\\frac{A}{\\pi}}$.',
+    'Tangent touches at one point; perpendicular to radius. Chord joins two boundary points; diameter is longest chord.',
+  ],
+  exam_tips: [
+    'If given diameter, use $C = \\pi d$ or find $r = d/2$ first for area—do not use $d$ in $2\\pi r$.',
+    'Do not confuse $r^2$ with $2r$—$7^2 = 49$, not 14.',
+    'Arc length has units of length (cm, m); sector area has square units (cm², m²).',
+  ],
+  visual_descriptions: [
+    'Radius: spoke from centre O to edge; diameter: line through O cutting circle in half.',
+    'Sector: pizza slice bounded by two radii and arc; tangent: line grazing edge at one point.',
+    'Circumference: perimeter "fence line"; chord: straight line across (not through centre).',
+  ],
+};
+
 const form1Notes: Record<string, MathTopicNotes> = {
   ...Object.fromEntries(
     Object.entries(form1Objectives)
-      .filter(([k]) => k !== 'Number Concepts and Operations' && k !== 'Approximation and Estimation' && k !== 'Ratios' && k !== 'Large and Small Numbers' && k !== 'Number Bases' && k !== 'Sets and Set Notation' && k !== 'Types of Sets' && k !== 'Scales' && k !== 'Consumer Arithmetic' && k !== 'Measures' && k !== 'Mensuration')
+      .filter(([k]) => k !== 'Number Concepts and Operations' && k !== 'Approximation and Estimation' && k !== 'Ratios' && k !== 'Large and Small Numbers' && k !== 'Number Bases' && k !== 'Sets and Set Notation' && k !== 'Types of Sets' && k !== 'Scales' && k !== 'Consumer Arithmetic' && k !== 'Measures' && k !== 'Mensuration' && k !== 'Travel Graphs' && k !== 'Symbolic Expression' && k !== 'Algebraic Manipulation' && k !== 'Translation' && k !== 'Data Representation' && k !== 'Symmetry' && k !== 'Circles')
       .map(([topic, objectives]) => [topic, buildFormNote(topic, objectives, 'Form 1')])
   ),
   'Number Concepts and Operations': numberConceptsForm1Notes,
@@ -1524,6 +2399,13 @@ const form1Notes: Record<string, MathTopicNotes> = {
   Measures: measuresForm1Notes,
   Mensuration: mensurationForm1Notes,
   Scales: scalesForm1Notes,
+  'Travel Graphs': travelGraphsForm1Notes,
+  'Symbolic Expression': symbolicExpressionsForm1Notes,
+  'Algebraic Manipulation': algebraicManipulationForm1Notes,
+  Translation: translationForm1Notes,
+  'Data Representation': dataRepresentationForm1Notes,
+  Symmetry: symmetryForm1Notes,
+  Circles: circlesForm1Notes,
 };
 
 const form2Objectives: Record<string, string[]> = {
