@@ -42,13 +42,20 @@ export interface PaymentStatus {
 }
 
 export const creditsApi = {
-  getBalance: async (): Promise<number> => {
+  getBalance: async (): Promise<number | null> => {
     try {
       const response = await api.get('/api/mobile/credits/balance');
-      return response.data.data?.balance || response.data.data?.credits || 0;
-    } catch (error) {
+      const balance = response.data.data?.balance ?? response.data.data?.credits;
+      return typeof balance === 'number' ? balance : 0;
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number } };
+      if (err.response?.status === 401) {
+        // Auth failure - return null so caller doesn't overwrite cached credits with 0
+        console.warn('Credits balance: auth token expired or invalid');
+        return null;
+      }
       console.error('Get balance error:', error);
-      return 0;
+      return null;
     }
   },
 
@@ -56,8 +63,13 @@ export const creditsApi = {
     try {
       const response = await api.get('/api/mobile/credits/info');
       return response.data.data || null;
-    } catch (error) {
-      console.error('Get credit info error:', error);
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number } };
+      if (err.response?.status === 401) {
+        console.warn('Credits info: auth token expired or invalid');
+      } else {
+        console.error('Get credit info error:', error);
+      }
       return null;
     }
   },

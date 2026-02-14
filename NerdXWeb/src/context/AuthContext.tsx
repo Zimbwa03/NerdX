@@ -45,6 +45,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadStoredAuth();
   }, []);
 
+  // Listen for session-expired events from the API interceptor
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      console.warn('Session expired - logging out');
+      // Clear user state so the app redirects to login
+      localStorage.removeItem(USER_DATA_KEY);
+      setUser(null);
+      setCreditNotification(null);
+    };
+    window.addEventListener('auth:session-expired', handleSessionExpired);
+    return () => window.removeEventListener('auth:session-expired', handleSessionExpired);
+  }, []);
+
   const loadStoredAuth = async () => {
     try {
       const token = localStorage.getItem('@auth_token');
@@ -138,9 +151,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           updateUser({ credits: total, credit_breakdown: info as User['credit_breakdown'] | undefined });
           return;
         }
+        // getCreditInfo returned null (likely auth failure) - don't fall through to getBalance
+        // Keep cached credits instead of overwriting with 0
+        return;
       }
       const balance = await creditsApi.getBalance();
-      if (typeof balance === 'number') {
+      // Only update credits if we got a valid response (not null from auth error)
+      if (balance !== null && typeof balance === 'number') {
         updateUser({ credits: balance });
       }
     } catch (error) {
