@@ -1,0 +1,337 @@
+.alevel-notes-page .subject-header-v2 {
+  border-color: rgba(167, 139, 250, 0.35);
+}
+
+.alevel-notes-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.alevel-notes-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.alevel-notes-pill-row {
+  display: inline-flex;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.alevel-notes-pill {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.alevel-notes-pill.active.lower {
+  background: rgba(139, 92, 246, 0.35);
+  border-color: rgba(196, 181, 253, 0.5);
+  color: #ede9fe;
+}
+
+.alevel-notes-pill.active.upper {
+  background: rgba(236, 72, 153, 0.35);
+  border-color: rgba(251, 207, 232, 0.45);
+  color: #fdf2f8;
+}
+
+.alevel-notes-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-width: 300px;
+}
+
+.alevel-notes-search input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #fff;
+  outline: none;
+}
+
+.alevel-notes-search input::placeholder {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.alevel-notes-starter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(196, 181, 253, 0.3);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(168, 85, 247, 0.13));
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.alevel-notes-starter-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ede9fe;
+}
+
+.alevel-notes-starter-content {
+  flex: 1;
+}
+
+.alevel-notes-starter-content h3 {
+  font-size: 15px;
+  margin-bottom: 3px;
+  color: #fff;
+}
+
+.alevel-notes-starter-content p {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.alevel-notes-starter-link {
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.alevel-notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.alevel-notes-topic-card {
+  text-decoration: none;
+  border-radius: 14px;
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 14px;
+  color: #fff;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.alevel-notes-topic-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(196, 181, 253, 0.65);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.alevel-notes-topic-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.alevel-notes-topic-num {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #ddd6fe;
+  font-weight: 700;
+}
+
+.alevel-notes-topic-paper {
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.alevel-notes-topic-card h3 {
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.alevel-notes-topic-card p {
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.alevel-pure-notes-detail .math-notes-content {
+  max-width: 1120px;
+}
+
+.alevel-notes-detail-header {
+  max-width: 1120px;
+}
+
+.alevel-topic-meta-strip {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.alevel-topic-meta-strip span {
+  display: inline-block;
+  font-size: 12px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.2);
+  border: 1px solid rgba(196, 181, 253, 0.3);
+}
+
+.alevel-section-index {
+  color: #c4b5fd;
+  margin-right: 2px;
+}
+
+.alevel-visual-card {
+  border-left: 4px solid #a855f7;
+}
+
+.alevel-diagram-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.alevel-diagram-card {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.alevel-diagram-card h4 {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.alevel-diagram-card p {
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.alevel-diagram-card svg {
+  width: 100%;
+  height: 130px;
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.alevel-diagram-card svg line {
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 1.4;
+}
+
+.alevel-diagram-card .curve {
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.one {
+  stroke: #a78bfa;
+}
+
+.alevel-diagram-card .curve.two {
+  stroke: #f472b6;
+}
+
+.alevel-diagram-card .curve.three {
+  stroke: #22d3ee;
+}
+
+.alevel-diagram-card .curve.four {
+  stroke: #f59e0b;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .asymptote {
+  stroke: rgba(248, 250, 252, 0.55);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+
+.alevel-diagram-card .root-mark {
+  fill: #facc15;
+}
+
+.alevel-diagram-card .root-mark.hollow {
+  fill: none;
+  stroke: #facc15;
+  stroke-width: 1.6;
+}
+
+.alevel-diagram-card .diagram-text {
+  fill: #e2e8f0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.alevel-diagram-card .diagram-label {
+  fill: rgba(226, 232, 240, 0.9);
+  font-size: 11px;
+}
+
+.alevel-division-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  color: #e2e8f0;
+}
+
+.alevel-division-table td {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  text-align: center;
+  padding: 4px 2px;
+}
+
+.alevel-visual-list {
+  margin-top: 8px;
+}
+
+.alevel-next-topic-card {
+  border-left: 4px solid #8b5cf6;
+}
+
+.alevel-back-to-index-link {
+  display: inline-block;
+  margin-top: 10px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ddd6fe;
+}
+
+@media (max-width: 768px) {
+  .alevel-notes-search {
+    min-width: 100%;
+  }
+
+  .alevel-notes-starter {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -55,6 +55,9 @@ import { AgentBuilderPage } from './pages/agents/AgentBuilderPage';
 import { VirtualLabHubPage } from './pages/virtual-lab/VirtualLabHubPage';
 import { VirtualLabSimulationPage } from './pages/virtual-lab/VirtualLabSimulationPage';
 import { ALevelPlaceholderPage } from './pages/a-level/ALevelPlaceholderPage';
+import { ALevelPureMathPage } from './pages/a-level/ALevelPureMathPage';
+import { ALevelPureMathNotesPage } from './pages/a-level/ALevelPureMathNotesPage';
+import { ALevelPureMathNoteDetailPage } from './pages/a-level/ALevelPureMathNoteDetailPage';
 import { FormulaSheetPage } from './pages/tools/FormulaSheetPage';
 import { PastPapersPage } from './pages/tools/PastPapersPage';
 import { AccountingPage } from './pages/accounting/AccountingPage';
@@ -107,7 +110,9 @@ function App() {
               <Route path="notifications/:id" element={<NotificationDetailPage />} />
               <Route path="virtual-lab" element={<VirtualLabHubPage />} />
               <Route path="virtual-lab/:labId" element={<VirtualLabSimulationPage />} />
-              <Route path="pure-math" element={<ALevelPlaceholderPage title="A-Level Pure Mathematics" fallbackPath="/app/mathematics" />} />
+              <Route path="pure-math" element={<ALevelPureMathPage />} />
+              <Route path="pure-math/notes" element={<ALevelPureMathNotesPage />} />
+              <Route path="pure-math/notes/:topic" element={<ALevelPureMathNoteDetailPage />} />
               <Route path="a-level-chemistry" element={<ALevelPlaceholderPage title="A-Level Chemistry" fallbackPath="/app/chemistry" />} />
               <Route path="a-level-physics" element={<ALevelPlaceholderPage title="A-Level Physics" fallbackPath="/app/physics" />} />
               <Route path="a-level-biology" element={<ALevelPlaceholderPage title="A-Level Biology" fallbackPath="/app/biology" />} />
