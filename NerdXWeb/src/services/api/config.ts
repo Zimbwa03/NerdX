@@ -26,29 +26,14 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Track consecutive 401 errors to detect expired sessions (not just transient failures)
-let consecutive401Count = 0;
-const MAX_401_BEFORE_LOGOUT = 3;
-
 // Response interceptor to handle common errors
+// NOTE: We intentionally do NOT clear auth tokens or trigger logout on 401.
+// Individual API calls (creditsApi, etc.) handle 401 gracefully by returning null.
+// This prevents auto-logout cascades when multiple concurrent requests fail.
 api.interceptors.response.use(
-  (response) => {
-    // Reset 401 counter on any successful response
-    consecutive401Count = 0;
-    return response;
-  },
+  (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
-      consecutive401Count++;
-      // Only trigger session expiry after multiple consecutive 401s
-      // This avoids logging out on transient network issues
-      if (consecutive401Count >= MAX_401_BEFORE_LOGOUT) {
-        consecutive401Count = 0;
-        clearAuthToken();
-        // Notify the app that the session has expired so AuthContext can properly logout
-        window.dispatchEvent(new CustomEvent('auth:session-expired'));
-      }
-    }
+    // Just pass the error through - let callers handle 401 individually
     return Promise.reject(error);
   }
 );

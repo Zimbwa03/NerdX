@@ -45,19 +45,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadStoredAuth();
   }, []);
 
-  // Listen for session-expired events from the API interceptor
-  useEffect(() => {
-    const handleSessionExpired = () => {
-      console.warn('Session expired - logging out');
-      // Clear user state so the app redirects to login
-      localStorage.removeItem(USER_DATA_KEY);
-      setUser(null);
-      setCreditNotification(null);
-    };
-    window.addEventListener('auth:session-expired', handleSessionExpired);
-    return () => window.removeEventListener('auth:session-expired', handleSessionExpired);
-  }, []);
-
   const loadStoredAuth = async () => {
     try {
       const token = localStorage.getItem('@auth_token');
