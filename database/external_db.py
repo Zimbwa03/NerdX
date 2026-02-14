@@ -47,7 +47,7 @@ def create_users_registration_table():
             date_of_birth VARCHAR(10) NOT NULL,
             nerdx_id VARCHAR(10) UNIQUE NOT NULL,
             referred_by_nerdx_id VARCHAR(10),
-            whatsapp_number VARCHAR(255),
+            phone_number VARCHAR(255),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -55,7 +55,7 @@ def create_users_registration_table():
         CREATE INDEX IF NOT EXISTS idx_users_registration_chat_id ON users_registration(chat_id);
         CREATE INDEX IF NOT EXISTS idx_users_registration_nerdx_id ON users_registration(nerdx_id);
         CREATE INDEX IF NOT EXISTS idx_users_registration_referred_by ON users_registration(referred_by_nerdx_id);
-        CREATE INDEX IF NOT EXISTS idx_users_registration_whatsapp_number ON users_registration(whatsapp_number);
+        CREATE INDEX IF NOT EXISTS idx_users_registration_phone_number ON users_registration(phone_number);
 
         -- Enable Row Level Security
         ALTER TABLE users_registration ENABLE ROW LEVEL SECURITY;
@@ -95,13 +95,13 @@ def create_users_registration_table():
             date_of_birth VARCHAR(10) NOT NULL,
             nerdx_id VARCHAR(10) UNIQUE NOT NULL,
             referred_by_nerdx_id VARCHAR(10),
-            whatsapp_number VARCHAR(255),
+            phone_number VARCHAR(255),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE INDEX IF NOT EXISTS idx_users_registration_referred_by ON users_registration(referred_by_nerdx_id);
-        CREATE INDEX IF NOT EXISTS idx_users_registration_whatsapp_number ON users_registration(whatsapp_number);
+        CREATE INDEX IF NOT EXISTS idx_users_registration_phone_number ON users_registration(phone_number);
 
         -- Enable Row Level Security
         ALTER TABLE users_registration ENABLE ROW LEVEL SECURITY;
@@ -955,7 +955,7 @@ def add_credits(user_id, amount, transaction_type="purchase", description="Credi
     Add credit units to user account with monthly subscription support.
     
     Args:
-        user_id: User ID (may be chat_id, email, or whatsapp_number; resolved to chat_id for DB)
+        user_id: User ID (may be chat_id, email, or phone_number; resolved to chat_id for DB)
         amount: Credit units to add
         transaction_type: Type of transaction (default: "purchase")
         description: Transaction description
@@ -1347,20 +1347,20 @@ def check_nerdx_id_exists(nerdx_id):
         return False
 
 def get_user_registration(chat_id):
-    """Get user registration data - checks chat_id, whatsapp_number, and email"""
+    """Get user registration data - checks chat_id, phone_number, and email"""
     try:
         # First try by chat_id (existing behavior)
         result = make_supabase_request("GET", "users_registration", filters={"chat_id": f"eq.{chat_id}"})
         if result and len(result) > 0:
             return result[0]
         
-        # If not found, try by whatsapp_number (for linked accounts) - column may not exist in all deployments
+        # If not found, try by phone_number (for linked accounts)
         try:
-            result = make_supabase_request("GET", "users_registration", filters={"whatsapp_number": f"eq.{chat_id}"}, use_service_role=True)
+            result = make_supabase_request("GET", "users_registration", filters={"phone_number": f"eq.{chat_id}"}, use_service_role=True)
             if result and len(result) > 0:
                 return result[0]
         except Exception:
-            pass  # whatsapp_number column may not exist in Supabase
+            pass  # phone_number lookup failed
         
         # If not found, try by email (for mobile app users)
         if '@' in str(chat_id):
@@ -1737,7 +1737,7 @@ def search_users_by_name(name, surname):
         return []
 
 def link_whatsapp_to_account(user_id, whatsapp_number):
-    """Link WhatsApp number to existing mobile app account"""
+    """Link WhatsApp number to existing mobile app account (stored in phone_number column)"""
     try:
         whatsapp_clean = whatsapp_number.strip() if whatsapp_number else None
         
@@ -1747,7 +1747,7 @@ def link_whatsapp_to_account(user_id, whatsapp_number):
         
         # Check if this WhatsApp number is already linked to another account
         existing = make_supabase_request("GET", "users_registration", 
-                                       filters={"whatsapp_number": f"eq.{whatsapp_clean}"}, 
+                                       filters={"phone_number": f"eq.{whatsapp_clean}"}, 
                                        use_service_role=True)
         
         if existing and len(existing) > 0:
@@ -1756,9 +1756,9 @@ def link_whatsapp_to_account(user_id, whatsapp_number):
                 logger.warning(f"WhatsApp number {whatsapp_clean} is already linked to another account")
                 return False
         
-        # Update the user account with WhatsApp number
+        # Update the user account with WhatsApp number in the phone_number column
         update_data = {
-            "whatsapp_number": whatsapp_clean,
+            "phone_number": whatsapp_clean,
             "updated_at": datetime.utcnow().isoformat()
         }
         

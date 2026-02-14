@@ -19,6 +19,20 @@ function uuid(): string {
   return crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 }
 
+/**
+ * Get the effective user ID for Supabase operations.
+ * Prefers the Supabase Auth UUID (required for RLS policies) and
+ * falls back to the provided application-level user ID.
+ */
+async function getEffectiveUserId(fallbackId: string): Promise<string> {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user?.id || fallbackId;
+  } catch {
+    return fallbackId;
+  }
+}
+
 // ─── File Uploads ─────────────────────────────────────────────────────────────
 
 export async function uploadTeacherFile(
@@ -54,6 +68,9 @@ export async function createTeacherProfile(
   try {
     const profileId = uuid();
 
+    // Resolve the effective user ID (Supabase Auth UUID for RLS, fallback to app ID)
+    const effectiveUserId = await getEffectiveUserId(userId);
+
     // 1. Upload media files if present
     let profileImageUrl: string | null = null;
     let introVideoUrl: string | null = null;
@@ -68,7 +85,7 @@ export async function createTeacherProfile(
     // 2. Insert teacher profile
     const profileRow = {
       id: profileId,
-      user_id: userId,
+      user_id: effectiveUserId,
       full_name: data.full_name,
       surname: data.surname,
       email: data.email,
@@ -105,7 +122,11 @@ export async function createTeacherProfile(
         form_levels: s.form_levels,
         curriculum: s.curriculum,
       }));
-      await supabase.from('teacher_subjects').insert(subjectRows);
+      const { error: subjectError } = await supabase.from('teacher_subjects').insert(subjectRows);
+      if (subjectError) {
+        console.error('[Marketplace] Subject insert error:', subjectError.message);
+        // Profile was created – continue, but log the error
+      }
     }
 
     // 4. Insert qualifications
@@ -127,7 +148,11 @@ export async function createTeacherProfile(
           qualification_type: q.qualification_type,
         });
       }
-      await supabase.from('teacher_qualifications').insert(qualRows);
+      const { error: qualError } = await supabase.from('teacher_qualifications').insert(qualRows);
+      if (qualError) {
+        console.error('[Marketplace] Qualification insert error:', qualError.message);
+        // Profile was created – continue, but log the error
+      }
     }
 
     return { ...profileRow, subjects: [], qualifications: [], reviews: [], average_rating: 0, total_reviews: 0 } as unknown as TeacherProfile;
@@ -177,14 +202,29 @@ export async function getTeacherProfile(teacherId: string): Promise<TeacherProfi
 
 export async function getTeacherProfileByUserId(userId: string): Promise<TeacherProfile | null> {
   try {
+    // Try with Supabase Auth UUID first (matches how profiles are now created)
+    const effectiveUserId = await getEffectiveUserId(userId);
+
     const { data, error } = await supabase
       .from('teacher_profiles')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', effectiveUserId)
       .single();
 
-    if (error || !data) return null;
-    return getTeacherProfile(data.id);
+    if (!error && data) return getTeacherProfile(data.id);
+
+    // Fallback: try with the original app-level user ID (for older profiles)
+    if (effectiveUserId !== userId) {
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('teacher_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (!fallbackError && fallbackData) return getTeacherProfile(fallbackData.id);
+    }
+
+    return null;
   } catch {
     return null;
   }

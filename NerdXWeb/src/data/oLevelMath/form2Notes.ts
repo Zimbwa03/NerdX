@@ -12661,4 +12661,437 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             "Position vector: arrow from origin O to point P on coordinate grid"
         ]
     },
+
+    // ============================================
+    // FORM 2: TYPES OF VECTORS (Comprehensive)
+    // ============================================
+    'F2 Types of Vectors': {
+        topic: 'Types of Vectors',
+        subject: 'Mathematics',
+        grade_level: 'O-Level Form 2',
+        summary: "In the ZIMSEC Form 2 Mathematics syllabus, vectors serve as a fundamental tool for describing movements in space. While scalar quantities\u2014such as temperature or mass\u2014are defined only by their size, vectors possess both **magnitude** (size) and **direction**. This topic provides a comprehensive classification of vector types: **Equal**, **Opposite (Negative)**, **Parallel**, **Zero**, **Unit**, **Position**, and **Collinear** vectors.\n\n## Column Vector Notation\n\n$$\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$$\n\n- $x$ = horizontal displacement: $+$ right, $-$ left\n- $y$ = vertical displacement: $+$ up, $-$ down\n\n## Summary of Vector Types\n\n| Type | Definition | Example |\n|---|---|---|\n| **Equal** | Same magnitude AND same direction | $\\\\begin{pmatrix} 4 \\\\\\\\ 7 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 4 \\\\\\\\ 7 \\\\end{pmatrix}$ |\n| **Opposite** | Same magnitude, opposite direction | $\\\\begin{pmatrix} 5 \\\\\\\\ 2 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} -5 \\\\\\\\ -2 \\\\end{pmatrix}$ |\n| **Parallel** | One is a scalar multiple of the other | $\\\\begin{pmatrix} 2 \\\\\\\\ 3 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 4 \\\\\\\\ 6 \\\\end{pmatrix}$ |\n| **Zero** | Magnitude is 0; no movement | $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$ |\n| **Unit** | Magnitude is exactly 1 | $\\\\begin{pmatrix} 1 \\\\\\\\ 0 \\\\end{pmatrix}$ or $\\\\begin{pmatrix} 0 \\\\\\\\ 1 \\\\end{pmatrix}$ |\n| **Position** | From origin $O(0,0)$ to point $P(x,y)$ | $\\\\vec{OP} = \\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix}$ |\n| **Collinear** | Parallel vectors sharing a common point | $\\\\overrightarrow{AB}$ and $\\\\overrightarrow{BC}$ on one line |",
+        sections: [
+            // ─── SECTION 1: INTRODUCTION TO VECTOR ANALYSIS ───
+            {
+                title: '1. Introduction to Vector Analysis and Representation',
+                content: "## Core Concept\n\nIn the ZIMSEC Form 2 Mathematics syllabus, vectors serve as a fundamental tool for describing movements in space. While **scalar** quantities\u2014such as temperature or mass\u2014are defined only by their size, **vectors** are essential for describing quantities that possess both **magnitude** (size) and **direction**.\n\n## The Column Vector Notation\n\nThe key step in vector analysis is the transition from coordinate geometry to vector algebra. When we describe a point in a Cartesian plane, we use coordinates $(x, y)$. To represent the **movement** or **displacement** to that point, we rearrange these values into a vertical form known as a **Column Vector**:\n\n$$\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$$\n\nIn this notation:\n- $x$ represents the **horizontal displacement** ($+$ right, $-$ left)\n- $y$ represents the **vertical displacement** ($+$ up, $-$ down)\n\n## Diagram: Column Vector Components\n\n| Component | Direction | Sign Convention |\n|---|---|---|\n| $x$ (top) | Horizontal | $+$ = Right/East, $-$ = Left/West |\n| $y$ (bottom) | Vertical | $+$ = Up/North, $-$ = Down/South |\n\n## Diagram: Interpreting Column Vectors on a Grid\n\n| Vector | $x$-shift | $y$-shift | Movement Description |\n|---|---|---|---|\n| $\\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix}$ | 3 right | 4 up | Move 3 units right and 4 units up |\n| $\\\\begin{pmatrix} -2 \\\\\\\\ 5 \\\\end{pmatrix}$ | 2 left | 5 up | Move 2 units left and 5 units up |\n| $\\\\begin{pmatrix} 0 \\\\\\\\ -6 \\\\end{pmatrix}$ | No shift | 6 down | Move 6 units straight down |\n| $\\\\begin{pmatrix} 7 \\\\\\\\ 0 \\\\end{pmatrix}$ | 7 right | No shift | Move 7 units straight right |\n\n## Why Column Notation?\n\nBy stacking components vertically, we clearly **separate horizontal and vertical influences**, allowing for systematic addition and subtraction that horizontal coordinates $(x, y)$ often obscure. Once this notation is mastered, we can begin to categorise vectors by their specific properties.\n\n> **Key Insight**: The point $(x, y)$ and the column vector $\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$ have the same numerical values but different meanings: the point is a **location**; the vector is the **movement** required to reach that location.",
+                worked_examples: [
+                    {
+                        question: "Write the displacement '5 units right and 3 units up' as a column vector.",
+                        steps: ["Horizontal: 5 right $\\\\Rightarrow x = +5$", "Vertical: 3 up $\\\\Rightarrow y = +3$"],
+                        final_answer: "$\\\\begin{pmatrix} 5 \\\\\\\\ 3 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Write the displacement '4 units left and 7 units down' as a column vector.",
+                        steps: ["Horizontal: 4 left $\\\\Rightarrow x = -4$", "Vertical: 7 down $\\\\Rightarrow y = -7$"],
+                        final_answer: "$\\\\begin{pmatrix} -4 \\\\\\\\ -7 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Convert the point $A(6, -2)$ to a position vector from the origin.",
+                        steps: ["Take the coordinates directly: $x = 6$, $y = -2$", "Write vertically."],
+                        final_answer: "$\\\\vec{OA} = \\\\begin{pmatrix} 6 \\\\\\\\ -2 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "A vector has $x$-component $0$ and $y$-component $8$. Describe its movement.",
+                        steps: ["$x = 0$ means no horizontal shift.", "$y = +8$ means 8 units up."],
+                        final_answer: "The vector $\\\\begin{pmatrix} 0 \\\\\\\\ 8 \\\\end{pmatrix}$ represents a purely vertical movement of 8 units upward (North)."
+                    }
+                ]
+            },
+
+            // ─── SECTION 2: EQUAL VECTORS ───
+            {
+                title: '2. Equal Vectors',
+                content: "## Definition\n\n**Equal Vectors** are vectors that have exactly the **same magnitude** and the **same direction**. In column form, every corresponding component must match.\n\n$$\\\\text{If } \\\\mathbf{a} = \\\\begin{pmatrix} x_1 \\\\\\\\ y_1 \\\\end{pmatrix} \\\\text{ and } \\\\mathbf{b} = \\\\begin{pmatrix} x_2 \\\\\\\\ y_2 \\\\end{pmatrix}, \\\\text{ then } \\\\mathbf{a} = \\\\mathbf{b} \\\\iff x_1 = x_2 \\\\text{ and } y_1 = y_2$$\n\n## Diagram: Equal Vectors on a Grid\n\n| Property | Requirement |\n|---|---|\n| $x$-components | Must be **identical** |\n| $y$-components | Must be **identical** |\n| Position on grid | Can be **anywhere** (position does not matter) |\n| Arrow length | Must be the **same** |\n| Arrow direction | Must **point the same way** |\n\n## Visual Illustration\n\nImagine two arrows on a coordinate grid:\n- Arrow $\\\\mathbf{a}$: starts at $(1, 1)$, ends at $(5, 8)$ $\\\\Rightarrow$ vector $\\\\begin{pmatrix} 4 \\\\\\\\ 7 \\\\end{pmatrix}$\n- Arrow $\\\\mathbf{b}$: starts at $(3, 2)$, ends at $(7, 9)$ $\\\\Rightarrow$ vector $\\\\begin{pmatrix} 4 \\\\\\\\ 7 \\\\end{pmatrix}$\n\nBoth have the same column vector, so they are **equal** even though they start at different points.\n\n## Analytical Note: Magnitude vs. Direction\n\nWhy are $\\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} -3 \\\\\\\\ -4 \\\\end{pmatrix}$ **not equal**? While they represent the same distance (magnitude = $\\\\sqrt{3^2 + 4^2} = 5$), they describe movements in **opposite directions**. A vector is only equal if it moves the same distance **in the same way**.\n\n> **Common Error**: A frequent mistake is treating $\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$ as equal to $\\\\begin{pmatrix} y \\\\\\\\ x \\\\end{pmatrix}$. For example, $\\\\begin{pmatrix} 5 \\\\\\\\ 2 \\\\end{pmatrix} \\\\neq \\\\begin{pmatrix} 2 \\\\\\\\ 5 \\\\end{pmatrix}$ because the directional path is different.\n\n## Maths Meter Practice\n\nIdentify the equal vector pairs from the list:\n1. $\\\\begin{pmatrix} 6 \\\\\\\\ 1 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 6 \\\\\\\\ 1 \\\\end{pmatrix}$\n2. $\\\\begin{pmatrix} -4 \\\\\\\\ 2 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 4 \\\\\\\\ -2 \\\\end{pmatrix}$\n3. $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$\n4. $\\\\begin{pmatrix} 9 \\\\\\\\ 10 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 10 \\\\\\\\ 9 \\\\end{pmatrix}$\n5. $\\\\begin{pmatrix} -5 \\\\\\\\ -5 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} -5 \\\\\\\\ -5 \\\\end{pmatrix}$",
+                worked_examples: [
+                    {
+                        question: "Show that vectors $\\\\mathbf{a} = \\\\begin{pmatrix} 4 \\\\\\\\ 7 \\\\end{pmatrix}$ and $\\\\mathbf{b} = \\\\begin{pmatrix} 4 \\\\\\\\ 7 \\\\end{pmatrix}$ are equal.",
+                        steps: ["Compare $x$-components: $4 = 4$ \u2713", "Compare $y$-components: $7 = 7$ \u2713", "All corresponding components match."],
+                        final_answer: "$\\\\mathbf{a} = \\\\mathbf{b}$ (Equal vectors)"
+                    },
+                    {
+                        question: "Show that $\\\\mathbf{c} = \\\\begin{pmatrix} -3 \\\\\\\\ 5 \\\\end{pmatrix}$ and $\\\\mathbf{d} = \\\\begin{pmatrix} -3 \\\\\\\\ 5 \\\\end{pmatrix}$ are equal.",
+                        steps: ["Compare $x$-components: $-3 = -3$ \u2713", "Compare $y$-components: $5 = 5$ \u2713"],
+                        final_answer: "$\\\\mathbf{c} = \\\\mathbf{d}$ (Equal vectors)"
+                    },
+                    {
+                        question: "Compare $\\\\mathbf{u} = \\\\begin{pmatrix} 0 \\\\\\\\ 10 \\\\end{pmatrix}$ and $\\\\mathbf{v} = \\\\begin{pmatrix} 0 \\\\\\\\ 10 \\\\end{pmatrix}$.",
+                        steps: ["$x$-components: $0 = 0$ \u2713", "$y$-components: $10 = 10$ \u2713"],
+                        final_answer: "$\\\\mathbf{u} = \\\\mathbf{v}$ (Equal vectors)"
+                    },
+                    {
+                        question: "Compare $\\\\mathbf{m} = \\\\begin{pmatrix} 1.2 \\\\\\\\ -4 \\\\end{pmatrix}$ and $\\\\mathbf{n} = \\\\begin{pmatrix} 1.2 \\\\\\\\ -4 \\\\end{pmatrix}$.",
+                        steps: ["$x$-components: $1.2 = 1.2$ \u2713", "$y$-components: $-4 = -4$ \u2713"],
+                        final_answer: "$\\\\mathbf{m} = \\\\mathbf{n}$ (Equal vectors)"
+                    },
+                    {
+                        question: "Compare $\\\\mathbf{p} = \\\\begin{pmatrix} 100 \\\\\\\\ 0 \\\\end{pmatrix}$ and $\\\\mathbf{q} = \\\\begin{pmatrix} 100 \\\\\\\\ 0 \\\\end{pmatrix}$.",
+                        steps: ["Both $x$-components are 100.", "Both $y$-components are 0."],
+                        final_answer: "$\\\\mathbf{p} = \\\\mathbf{q}$ (Equal vectors)"
+                    },
+                    {
+                        question: "Compare $\\\\mathbf{r} = \\\\begin{pmatrix} -8 \\\\\\\\ -8 \\\\end{pmatrix}$ and $\\\\mathbf{s} = \\\\begin{pmatrix} -8 \\\\\\\\ -8 \\\\end{pmatrix}$.",
+                        steps: ["$x$-components: $-8 = -8$ \u2713", "$y$-components: $-8 = -8$ \u2713"],
+                        final_answer: "$\\\\mathbf{r} = \\\\mathbf{s}$ (Equal vectors)"
+                    },
+                    {
+                        question: "Compare $\\\\mathbf{e} = \\\\begin{pmatrix} 2 \\\\\\\\ 3 \\\\end{pmatrix}$ and $\\\\mathbf{f} = \\\\begin{pmatrix} 2 \\\\\\\\ 3 \\\\end{pmatrix}$.",
+                        steps: ["$x$-components: $2 = 2$ \u2713", "$y$-components: $3 = 3$ \u2713"],
+                        final_answer: "$\\\\mathbf{e} = \\\\mathbf{f}$ (Equal vectors)"
+                    },
+                    {
+                        question: "Compare $\\\\mathbf{g} = \\\\begin{pmatrix} -1 \\\\\\\\ 0 \\\\end{pmatrix}$ and $\\\\mathbf{h} = \\\\begin{pmatrix} -1 \\\\\\\\ 0 \\\\end{pmatrix}$.",
+                        steps: ["$x$-components: $-1 = -1$ \u2713", "$y$-components: $0 = 0$ \u2713"],
+                        final_answer: "$\\\\mathbf{g} = \\\\mathbf{h}$ (Equal vectors)"
+                    }
+                ]
+            },
+
+            // ─── SECTION 3: OPPOSITE (NEGATIVE) VECTORS ───
+            {
+                title: '3. Opposite (Negative) Vectors',
+                content: "## Definition\n\n**Reversal** is a critical concept in vector geometry, used to describe returning to a start point or moving in an exactly contrary path.\n\nAn **Opposite (Negative) Vector** has the **same magnitude** but moves in the **exactly opposite direction**.\n\n$$\\\\text{If } \\\\mathbf{a} = \\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}, \\\\text{ then } -\\\\mathbf{a} = \\\\begin{pmatrix} -x \\\\\\\\ -y \\\\end{pmatrix}$$\n\n## Diagram: Opposite Vectors\n\n| Original Vector $\\\\mathbf{a}$ | Negative Vector $-\\\\mathbf{a}$ | Relationship |\n|---|---|---|\n| $\\\\begin{pmatrix} 5 \\\\\\\\ 2 \\\\end{pmatrix}$ | $\\\\begin{pmatrix} -5 \\\\\\\\ -2 \\\\end{pmatrix}$ | Signs of **both** components reversed |\n| $\\\\begin{pmatrix} -3 \\\\\\\\ 6 \\\\end{pmatrix}$ | $\\\\begin{pmatrix} 3 \\\\\\\\ -6 \\\\end{pmatrix}$ | Negative of negative = positive |\n| $\\\\begin{pmatrix} 0 \\\\\\\\ -7 \\\\end{pmatrix}$ | $\\\\begin{pmatrix} 0 \\\\\\\\ 7 \\\\end{pmatrix}$ | Zero stays zero; sign of $-7$ flips |\n\n## Visual Illustration\n\nOn a coordinate grid, if vector $\\\\mathbf{a}$ is an arrow pointing from the origin to the point $(5, 2)$, then $-\\\\mathbf{a}$ is an arrow of the **same length** pointing from the origin to $(-5, -2)$. The two arrows are on the **same line** but point in **opposite directions**.\n\n## Key Property\n\n$$\\\\mathbf{a} + (-\\\\mathbf{a}) = \\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$$\n\nA vector added to its negative always produces the **zero vector**.\n\n> **Common Error**: Students often forget that the negative of a negative component is **positive**. The negative of $\\\\begin{pmatrix} -2 \\\\\\\\ -3 \\\\end{pmatrix}$ is $\\\\begin{pmatrix} 2 \\\\\\\\ 3 \\\\end{pmatrix}$, not $\\\\begin{pmatrix} -2 \\\\\\\\ -3 \\\\end{pmatrix}$ or $\\\\begin{pmatrix} 2 \\\\\\\\ -3 \\\\end{pmatrix}$.\n\n## Maths Meter Practice\n\nWrite the negative form of the following:\n1. $\\\\begin{pmatrix} 12 \\\\\\\\ 3 \\\\end{pmatrix}$\n2. $\\\\begin{pmatrix} -5 \\\\\\\\ 8 \\\\end{pmatrix}$\n3. $\\\\begin{pmatrix} 4 \\\\\\\\ -9 \\\\end{pmatrix}$\n4. $\\\\begin{pmatrix} -1 \\\\\\\\ -6 \\\\end{pmatrix}$\n5. $\\\\begin{pmatrix} 0 \\\\\\\\ -2 \\\\end{pmatrix}$",
+                worked_examples: [
+                    {
+                        question: "Write the negative of $\\\\mathbf{A} = \\\\begin{pmatrix} 5 \\\\\\\\ 2 \\\\end{pmatrix}$.",
+                        steps: ["Change sign of $x$: $5 \\\\to -5$", "Change sign of $y$: $2 \\\\to -2$"],
+                        final_answer: "$-\\\\mathbf{A} = \\\\begin{pmatrix} -5 \\\\\\\\ -2 \\\\end{pmatrix}$ (opposite of $\\\\mathbf{A}$)"
+                    },
+                    {
+                        question: "Write the negative of $\\\\mathbf{C} = \\\\begin{pmatrix} -3 \\\\\\\\ 6 \\\\end{pmatrix}$.",
+                        steps: ["Change sign of $x$: $-3 \\\\to 3$", "Change sign of $y$: $6 \\\\to -6$"],
+                        final_answer: "$-\\\\mathbf{C} = \\\\begin{pmatrix} 3 \\\\\\\\ -6 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Write the negative of $\\\\mathbf{P} = \\\\begin{pmatrix} 4 \\\\\\\\ -7 \\\\end{pmatrix}$.",
+                        steps: ["Change sign of $x$: $4 \\\\to -4$", "Change sign of $y$: $-7 \\\\to 7$"],
+                        final_answer: "$-\\\\mathbf{P} = \\\\begin{pmatrix} -4 \\\\\\\\ 7 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Write the negative of $\\\\mathbf{Q} = \\\\begin{pmatrix} -8 \\\\\\\\ -1 \\\\end{pmatrix}$.",
+                        steps: ["Change sign of $x$: $-8 \\\\to 8$", "Change sign of $y$: $-1 \\\\to 1$"],
+                        final_answer: "$-\\\\mathbf{Q} = \\\\begin{pmatrix} 8 \\\\\\\\ 1 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Find the negative of $\\\\begin{pmatrix} 0 \\\\\\\\ 5 \\\\end{pmatrix}$.",
+                        steps: ["Change sign of $x$: $0 \\\\to 0$ (zero is unchanged)", "Change sign of $y$: $5 \\\\to -5$"],
+                        final_answer: "$\\\\begin{pmatrix} 0 \\\\\\\\ -5 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Find the negative of $\\\\begin{pmatrix} -10 \\\\\\\\ 0 \\\\end{pmatrix}$.",
+                        steps: ["Change sign of $x$: $-10 \\\\to 10$", "Change sign of $y$: $0 \\\\to 0$"],
+                        final_answer: "$\\\\begin{pmatrix} 10 \\\\\\\\ 0 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "State the type of vector formed when $\\\\mathbf{V} = \\\\begin{pmatrix} 2 \\\\\\\\ 2 \\\\end{pmatrix}$ is multiplied by $-1$.",
+                        steps: ["$(-1) \\\\times \\\\begin{pmatrix} 2 \\\\\\\\ 2 \\\\end{pmatrix} = \\\\begin{pmatrix} -2 \\\\\\\\ -2 \\\\end{pmatrix}$", "The result has the same magnitude but opposite direction."],
+                        final_answer: "The resulting vector $\\\\begin{pmatrix} -2 \\\\\\\\ -2 \\\\end{pmatrix}$ is the **opposite** of $\\\\mathbf{V}$."
+                    }
+                ]
+            },
+
+            // ─── SECTION 4: PARALLEL VECTORS ───
+            {
+                title: '4. Parallel Vectors',
+                content: "## Definition\n\nParallel vectors represent movements that follow the **same slope** or gradient logic, regardless of their length.\n\n**Parallel Vectors** are vectors that have the **same directional ratio**. One vector is a **scalar multiple** of the other.\n\n$$\\\\text{If } \\\\mathbf{b} = k\\\\mathbf{a} \\\\text{ for some scalar } k, \\\\text{ then } \\\\mathbf{a} \\\\parallel \\\\mathbf{b}$$\n\n## How to Test for Parallelism\n\n| Step | Action |\n|---|---|\n| **Step 1** | Divide corresponding components: $\\\\frac{x_2}{x_1}$ and $\\\\frac{y_2}{y_1}$ |\n| **Step 2** | If both ratios are **equal**, the vectors are parallel |\n| **Step 3** | The common ratio $k$ is the scalar multiple |\n\n## Diagram: Parallel Vectors Illustrated\n\n| Vector $\\\\mathbf{a}$ | Vector $\\\\mathbf{b}$ | Scalar $k$ | Parallel? |\n|---|---|---|---|\n| $\\\\begin{pmatrix} 2 \\\\\\\\ 3 \\\\end{pmatrix}$ | $\\\\begin{pmatrix} 4 \\\\\\\\ 6 \\\\end{pmatrix}$ | $k = 2$ | \u2713 Yes |\n| $\\\\begin{pmatrix} 1 \\\\\\\\ 5 \\\\end{pmatrix}$ | $\\\\begin{pmatrix} -2 \\\\\\\\ -10 \\\\end{pmatrix}$ | $k = -2$ | \u2713 Yes |\n| $\\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix}$ | $\\\\begin{pmatrix} 6 \\\\\\\\ 9 \\\\end{pmatrix}$ | $x$: $k=2$, $y$: $k=2.25$ | \u2717 No |\n\n## Visual Illustration\n\nOn a coordinate grid, parallel vectors point in the **same** (or exactly **opposite**) direction but may have different lengths. Think of railway tracks\u2014they always run in the same direction.\n\n- $\\\\begin{pmatrix} 2 \\\\\\\\ 3 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 4 \\\\\\\\ 6 \\\\end{pmatrix}$: same direction, $\\\\mathbf{b}$ is twice as long\n- $\\\\begin{pmatrix} 1 \\\\\\\\ 5 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} -2 \\\\\\\\ -10 \\\\end{pmatrix}$: opposite directions (anti-parallel), but still parallel\n\n## Analytical Note\n\nAll **equal vectors** are parallel because their directional ratio is $1:1$ ($k = 1$). However, **not all parallel vectors are equal**, as their magnitudes (lengths) can be different.\n\n> **Common Error**: Students often assume $\\\\begin{pmatrix} 1 \\\\\\\\ 2 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 2 \\\\\\\\ 4 \\\\end{pmatrix}$ are **equal** because they \"look\" similar. They are **parallel**, but not equal ($k = 2 \\\\neq 1$).\n\n## Maths Meter Practice\n\nIdentify the parallel vectors:\n1. $\\\\begin{pmatrix} 3 \\\\\\\\ 1 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 9 \\\\\\\\ 3 \\\\end{pmatrix}$\n2. $\\\\begin{pmatrix} 2 \\\\\\\\ 5 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 2 \\\\\\\\ 6 \\\\end{pmatrix}$\n3. $\\\\begin{pmatrix} -1 \\\\\\\\ 2 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 2 \\\\\\\\ -4 \\\\end{pmatrix}$\n4. $\\\\begin{pmatrix} 4 \\\\\\\\ 4 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 1 \\\\\\\\ 1 \\\\end{pmatrix}$\n5. $\\\\begin{pmatrix} 0 \\\\\\\\ 3 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 0 \\\\\\\\ 10 \\\\end{pmatrix}$\n6. $\\\\begin{pmatrix} 5 \\\\\\\\ 2 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} -5 \\\\\\\\ -2 \\\\end{pmatrix}$",
+                worked_examples: [
+                    {
+                        question: "Identify if $\\\\begin{pmatrix} 2 \\\\\\\\ 3 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 4 \\\\\\\\ 6 \\\\end{pmatrix}$ are parallel.",
+                        steps: ["Check if one is a multiple of the other.", "$2 \\\\times \\\\begin{pmatrix} 2 \\\\\\\\ 3 \\\\end{pmatrix} = \\\\begin{pmatrix} 4 \\\\\\\\ 6 \\\\end{pmatrix}$ \u2713"],
+                        final_answer: "Yes, the vectors are **parallel** ($k = 2$)."
+                    },
+                    {
+                        question: "Identify if $\\\\begin{pmatrix} 1 \\\\\\\\ 5 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} -2 \\\\\\\\ -10 \\\\end{pmatrix}$ are parallel.",
+                        steps: ["$(-2) \\\\times \\\\begin{pmatrix} 1 \\\\\\\\ 5 \\\\end{pmatrix} = \\\\begin{pmatrix} -2 \\\\\\\\ -10 \\\\end{pmatrix}$ \u2713"],
+                        final_answer: "Yes, the vectors are **parallel** ($k = -2$)."
+                    },
+                    {
+                        question: "Identify if $\\\\begin{pmatrix} 10 \\\\\\\\ 20 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 1 \\\\\\\\ 2 \\\\end{pmatrix}$ are parallel.",
+                        steps: ["$\\\\frac{1}{10} \\\\times \\\\begin{pmatrix} 10 \\\\\\\\ 20 \\\\end{pmatrix} = \\\\begin{pmatrix} 1 \\\\\\\\ 2 \\\\end{pmatrix}$ \u2713"],
+                        final_answer: "Yes, the vectors are **parallel** ($k = \\\\frac{1}{10}$)."
+                    },
+                    {
+                        question: "Identify if $\\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 6 \\\\\\\\ 9 \\\\end{pmatrix}$ are parallel.",
+                        steps: ["$x$-ratio: $\\\\frac{6}{3} = 2$", "$y$-ratio: $\\\\frac{9}{4} = 2.25$", "Ratios are **not equal** ($2 \\\\neq 2.25$)."],
+                        final_answer: "**Not Parallel**."
+                    },
+                    {
+                        question: "Determine the relationship between $\\\\begin{pmatrix} 5 \\\\\\\\ 0 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 15 \\\\\\\\ 0 \\\\end{pmatrix}$.",
+                        steps: ["$3 \\\\times \\\\begin{pmatrix} 5 \\\\\\\\ 0 \\\\end{pmatrix} = \\\\begin{pmatrix} 15 \\\\\\\\ 0 \\\\end{pmatrix}$ \u2713"],
+                        final_answer: "The vectors are **parallel** ($k = 3$). Both lie along the horizontal axis."
+                    },
+                    {
+                        question: "Are $\\\\begin{pmatrix} -1 \\\\\\\\ 4 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 2 \\\\\\\\ -8 \\\\end{pmatrix}$ parallel?",
+                        steps: ["$(-2) \\\\times \\\\begin{pmatrix} -1 \\\\\\\\ 4 \\\\end{pmatrix} = \\\\begin{pmatrix} 2 \\\\\\\\ -8 \\\\end{pmatrix}$ \u2713"],
+                        final_answer: "Yes, they are **parallel** ($k = -2$, anti-parallel direction)."
+                    },
+                    {
+                        question: "Are $\\\\begin{pmatrix} 7 \\\\\\\\ 3 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 14 \\\\\\\\ 5 \\\\end{pmatrix}$ parallel?",
+                        steps: ["$x$-ratio: $\\\\frac{14}{7} = 2$", "$y$-ratio: $\\\\frac{5}{3} \\\\approx 1.67$", "Ratios differ ($2 \\\\neq \\\\frac{5}{3}$)."],
+                        final_answer: "**Not Parallel**."
+                    },
+                    {
+                        question: "Are $\\\\begin{pmatrix} 0 \\\\\\\\ 1 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 0 \\\\\\\\ -4 \\\\end{pmatrix}$ parallel?",
+                        steps: ["Both $x$-components are $0$ (both vertical).", "$(-4) \\\\times \\\\begin{pmatrix} 0 \\\\\\\\ 1 \\\\end{pmatrix} = \\\\begin{pmatrix} 0 \\\\\\\\ -4 \\\\end{pmatrix}$ \u2713"],
+                        final_answer: "Yes, **Parallel** ($k = -4$). Both lie along the vertical axis."
+                    }
+                ]
+            },
+
+            // ─── SECTION 5: THE ZERO VECTOR ───
+            {
+                title: '5. The Zero Vector',
+                content: "## Definition\n\nThe **Zero Vector** is the \"identity element\" of vectors, representing a state of **absolute rest**\u2014no movement at all.\n\n$$\\\\vec{0} = \\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$$\n\n## Properties of the Zero Vector\n\n| Property | Explanation |\n|---|---|\n| **Magnitude** | $\\\\|\\\\vec{0}\\\\| = 0$ (no distance) |\n| **Direction** | Undefined (a point has no direction) |\n| **Additive Identity** | $\\\\mathbf{a} + \\\\vec{0} = \\\\mathbf{a}$ for any vector $\\\\mathbf{a}$ |\n| **Result of Opposites** | $\\\\mathbf{a} + (-\\\\mathbf{a}) = \\\\vec{0}$ |\n\n## Diagram: The Zero Vector as a Point\n\nOn a coordinate grid, the zero vector is represented as a **single point** at the origin (or wherever the vector starts). It has **no arrow** because there is no displacement.\n\n| Start Point | End Point | Vector | Type |\n|---|---|---|---|\n| $(3, 4)$ | $(3, 4)$ | $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$ | Zero vector |\n| $(0, 0)$ | $(0, 0)$ | $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$ | Zero vector |\n\n## Meaning of Zero Magnitude\n\nIn displacement, zero magnitude means the movement **begins and ends at the exact same point**. There is no distance between the start and end positions.\n\n> **Common Error**: Never write the zero vector as a single digit \"$0$\". In vector algebra, it must maintain the column form $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$.\n\n## Maths Meter Practice\n\n1. What is the magnitude of $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$?\n2. Write the zero vector in column form.\n3. If $\\\\mathbf{a} + \\\\mathbf{b} = \\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$, what is the relationship between $\\\\mathbf{a}$ and $\\\\mathbf{b}$?\n4. Is $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$ parallel to all vectors? (Concept: It represents a point, thus shares any line).",
+                worked_examples: [
+                    {
+                        question: "Show that the sum of $\\\\mathbf{a} = \\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix}$ and its opposite results in a zero vector.",
+                        steps: ["$\\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix} + \\\\begin{pmatrix} -3 \\\\\\\\ -4 \\\\end{pmatrix} = \\\\begin{pmatrix} 3 + (-3) \\\\\\\\ 4 + (-4) \\\\end{pmatrix}$", "$= \\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$"],
+                        final_answer: "The resultant is a zero vector: $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Show the resultant is zero for $\\\\begin{pmatrix} -2 \\\\\\\\ 5 \\\\end{pmatrix} + \\\\begin{pmatrix} 2 \\\\\\\\ -5 \\\\end{pmatrix}$.",
+                        steps: ["Add $x$-components: $-2 + 2 = 0$", "Add $y$-components: $5 + (-5) = 0$"],
+                        final_answer: "$\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Show the resultant is zero for $\\\\begin{pmatrix} 10 \\\\\\\\ 0 \\\\end{pmatrix} + \\\\begin{pmatrix} -10 \\\\\\\\ 0 \\\\end{pmatrix}$.",
+                        steps: ["$10 + (-10) = 0$", "$0 + 0 = 0$"],
+                        final_answer: "$\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Show the resultant is zero for $\\\\begin{pmatrix} 0 \\\\\\\\ -6 \\\\end{pmatrix} + \\\\begin{pmatrix} 0 \\\\\\\\ 6 \\\\end{pmatrix}$.",
+                        steps: ["$0 + 0 = 0$", "$-6 + 6 = 0$"],
+                        final_answer: "$\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Show the resultant is zero for $\\\\begin{pmatrix} -1 \\\\\\\\ -1 \\\\end{pmatrix} + \\\\begin{pmatrix} 1 \\\\\\\\ 1 \\\\end{pmatrix}$.",
+                        steps: ["$-1 + 1 = 0$", "$-1 + 1 = 0$"],
+                        final_answer: "$\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Show the resultant is zero for $\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix} + \\\\begin{pmatrix} -x \\\\\\\\ -y \\\\end{pmatrix}$ (general case).",
+                        steps: ["$x + (-x) = 0$", "$y + (-y) = 0$"],
+                        final_answer: "$\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$. This proves that **any** vector plus its negative equals the zero vector."
+                    }
+                ]
+            },
+
+            // ─── SECTION 6: UNIT VECTORS ───
+            {
+                title: '6. Unit Vectors (Introductory Level)',
+                content: "## Definition\n\nA **Unit Vector** is any vector with a magnitude of **exactly 1 unit**. Unit vectors are the standard \"measuring sticks\" used to define direction.\n\n## The Standard Unit Vectors\n\n$$\\\\mathbf{i} = \\\\begin{pmatrix} 1 \\\\\\\\ 0 \\\\end{pmatrix} \\\\quad \\\\text{and} \\\\quad \\\\mathbf{j} = \\\\begin{pmatrix} 0 \\\\\\\\ 1 \\\\end{pmatrix}$$\n\n## Diagram: The Four Basic Unit Vectors\n\n| Unit Vector | Column Form | Direction | Description |\n|---|---|---|---|\n| $\\\\mathbf{i}$ | $\\\\begin{pmatrix} 1 \\\\\\\\ 0 \\\\end{pmatrix}$ | $\\\\rightarrow$ | 1 unit right (East) |\n| $\\\\mathbf{j}$ | $\\\\begin{pmatrix} 0 \\\\\\\\ 1 \\\\end{pmatrix}$ | $\\\\uparrow$ | 1 unit up (North) |\n| $-\\\\mathbf{i}$ | $\\\\begin{pmatrix} -1 \\\\\\\\ 0 \\\\end{pmatrix}$ | $\\\\leftarrow$ | 1 unit left (West) |\n| $-\\\\mathbf{j}$ | $\\\\begin{pmatrix} 0 \\\\\\\\ -1 \\\\end{pmatrix}$ | $\\\\downarrow$ | 1 unit down (South) |\n\n## Visual Illustration\n\nOn a coordinate grid centred at the origin:\n- $\\\\mathbf{i}$ is a short arrow from $(0,0)$ to $(1,0)$ pointing **right**\n- $\\\\mathbf{j}$ is a short arrow from $(0,0)$ to $(0,1)$ pointing **up**\n\nThese two vectors form the **basis** of all 2D vectors. Any vector $\\\\begin{pmatrix} a \\\\\\\\ b \\\\end{pmatrix}$ can be written as $a\\\\mathbf{i} + b\\\\mathbf{j}$.\n\n## Utility of Unit Vectors\n\nUnit vectors allow us to describe the **pure direction** of a movement without being concerned with the actual distance travelled. They are the building blocks from which all other vectors are constructed.\n\n## Checking if a Vector is a Unit Vector\n\nCalculate the magnitude: $\\\\|\\\\mathbf{v}\\\\| = \\\\sqrt{x^2 + y^2}$. If the result is $1$, it is a unit vector.\n\n## Maths Meter Practice\n\nVerify if these are unit vectors (Magnitude $= 1$?):\n1. $\\\\begin{pmatrix} 1 \\\\\\\\ 0 \\\\end{pmatrix}$ (Hint: $\\\\sqrt{1^2 + 0^2} = 1$ \u2713)\n2. $\\\\begin{pmatrix} 1 \\\\\\\\ 1 \\\\end{pmatrix}$ (Hint: $\\\\sqrt{1^2 + 1^2} = \\\\sqrt{2} \\\\approx 1.41$ \u2717)\n3. $\\\\begin{pmatrix} 0 \\\\\\\\ -1 \\\\end{pmatrix}$\n4. $\\\\begin{pmatrix} 0.5 \\\\\\\\ 0.5 \\\\end{pmatrix}$",
+                worked_examples: [
+                    {
+                        question: "Verify that $\\\\begin{pmatrix} 1 \\\\\\\\ 0 \\\\end{pmatrix}$ is a unit vector.",
+                        steps: ["$\\\\|\\\\mathbf{v}\\\\| = \\\\sqrt{1^2 + 0^2} = \\\\sqrt{1} = 1$"],
+                        final_answer: "Yes, it is a unit vector ($\\\\mathbf{i}$). It represents 1 unit to the right."
+                    },
+                    {
+                        question: "Verify that $\\\\begin{pmatrix} 0 \\\\\\\\ 1 \\\\end{pmatrix}$ is a unit vector.",
+                        steps: ["$\\\\|\\\\mathbf{v}\\\\| = \\\\sqrt{0^2 + 1^2} = \\\\sqrt{1} = 1$"],
+                        final_answer: "Yes, it is a unit vector ($\\\\mathbf{j}$). It represents 1 unit upward."
+                    },
+                    {
+                        question: "Is $\\\\begin{pmatrix} -1 \\\\\\\\ 0 \\\\end{pmatrix}$ a unit vector?",
+                        steps: ["$\\\\|\\\\mathbf{v}\\\\| = \\\\sqrt{(-1)^2 + 0^2} = \\\\sqrt{1} = 1$"],
+                        final_answer: "Yes, it is a unit vector ($-\\\\mathbf{i}$). It represents 1 unit to the left."
+                    },
+                    {
+                        question: "Is $\\\\begin{pmatrix} 0 \\\\\\\\ -1 \\\\end{pmatrix}$ a unit vector?",
+                        steps: ["$\\\\|\\\\mathbf{v}\\\\| = \\\\sqrt{0^2 + (-1)^2} = \\\\sqrt{1} = 1$"],
+                        final_answer: "Yes, it is a unit vector ($-\\\\mathbf{j}$). It represents 1 unit downward."
+                    },
+                    {
+                        question: "Is $\\\\begin{pmatrix} 1 \\\\\\\\ 1 \\\\end{pmatrix}$ a unit vector?",
+                        steps: ["$\\\\|\\\\mathbf{v}\\\\| = \\\\sqrt{1^2 + 1^2} = \\\\sqrt{2} \\\\approx 1.414$", "Since $\\\\sqrt{2} \\\\neq 1$, this is **not** a unit vector."],
+                        final_answer: "No. Magnitude is $\\\\sqrt{2}$, not $1$."
+                    },
+                    {
+                        question: "Is $\\\\begin{pmatrix} 0.5 \\\\\\\\ 0.5 \\\\end{pmatrix}$ a unit vector?",
+                        steps: ["$\\\\|\\\\mathbf{v}\\\\| = \\\\sqrt{0.5^2 + 0.5^2} = \\\\sqrt{0.25 + 0.25} = \\\\sqrt{0.5} \\\\approx 0.707$", "Since $\\\\sqrt{0.5} \\\\neq 1$, this is **not** a unit vector."],
+                        final_answer: "No. Magnitude is $\\\\sqrt{0.5} \\\\approx 0.71$, not $1$."
+                    }
+                ]
+            },
+
+            // ─── SECTION 7: POSITION VECTORS ───
+            {
+                title: '7. Position Vectors',
+                content: "## Definition\n\nPosition vectors link **coordinate geometry** to **vector algebra** by anchoring every movement to the **Origin** $O(0, 0)$.\n\nIf a point $P$ has coordinates $(x, y)$, its **position vector** is the movement from the origin $O(0, 0)$ to $P$:\n\n$$\\\\vec{OP} = \\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$$\n\n## Diagram: Position Vector on the Coordinate Plane\n\n| Point | Coordinates | Position Vector $\\\\vec{OP}$ | Direction from Origin |\n|---|---|---|---|\n| $A$ | $(3, 4)$ | $\\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix}$ | 3 right, 4 up |\n| $B$ | $(-5, 2)$ | $\\\\begin{pmatrix} -5 \\\\\\\\ 2 \\\\end{pmatrix}$ | 5 left, 2 up |\n| $C$ | $(0, 10)$ | $\\\\begin{pmatrix} 0 \\\\\\\\ 10 \\\\end{pmatrix}$ | Straight up 10 units |\n| $D$ | $(-1, -6)$ | $\\\\begin{pmatrix} -1 \\\\\\\\ -6 \\\\end{pmatrix}$ | 1 left, 6 down |\n| $O$ | $(0, 0)$ | $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$ | No movement (zero vector) |\n\n## Visual Illustration\n\nOn a coordinate grid, draw an arrow from the **origin** $(0, 0)$ to each point. The arrow represents the position vector. Each position vector is unique to its point and always starts at the origin.\n\n## Key Insight\n\nThe point $(x, y)$ and the position vector $\\\\vec{OP} = \\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$ are **identical in value** but **different in meaning**: the point is a **location**; the vector is the **movement** required to reach that location from zero.\n\n> **Common Error**: Always convert the horizontal coordinate $(x, y)$ to the vertical column vector $\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$. Writing $\\\\vec{OP} = (x, y)$ is **incorrect** in vector format.\n\n## Maths Meter Practice\n\nConvert to position vectors:\n1. $A(5, 1)$\n2. $B(-2, 0)$\n3. $C(3, -3)$\n4. $D(0, 4)$\n5. $E(-10, -2)$\n6. $F(1, 9)$",
+                worked_examples: [
+                    {
+                        question: "Write the position vector of point $A(3, 4)$.",
+                        steps: ["The position vector goes from $O(0,0)$ to $A(3,4)$.", "Write the coordinates vertically."],
+                        final_answer: "$\\\\vec{OA} = \\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Write the position vector of point $B(-5, 2)$.",
+                        steps: ["From the origin to $B(-5, 2)$: move 5 left and 2 up."],
+                        final_answer: "$\\\\vec{OB} = \\\\begin{pmatrix} -5 \\\\\\\\ 2 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Point $C$ is $(0, 10)$. Write its position vector.",
+                        steps: ["$x = 0$ (no horizontal shift), $y = 10$ (straight up)."],
+                        final_answer: "$\\\\vec{OC} = \\\\begin{pmatrix} 0 \\\\\\\\ 10 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Point $D$ is $(-1, -6)$. Write its position vector.",
+                        steps: ["$x = -1$ (1 left), $y = -6$ (6 down)."],
+                        final_answer: "$\\\\vec{OD} = \\\\begin{pmatrix} -1 \\\\\\\\ -6 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Determine the magnitude of $\\\\vec{OP}$ if $P$ is $(3, 0)$.",
+                        steps: ["$\\\\vec{OP} = \\\\begin{pmatrix} 3 \\\\\\\\ 0 \\\\end{pmatrix}$", "Magnitude $= \\\\sqrt{3^2 + 0^2} = \\\\sqrt{9} = 3$"],
+                        final_answer: "Magnitude is $3$ units."
+                    },
+                    {
+                        question: "Write the position vector of the origin.",
+                        steps: ["The origin is $O(0, 0)$.", "Movement from $O$ to $O$ is zero."],
+                        final_answer: "$\\\\vec{OO} = \\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$ (the zero vector)"
+                    },
+                    {
+                        question: "Write the position vector of point $X(12, 5)$.",
+                        steps: ["From origin: 12 right, 5 up."],
+                        final_answer: "$\\\\vec{OX} = \\\\begin{pmatrix} 12 \\\\\\\\ 5 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Write the position vector of point $Y(-4, -4)$.",
+                        steps: ["From origin: 4 left, 4 down."],
+                        final_answer: "$\\\\vec{OY} = \\\\begin{pmatrix} -4 \\\\\\\\ -4 \\\\end{pmatrix}$"
+                    }
+                ]
+            },
+
+            // ─── SECTION 8: COLLINEAR VECTORS ───
+            {
+                title: '8. Collinear Vectors (Introductory Level)',
+                content: "## Definition\n\n**Collinear Vectors** are vectors that lie on the **same straight line**. This occurs when vectors are **parallel** and **share at least one common point**.\n\n## Conditions for Collinearity\n\n| Condition | Explanation |\n|---|---|\n| **Parallel** | One vector must be a scalar multiple of the other |\n| **Common Point** | The end point of the first vector is the start point of the second |\n\n## Diagram: Collinear Vectors\n\nImagine three points $A$, $B$, $C$ on a straight line:\n\n$$A \\\\longrightarrow B \\\\longrightarrow C$$\n\nIf $\\\\overrightarrow{AB} = k \\\\cdot \\\\overrightarrow{BC}$ for some scalar $k$, then $A$, $B$, $C$ are **collinear** (they all lie on one straight line).\n\n## How to Prove Collinearity\n\n| Step | Action |\n|---|---|\n| **Step 1** | Check if the two vectors are **parallel** (one is a scalar multiple of the other) |\n| **Step 2** | Check that they **share a common point** (e.g., end of first = start of second) |\n| **Step 3** | If both conditions are met, the points are **collinear** |\n\n## Visual Illustration\n\nOn a coordinate grid, collinear points all lie on the **same straight line**. The vectors between consecutive points are parallel (same direction or anti-parallel).\n\n$$\\\\text{Points: } A(1,1), \\\\; B(3,3), \\\\; C(7,7)$$\n$$\\\\overrightarrow{AB} = \\\\begin{pmatrix} 2 \\\\\\\\ 2 \\\\end{pmatrix}, \\\\quad \\\\overrightarrow{BC} = \\\\begin{pmatrix} 4 \\\\\\\\ 4 \\\\end{pmatrix} = 2 \\\\times \\\\begin{pmatrix} 2 \\\\\\\\ 2 \\\\end{pmatrix}$$\n\nSince $\\\\overrightarrow{BC} = 2\\\\overrightarrow{AB}$ and they share point $B$, the points are collinear.\n\n> **Key Rule**: To prove collinearity, show: (1) One vector is a multiple of another, AND (2) The end point of the first vector is the start point of the second.",
+                worked_examples: [
+                    {
+                        question: "Points $A$, $B$, $C$ lie on a line. $\\\\overrightarrow{AB} = \\\\begin{pmatrix} 2 \\\\\\\\ 2 \\\\end{pmatrix}$ and $\\\\overrightarrow{BC} = \\\\begin{pmatrix} 4 \\\\\\\\ 4 \\\\end{pmatrix}$. Prove collinearity.",
+                        steps: ["Check parallelism: $\\\\begin{pmatrix} 4 \\\\\\\\ 4 \\\\end{pmatrix} = 2 \\\\times \\\\begin{pmatrix} 2 \\\\\\\\ 2 \\\\end{pmatrix}$ \u2713", "Common point: $\\\\overrightarrow{AB}$ ends at $B$, $\\\\overrightarrow{BC}$ starts at $B$ \u2713"],
+                        final_answer: "The vectors are **collinear**. Points $A$, $B$, $C$ lie on one straight line."
+                    },
+                    {
+                        question: "$\\\\overrightarrow{PQ} = \\\\begin{pmatrix} 1 \\\\\\\\ 3 \\\\end{pmatrix}$ and $\\\\overrightarrow{QR} = \\\\begin{pmatrix} 3 \\\\\\\\ 9 \\\\end{pmatrix}$. Are $P$, $Q$, $R$ collinear?",
+                        steps: ["$\\\\begin{pmatrix} 3 \\\\\\\\ 9 \\\\end{pmatrix} = 3 \\\\times \\\\begin{pmatrix} 1 \\\\\\\\ 3 \\\\end{pmatrix}$ \u2713 (parallel)", "Common point $Q$ \u2713"],
+                        final_answer: "**Collinear**. Points $P$, $Q$, $R$ all lie on the same straight line."
+                    },
+                    {
+                        question: "$\\\\overrightarrow{XY} = \\\\begin{pmatrix} 5 \\\\\\\\ 10 \\\\end{pmatrix}$ and $\\\\overrightarrow{YZ} = \\\\begin{pmatrix} 1 \\\\\\\\ 2 \\\\end{pmatrix}$. Are $X$, $Y$, $Z$ collinear?",
+                        steps: ["$\\\\begin{pmatrix} 5 \\\\\\\\ 10 \\\\end{pmatrix} = 5 \\\\times \\\\begin{pmatrix} 1 \\\\\\\\ 2 \\\\end{pmatrix}$ \u2713 (parallel)", "Common point $Y$ \u2713"],
+                        final_answer: "**Collinear**."
+                    },
+                    {
+                        question: "$\\\\overrightarrow{DE} = \\\\begin{pmatrix} -2 \\\\\\\\ 4 \\\\end{pmatrix}$ and $\\\\overrightarrow{EF} = \\\\begin{pmatrix} 3 \\\\\\\\ -6 \\\\end{pmatrix}$. Collinear?",
+                        steps: ["Check: $\\\\frac{3}{-2} = -1.5$ and $\\\\frac{-6}{4} = -1.5$ \u2713 (parallel, $k = -1.5$)", "Common point $E$ \u2713"],
+                        final_answer: "**Collinear** ($k = -1.5$, anti-parallel direction)."
+                    },
+                    {
+                        question: "$\\\\overrightarrow{MN} = \\\\begin{pmatrix} 2 \\\\\\\\ 3 \\\\end{pmatrix}$ and $\\\\overrightarrow{NP} = \\\\begin{pmatrix} 4 \\\\\\\\ 5 \\\\end{pmatrix}$. Collinear?",
+                        steps: ["Check: $\\\\frac{4}{2} = 2$ but $\\\\frac{5}{3} \\\\approx 1.67$", "Ratios differ: **not parallel**."],
+                        final_answer: "**Not collinear**. The vectors are not parallel."
+                    }
+                ]
+            },
+
+            // ─── SECTION 9: MIXED REVISION EXERCISE ───
+            {
+                title: '9. Mixed Revision Exercise',
+                content: "## Part A: Identify Vector Types (10 Questions)\n\nState if the pairs are **Equal**, **Parallel**, or **Opposite**:\n\n| No. | Vector 1 | Vector 2 | Your Answer |\n|---|---|---|---|\n| 1 | $\\\\begin{pmatrix} 4 \\\\\\\\ 1 \\\\end{pmatrix}$ | $\\\\begin{pmatrix} 4 \\\\\\\\ 1 \\\\end{pmatrix}$ | |\n| 2 | $\\\\begin{pmatrix} 2 \\\\\\\\ 3 \\\\end{pmatrix}$ | $\\\\begin{pmatrix} -2 \\\\\\\\ -3 \\\\end{pmatrix}$ | |\n| 3 | $\\\\begin{pmatrix} 1 \\\\\\\\ 5 \\\\end{pmatrix}$ | $\\\\begin{pmatrix} 2 \\\\\\\\ 10 \\\\end{pmatrix}$ | |\n| 4 | $\\\\begin{pmatrix} 0 \\\\\\\\ 4 \\\\end{pmatrix}$ | $\\\\begin{pmatrix} 0 \\\\\\\\ 4 \\\\end{pmatrix}$ | |\n| 5 | $\\\\begin{pmatrix} -6 \\\\\\\\ 2 \\\\end{pmatrix}$ | $\\\\begin{pmatrix} 6 \\\\\\\\ -2 \\\\end{pmatrix}$ | |\n| 6 | $\\\\begin{pmatrix} 10 \\\\\\\\ 0 \\\\end{pmatrix}$ | $\\\\begin{pmatrix} 1 \\\\\\\\ 0 \\\\end{pmatrix}$ | |\n| 7 | $\\\\begin{pmatrix} -3 \\\\\\\\ -3 \\\\end{pmatrix}$ | $\\\\begin{pmatrix} -3 \\\\\\\\ -3 \\\\end{pmatrix}$ | |\n| 8 | $\\\\begin{pmatrix} 7 \\\\\\\\ 2 \\\\end{pmatrix}$ | $\\\\begin{pmatrix} 21 \\\\\\\\ 6 \\\\end{pmatrix}$ | |\n| 9 | $\\\\begin{pmatrix} 5 \\\\\\\\ -1 \\\\end{pmatrix}$ | $\\\\begin{pmatrix} -5 \\\\\\\\ 1 \\\\end{pmatrix}$ | |\n| 10 | $\\\\begin{pmatrix} 8 \\\\\\\\ 8 \\\\end{pmatrix}$ | $\\\\begin{pmatrix} 8 \\\\\\\\ 8 \\\\end{pmatrix}$ | |\n\n---\n\n## Part B: Position Vectors (10 Questions)\n\nConvert the following points to position vectors:\n\n| No. | Point | Position Vector |\n|---|---|---|\n| 11 | $A(4, 6)$ | |\n| 12 | $B(-1, 5)$ | |\n| 13 | $C(0, -2)$ | |\n| 14 | $D(3, 0)$ | |\n| 15 | $E(-4, -4)$ | |\n| 16 | $F(10, 12)$ | |\n| 17 | $G(2, -9)$ | |\n| 18 | $H(-7, 1)$ | |\n| 19 | $I(0, 0)$ | |\n| 20 | $J(1, 1)$ | |\n\n---\n\n## Part C: Negatives and Parallel (10 Questions)\n\n21. Write negative of $\\\\begin{pmatrix} 6 \\\\\\\\ 2 \\\\end{pmatrix}$.\n22. Write negative of $\\\\begin{pmatrix} -3 \\\\\\\\ 0 \\\\end{pmatrix}$.\n23. Is $\\\\begin{pmatrix} 1 \\\\\\\\ 4 \\\\end{pmatrix}$ parallel to $\\\\begin{pmatrix} 3 \\\\\\\\ 12 \\\\end{pmatrix}$?\n24. Write negative of $\\\\begin{pmatrix} 4 \\\\\\\\ -5 \\\\end{pmatrix}$.\n25. Is $\\\\begin{pmatrix} 2 \\\\\\\\ 2 \\\\end{pmatrix}$ parallel to $\\\\begin{pmatrix} 10 \\\\\\\\ 10 \\\\end{pmatrix}$?\n26. Write negative of $\\\\begin{pmatrix} -1 \\\\\\\\ -1 \\\\end{pmatrix}$.\n27. Is $\\\\begin{pmatrix} 5 \\\\\\\\ 1 \\\\end{pmatrix}$ parallel to $\\\\begin{pmatrix} 5 \\\\\\\\ 2 \\\\end{pmatrix}$?\n28. Write negative of $\\\\begin{pmatrix} 0 \\\\\\\\ 9 \\\\end{pmatrix}$.\n29. Is $\\\\begin{pmatrix} -2 \\\\\\\\ 3 \\\\end{pmatrix}$ parallel to $\\\\begin{pmatrix} 4 \\\\\\\\ -6 \\\\end{pmatrix}$?\n30. Write negative of $\\\\begin{pmatrix} 10 \\\\\\\\ 10 \\\\end{pmatrix}$.\n\n---\n\n## Part D: True/False (5 Questions)\n\n31. All parallel vectors are equal.\n32. The negative of $\\\\begin{pmatrix} -2 \\\\\\\\ 5 \\\\end{pmatrix}$ is $\\\\begin{pmatrix} 2 \\\\\\\\ -5 \\\\end{pmatrix}$.\n33. $\\\\vec{OP}$ is a position vector.\n34. $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$ is a unit vector.\n35. Equal vectors must have the same column form.",
+                worked_examples: []
+            },
+
+            // ─── SECTION 10: EXAM-STYLE STRUCTURED TEST ───
+            {
+                title: '10. Exam-Style Structured Test',
+                content: "## Instructions\n\nAnswer ALL questions. Show your working for full marks.\n\n---\n\n**1.** Point $P$ is $(8, 3)$. Write in column vector form the position vector $\\\\vec{OP}$. $[2]$\n\n**2.** Given $\\\\mathbf{a} = \\\\begin{pmatrix} -5 \\\\\\\\ 2 \\\\end{pmatrix}$, hence determine $-\\\\mathbf{a}$. $[2]$\n\n**3.** Show that $\\\\begin{pmatrix} 3 \\\\\\\\ 9 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 1 \\\\\\\\ 3 \\\\end{pmatrix}$ are parallel. $[2]$\n\n**4.** Calculate the magnitude of the zero vector. $[1]$\n\n**5.** Translation $\\\\mathbf{T} = \\\\begin{pmatrix} 4 \\\\\\\\ 5 \\\\end{pmatrix}$ is applied to original point $\\\\begin{pmatrix} 2 \\\\\\\\ 1 \\\\end{pmatrix}$. Hence determine the image point. $[3]$\n\n**6.** Write in column vector form the negative of $\\\\begin{pmatrix} -12 \\\\\\\\ -6 \\\\end{pmatrix}$. $[2]$\n\n**7.** Show that $\\\\begin{pmatrix} 7 \\\\\\\\ 7 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 7 \\\\\\\\ 7 \\\\end{pmatrix}$ are equal vectors. $[2]$\n\n**8.** Point $K$ is $(-3, 0)$. Write in column vector form $\\\\vec{OK}$. $[2]$\n\n**9.** State the type of vector represented by $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$. $[1]$\n\n**10.** Hence determine if $\\\\begin{pmatrix} 2 \\\\\\\\ 5 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} -2 \\\\\\\\ -5 \\\\end{pmatrix}$ are opposite vectors. $[2]$\n\n**11.** Calculate the magnitude of the unit vector $\\\\begin{pmatrix} 1 \\\\\\\\ 0 \\\\end{pmatrix}$. $[1]$\n\n**12.** Given Original $= \\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$ and Translation $= \\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix}$, hence determine the image point. $[2]$\n\n**13.** Show that $\\\\begin{pmatrix} 2 \\\\\\\\ 1 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 10 \\\\\\\\ 5 \\\\end{pmatrix}$ are parallel. $[2]$\n\n**14.** Write in column vector form the negative of $\\\\begin{pmatrix} 0 \\\\\\\\ -1 \\\\end{pmatrix}$. $[1]$\n\n**15.** State if the following are collinear: $\\\\overrightarrow{AB} = \\\\begin{pmatrix} 1 \\\\\\\\ 2 \\\\end{pmatrix}$ and $\\\\overrightarrow{BC} = \\\\begin{pmatrix} 2 \\\\\\\\ 4 \\\\end{pmatrix}$. $[2]$\n\n**16.** Hence determine if $\\\\begin{pmatrix} 4 \\\\\\\\ 0 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 0 \\\\\\\\ 4 \\\\end{pmatrix}$ are equal. $[2]$\n\n**17.** Calculate the resultant of $\\\\begin{pmatrix} 3 \\\\\\\\ 3 \\\\end{pmatrix} + \\\\begin{pmatrix} -3 \\\\\\\\ -3 \\\\end{pmatrix}$. $[2]$\n\n**18.** Write the position vector of point $M(0, -5)$. $[2]$\n\n**19.** Show that $\\\\begin{pmatrix} -1 \\\\\\\\ 4 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 1 \\\\\\\\ -4 \\\\end{pmatrix}$ are opposite. $[2]$\n\n**20.** Hence determine the image point if original $(1, 1)$ is translated by $\\\\begin{pmatrix} -1 \\\\\\\\ -1 \\\\end{pmatrix}$. $[2]$",
+                worked_examples: []
+            },
+
+            // ─── SECTION 11: FULL MEMO AND WORKED SOLUTIONS ───
+            {
+                title: '11. Full Memo and Worked Solutions',
+                content: "## Revision Exercise Answers (35 Questions)\n\n### Part A: Identify Vector Types\n**1.** Equal. Components match: $\\\\begin{pmatrix} 4 \\\\\\\\ 1 \\\\end{pmatrix} = \\\\begin{pmatrix} 4 \\\\\\\\ 1 \\\\end{pmatrix}$\n**2.** Opposite. $\\\\begin{pmatrix} -2 \\\\\\\\ -3 \\\\end{pmatrix} = -\\\\begin{pmatrix} 2 \\\\\\\\ 3 \\\\end{pmatrix}$\n**3.** Parallel. $2 \\\\times \\\\begin{pmatrix} 1 \\\\\\\\ 5 \\\\end{pmatrix} = \\\\begin{pmatrix} 2 \\\\\\\\ 10 \\\\end{pmatrix}$, so $k = 2$.\n**4.** Equal. $\\\\begin{pmatrix} 0 \\\\\\\\ 4 \\\\end{pmatrix} = \\\\begin{pmatrix} 0 \\\\\\\\ 4 \\\\end{pmatrix}$\n**5.** Opposite. $\\\\begin{pmatrix} 6 \\\\\\\\ -2 \\\\end{pmatrix} = -\\\\begin{pmatrix} -6 \\\\\\\\ 2 \\\\end{pmatrix}$\n**6.** Parallel. $0.1 \\\\times \\\\begin{pmatrix} 10 \\\\\\\\ 0 \\\\end{pmatrix} = \\\\begin{pmatrix} 1 \\\\\\\\ 0 \\\\end{pmatrix}$, so $k = 0.1$.\n**7.** Equal. $\\\\begin{pmatrix} -3 \\\\\\\\ -3 \\\\end{pmatrix} = \\\\begin{pmatrix} -3 \\\\\\\\ -3 \\\\end{pmatrix}$\n**8.** Parallel. $3 \\\\times \\\\begin{pmatrix} 7 \\\\\\\\ 2 \\\\end{pmatrix} = \\\\begin{pmatrix} 21 \\\\\\\\ 6 \\\\end{pmatrix}$, so $k = 3$.\n**9.** Opposite. $\\\\begin{pmatrix} -5 \\\\\\\\ 1 \\\\end{pmatrix} = -\\\\begin{pmatrix} 5 \\\\\\\\ -1 \\\\end{pmatrix}$\n**10.** Equal. $\\\\begin{pmatrix} 8 \\\\\\\\ 8 \\\\end{pmatrix} = \\\\begin{pmatrix} 8 \\\\\\\\ 8 \\\\end{pmatrix}$\n\n### Part B: Position Vectors\n**11.** $\\\\vec{OA} = \\\\begin{pmatrix} 4 \\\\\\\\ 6 \\\\end{pmatrix}$\n**12.** $\\\\vec{OB} = \\\\begin{pmatrix} -1 \\\\\\\\ 5 \\\\end{pmatrix}$\n**13.** $\\\\vec{OC} = \\\\begin{pmatrix} 0 \\\\\\\\ -2 \\\\end{pmatrix}$\n**14.** $\\\\vec{OD} = \\\\begin{pmatrix} 3 \\\\\\\\ 0 \\\\end{pmatrix}$\n**15.** $\\\\vec{OE} = \\\\begin{pmatrix} -4 \\\\\\\\ -4 \\\\end{pmatrix}$\n**16.** $\\\\vec{OF} = \\\\begin{pmatrix} 10 \\\\\\\\ 12 \\\\end{pmatrix}$\n**17.** $\\\\vec{OG} = \\\\begin{pmatrix} 2 \\\\\\\\ -9 \\\\end{pmatrix}$\n**18.** $\\\\vec{OH} = \\\\begin{pmatrix} -7 \\\\\\\\ 1 \\\\end{pmatrix}$\n**19.** $\\\\vec{OI} = \\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$ (zero vector)\n**20.** $\\\\vec{OJ} = \\\\begin{pmatrix} 1 \\\\\\\\ 1 \\\\end{pmatrix}$\n\n### Part C: Negatives and Parallel\n**21.** $\\\\begin{pmatrix} -6 \\\\\\\\ -2 \\\\end{pmatrix}$\n**22.** $\\\\begin{pmatrix} 3 \\\\\\\\ 0 \\\\end{pmatrix}$\n**23.** Yes. $3 \\\\times \\\\begin{pmatrix} 1 \\\\\\\\ 4 \\\\end{pmatrix} = \\\\begin{pmatrix} 3 \\\\\\\\ 12 \\\\end{pmatrix}$, so $k = 3$.\n**24.** $\\\\begin{pmatrix} -4 \\\\\\\\ 5 \\\\end{pmatrix}$\n**25.** Yes. $5 \\\\times \\\\begin{pmatrix} 2 \\\\\\\\ 2 \\\\end{pmatrix} = \\\\begin{pmatrix} 10 \\\\\\\\ 10 \\\\end{pmatrix}$, so $k = 5$.\n**26.** $\\\\begin{pmatrix} 1 \\\\\\\\ 1 \\\\end{pmatrix}$\n**27.** No. $\\\\frac{5}{5} = 1$ but $\\\\frac{2}{1} = 2$. Ratios differ.\n**28.** $\\\\begin{pmatrix} 0 \\\\\\\\ -9 \\\\end{pmatrix}$\n**29.** Yes. $(-2) \\\\times \\\\begin{pmatrix} -2 \\\\\\\\ 3 \\\\end{pmatrix} = \\\\begin{pmatrix} 4 \\\\\\\\ -6 \\\\end{pmatrix}$, so $k = -2$.\n**30.** $\\\\begin{pmatrix} -10 \\\\\\\\ -10 \\\\end{pmatrix}$\n\n### Part D: True/False\n**31.** **False**. Parallel vectors can have different magnitudes; equal vectors must have the same magnitude AND direction.\n**32.** **True**. Negate both components: $-(-2) = 2$ and $-(5) = -5$.\n**33.** **True**. $\\\\vec{OP}$ denotes the vector from origin $O$ to point $P$.\n**34.** **False**. The zero vector has magnitude $0$, not $1$.\n**35.** **True**. Equal vectors have identical $x$ and $y$ components.\n\n---\n\n## Exam-Style Test Answers (20 Questions)\n\n**1.** Point $(8, 3)$ $\\\\Rightarrow \\\\vec{OP} = \\\\begin{pmatrix} 8 \\\\\\\\ 3 \\\\end{pmatrix}$ $[\\\\text{M1 A1}]$\n\n**2.** $-\\\\mathbf{a} = -\\\\begin{pmatrix} -5 \\\\\\\\ 2 \\\\end{pmatrix} = \\\\begin{pmatrix} 5 \\\\\\\\ -2 \\\\end{pmatrix}$ $[\\\\text{M1 A1}]$\n\n**3.** $\\\\begin{pmatrix} 3 \\\\\\\\ 9 \\\\end{pmatrix} = 3 \\\\times \\\\begin{pmatrix} 1 \\\\\\\\ 3 \\\\end{pmatrix}$. Ratios match ($k = 3$), so they are **parallel**. $[\\\\text{M1 A1}]$\n\n**4.** Magnitude of zero vector $= 0$. $[\\\\text{A1}]$\n\n**5.** Image $= \\\\begin{pmatrix} 2 \\\\\\\\ 1 \\\\end{pmatrix} + \\\\begin{pmatrix} 4 \\\\\\\\ 5 \\\\end{pmatrix} = \\\\begin{pmatrix} 6 \\\\\\\\ 6 \\\\end{pmatrix}$. Image point is $(6, 6)$. $[\\\\text{M1 M1 A1}]$\n\n**6.** $-\\\\begin{pmatrix} -12 \\\\\\\\ -6 \\\\end{pmatrix} = \\\\begin{pmatrix} 12 \\\\\\\\ 6 \\\\end{pmatrix}$ $[\\\\text{M1 A1}]$\n\n**7.** Compare components: $7 = 7$ and $7 = 7$. All match, so vectors are **equal**. $[\\\\text{M1 A1}]$\n\n**8.** $K(-3, 0) \\\\Rightarrow \\\\vec{OK} = \\\\begin{pmatrix} -3 \\\\\\\\ 0 \\\\end{pmatrix}$ $[\\\\text{M1 A1}]$\n\n**9.** **Zero Vector**. $[\\\\text{A1}]$\n\n**10.** $\\\\begin{pmatrix} -2 \\\\\\\\ -5 \\\\end{pmatrix} = (-1) \\\\times \\\\begin{pmatrix} 2 \\\\\\\\ 5 \\\\end{pmatrix}$. Signs reversed on all components, so they are **opposite vectors**. $[\\\\text{M1 A1}]$\n\n**11.** $\\\\|\\\\begin{pmatrix} 1 \\\\\\\\ 0 \\\\end{pmatrix}\\\\| = \\\\sqrt{1^2 + 0^2} = 1$. $[\\\\text{A1}]$\n\n**12.** $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix} + \\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix} = \\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix}$. Image is $(3, 4)$. $[\\\\text{M1 A1}]$\n\n**13.** $5 \\\\times \\\\begin{pmatrix} 2 \\\\\\\\ 1 \\\\end{pmatrix} = \\\\begin{pmatrix} 10 \\\\\\\\ 5 \\\\end{pmatrix}$. Ratios match ($k = 5$), so **parallel**. $[\\\\text{M1 A1}]$\n\n**14.** $-\\\\begin{pmatrix} 0 \\\\\\\\ -1 \\\\end{pmatrix} = \\\\begin{pmatrix} 0 \\\\\\\\ 1 \\\\end{pmatrix}$ $[\\\\text{A1}]$\n\n**15.** $\\\\begin{pmatrix} 2 \\\\\\\\ 4 \\\\end{pmatrix} = 2 \\\\times \\\\begin{pmatrix} 1 \\\\\\\\ 2 \\\\end{pmatrix}$ (parallel) and they share point $B$. Therefore **collinear**. $[\\\\text{M1 A1}]$\n\n**16.** $x$-components: $4 \\\\neq 0$. Therefore **Not Equal**. $[\\\\text{M1 A1}]$\n\n**17.** $\\\\begin{pmatrix} 3 \\\\\\\\ 3 \\\\end{pmatrix} + \\\\begin{pmatrix} -3 \\\\\\\\ -3 \\\\end{pmatrix} = \\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$ (zero vector). $[\\\\text{M1 A1}]$\n\n**18.** $M(0, -5) \\\\Rightarrow \\\\vec{OM} = \\\\begin{pmatrix} 0 \\\\\\\\ -5 \\\\end{pmatrix}$ $[\\\\text{M1 A1}]$\n\n**19.** $\\\\begin{pmatrix} 1 \\\\\\\\ -4 \\\\end{pmatrix} = (-1) \\\\times \\\\begin{pmatrix} -1 \\\\\\\\ 4 \\\\end{pmatrix}$. Same magnitude, reversed direction. Therefore **opposite**. $[\\\\text{M1 A1}]$\n\n**20.** $\\\\begin{pmatrix} 1 \\\\\\\\ 1 \\\\end{pmatrix} + \\\\begin{pmatrix} -1 \\\\\\\\ -1 \\\\end{pmatrix} = \\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$. Image is at the **Origin** $(0, 0)$. $[\\\\text{M1 A1}]$",
+                worked_examples: [
+                    {
+                        question: "Q1: Write $\\\\vec{OP}$ for $P(8, 3)$.",
+                        steps: ["Point is $(8, 3)$.", "Write vertically from origin."],
+                        final_answer: "$\\\\vec{OP} = \\\\begin{pmatrix} 8 \\\\\\\\ 3 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Q2: Find $-\\\\mathbf{a}$ where $\\\\mathbf{a} = \\\\begin{pmatrix} -5 \\\\\\\\ 2 \\\\end{pmatrix}$.",
+                        steps: ["Negate both components: $-(-5) = 5$, $-(2) = -2$."],
+                        final_answer: "$-\\\\mathbf{a} = \\\\begin{pmatrix} 5 \\\\\\\\ -2 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Q3: Show $\\\\begin{pmatrix} 3 \\\\\\\\ 9 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 1 \\\\\\\\ 3 \\\\end{pmatrix}$ are parallel.",
+                        steps: ["$\\\\begin{pmatrix} 3 \\\\\\\\ 9 \\\\end{pmatrix} = 3 \\\\times \\\\begin{pmatrix} 1 \\\\\\\\ 3 \\\\end{pmatrix}$", "Both ratios equal $3$."],
+                        final_answer: "**Parallel** ($k = 3$)."
+                    },
+                    {
+                        question: "Q5: Translate $\\\\begin{pmatrix} 2 \\\\\\\\ 1 \\\\end{pmatrix}$ by $\\\\begin{pmatrix} 4 \\\\\\\\ 5 \\\\end{pmatrix}$.",
+                        steps: ["Image $= \\\\text{Original} + \\\\text{Translation}$", "$\\\\begin{pmatrix} 2 \\\\\\\\ 1 \\\\end{pmatrix} + \\\\begin{pmatrix} 4 \\\\\\\\ 5 \\\\end{pmatrix} = \\\\begin{pmatrix} 6 \\\\\\\\ 6 \\\\end{pmatrix}$"],
+                        final_answer: "Image point is $(6, 6)$."
+                    },
+                    {
+                        question: "Q10: Are $\\\\begin{pmatrix} 2 \\\\\\\\ 5 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} -2 \\\\\\\\ -5 \\\\end{pmatrix}$ opposite?",
+                        steps: ["$(-1) \\\\times \\\\begin{pmatrix} 2 \\\\\\\\ 5 \\\\end{pmatrix} = \\\\begin{pmatrix} -2 \\\\\\\\ -5 \\\\end{pmatrix}$ \u2713", "Same magnitude, opposite direction."],
+                        final_answer: "Yes, they are **opposite vectors**."
+                    },
+                    {
+                        question: "Q15: Are $\\\\overrightarrow{AB} = \\\\begin{pmatrix} 1 \\\\\\\\ 2 \\\\end{pmatrix}$ and $\\\\overrightarrow{BC} = \\\\begin{pmatrix} 2 \\\\\\\\ 4 \\\\end{pmatrix}$ collinear?",
+                        steps: ["$\\\\begin{pmatrix} 2 \\\\\\\\ 4 \\\\end{pmatrix} = 2 \\\\times \\\\begin{pmatrix} 1 \\\\\\\\ 2 \\\\end{pmatrix}$ (parallel)", "They share common point $B$."],
+                        final_answer: "**Collinear**."
+                    },
+                    {
+                        question: "Q17: Calculate $\\\\begin{pmatrix} 3 \\\\\\\\ 3 \\\\end{pmatrix} + \\\\begin{pmatrix} -3 \\\\\\\\ -3 \\\\end{pmatrix}$.",
+                        steps: ["$x$: $3 + (-3) = 0$", "$y$: $3 + (-3) = 0$"],
+                        final_answer: "$\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$ (zero vector)"
+                    },
+                    {
+                        question: "Q20: Translate $(1, 1)$ by $\\\\begin{pmatrix} -1 \\\\\\\\ -1 \\\\end{pmatrix}$.",
+                        steps: ["$\\\\begin{pmatrix} 1 \\\\\\\\ 1 \\\\end{pmatrix} + \\\\begin{pmatrix} -1 \\\\\\\\ -1 \\\\end{pmatrix} = \\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$"],
+                        final_answer: "Image is at the **Origin** $(0, 0)$."
+                    }
+                ]
+            }
+        ],
+        key_points: [
+            "**Equal Vectors**: Same magnitude AND same direction. Every corresponding component must match: $\\\\begin{pmatrix} a \\\\\\\\ b \\\\end{pmatrix} = \\\\begin{pmatrix} a \\\\\\\\ b \\\\end{pmatrix}$.",
+            "**Opposite (Negative) Vectors**: Same magnitude, opposite direction. $-\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix} = \\\\begin{pmatrix} -x \\\\\\\\ -y \\\\end{pmatrix}$.",
+            "**Parallel Vectors**: One is a scalar multiple of the other: $\\\\mathbf{b} = k\\\\mathbf{a}$. Check by comparing component ratios.",
+            "**Zero Vector**: $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$ has magnitude $0$ and no direction. It is the result of adding a vector to its negative.",
+            "**Unit Vectors**: Magnitude of exactly $1$. Standard unit vectors: $\\\\mathbf{i} = \\\\begin{pmatrix} 1 \\\\\\\\ 0 \\\\end{pmatrix}$ and $\\\\mathbf{j} = \\\\begin{pmatrix} 0 \\\\\\\\ 1 \\\\end{pmatrix}$.",
+            "**Position Vectors**: $\\\\vec{OP} = \\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$ from origin to point $P(x, y)$.",
+            "**Collinear Vectors**: Parallel vectors that share a common point, meaning all points lie on the same straight line.",
+            "All equal vectors are parallel ($k = 1$), but not all parallel vectors are equal.",
+            "The negative of a negative component is positive: $-(-a) = a$.",
+            "Column vector $\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$ is NOT a fraction $\\\\frac{x}{y}$."
+        ],
+        exam_tips: [
+            "For **Equal vectors**: compare BOTH components. If either differs, they are NOT equal.",
+            "For **Opposite vectors**: negate BOTH components. Remember $-(-a) = a$.",
+            "For **Parallel vectors**: find the scalar $k$ by dividing corresponding components. Both ratios must be EQUAL.",
+            "Never write the zero vector as just '$0$'. Always use column form $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$.",
+            "To prove **collinearity**: show (1) vectors are parallel AND (2) they share a common point.",
+            "In ZIMSEC exams, always use column vector notation $\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$, not coordinate form $(x, y)$.",
+            "Show full working for method marks: write out the scalar multiplication or component comparison step by step.",
+            "**Parallel $\\\\neq$ Equal**: $\\\\begin{pmatrix} 1 \\\\\\\\ 2 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 2 \\\\\\\\ 4 \\\\end{pmatrix}$ are parallel but NOT equal.",
+            "$\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix} \\\\neq \\\\begin{pmatrix} y \\\\\\\\ x \\\\end{pmatrix}$. Swapping components changes the direction completely.",
+            "For position vectors, the arrow always starts at the **origin** $O(0, 0)$."
+        ],
+        visual_descriptions: [
+            "Equal Vectors diagram: Two arrows of identical length pointing in the same direction, placed at different positions on the grid. Both arrows are labelled with the same column vector to show equality is independent of position.",
+            "Opposite Vectors diagram: Two arrows of the same length on the same line but pointing in opposite directions. Vector a points from origin to (5,2); vector -a points from origin to (-5,-2). The arrows form a straight line through the origin.",
+            "Parallel Vectors diagram: Two arrows pointing in the same direction but with different lengths. Vector a = (2,3) is shorter; vector b = (4,6) is twice as long. Both arrows have the same slope/gradient on the grid.",
+            "Anti-Parallel Vectors diagram: Two arrows pointing in opposite directions on the same line but with different lengths. Vector a = (1,5) and vector b = (-2,-10). They share the same line but b is twice as long and reversed.",
+            "Zero Vector diagram: A single point (dot) at the origin with no arrow, labelled as the zero vector (0,0). Surrounding arrows representing other vectors contrast with this point of no movement.",
+            "Unit Vectors diagram: Four short arrows of length 1 emanating from the origin: i = (1,0) pointing right, j = (0,1) pointing up, -i = (-1,0) pointing left, -j = (0,-1) pointing down. These form a plus (+) shape at the origin.",
+            "Position Vector diagram: A coordinate grid with origin O marked. Arrows from O to various points: A(3,4), B(-5,2), C(0,10). Each arrow is labelled with its position vector in column form.",
+            "Collinear Vectors diagram: Three points A, B, C on the same straight line. Arrow from A to B labelled (2,2); arrow from B to C labelled (4,4). A dashed line extends through all three points showing they are on one line. The label '2 x (2,2) = (4,4)' shows the scalar relationship.",
+            "Vector Types Classification Tree: A tree diagram branching from 'Vectors' into seven types: Equal (same components), Opposite (negated components), Parallel (scalar multiple), Zero (0,0), Unit (magnitude 1), Position (from origin), Collinear (parallel + common point).",
+            "Comparison Table diagram: A large table showing how the same pair of vectors can be classified. For example, (3,4) and (3,4) are Equal AND Parallel; (3,4) and (-3,-4) are Opposite AND Parallel; (3,4) and (6,8) are Parallel only."
+        ]
+    },
 };

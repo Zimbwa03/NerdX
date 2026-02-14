@@ -8,6 +8,7 @@ import 'tldraw/tldraw.css';
 import {
   getBookingById,
   getTeacherProfile,
+  getTeacherProfileByUserId,
   completeLesson,
 } from '../../services/api/teacherMarketplaceApi';
 import type { LessonBooking, TeacherProfile } from '../../types';
@@ -212,7 +213,12 @@ export function VirtualClassroomPage() {
   };
 
   // ─── Derived state ──────────────────────────────────────────────────────────
-  const isTeacher = user && teacher && teacher.user_id === user.id;
+  // teacher.user_id may be a Supabase Auth UUID or an app-level ID, so check both
+  const isTeacher = user && teacher && (
+    teacher.user_id === user.id ||
+    teacher.email === user.email ||
+    (user.teacher_profile_id != null && teacher.id === user.teacher_profile_id)
+  );
 
   // ─── Loading state ───────────────────────────────────────────────────────────
   if (loading) {
