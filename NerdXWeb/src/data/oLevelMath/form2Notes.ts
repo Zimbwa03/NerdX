@@ -12334,4 +12334,331 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             "Translation diagram: original shape, vector arrow, image shape in new position"
         ]
     },
+
+    // ============================================
+    // FORM 2: DEFINITION AND REPRESENTATION OF VECTORS
+    // ============================================
+    'F2 Vectors Definition': {
+        topic: 'The Definition and Representation of Vectors',
+        subject: 'Mathematics',
+        grade_level: 'O-Level Form 2',
+        summary: "A **vector** is a quantity with both **magnitude** (size) and **direction**. A **scalar** has magnitude only. Vectors are the mathematical foundation for describing displacement, force, and velocity.\n\n## Scalar vs Vector\n\n| Scalar (magnitude only) | Vector (magnitude & direction) |\n|---|---|\n| Mass (50 kg) | Displacement (10 km North) |\n| Time (2 hours) | Velocity (80 km/h East) |\n| Temperature (30\u00b0C) | Force (10 N downwards) |\n| Distance (5 km) | Weight (500 N towards Earth) |\n\n## Column Vector Notation\n\n$$\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$$\n\n- $x$ (top) = horizontal shift: $+$ right, $-$ left\n- $y$ (bottom) = vertical shift: $+$ up, $-$ down\n\n## Calculating a Vector Between Points\n\n$$\\\\overrightarrow{AB} = \\\\begin{pmatrix} x_2 - x_1 \\\\\\\\ y_2 - y_1 \\\\end{pmatrix}$$\n\n## Key Relationships\n\n- **Equal vectors**: same magnitude AND same direction\n- **Opposite vectors**: $-\\\\vec{a} = \\\\begin{pmatrix} -x \\\\\\\\ -y \\\\end{pmatrix}$\n- **Translation**: Image = Original + Vector",
+        sections: [
+            // ─── SECTION 1: CONCEPT OF VECTORS ───
+            {
+                title: '1. Introduction to the Concept of Vectors',
+                content: "## Core Definitions\n\n- A **vector** is a quantity possessing both **magnitude** (size) and **direction**.\n- A **scalar** quantity possesses **magnitude only**.\n\n| Scalar Quantities | Vector Quantities |\n|---|---|\n| Mass (e.g., 50 kg) | Displacement (e.g., 10 km North) |\n| Time (e.g., 2 hours) | Velocity (e.g., 80 km/h East) |\n| Temperature (e.g., 30\u00b0C) | Force (e.g., 10 N downwards) |\n| Distance (e.g., 5 km) | Weight (e.g., 500 N towards Earth) |\n\n> **Common Error**: Students confuse **speed** (scalar) with **velocity** (vector). If a direction is mentioned (e.g., \"moving South\"), it is velocity.\n\n## Practice\n\n1. Pressure gauge reading of 100 Pa.\n2. Displacement of 15 m to the right.\n3. Volume of a fuel tank (500 cm\u00b3).\n4. Wind blowing at 20 km/h from the North.\n5. Time interval of 60 seconds.",
+                worked_examples: [
+                    {
+                        question: "A bus travels 300 km from Bulawayo to Harare. Scalar or vector?",
+                        steps: ["Magnitude: 300 km. Direction: Bulawayo to Harare."],
+                        final_answer: "Vector quantity (displacement)."
+                    },
+                    {
+                        question: "The temperature in the Lowveld reaches 38\u00b0C. Scalar or vector?",
+                        steps: ["Temperature has no direction."],
+                        final_answer: "Scalar quantity."
+                    },
+                    {
+                        question: "A farmer harvests 10 tonnes of maize. Scalar or vector?",
+                        steps: ["Mass is a measure of matter without direction."],
+                        final_answer: "Scalar quantity."
+                    },
+                    {
+                        question: "A car moves at 60 km/h. Scalar or vector?",
+                        steps: ["Only speed (magnitude) is provided, no direction."],
+                        final_answer: "Scalar quantity (speed)."
+                    },
+                    {
+                        question: "A light aircraft flies from Kariba on a bearing of 045\u00b0. Scalar or vector?",
+                        steps: ["The bearing provides a specific direction alongside the movement."],
+                        final_answer: "Vector quantity."
+                    },
+                    {
+                        question: "A student exerts a force of 15 N to lift a desk. Scalar or vector?",
+                        steps: ["Force has magnitude (15 N) and direction (upward)."],
+                        final_answer: "Vector quantity."
+                    },
+                    {
+                        question: "It takes 45 minutes to complete a test. Scalar or vector?",
+                        steps: ["Time does not point in any direction."],
+                        final_answer: "Scalar quantity."
+                    },
+                    {
+                        question: "An eagle flies 2 km West. Scalar or vector?",
+                        steps: ["Both size (2 km) and direction (West) are stated."],
+                        final_answer: "Vector quantity."
+                    }
+                ]
+            },
+
+            // ─── SECTION 2: NOTATION ───
+            {
+                title: '2. Representation of Vectors and Notation',
+                content: "## Two Primary Representations\n\n**1. Arrow Notation**: A directed line segment from $A$ to $B$ is written as $\\\\overrightarrow{AB}$. In bold: $\\\\vec{a}$.\n\n**2. Column Vector Form**:\n\n$$\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$$\n\n| Component | Meaning |\n|---|---|\n| $x$ (top) | Horizontal: $+$ = right/East, $-$ = left/West |\n| $y$ (bottom) | Vertical: $+$ = up/North, $-$ = down/South |\n\n> **Common Error**: A column vector is **not** a fraction. $\\\\begin{pmatrix} 2 \\\\\\\\ 5 \\\\end{pmatrix}$ is a vector; $\\\\frac{2}{5}$ is a fraction. They are completely different.\n\n## Practice\n\n1. Write \"5 right, 2 down\" as a column vector.\n2. Represent 8 units West.\n3. $\\\\overrightarrow{XY}$ from $(1,1)$ to $(4,4)$.\n4. $\\\\vec{v}$: 3 left, 7 up.\n5. $\\\\overrightarrow{CD}$: 1 right, 9 down.",
+                worked_examples: [
+                    {
+                        question: "A shift of 4 units right and 3 units up.",
+                        steps: ["$x = +4$ (right), $y = +3$ (up)."],
+                        final_answer: "$\\\\begin{pmatrix} 4 \\\\\\\\ 3 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "A shift of 2 units left and 5 units down.",
+                        steps: ["$x = -2$ (left), $y = -5$ (down)."],
+                        final_answer: "$\\\\begin{pmatrix} -2 \\\\\\\\ -5 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Movement of 10 units East only.",
+                        steps: ["$x = +10$, $y = 0$ (no vertical movement)."],
+                        final_answer: "$\\\\begin{pmatrix} 10 \\\\\\\\ 0 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Movement of 7 units South only.",
+                        steps: ["$x = 0$, $y = -7$ (down)."],
+                        final_answer: "$\\\\begin{pmatrix} 0 \\\\\\\\ -7 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "$\\\\overrightarrow{PQ}$ where $P(2, 2)$ and $Q(5, 6)$.",
+                        steps: ["$x$: $5 - 2 = 3$, $y$: $6 - 2 = 4$."],
+                        final_answer: "$\\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "$\\\\vec{u}$: 8 units left, 1 unit up.",
+                        steps: ["$x = -8$, $y = +1$."],
+                        final_answer: "$\\\\vec{u} = \\\\begin{pmatrix} -8 \\\\\\\\ 1 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "$\\\\vec{b}$: 12 units West and 2 units North.",
+                        steps: ["$x = -12$ (West = left), $y = +2$ (North = up)."],
+                        final_answer: "$\\\\vec{b} = \\\\begin{pmatrix} -12 \\\\\\\\ 2 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "$\\\\overrightarrow{MN}$: 3 units right and 3 units down.",
+                        steps: ["$x = +3$, $y = -3$."],
+                        final_answer: "$\\\\overrightarrow{MN} = \\\\begin{pmatrix} 3 \\\\\\\\ -3 \\\\end{pmatrix}$"
+                    }
+                ]
+            },
+
+            // ─── SECTION 3: MAGNITUDE AND DIRECTION ───
+            {
+                title: '3. Magnitude and Direction of Vectors',
+                content: "## Core Properties\n\n- **Magnitude**: The length/distance of the vector (always positive).\n- **Direction**: The orientation, described by compass points (N, S, E, W) or bearings.\n\nOn a grid, the arrow length corresponds to magnitude and the arrowhead marks the direction.\n\n> **Common Error**: If an arrow points from $B$ to $A$, the vector is $\\\\overrightarrow{BA}$, not $\\\\overrightarrow{AB}$. Reversing the arrowhead completely changes the vector's identity.",
+                worked_examples: [
+                    {
+                        question: "Arrow 5 units long pointing North.",
+                        steps: ["Length = 5 units, arrowhead points upward."],
+                        final_answer: "Magnitude: 5 units; Direction: North."
+                    },
+                    {
+                        question: "Arrow 3 units long pointing East.",
+                        steps: ["Length = 3 units, arrowhead points right."],
+                        final_answer: "Magnitude: 3 units; Direction: East."
+                    },
+                    {
+                        question: "$\\\\vec{a}$ from $(0, 0)$ to $(0, -6)$.",
+                        steps: ["Moves 6 units downward (South), no horizontal shift."],
+                        final_answer: "Magnitude: 6 units; Direction: South."
+                    },
+                    {
+                        question: "$\\\\vec{b}$ from $(1, 2)$ to $(5, 2)$.",
+                        steps: ["Moves 4 units right (East), no vertical shift."],
+                        final_answer: "Magnitude: 4 units; Direction: East."
+                    },
+                    {
+                        question: "$\\\\vec{v} = \\\\begin{pmatrix} 0 \\\\\\\\ 8 \\\\end{pmatrix}$. State its properties.",
+                        steps: ["$x = 0$ (no horizontal shift), $y = 8$ (up)."],
+                        final_answer: "Magnitude: 8 units; Direction: North."
+                    },
+                    {
+                        question: "$\\\\vec{w} = \\\\begin{pmatrix} -4 \\\\\\\\ 0 \\\\end{pmatrix}$. State its properties.",
+                        steps: ["$x = -4$ (left), $y = 0$ (no vertical shift)."],
+                        final_answer: "Magnitude: 4 units; Direction: West."
+                    }
+                ]
+            },
+
+            // ─── SECTION 4: VECTORS ON THE COORDINATE PLANE ───
+            {
+                title: '4. Vectors on the Coordinate Plane',
+                content: "## The Calculation Formula\n\nTo find the vector from $A(x_1, y_1)$ to $B(x_2, y_2)$:\n\n$$\\\\overrightarrow{AB} = \\\\begin{pmatrix} x_2 - x_1 \\\\\\\\ y_2 - y_1 \\\\end{pmatrix}$$\n\nRule: **End minus Start** (always).\n\n> **Common Error**: Mixing up signs. Subtracting $(-2)$ means adding $2$. Always ensure $x$-change is on top.\n\n## Practice\n\n1. $A(3,5)$ to $B(7,10)$. | 2. $C(0,0)$ to $D(-4,2)$.\n3. $E(2,2)$ to $F(2,12)$. | 4. $G(6,1)$ to $H(1,1)$.\n5. $I(-2,-2)$ to $J(-6,-6)$. | 6. $K(5,0)$ to $L(0,0)$.\n7. $M(5,-1)$ to $N(8,-1)$. | 8. $P(4,4)$ to $Q(8,0)$.",
+                worked_examples: [
+                    {
+                        question: "$\\\\overrightarrow{AB}$ where $A(2, 3)$ and $B(6, 8)$.",
+                        steps: ["$\\\\begin{pmatrix} 6-2 \\\\\\\\ 8-3 \\\\end{pmatrix}$"],
+                        final_answer: "$\\\\begin{pmatrix} 4 \\\\\\\\ 5 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "$\\\\overrightarrow{PQ}$ where $P(0, 0)$ and $Q(-3, 5)$.",
+                        steps: ["$\\\\begin{pmatrix} -3-0 \\\\\\\\ 5-0 \\\\end{pmatrix}$"],
+                        final_answer: "$\\\\begin{pmatrix} -3 \\\\\\\\ 5 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "$\\\\overrightarrow{XY}$ where $X(5, 2)$ and $Y(1, -4)$.",
+                        steps: ["$\\\\begin{pmatrix} 1-5 \\\\\\\\ -4-2 \\\\end{pmatrix}$"],
+                        final_answer: "$\\\\begin{pmatrix} -4 \\\\\\\\ -6 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "$\\\\overrightarrow{CD}$ where $C(-2, -2)$ and $D(3, 3)$.",
+                        steps: ["$\\\\begin{pmatrix} 3-(-2) \\\\\\\\ 3-(-2) \\\\end{pmatrix} = \\\\begin{pmatrix} 3+2 \\\\\\\\ 3+2 \\\\end{pmatrix}$"],
+                        final_answer: "$\\\\begin{pmatrix} 5 \\\\\\\\ 5 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "$\\\\overrightarrow{EF}$ where $E(10, 20)$ and $F(10, 25)$.",
+                        steps: ["$\\\\begin{pmatrix} 10-10 \\\\\\\\ 25-20 \\\\end{pmatrix}$. Only vertical movement."],
+                        final_answer: "$\\\\begin{pmatrix} 0 \\\\\\\\ 5 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "$\\\\overrightarrow{GH}$ where $G(4, 0)$ and $H(0, 0)$.",
+                        steps: ["$\\\\begin{pmatrix} 0-4 \\\\\\\\ 0-0 \\\\end{pmatrix}$"],
+                        final_answer: "$\\\\begin{pmatrix} -4 \\\\\\\\ 0 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "$\\\\overrightarrow{JK}$ where $J(-1, 6)$ and $K(4, 6)$.",
+                        steps: ["$\\\\begin{pmatrix} 4-(-1) \\\\\\\\ 6-6 \\\\end{pmatrix} = \\\\begin{pmatrix} 5 \\\\\\\\ 0 \\\\end{pmatrix}$"],
+                        final_answer: "$\\\\begin{pmatrix} 5 \\\\\\\\ 0 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "$\\\\overrightarrow{LM}$ where $L(5, -3)$ and $M(2, -8)$.",
+                        steps: ["$\\\\begin{pmatrix} 2-5 \\\\\\\\ -8-(-3) \\\\end{pmatrix} = \\\\begin{pmatrix} -3 \\\\\\\\ -8+3 \\\\end{pmatrix}$"],
+                        final_answer: "$\\\\begin{pmatrix} -3 \\\\\\\\ -5 \\\\end{pmatrix}$"
+                    }
+                ]
+            },
+
+            // ─── SECTION 5: EQUAL AND OPPOSITE VECTORS ───
+            {
+                title: '5. Equal and Opposite Vectors',
+                content: "## Equal Vectors\n\nSame **magnitude** AND same **direction** (regardless of position on the grid).\n\n## Opposite (Negative) Vectors\n\nSame magnitude, **opposite direction**:\n\n$$\\\\text{If } \\\\vec{a} = \\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}, \\\\text{ then } -\\\\vec{a} = \\\\begin{pmatrix} -x \\\\\\\\ -y \\\\end{pmatrix}$$\n\nAlso: $\\\\overrightarrow{BA} = -\\\\overrightarrow{AB}$.\n\n> **Common Error**: Parallel vectors are not always equal. They must also have the **same length** and point in the **same direction**.\n\n## Practice\n\n1. Negative of $\\\\begin{pmatrix} 2 \\\\\\\\ -8 \\\\end{pmatrix}$. | 2. If $\\\\vec{a} = \\\\begin{pmatrix} 5 \\\\\\\\ 5 \\\\end{pmatrix}$, find $-\\\\vec{a}$.\n3. Are $\\\\begin{pmatrix} 4 \\\\\\\\ 3 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} -4 \\\\\\\\ -3 \\\\end{pmatrix}$ opposite?\n4. Opposite of \"10 units South.\"\n5. If $\\\\overrightarrow{PQ} = \\\\begin{pmatrix} 0 \\\\\\\\ 15 \\\\end{pmatrix}$, find $\\\\overrightarrow{QP}$.\n6. Are $\\\\begin{pmatrix} 2 \\\\\\\\ 2 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 2 \\\\\\\\ -2 \\\\end{pmatrix}$ opposite?",
+                worked_examples: [
+                    {
+                        question: "$\\\\vec{u} = \\\\begin{pmatrix} 5 \\\\\\\\ 2 \\\\end{pmatrix}$ and $\\\\vec{v} = \\\\begin{pmatrix} 5 \\\\\\\\ 2 \\\\end{pmatrix}$. Equal, opposite, or neither?",
+                        steps: ["Components are identical."],
+                        final_answer: "Equal."
+                    },
+                    {
+                        question: "$\\\\vec{a} = \\\\begin{pmatrix} 3 \\\\\\\\ -4 \\\\end{pmatrix}$ and $\\\\vec{b} = \\\\begin{pmatrix} -3 \\\\\\\\ 4 \\\\end{pmatrix}$.",
+                        steps: ["Signs are reversed on every component."],
+                        final_answer: "Opposite."
+                    },
+                    {
+                        question: "$\\\\vec{c} = \\\\begin{pmatrix} 2 \\\\\\\\ 0 \\\\end{pmatrix}$ and $\\\\vec{d} = \\\\begin{pmatrix} 0 \\\\\\\\ 2 \\\\end{pmatrix}$.",
+                        steps: ["Same magnitude (2 units each), but different directions (East vs North)."],
+                        final_answer: "Neither equal nor opposite."
+                    },
+                    {
+                        question: "Find the negative of $\\\\vec{p} = \\\\begin{pmatrix} -3 \\\\\\\\ 7 \\\\end{pmatrix}$.",
+                        steps: ["Negate both components."],
+                        final_answer: "$-\\\\vec{p} = \\\\begin{pmatrix} 3 \\\\\\\\ -7 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "If $\\\\overrightarrow{AB} = \\\\begin{pmatrix} 4 \\\\\\\\ 4 \\\\end{pmatrix}$, find $\\\\overrightarrow{BA}$.",
+                        steps: ["$\\\\overrightarrow{BA}$ is the negative of $\\\\overrightarrow{AB}$."],
+                        final_answer: "$\\\\begin{pmatrix} -4 \\\\\\\\ -4 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "Are $\\\\begin{pmatrix} 6 \\\\\\\\ 1 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 1 \\\\\\\\ 6 \\\\end{pmatrix}$ equal?",
+                        steps: ["$x$-components differ ($6 \\\\neq 1$) and $y$-components differ ($1 \\\\neq 6$)."],
+                        final_answer: "No, they are not equal."
+                    },
+                    {
+                        question: "If $\\\\vec{x} = \\\\begin{pmatrix} 0 \\\\\\\\ -9 \\\\end{pmatrix}$, find $-\\\\vec{x}$.",
+                        steps: ["Negate both components."],
+                        final_answer: "$\\\\begin{pmatrix} 0 \\\\\\\\ 9 \\\\end{pmatrix}$"
+                    },
+                    {
+                        question: "$\\\\vec{m} = \\\\begin{pmatrix} -10 \\\\\\\\ -5 \\\\end{pmatrix}$ and $\\\\vec{n} = \\\\begin{pmatrix} -10 \\\\\\\\ -5 \\\\end{pmatrix}$.",
+                        steps: ["All components match."],
+                        final_answer: "Equal."
+                    }
+                ]
+            },
+
+            // ─── SECTION 6: TRANSLATIONS ───
+            {
+                title: '6. Simple Applications and Translations',
+                content: "## The Translation Formula\n\n$$\\\\text{Image} = \\\\text{Original Point} + \\\\text{Translation Vector}$$\n\n## Position Vector\n\nThe position vector of point $P(x, y)$ is $\\\\vec{OP} = \\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$ (from origin to the point).\n\n## Practice\n\n1. Translate $(4, 5)$ by $\\\\begin{pmatrix} 2 \\\\\\\\ 2 \\\\end{pmatrix}$.\n2. Image of $(-3, -3)$ under $\\\\begin{pmatrix} 6 \\\\\\\\ 0 \\\\end{pmatrix}$.\n3. \"5 left, 3 up\" as a vector.\n4. $P(0, 0) \\\\to P'(4, 7)$. Vector?\n5. Translate $(12, 6)$ by $\\\\begin{pmatrix} -4 \\\\\\\\ -4 \\\\end{pmatrix}$.",
+                worked_examples: [
+                    {
+                        question: "$P(3, 4)$ translated by $\\\\vec{v} = \\\\begin{pmatrix} 2 \\\\\\\\ 1 \\\\end{pmatrix}$. Find $P'$.",
+                        steps: ["$x: 3 + 2 = 5$, $y: 4 + 1 = 5$."],
+                        final_answer: "$P'(5, 5)$"
+                    },
+                    {
+                        question: "$Q(1, 6)$ translated by $\\\\vec{v} = \\\\begin{pmatrix} -3 \\\\\\\\ -2 \\\\end{pmatrix}$. Find $Q'$.",
+                        steps: ["$x: 1 + (-3) = -2$, $y: 6 + (-2) = 4$."],
+                        final_answer: "$Q'(-2, 4)$"
+                    },
+                    {
+                        question: "$R(-5, -2)$ translated by $\\\\begin{pmatrix} 6 \\\\\\\\ 6 \\\\end{pmatrix}$.",
+                        steps: ["$x: -5 + 6 = 1$, $y: -2 + 6 = 4$."],
+                        final_answer: "$R'(1, 4)$"
+                    },
+                    {
+                        question: "$S(2, 2)$ translated by $\\\\begin{pmatrix} 0 \\\\\\\\ -5 \\\\end{pmatrix}$.",
+                        steps: ["$x: 2 + 0 = 2$, $y: 2 + (-5) = -3$."],
+                        final_answer: "$S'(2, -3)$"
+                    },
+                    {
+                        question: "Vertex $A(5, 5)$ moved 4 right and 2 down.",
+                        steps: ["Vector: $\\\\begin{pmatrix} 4 \\\\\\\\ -2 \\\\end{pmatrix}$. Image: $(5+4, 5-2)$."],
+                        final_answer: "$A'(9, 3)$"
+                    },
+                    {
+                        question: "Image of $B(15, 15)$ under $\\\\begin{pmatrix} -15 \\\\\\\\ -15 \\\\end{pmatrix}$.",
+                        steps: ["$(15-15, 15-15)$. Translated to the origin."],
+                        final_answer: "$B'(0, 0)$"
+                    },
+                    {
+                        question: "Origin $(0, 0)$ moved by $\\\\begin{pmatrix} a \\\\\\\\ b \\\\end{pmatrix}$.",
+                        steps: ["$(0+a, 0+b) = (a, b)$."],
+                        final_answer: "Image is $(a, b)$. This is the position vector."
+                    },
+                    {
+                        question: "$P(10, 4)$ translated by $\\\\begin{pmatrix} -8 \\\\\\\\ 2 \\\\end{pmatrix}$.",
+                        steps: ["$x: 10-8 = 2$, $y: 4+2 = 6$."],
+                        final_answer: "$P'(2, 6)$"
+                    }
+                ]
+            },
+
+            // ─── SECTION 7: REVISION + EXAM + MEMO ───
+            {
+                title: '7. Comprehensive Revision, Exam Test, and Full Memo',
+                content: "## Mixed Revision (30 Questions)\n\n1. Define a vector.\n2. Is mass scalar or vector?\n3. Identify the vector: Speed, Time, Velocity, Temperature.\n4. Write \"4 left, 6 up\" as a column vector.\n5. In $\\\\begin{pmatrix} -5 \\\\\\\\ 0 \\\\end{pmatrix}$, what does $-5$ represent?\n6. True/False: $\\\\overrightarrow{PQ} = \\\\overrightarrow{QP}$.\n7. Magnitude of a vector 15 units long pointing South.\n8. Direction of $\\\\begin{pmatrix} 0 \\\\\\\\ -10 \\\\end{pmatrix}$.\n9. Vector from $(2, 2)$ to $(5, 6)$.\n10. Vector from $(3, 3)$ to $(0, 0)$.\n11. If $\\\\vec{a} = \\\\begin{pmatrix} 4 \\\\\\\\ -3 \\\\end{pmatrix}$, find $-\\\\vec{a}$.\n12. Are $\\\\begin{pmatrix} 7 \\\\\\\\ 2 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 7 \\\\\\\\ 2 \\\\end{pmatrix}$ equal?\n13. Are $\\\\begin{pmatrix} 1 \\\\\\\\ 5 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} -1 \\\\\\\\ -5 \\\\end{pmatrix}$ opposite?\n14. $(6, 6)$ moved by $\\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix}$. Image?\n15. Name of a vector with zero magnitude.\n16. Represent \"10 right\" as a column vector.\n17. $\\\\overrightarrow{AB}$: $A(5,2)$, $B(8,5)$.\n18. Negative of $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$.\n19. Image of $(0,0)$ under $\\\\begin{pmatrix} -5 \\\\\\\\ 3 \\\\end{pmatrix}$.\n20. 8 km North as a column vector.\n21. Does a scalar possess direction?\n22. $\\\\overrightarrow{MN}$: $M(1,2)$, $N(1,8)$.\n23. If $\\\\vec{v} = \\\\begin{pmatrix} -2 \\\\\\\\ -2 \\\\end{pmatrix}$, find $-\\\\vec{v}$.\n24. Scalar example from Zimbabwean context.\n25. Vector example from Zimbabwean context.\n26. Image of $(2, -2)$ under $\\\\begin{pmatrix} 5 \\\\\\\\ 5 \\\\end{pmatrix}$.\n27. Vector from $(-4, -4)$ to $(-2, -2)$.\n28. Is $\\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix}$ equal to $\\\\begin{pmatrix} 4 \\\\\\\\ 3 \\\\end{pmatrix}$?\n29. Negative of $\\\\begin{pmatrix} -10 \\\\\\\\ 5 \\\\end{pmatrix}$.\n30. Image $(7,7)$, Original $(3,3)$. Translation vector?\n\n---\n\n## Exam-Style Test\n\n**Q1.** [3] Define \"scalar\" and give two examples.\n**Q2.** [3] Define \"vector\" and give two examples.\n**Q3.** [3] Write as column vectors: (a) 8 units East. (b) 5 units South. (c) 2 West, 4 North.\n**Q4.** [4] (a) $A(3,6)$, $B(8,10)$. Find $\\\\overrightarrow{AB}$. (b) Image of $C(1,1)$ under $\\\\overrightarrow{AB}$.\n**Q5.** [3] (a) $\\\\overrightarrow{PQ}$: $P(-2,4)$, $Q(3,-1)$. (b) State $-\\\\overrightarrow{PQ}$.\n**Q6.** [2] Magnitude and direction of $\\\\vec{u} = \\\\begin{pmatrix} 12 \\\\\\\\ 0 \\\\end{pmatrix}$.\n**Q7.** [2] $M(4,4) \\\\to M'(9,6)$. Find the vector.\n**Q8.** [2] $K(-5,3)$ translated by $\\\\begin{pmatrix} 7 \\\\\\\\ -3 \\\\end{pmatrix}$. Find $K'$.\n**Q9.** [2] Why are $\\\\begin{pmatrix} 2 \\\\\\\\ 5 \\\\end{pmatrix}$ and $\\\\begin{pmatrix} 5 \\\\\\\\ 2 \\\\end{pmatrix}$ not equal?\n**Q10.** [2] $\\\\overrightarrow{CD}$: $C(6,0)$, $D(0,6)$.\n\n---\n\n## Full Memo\n\n### Revision Answers\n**1.** Quantity with magnitude and direction. **2.** Scalar. **3.** Velocity. **4.** $\\\\begin{pmatrix} -4 \\\\\\\\ 6 \\\\end{pmatrix}$\n**5.** 5 units left. **6.** False. **7.** 15 units. **8.** South.\n**9.** $\\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix}$ **10.** $\\\\begin{pmatrix} -3 \\\\\\\\ -3 \\\\end{pmatrix}$ **11.** $\\\\begin{pmatrix} -4 \\\\\\\\ 3 \\\\end{pmatrix}$ **12.** Yes.\n**13.** Yes. **14.** $(9, 10)$. **15.** Zero vector. **16.** $\\\\begin{pmatrix} 10 \\\\\\\\ 0 \\\\end{pmatrix}$\n**17.** $\\\\begin{pmatrix} 3 \\\\\\\\ 3 \\\\end{pmatrix}$ **18.** $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$ **19.** $(-5, 3)$. **20.** $\\\\begin{pmatrix} 0 \\\\\\\\ 8 \\\\end{pmatrix}$\n**21.** No. **22.** $\\\\begin{pmatrix} 0 \\\\\\\\ 6 \\\\end{pmatrix}$ **23.** $\\\\begin{pmatrix} 2 \\\\\\\\ 2 \\\\end{pmatrix}$ **24.** Mass of maize.\n**25.** Velocity of a bus to Bulawayo. **26.** $(7, 3)$. **27.** $\\\\begin{pmatrix} 2 \\\\\\\\ 2 \\\\end{pmatrix}$ **28.** No.\n**29.** $\\\\begin{pmatrix} 10 \\\\\\\\ -5 \\\\end{pmatrix}$ **30.** $\\\\begin{pmatrix} 4 \\\\\\\\ 4 \\\\end{pmatrix}$\n\n### Exam Answers\n**Q1.** Scalar: magnitude only [M1]. Examples: Time, Mass [A1 A1].\n**Q2.** Vector: magnitude and direction [M1]. Examples: Force, Velocity [A1 A1].\n**Q3.** (a) $\\\\begin{pmatrix} 8 \\\\\\\\ 0 \\\\end{pmatrix}$ (b) $\\\\begin{pmatrix} 0 \\\\\\\\ -5 \\\\end{pmatrix}$ (c) $\\\\begin{pmatrix} -2 \\\\\\\\ 4 \\\\end{pmatrix}$ [A1 each]\n**Q4.** (a) $\\\\begin{pmatrix} 8-3 \\\\\\\\ 10-6 \\\\end{pmatrix} = \\\\begin{pmatrix} 5 \\\\\\\\ 4 \\\\end{pmatrix}$ [M1 A1] (b) $(1+5, 1+4) = (6, 5)$ [M1 A1]\n**Q5.** (a) $\\\\begin{pmatrix} 3-(-2) \\\\\\\\ -1-4 \\\\end{pmatrix} = \\\\begin{pmatrix} 5 \\\\\\\\ -5 \\\\end{pmatrix}$ [M1 A1] (b) $\\\\begin{pmatrix} -5 \\\\\\\\ 5 \\\\end{pmatrix}$ [A1]\n**Q6.** Magnitude: 12 [A1]. Direction: East [A1].\n**Q7.** $\\\\begin{pmatrix} 9-4 \\\\\\\\ 6-4 \\\\end{pmatrix} = \\\\begin{pmatrix} 5 \\\\\\\\ 2 \\\\end{pmatrix}$ [M1 A1]\n**Q8.** $(-5+7, 3-3) = (2, 0)$. $K'(2, 0)$ [M1 A1]\n**Q9.** Directions differ [M1]; $x$ and $y$ shifts are swapped [A1].\n**Q10.** $\\\\begin{pmatrix} 0-6 \\\\\\\\ 6-0 \\\\end{pmatrix} = \\\\begin{pmatrix} -6 \\\\\\\\ 6 \\\\end{pmatrix}$ [M1 A1]"
+            }
+        ],
+        key_points: [
+            "A **vector** has both magnitude and direction; a **scalar** has magnitude only.",
+            "Column vector notation: $\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$ where $x$ = horizontal ($+$ right, $-$ left), $y$ = vertical ($+$ up, $-$ down).",
+            "A column vector is NOT a fraction. Do not put a division line between components.",
+            "Vector from $A$ to $B$: $\\\\overrightarrow{AB} = \\\\begin{pmatrix} x_2 - x_1 \\\\\\\\ y_2 - y_1 \\\\end{pmatrix}$ (End minus Start).",
+            "**Equal vectors**: identical magnitude AND direction.",
+            "**Negative vector**: $-\\\\vec{a} = \\\\begin{pmatrix} -x \\\\\\\\ -y \\\\end{pmatrix}$. Also: $\\\\overrightarrow{BA} = -\\\\overrightarrow{AB}$.",
+            "Parallel vectors are NOT necessarily equal \u2014 they must also have the same length.",
+            "**Translation**: Image = Original + Vector.",
+            "**Position vector**: $\\\\vec{OP} = \\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$ from origin to point $P(x, y)$.",
+            "Speed is scalar; velocity is vector. If direction is mentioned, it is a vector."
+        ],
+        exam_tips: [
+            "Always use column vector notation $\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$ in ZIMSEC papers. Coordinate notation for vectors loses marks.",
+            "For \"scalar or vector?\" questions: check if direction is stated. If yes, it is a vector.",
+            "When calculating $\\\\overrightarrow{AB}$: always do End minus Start ($B - A$).",
+            "Subtracting a negative: $3 - (-2) = 3 + 2 = 5$. Watch signs carefully.",
+            "The arrowhead defines the direction. Reversing it changes the vector ($\\\\overrightarrow{AB} \\\\neq \\\\overrightarrow{BA}$).",
+            "For translation: Image = Original + Vector. To find the vector: Image $-$ Original.",
+            "The zero vector $\\\\begin{pmatrix} 0 \\\\\\\\ 0 \\\\end{pmatrix}$ has zero magnitude and no direction.",
+            "Show full working: ZIMSEC awards method marks for the subtraction step before the final answer."
+        ],
+        visual_descriptions: [
+            "Scalar vs Vector table: mass, time, temperature, distance vs displacement, velocity, force, weight",
+            "Column vector diagram: top number = horizontal (right/left), bottom number = vertical (up/down)",
+            "Arrow on grid from A to B showing direction with arrowhead at B",
+            "Coordinate plane with vector calculated as End minus Start",
+            "Equal vectors: two arrows same length, same direction, different positions",
+            "Opposite vectors: two arrows same length, reversed arrowheads",
+            "Translation diagram: original point + vector arrow = image point",
+            "Position vector: arrow from origin O to point P on coordinate grid"
+        ]
+    },
 };

@@ -207,7 +207,6 @@ export function DashboardPage() {
   const subjects = selectedLevel === 'O Level' ? O_LEVEL_SUBJECTS : A_LEVEL_SUBJECTS;
 
   return (
-  return (
     <div className="dashboard-page-v2">
       <FloatingParticles count={20} />
 
