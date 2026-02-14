@@ -1,8 +1,10 @@
 // Web Gamification Service
 // Mirrors the mobile GamificationService.ts — levels, XP, badges, streaks, activity tracking
 // Uses localStorage for persistence; syncs with backend /api/mobile/user/stats
+// Also writes to Supabase student_weekly_activity for dashboard analytics
 
 import { userStatsApi, type UserStats } from './api/userStatsApi';
+import { recordDailyActivity } from './dashboardDataService';
 
 // ============= TYPE DEFINITIONS =============
 
@@ -167,8 +169,8 @@ export const gamificationService = {
         } catch { /* ignore */ }
     },
 
-    // Sync with backend stats and merge
-    syncWithBackend: async (): Promise<UserProgress> => {
+    // Sync with backend stats and merge, also record activity to Supabase
+    syncWithBackend: async (userId?: string): Promise<UserProgress> => {
         const local = gamificationService.getProgress();
         try {
             const remote: UserStats | null = await userStatsApi.getStats();
@@ -181,6 +183,15 @@ export const gamificationService = {
                     local.correctAnswers = Math.round((remote.accuracy / 100) * local.totalQuestionsAnswered);
                 }
                 gamificationService.saveProgress(local);
+
+                // Also sync today's local activity to Supabase for dashboard charts
+                if (userId && (local.todayQuestionsAnswered > 0 || local.todayCorrectAnswers > 0)) {
+                    recordDailyActivity(
+                        userId,
+                        local.todayQuestionsAnswered,
+                        local.todayCorrectAnswers,
+                    ).catch(() => { /* non-blocking */ });
+                }
             }
         } catch (e) {
             console.warn('Gamification sync failed:', e);

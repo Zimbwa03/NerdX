@@ -1,8 +1,9 @@
 /**
  * DashboardPage - Premium Desktop Dashboard
  * Advanced design with gradient cards, floating particles, and glassmorphism
+ * Loads live data from Supabase via dashboardDataService
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { formatCreditBalance } from '../utils/creditCalculator';
@@ -10,11 +11,12 @@ import { FloatingParticles } from '../components/FloatingParticles';
 import { SubjectCard } from '../components/SubjectCard';
 import { getStudentBookings } from '../services/api/teacherMarketplaceApi';
 import type { LessonBooking } from '../types';
-import { LogOut, Calculator, FlaskConical, BookOpen, Monitor, Globe, Receipt, Briefcase, Clock, GraduationCap, MessageCircle, Beaker, TrendingUp, Coins, Wifi, Mic, Atom, Brain, Map, Sparkles, Bell, Sigma, FileText, Wallet, Search, Calendar, Video, ArrowRight, Rss, Heart, BarChart3, Target, Zap, Layers, BookCheck, Compass, MessagesSquare } from 'lucide-react';
+import { LogOut, Calculator, FlaskConical, BookOpen, Monitor, Globe, Receipt, Briefcase, Clock, GraduationCap, MessageCircle, Beaker, TrendingUp, Coins, Wifi, Mic, Atom, Brain, Map, Sparkles, Bell, Sigma, FileText, Wallet, Search, Calendar, Video, ArrowRight, Rss, Heart, BarChart3, Target, Zap, Layers, BookCheck, Compass, MessagesSquare, Loader2 } from 'lucide-react';
 import { PostCard } from '../components/marketplace/PostCard';
 import { getAllPosts } from '../services/api/teacherMarketplaceApi';
 import type { TeacherPost, PostComment } from '../types';
 import { toggleLike, addComment, deleteComment } from '../services/api/teacherMarketplaceApi';
+import { fetchDashboardData, type DashboardData } from '../services/dashboardDataService';
 
 // O Level subjects with gradient colors and icons
 const O_LEVEL_SUBJECTS = [
@@ -64,23 +66,11 @@ const MORE_TOOLS = [
   { id: 'credits', title: 'Credits & Store', subtitle: 'Boost Your Learning', icon: Coins, from: '#fbc2eb', to: '#e8b4d9' },
 ];
 
-const INSIGHTS_SNAPSHOTS = [
-  { label: 'Mastery Score', value: '82%', trend: '+6%', icon: Target },
-  { label: 'Study Streak', value: '12 days', trend: '+2', icon: Zap },
-  { label: 'Predicted Grade', value: 'B+ -> A-', trend: 'Rising', icon: BarChart3 },
-];
-
-const RECOMMENDED_FOCUS = [
-  { title: 'Quadratic Equations', detail: 'Priority: High - 25 min', tone: 'focus-high' },
-  { title: 'Cell Respiration', detail: 'Priority: Medium - 20 min', tone: 'focus-med' },
-  { title: 'Stoichiometry', detail: 'Priority: Medium - 15 min', tone: 'focus-med' },
-];
-
-const LEARNING_LEVELS = [
-  { label: 'Foundation', percent: 100, status: 'Complete' },
-  { label: 'Core Skills', percent: 78, status: 'In Progress' },
-  { label: 'Exam Readiness', percent: 42, status: 'Building' },
-  { label: 'Top Performer', percent: 18, status: 'Unlocking' },
+// Live data insight icons mapping
+const INSIGHT_ICONS = [
+  { label: 'Mastery Score', icon: Target },
+  { label: 'Study Streak', icon: Zap },
+  { label: 'Predicted Grade', icon: BarChart3 },
 ];
 
 export function DashboardPage() {
@@ -89,6 +79,8 @@ export function DashboardPage() {
   const [upcomingLessons, setUpcomingLessons] = useState<LessonBooking[]>([]);
   const [feedPosts, setFeedPosts] = useState<TeacherPost[]>([]);
   const [feedLoading, setFeedLoading] = useState(false);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -98,6 +90,24 @@ export function DashboardPage() {
       navigate('/app/teacher-dashboard', { replace: true });
     }
   }, [user, navigate]);
+
+  // Fetch live dashboard data (AI Insights, Progress, Levels, Weekly Activity)
+  const loadDashboardData = useCallback(async () => {
+    if (!user || user.role === 'teacher') return;
+    setDashboardLoading(true);
+    try {
+      const data = await fetchDashboardData(user.id);
+      setDashboardData(data);
+    } catch (err) {
+      console.error('Failed to load dashboard data:', err);
+    } finally {
+      setDashboardLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   // Fetch student's confirmed bookings
   useEffect(() => {
@@ -124,6 +134,56 @@ export function DashboardPage() {
       }
     })();
   }, [user]);
+
+  // Build live insights snapshots for the AI Insights panel
+  const insightsSnapshots = dashboardData ? [
+    { label: 'Mastery Score', value: `${dashboardData.insights.masteryScore}%`, trend: dashboardData.insights.masteryTrend, icon: Target },
+    { label: 'Study Streak', value: `${dashboardData.insights.studyStreak} days`, trend: dashboardData.insights.streakTrend, icon: Zap },
+    { label: 'Predicted Grade', value: dashboardData.insights.predictedGrade, trend: dashboardData.insights.gradeTrend, icon: BarChart3 },
+  ] : INSIGHT_ICONS.map(i => ({ ...i, value: '--', trend: '--' }));
+
+  // Build weekly activity graph values (7 bars, percentage of max)
+  const weeklyGraphValues = dashboardData
+    ? dashboardData.weeklyActivity.map(d => {
+        const maxVal = Math.max(...dashboardData.weeklyActivity.map(w => w.value), 1);
+        return Math.round((d.value / maxVal) * 100);
+      })
+    : [0, 0, 0, 0, 0, 0, 0];
+
+  const weeklyGraphLabels = dashboardData
+    ? dashboardData.weeklyActivity.map(d => d.dayLabel.charAt(0))
+    : ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+  // Live subject progress (top 4 for dashboard card)
+  const subjectProgressItems = dashboardData
+    ? dashboardData.progress.subjects.filter(s => s.value > 0).slice(0, 4)
+    : [];
+
+  // If no subjects have data yet, show defaults with 0
+  const displaySubjects = subjectProgressItems.length > 0
+    ? subjectProgressItems
+    : (dashboardData?.progress.subjects.slice(0, 4) || [
+        { label: 'Mathematics', value: 0, subject: 'mathematics' },
+        { label: 'Biology', value: 0, subject: 'biology' },
+        { label: 'Chemistry', value: 0, subject: 'chemistry' },
+        { label: 'Physics', value: 0, subject: 'physics' },
+      ]);
+
+  // Live levels
+  const learningLevels = dashboardData?.levels || [
+    { label: 'Foundation', percent: 0, status: 'Locked' },
+    { label: 'Core Skills', percent: 0, status: 'Locked' },
+    { label: 'Exam Readiness', percent: 0, status: 'Locked' },
+    { label: 'Top Performer', percent: 0, status: 'Locked' },
+  ];
+
+  // Live recommended focus (from actual failed topics)
+  const recommendedFocus = dashboardData?.recommendedFocus || [
+    { title: 'Start Practicing', detail: 'Answer questions to get AI recommendations', tone: 'focus-med', studyTip: 'Try answering 10 questions in any subject to get started.', subject: '', accuracy: 0, attempts: 0 },
+  ];
+
+  // Next study plan text
+  const nextStudyPlan = dashboardData?.progress.nextStudyPlan || 'Start answering questions to get personalized study plans';
 
   // Post interaction handlers
   const handlePostLike = async (postId: string) => {
@@ -251,17 +311,23 @@ export function DashboardPage() {
               <span>O &amp; A Level</span>
             </div>
             <div className="sidebar-levels__list">
-              {LEARNING_LEVELS.map((level) => (
-                <div key={level.label} className="level-row">
-                  <div className="level-row__meta">
-                    <span className="level-row__label">{level.label}</span>
-                    <span className="level-row__status">{level.status}</span>
-                  </div>
-                  <div className="level-row__bar">
-                    <span style={{ width: `${level.percent}%` }} />
-                  </div>
+              {dashboardLoading ? (
+                <div className="sidebar-levels__loading">
+                  <Loader2 size={16} className="spin-icon" /> Loading...
                 </div>
-              ))}
+              ) : (
+                learningLevels.map((level) => (
+                  <div key={level.label} className="level-row">
+                    <div className="level-row__meta">
+                      <span className="level-row__label">{level.label}</span>
+                      <span className="level-row__status">{level.status}</span>
+                    </div>
+                    <div className="level-row__bar">
+                      <span style={{ width: `${level.percent}%` }} />
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </aside>
@@ -297,34 +363,39 @@ export function DashboardPage() {
                   Open Dashboard <ArrowRight size={16} />
                 </Link>
               </div>
-              <div className="insights-metrics">
-                {INSIGHTS_SNAPSHOTS.map((stat) => (
-                  <div key={stat.label} className="insight-metric">
-                    <span className="insight-metric__icon"><stat.icon size={18} /></span>
-                    <div>
-                      <span className="insight-metric__label">{stat.label}</span>
-                      <span className="insight-metric__value">{stat.value}</span>
-                    </div>
-                    <span className="insight-metric__trend">{stat.trend}</span>
+              {dashboardLoading ? (
+                <div className="insights-loading">
+                  <Loader2 size={20} className="spin-icon" />
+                  <span>Loading insights...</span>
+                </div>
+              ) : (
+                <>
+                  <div className="insights-metrics">
+                    {insightsSnapshots.map((stat) => (
+                      <div key={stat.label} className="insight-metric">
+                        <span className="insight-metric__icon"><stat.icon size={18} /></span>
+                        <div>
+                          <span className="insight-metric__label">{stat.label}</span>
+                          <span className="insight-metric__value">{stat.value}</span>
+                        </div>
+                        <span className="insight-metric__trend">{stat.trend}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <div className="insight-graph">
-                <div className="insight-graph__bars">
-                  {[64, 52, 78, 70, 88, 92, 75].map((value, index) => (
-                    <span key={`graph-${index}`} style={{ height: `${value}%` }} />
-                  ))}
-                </div>
-                <div className="insight-graph__labels">
-                  <span>M</span>
-                  <span>T</span>
-                  <span>W</span>
-                  <span>T</span>
-                  <span>F</span>
-                  <span>S</span>
-                  <span>S</span>
-                </div>
-              </div>
+                  <div className="insight-graph">
+                    <div className="insight-graph__bars">
+                      {weeklyGraphValues.map((value, index) => (
+                        <span key={`graph-${index}`} style={{ height: `${Math.max(value, 3)}%` }} title={dashboardData ? `${dashboardData.weeklyActivity[index]?.value || 0} questions` : ''} />
+                      ))}
+                    </div>
+                    <div className="insight-graph__labels">
+                      {weeklyGraphLabels.map((label, index) => (
+                        <span key={`label-${index}`}>{label}</span>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="insights-card" id="progress">
@@ -337,52 +408,77 @@ export function DashboardPage() {
                   Detailed View <ArrowRight size={16} />
                 </Link>
               </div>
-              <div className="progress-list">
-                {[
-                  { label: 'Mathematics', value: 86 },
-                  { label: 'Biology', value: 74 },
-                  { label: 'Chemistry', value: 68 },
-                  { label: 'Physics', value: 62 },
-                ].map((item) => (
-                  <div key={item.label} className="progress-row">
-                    <span>{item.label}</span>
-                    <div className="progress-row__bar">
-                      <span style={{ width: `${item.value}%` }} />
-                    </div>
-                    <span className="progress-row__value">{item.value}%</span>
-                  </div>
-                ))}
-              </div>
-              <div className="next-study">
-                <div>
-                  <h4>Next Study Plan</h4>
-                  <p>Recommended: 45 minutes on Algebra and Functions</p>
+              {dashboardLoading ? (
+                <div className="insights-loading">
+                  <Loader2 size={20} className="spin-icon" />
+                  <span>Loading progress...</span>
                 </div>
-                <button type="button" onClick={() => navigate('/app/progress')}>
-                  Start Session <ArrowRight size={14} />
-                </button>
-              </div>
+              ) : (
+                <>
+                  <div className="progress-list">
+                    {displaySubjects.map((item) => (
+                      <div key={item.label} className="progress-row">
+                        <span>{item.label}</span>
+                        <div className="progress-row__bar">
+                          <span style={{ width: `${item.value}%` }} />
+                        </div>
+                        <span className="progress-row__value">{item.value}%</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="next-study">
+                    <div>
+                      <h4>Next Study Plan</h4>
+                      <p>{nextStudyPlan}</p>
+                    </div>
+                    <button type="button" onClick={() => navigate('/app/progress')}>
+                      Start Session <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="insights-card insights-card--compact">
               <div className="insights-card__header">
                 <div>
                   <h3>Recommended Focus</h3>
-                  <p>AI-curated priorities for this week</p>
+                  <p>Based on your weakest topics this week</p>
                 </div>
               </div>
-              <div className="focus-list">
-                {RECOMMENDED_FOCUS.map((focus) => (
-                  <div key={focus.title} className={`focus-item ${focus.tone}`}>
-                    <h4>{focus.title}</h4>
-                    <span>{focus.detail}</span>
+              {dashboardLoading ? (
+                <div className="insights-loading">
+                  <Loader2 size={20} className="spin-icon" />
+                  <span>Analysing your weak areas...</span>
+                </div>
+              ) : (
+                <>
+                  <div className="focus-list">
+                    {recommendedFocus.map((focus) => (
+                      <div key={focus.title} className={`focus-item ${focus.tone}`}>
+                        <div className="focus-item__header">
+                          <h4>{focus.title}</h4>
+                          {focus.accuracy > 0 && (
+                            <span className={`focus-item__accuracy ${focus.accuracy <= 30 ? 'acc-low' : focus.accuracy <= 50 ? 'acc-med' : 'acc-ok'}`}>
+                              {focus.accuracy}%
+                            </span>
+                          )}
+                        </div>
+                        <span className="focus-item__detail">{focus.detail}</span>
+                        {focus.studyTip && (
+                          <p className="focus-item__tip">
+                            <Sparkles size={12} /> {focus.studyTip}
+                          </p>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <div className="study-reminder">
-                <Calendar size={16} />
-                <span>Next recommendation check-in: Feb 15, 2026, 7:00 PM</span>
-              </div>
+                  <div className="study-reminder">
+                    <Calendar size={16} />
+                    <span>Updates every time you answer questions</span>
+                  </div>
+                </>
+              )}
             </div>
           </section>
 

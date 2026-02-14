@@ -1,5 +1,6 @@
 // Enhanced Student Progress Dashboard
-// Gamified progress page with interactive SVG graphs, level system, streaks, achievements
+// Premium glassmorphism design matching DashboardPage quality
+// Loads live data from dashboardDataService + gamificationService for consistency
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +13,7 @@ import {
   type DailyActivity,
   type SubjectMasteryData,
 } from '../services/gamificationService';
+import { fetchDashboardData, type DashboardData } from '../services/dashboardDataService';
 
 // ============= SVG COMPONENTS =============
 
@@ -200,6 +202,35 @@ function HealthGauge({ score }: { score: number }) {
   );
 }
 
+// Level progress bar component matching dashboard sidebar style
+function LevelProgressSection({ levels }: { levels: DashboardData['levels'] }) {
+  return (
+    <div className="progress-levels-section">
+      {levels.map((level) => {
+        const barColor = level.percent >= 100 ? '#22C55E' :
+          level.percent >= 50 ? 'linear-gradient(90deg, #7C4DFF, #00E676)' :
+          level.percent > 0 ? 'linear-gradient(90deg, #3B82F6, #60A5FA)' :
+          'rgba(148,163,184,0.3)';
+        return (
+          <div key={level.label} className="progress-level-item">
+            <div className="progress-level-meta">
+              <span className="progress-level-name">{level.label}</span>
+              <span className={`progress-level-status status-${level.status.toLowerCase().replace(' ', '-')}`}>
+                {level.status}
+              </span>
+            </div>
+            <div className="progress-level-bar-track">
+              <div className="progress-level-bar-fill"
+                style={{ width: `${level.percent}%`, background: barColor }} />
+            </div>
+            <span className="progress-level-pct">{level.percent}%</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ============= MAIN PAGE =============
 
 export function ProgressPage() {
@@ -214,6 +245,7 @@ export function ProgressPage() {
   const [subjectMastery, setSubjectMastery] = useState<SubjectMasteryData[]>([]);
   const [aiInsights, setAiInsights] = useState<AIInsights | null>(null);
   const [knowledgeMap, setKnowledgeMap] = useState<KnowledgeMap | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showAllBadges, setShowAllBadges] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -221,8 +253,8 @@ export function ProgressPage() {
   const loadAllData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Sync with backend first
-      const progress = await gamificationService.syncWithBackend();
+      // Sync gamification data with backend, passing userId for Supabase sync
+      const progress = await gamificationService.syncWithBackend(user?.id);
 
       // Load gamification data
       setLevelInfo(gamificationService.getLevelInfo(progress));
@@ -232,24 +264,27 @@ export function ProgressPage() {
       setStreakHistory(gamificationService.getStreakHistory(progress));
       setSubjectMastery(gamificationService.getDefaultSubjectData());
 
-      // Load API data
-      const [insightsData, kmData] = await Promise.all([
+      // Load API data + dashboard data in parallel
+      const [insightsData, kmData, dbData] = await Promise.all([
         dktApi.getAIInsights().catch(() => null),
         dktApi.getKnowledgeMap().catch(() => null),
+        user?.id ? fetchDashboardData(user.id).catch(() => null) : Promise.resolve(null),
       ]);
 
       setAiInsights(insightsData);
       setKnowledgeMap(kmData);
+      setDashboardData(dbData);
 
       // Update subject mastery from knowledge map if available
       if (kmData?.skills) {
         const subjects = gamificationService.getDefaultSubjectData();
-        const skillsBySubject = new Map<string, { mastered: number; total: number }>();
+        const skillsBySubject = new Map<string, { mastered: number; total: number; sumMastery: number }>();
 
         kmData.skills.forEach(skill => {
           const subj = (skill.subject || 'mathematics').toLowerCase();
-          const entry = skillsBySubject.get(subj) || { mastered: 0, total: 0 };
+          const entry = skillsBySubject.get(subj) || { mastered: 0, total: 0, sumMastery: 0 };
           entry.total++;
+          entry.sumMastery += skill.mastery;
           if (skill.mastery_level >= 0.7) entry.mastered++;
           skillsBySubject.set(subj, entry);
         });
@@ -259,7 +294,7 @@ export function ProgressPage() {
           if (data && data.total > 0) {
             return {
               ...s,
-              mastery: Math.round((data.mastered / data.total) * 100),
+              mastery: Math.round((data.sumMastery / data.total) * 100),
               skillsCount: data.total,
               masteredSkills: data.mastered,
             };
@@ -273,17 +308,19 @@ export function ProgressPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => { loadAllData(); }, [loadAllData]);
 
-  // Derived values
+  // Derived values - use dashboardData health_score for consistency with dashboard
   const healthScore = useMemo(() => {
+    // Prefer dashboard data for consistency
+    if (dashboardData?.insights.masteryScore) return dashboardData.insights.masteryScore;
     if (!aiInsights) return 0;
-    const { mastered_skills = 0, learning_skills = 0, struggling_skills = 0 } = aiInsights;
-    const total = mastered_skills + learning_skills + struggling_skills;
-    return total > 0 ? Math.round(((mastered_skills + learning_skills * 0.5) / total) * 100) : 50;
-  }, [aiInsights]);
+    const { mastered_count = 0, learning_count = 0, struggling_count = 0 } = aiInsights;
+    const total = mastered_count + learning_count + struggling_count;
+    return total > 0 ? Math.round(((mastered_count + learning_count * 0.5) / total) * 100) : 50;
+  }, [aiInsights, dashboardData]);
 
   const unlockedBadges = useMemo(() => badges.filter(b => b.isUnlocked), [badges]);
   const lockedBadges = useMemo(() => badges.filter(b => !b.isUnlocked), [badges]);
@@ -297,6 +334,14 @@ export function ProgressPage() {
     return { mastered, learning, needsWork, all: knowledgeMap.skills };
   }, [knowledgeMap]);
 
+  // Level progress from dashboard data for consistency
+  const levelProgress = dashboardData?.levels || [
+    { label: 'Foundation', percent: 0, status: 'Locked' },
+    { label: 'Core Skills', percent: 0, status: 'Locked' },
+    { label: 'Exam Readiness', percent: 0, status: 'Locked' },
+    { label: 'Top Performer', percent: 0, status: 'Locked' },
+  ];
+
   if (isLoading) {
     return (
       <div className="progress-dashboard loading-state">
@@ -309,9 +354,9 @@ export function ProgressPage() {
   }
 
   return (
-    <div className="progress-dashboard">
-      {/* === Hero Section === */}
-      <section className="progress-hero">
+    <div className="progress-dashboard progress-dashboard--premium">
+      {/* === Hero Section with gradient backdrop === */}
+      <section className="progress-hero progress-hero--glass">
         <div className="hero-gradient" />
         <div className="hero-content">
           {levelInfo && <LevelRingSVG {...levelInfo} />}
@@ -323,37 +368,44 @@ export function ProgressPage() {
             <p className="xp-text">
               {levelInfo?.currentXP ?? 0} / {levelInfo?.xpForNextLevel ?? 100} XP to Level {(levelInfo?.level ?? 0) + 1}
             </p>
-            <p className="hero-greeting">Keep going, {user?.name || 'Student'}! 🚀</p>
+            <p className="hero-greeting">Keep going, {user?.name || 'Student'}!</p>
           </div>
         </div>
       </section>
 
-      {/* === Quick Stats Grid === */}
-      <section className="stats-grid">
-        <div className="stat-card stat-streak">
+      {/* === Quick Stats Grid with glass cards === */}
+      <section className="stats-grid stats-grid--glass">
+        <div className="stat-card stat-streak glass-stat">
           <span className="stat-icon">🔥</span>
           <span className="stat-value">{overallStats?.streak ?? 0}</span>
           <span className="stat-label">Day Streak</span>
         </div>
-        <div className="stat-card stat-accuracy">
+        <div className="stat-card stat-accuracy glass-stat">
           <span className="stat-icon">📊</span>
           <span className="stat-value">{overallStats?.accuracy ?? 0}%</span>
           <span className="stat-label">Accuracy</span>
         </div>
-        <div className="stat-card stat-questions">
+        <div className="stat-card stat-questions glass-stat">
           <span className="stat-icon">❓</span>
           <span className="stat-value">{overallStats?.totalQuestions ?? 0}</span>
           <span className="stat-label">Questions</span>
         </div>
-        <div className="stat-card stat-xp">
+        <div className="stat-card stat-xp glass-stat">
           <span className="stat-icon">💎</span>
           <span className="stat-value">{overallStats?.totalXP ?? 0}</span>
           <span className="stat-label">Total XP</span>
         </div>
       </section>
 
-      {/* === AI Insights Card === */}
-      <section className="insights-summary glass-card">
+      {/* === Learning Level Progress (matches dashboard sidebar) === */}
+      <section className="glass-card section-card section-card--fade-in">
+        <h3>📈 Your Learning Level</h3>
+        <p className="section-subtitle">Track your progression through mastery tiers</p>
+        <LevelProgressSection levels={levelProgress} />
+      </section>
+
+      {/* === AI Insights Card with glass effect === */}
+      <section className="insights-summary glass-card section-card--fade-in">
         <div className="insights-header-row">
           <div>
             <h3>🧠 AI Learning Insights</h3>
@@ -365,22 +417,22 @@ export function ProgressPage() {
         </div>
         <div className="insights-counts">
           <div className="insights-count green">
-            <span className="cnt-num">{aiInsights?.mastered_skills ?? 0}</span>
+            <span className="cnt-num">{aiInsights?.mastered_count ?? dashboardData?.aiInsights?.mastered_count ?? 0}</span>
             <span className="cnt-label">Mastered</span>
           </div>
           <div className="insights-count amber">
-            <span className="cnt-num">{aiInsights?.learning_skills ?? 0}</span>
+            <span className="cnt-num">{aiInsights?.learning_count ?? dashboardData?.aiInsights?.learning_count ?? 0}</span>
             <span className="cnt-label">Learning</span>
           </div>
           <div className="insights-count red">
-            <span className="cnt-num">{aiInsights?.struggling_skills ?? 0}</span>
+            <span className="cnt-num">{aiInsights?.struggling_count ?? dashboardData?.aiInsights?.struggling_count ?? 0}</span>
             <span className="cnt-label">Needs Work</span>
           </div>
         </div>
         {aiInsights?.study_plan && aiInsights.study_plan.length > 0 && (
           <div className="insights-expand">
             <button className="expand-btn" onClick={() => setShowDetails(!showDetails)}>
-              {showDetails ? 'Hide Study Plan ▲' : 'View Study Plan ▼'}
+              {showDetails ? 'Hide Study Plan' : 'View Study Plan'}
             </button>
             {showDetails && (
               <div className="study-plan-list">
@@ -388,9 +440,10 @@ export function ProgressPage() {
                   <div key={i} className={`study-plan-item priority-${item.priority || 'medium'}`}>
                     <span className="plan-priority">{item.priority === 'high' ? '🔴' : item.priority === 'low' ? '🟢' : '🟡'}</span>
                     <div className="plan-content">
-                      <span className="plan-action">{item.action || item.topic}</span>
-                      {item.topic && item.action && <span className="plan-topic">{item.topic}</span>}
+                      <span className="plan-action">{item.action}</span>
+                      <span className="plan-desc">{item.description}</span>
                     </div>
+                    <span className="plan-time">{item.estimated_time}</span>
                   </div>
                 ))}
               </div>
@@ -400,14 +453,14 @@ export function ProgressPage() {
       </section>
 
       {/* === Weekly Activity Chart === */}
-      <section className="glass-card section-card">
+      <section className="glass-card section-card section-card--fade-in">
         <h3>📈 Weekly Activity</h3>
         <p className="section-subtitle">Questions answered this week</p>
         <WeeklyActivityChart data={weeklyActivity} />
       </section>
 
       {/* === Subject Mastery === */}
-      <section className="glass-card section-card">
+      <section className="glass-card section-card section-card--fade-in">
         <h3>📚 Subject Mastery</h3>
         <p className="section-subtitle">Your progress across subjects</p>
         <div className="mastery-grid">
@@ -418,22 +471,22 @@ export function ProgressPage() {
       </section>
 
       {/* === Streak Calendar === */}
-      <section className="glass-card section-card">
+      <section className="glass-card section-card section-card--fade-in">
         <h3>📅 Consistency Tracker</h3>
         <StreakCalendar history={streakHistory} streak={overallStats?.streak ?? 0} />
       </section>
 
       {/* === Focus Areas === */}
       {aiInsights?.focus_areas && aiInsights.focus_areas.length > 0 && (
-        <section className="glass-card section-card">
+        <section className="glass-card section-card section-card--fade-in">
           <h3>🎯 Focus Areas</h3>
           <p className="section-subtitle">Skills that need your attention</p>
           <div className="focus-areas-list">
             {aiInsights.focus_areas.map((area, i) => (
               <div key={i} className="focus-area-item">
                 <div className="focus-info">
-                  <span className="focus-name">{area.skill || area.topic}</span>
-                  <span className="focus-level">{area.level || 'Learning'}</span>
+                  <span className="focus-name">{area.skill_name || area.topic}</span>
+                  <span className="focus-level">{area.status || 'Learning'}</span>
                 </div>
                 <div className="focus-bar-track">
                   <div className="focus-bar-fill" style={{
@@ -442,7 +495,7 @@ export function ProgressPage() {
                   }} />
                 </div>
                 <button className="focus-practice-btn" onClick={() => navigate('/app/teacher', {
-                  state: { subject: area.subject || 'Mathematics', topic: area.skill || area.topic }
+                  state: { subject: area.subject || 'Mathematics', topic: area.skill_name || area.topic }
                 })}>
                   Practice
                 </button>
@@ -453,7 +506,7 @@ export function ProgressPage() {
       )}
 
       {/* === Achievement Gallery === */}
-      <section className="glass-card section-card">
+      <section className="glass-card section-card section-card--fade-in">
         <div className="section-header-row">
           <h3>🏆 Achievements</h3>
           <span className="badge-count">{unlockedBadges.length} / {badges.length} unlocked</span>
@@ -469,7 +522,7 @@ export function ProgressPage() {
       </section>
 
       {/* === Knowledge Map === */}
-      <section className="glass-card section-card">
+      <section className="glass-card section-card section-card--fade-in">
         <h3>🗺️ Knowledge Map</h3>
         <div className="km-summary">
           <div className="km-stat green"><span>{kmSkills.mastered}</span><label>Mastered</label></div>
@@ -496,25 +549,25 @@ export function ProgressPage() {
       </section>
 
       {/* === Lifetime Statistics === */}
-      <section className="glass-card section-card lifetime-stats">
+      <section className="glass-card section-card lifetime-stats section-card--fade-in">
         <h3>📊 Lifetime Statistics</h3>
         <div className="lifetime-grid">
-          <div className="lifetime-item">
+          <div className="lifetime-item glass-stat">
             <span className="lt-icon">📝</span>
             <span className="lt-value">{overallStats?.totalQuizzes ?? 0}</span>
             <span className="lt-label">Quizzes Completed</span>
           </div>
-          <div className="lifetime-item">
+          <div className="lifetime-item glass-stat">
             <span className="lt-icon">⚡</span>
             <span className="lt-value">{overallStats?.totalXP ?? 0}</span>
             <span className="lt-label">Total XP Earned</span>
           </div>
-          <div className="lifetime-item">
+          <div className="lifetime-item glass-stat">
             <span className="lt-icon">💯</span>
             <span className="lt-value">{overallStats?.perfectScores ?? 0}</span>
             <span className="lt-label">Perfect Scores</span>
           </div>
-          <div className="lifetime-item">
+          <div className="lifetime-item glass-stat">
             <span className="lt-icon">🏅</span>
             <span className="lt-value">{overallStats?.longestStreak ?? 0}</span>
             <span className="lt-label">Longest Streak</span>
@@ -527,11 +580,11 @@ export function ProgressPage() {
         <div className="footer-gradient">
           <p className="footer-message">
             {(overallStats?.streak ?? 0) > 0
-              ? `Amazing ${overallStats?.streak}-day streak! You're on fire! 🔥`
-              : 'Start your learning journey today! Every question counts! 💪'}
+              ? `Amazing ${overallStats?.streak}-day streak! You're on fire!`
+              : 'Start your learning journey today! Every question counts!'}
           </p>
           <button className="footer-cta" onClick={() => navigate('/app')}>
-            Start Learning →
+            Start Learning
           </button>
         </div>
       </section>

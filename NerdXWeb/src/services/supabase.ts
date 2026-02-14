@@ -2,7 +2,10 @@
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://lzteiewcvxoazqfxfjgg.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+// The anon key is a PUBLIC client-side key (safe to embed) – hardcoded fallback
+// ensures the Supabase client works even when VITE_SUPABASE_ANON_KEY is not set
+// in the build environment (e.g. Render, where .env is gitignored).
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6dGVpZXdjdnhvYXpxZnhmamdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5NDE0MTIsImV4cCI6MjA3NzUxNzQxMn0.ZtCVuK3rx2rqpc5kJV-6iblqjUEZy52dkpUdkEbQlvI';
 
 // Make Supabase optional - app can work without it
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
