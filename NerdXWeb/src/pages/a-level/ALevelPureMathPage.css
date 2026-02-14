@@ -284,3 +284,109 @@
     min-width: 140px;
   }
 }
+
+/* Light mode overrides */
+[data-theme="light"] .alevel-pure-math-page .alevel-pure-badge {
+  background: rgba(124, 77, 255, 0.12);
+  border-color: rgba(124, 77, 255, 0.25);
+  color: #4c1d95;
+}
+
+[data-theme="light"] .alevel-pure-math-page .alevel-pure-title {
+  color: #0f172a;
+  background: none;
+  -webkit-text-fill-color: initial;
+}
+
+[data-theme="light"] .alevel-level-toggle {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+[data-theme="light"] .alevel-level-btn {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .alevel-level-btn.active.lower,
+[data-theme="light"] .alevel-level-btn.active.upper {
+  background: rgba(124, 77, 255, 0.14);
+  border-color: rgba(124, 77, 255, 0.35);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .alevel-search-wrap {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+[data-theme="light"] .alevel-search-wrap input {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .alevel-search-wrap input::placeholder {
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .alevel-pattern-card {
+  background: #f8f9fc;
+  border-color: rgba(15, 23, 42, 0.08);
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .alevel-pattern-card strong {
+  color: #7c3aed;
+}
+
+[data-theme="light"] .alevel-pure-math-page .alevel-topic-card {
+  background: #ffffff;
+  border-color: rgba(124, 77, 255, 0.2);
+}
+
+[data-theme="light"] .alevel-topic-chip {
+  background: rgba(124, 77, 255, 0.12);
+  color: #4c1d95;
+}
+
+[data-theme="light"] .alevel-topic-chip.muted {
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .alevel-topic-desc {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .alevel-modal {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .alevel-modal-subtitle {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .alevel-modal-close {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.1);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .alevel-format-btn {
+  background: #f8f9fc;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .alevel-format-btn small {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .alevel-format-btn.active {
+  background: rgba(124, 77, 255, 0.14);
+  border-color: rgba(124, 77, 255, 0.35);
+}
+
+[data-theme="light"] .alevel-credit-line {
+  color: var(--text-secondary);
+}

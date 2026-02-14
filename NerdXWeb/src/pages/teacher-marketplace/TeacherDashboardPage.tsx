@@ -40,6 +40,13 @@ export function TeacherDashboardPage() {
   const [availSlots, setAvailSlots] = useState<{ day_of_week: DayOfWeek; start_time: string; end_time: string }[]>([]);
   const [savingAvail, setSavingAvail] = useState(false);
 
+  // Redirect non-teachers to student dashboard
+  useEffect(() => {
+    if (user && user.role === 'student' && !user.is_teacher) {
+      navigate('/app', { replace: true });
+    }
+  }, [user, navigate]);
+
   useEffect(() => {
     async function load() {
       if (!user) return;

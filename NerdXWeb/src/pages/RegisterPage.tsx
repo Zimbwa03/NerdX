@@ -66,6 +66,7 @@ export function RegisterPage() {
         phone_number: phoneNumber.trim() || undefined,
         password,
         date_of_birth: dateOfBirth || undefined,
+        role,
       };
 
       const response = await authApi.register(registerData);
@@ -245,7 +246,7 @@ export function RegisterPage() {
           </button>
 
           <p className="auth-switch">
-            Already have an account? <Link to="/login" className="auth-switch__link">Sign In</Link>
+            Already have an account? <Link to={`/login${role === 'teacher' ? '?role=teacher' : ''}`} className="auth-switch__link">Sign In</Link>
           </p>
         </div>
       </div>

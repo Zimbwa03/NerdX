@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { FileUploader } from '../../components/marketplace/FileUploader';
@@ -43,6 +43,13 @@ export function TeacherOnboardingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+
+  // Only teachers can access onboarding
+  useEffect(() => {
+    if (user && user.role === 'student' && !user.is_teacher) {
+      navigate('/app', { replace: true });
+    }
+  }, [user, navigate]);
 
   // Step 1: Personal Details
   const [fullName, setFullName] = useState(user?.name || '');

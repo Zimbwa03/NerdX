@@ -5,6 +5,7 @@ import type { User } from '../../types';
 export interface LoginData {
   identifier: string; // email or phone
   password: string;
+  role?: 'student' | 'teacher';
 }
 
 export interface RegisterData {
@@ -15,6 +16,7 @@ export interface RegisterData {
   password: string;
   date_of_birth?: string;
   referred_by?: string;
+  role?: 'student' | 'teacher';
 }
 
 export interface AuthResponse {

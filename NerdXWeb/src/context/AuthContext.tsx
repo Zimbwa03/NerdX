@@ -52,6 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (token && userData) {
         const parsedUser = JSON.parse(userData) as User;
+        // Ensure role has a default for users stored before role field existed
+        if (!parsedUser.role) {
+          parsedUser.role = parsedUser.is_teacher ? 'teacher' : 'student';
+        }
         setUser(parsedUser);
 
         // Try to restore Supabase session with a timeout to prevent infinite loading

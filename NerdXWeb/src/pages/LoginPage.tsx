@@ -1,11 +1,15 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, BookOpen, GraduationCap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/api/authApi';
 import { supabase } from '../services/supabase';
 
 export function LoginPage() {
+  const [searchParams] = useSearchParams();
+  const [role, setRole] = useState<'student' | 'teacher'>(
+    searchParams.get('role') === 'teacher' ? 'teacher' : 'student'
+  );
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -13,6 +17,10 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (searchParams.get('role') === 'teacher') setRole('teacher');
+  }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +33,7 @@ export function LoginPage() {
 
     setIsLoading(true);
     try {
-      const response = await authApi.login({ identifier, password });
+      const response = await authApi.login({ identifier, password, role });
 
       if (response.success && response.token && response.user) {
         const isEmail = identifier.includes('@');
@@ -34,7 +42,19 @@ export function LoginPage() {
           : undefined;
 
         await login(response.user, response.token, response.notifications, supabaseCredentials);
-        navigate('/app', { replace: true });
+
+        // Role-based routing
+        const userRole = response.user.role || role;
+        if (userRole === 'teacher') {
+          // Teacher: go to dashboard if they have a profile, otherwise onboarding
+          if (response.user.teacher_profile_id) {
+            navigate('/app/teacher-dashboard', { replace: true });
+          } else {
+            navigate('/app/teacher-onboarding', { replace: true });
+          }
+        } else {
+          navigate('/app', { replace: true });
+        }
       } else {
         setError(response.message || 'Invalid credentials');
       }
@@ -71,21 +91,46 @@ export function LoginPage() {
             <img src="/logo.png" alt="NerdX" className="auth-logo__img" />
             <span className="auth-logo__text">NerdX</span>
           </Link>
-          <h1 className="auth-brand__title">Master Your Future with AI</h1>
-          <p className="auth-brand__desc">Join thousands of ZIMSEC students who are learning smarter, not harder.</p>
+          <h1 className="auth-brand__title">
+            {role === 'teacher' ? 'Empower Students Across Zimbabwe' : 'Master Your Future with AI'}
+          </h1>
+          <p className="auth-brand__desc">
+            {role === 'teacher'
+              ? 'Sign in to manage your lessons, connect with students, and grow your teaching career on NerdX.'
+              : 'Join thousands of ZIMSEC students who are learning smarter, not harder.'}
+          </p>
           <div className="auth-brand__stats">
-            <div className="auth-brand__stat">
-              <strong>5,000+</strong>
-              <span>Students</span>
-            </div>
-            <div className="auth-brand__stat">
-              <strong>10+</strong>
-              <span>Subjects</span>
-            </div>
-            <div className="auth-brand__stat">
-              <strong>95%</strong>
-              <span>Pass Rate</span>
-            </div>
+            {role === 'teacher' ? (
+              <>
+                <div className="auth-brand__stat">
+                  <strong>5,000+</strong>
+                  <span>Students</span>
+                </div>
+                <div className="auth-brand__stat">
+                  <strong>50+</strong>
+                  <span>Teachers</span>
+                </div>
+                <div className="auth-brand__stat">
+                  <strong>500+</strong>
+                  <span>Lessons</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="auth-brand__stat">
+                  <strong>5,000+</strong>
+                  <span>Students</span>
+                </div>
+                <div className="auth-brand__stat">
+                  <strong>10+</strong>
+                  <span>Subjects</span>
+                </div>
+                <div className="auth-brand__stat">
+                  <strong>95%</strong>
+                  <span>Pass Rate</span>
+                </div>
+              </>
+            )}
           </div>
           <img src="/images/students-learning.png" alt="Students using NerdX" className="auth-brand__image" />
         </div>
@@ -95,7 +140,31 @@ export function LoginPage() {
         <div className="auth-form-wrapper">
           <div className="auth-form-header">
             <h2 className="auth-form__title">Welcome Back</h2>
-            <p className="auth-form__subtitle">Sign in to continue your learning journey</p>
+            <p className="auth-form__subtitle">
+              {role === 'teacher'
+                ? 'Sign in to your teaching dashboard'
+                : 'Sign in to continue your learning journey'}
+            </p>
+          </div>
+
+          {/* Role toggle */}
+          <div className="auth-role-toggle">
+            <button
+              type="button"
+              className={`auth-role-toggle__btn${role === 'student' ? ' auth-role-toggle__btn--active' : ''}`}
+              onClick={() => { setRole('student'); setError(''); }}
+            >
+              <BookOpen size={16} />
+              I'm a Student
+            </button>
+            <button
+              type="button"
+              className={`auth-role-toggle__btn${role === 'teacher' ? ' auth-role-toggle__btn--active' : ''}`}
+              onClick={() => { setRole('teacher'); setError(''); }}
+            >
+              <GraduationCap size={16} />
+              I'm a Teacher
+            </button>
           </div>
 
           {error && <div className="auth-alert auth-alert--error">{error}</div>}
@@ -141,7 +210,7 @@ export function LoginPage() {
 
             <button type="submit" className="auth-submit" disabled={isLoading}>
               {isLoading ? <span className="auth-spinner" /> : (
-                <>Sign In <ArrowRight size={18} /></>
+                <>{role === 'teacher' ? 'Sign In as Teacher' : 'Sign In'} <ArrowRight size={18} /></>
               )}
             </button>
           </form>
@@ -156,7 +225,7 @@ export function LoginPage() {
           </button>
 
           <p className="auth-switch">
-            Don't have an account? <Link to="/register" className="auth-switch__link">Sign Up</Link>
+            Don't have an account? <Link to={`/register${role === 'teacher' ? '?role=teacher' : ''}`} className="auth-switch__link">Sign Up</Link>
           </p>
         </div>
       </div>

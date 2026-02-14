@@ -5,6 +5,7 @@
 import type { MathTopicNotes } from '../mathNotes/types';
 import { form1MathNotes } from './form1Notes';
 import { form1MathNotes2 } from './form1Notes2';
+import { form2MathNotes } from './form2Notes';
 
 // Complete notes for each O-Level Mathematics topic
 export const oLevelMathNotes: Record<string, MathTopicNotes> = {
@@ -4202,6 +4203,7 @@ const allMathNotes: Record<string, MathTopicNotes> = {
     ...oLevelMathNotes,
     ...form1MathNotes,
     ...form1MathNotes2,
+    ...form2MathNotes,
 };
 
 export function getOLevelMathNotes(topicName: string): MathTopicNotes | null {

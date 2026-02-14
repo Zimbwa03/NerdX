@@ -77,6 +77,7 @@ import { OfflineChatPage } from './pages/tools/OfflineChatPage';
 import { FindTeacherPage } from './pages/teacher-marketplace/FindTeacherPage';
 import { TeacherProfilePage } from './pages/teacher-marketplace/TeacherProfilePage';
 import { BookLessonPage } from './pages/teacher-marketplace/BookLessonPage';
+import { TeacherFeedPage } from './pages/teacher-marketplace/TeacherFeedPage';
 import { TeacherOnboardingPage } from './pages/teacher-marketplace/TeacherOnboardingPage';
 import { TeacherDashboardPage } from './pages/teacher-marketplace/TeacherDashboardPage';
 import { VirtualClassroomPage } from './pages/teacher-marketplace/VirtualClassroomPage';
@@ -172,6 +173,7 @@ function App() {
               <Route path="sciences/notes" element={<ScienceNotesPage />} />
               <Route path="sciences/tutor" element={<Navigate to="/app/teacher" state={{ subject: 'Biology' }} replace />} />
               <Route path="marketplace" element={<FindTeacherPage />} />
+              <Route path="marketplace/feed" element={<TeacherFeedPage />} />
               <Route path="marketplace/teacher/:teacherId" element={<TeacherProfilePage />} />
               <Route path="marketplace/book/:teacherId" element={<BookLessonPage />} />
               <Route path="teacher-onboarding" element={<TeacherOnboardingPage />} />

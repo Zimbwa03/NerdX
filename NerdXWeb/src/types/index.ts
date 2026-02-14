@@ -1,5 +1,7 @@
 // TypeScript type definitions for NerdX Web App
 
+export type UserRole = 'student' | 'teacher';
+
 export interface User {
   id: string;
   nerdx_id?: string;
@@ -14,6 +16,7 @@ export interface User {
     purchased_credits: number;
     welcome_bonus_claimed: boolean;
   };
+  role: UserRole;
   is_teacher?: boolean;
   teacher_profile_id?: string;
 }

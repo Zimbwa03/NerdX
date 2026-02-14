@@ -11,7 +11,7 @@ import {
 import type { TeacherProfile, TeacherSearchFilters, AcademicLevel, DayOfWeek } from '../../types';
 import {
   Search, SlidersHorizontal, ArrowLeft, GraduationCap, Star,
-  Loader2, Users, X, RefreshCw
+  Loader2, Users, X, RefreshCw, Rss
 } from 'lucide-react';
 
 export function FindTeacherPage() {
@@ -104,6 +104,15 @@ export function FindTeacherPage() {
             Browse verified ZIMSEC & Cambridge teachers. Filter by subject, level, and rating.
           </p>
         </div>
+      </div>
+
+      {/* Feed link bar */}
+      <div className="marketplace-feed-bar">
+        <Link to="/app/marketplace/feed" className="marketplace-feed-bar__link">
+          <Rss size={16} />
+          <span>Browse Teacher Feed</span>
+          <span className="marketplace-feed-bar__arrow">&rarr;</span>
+        </Link>
       </div>
 
       {/* Search & Filter Bar */}

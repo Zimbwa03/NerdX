@@ -134,7 +134,8 @@ export function LandingPage() {
             <button type="button" className="lp-nav__link lp-nav__link--highlight" onClick={() => scrollTo('for-teachers')}>Teach on NerdX</button>
           </nav>
           <div className="lp-header__actions">
-            <button type="button" className="lp-btn lp-btn--ghost" onClick={() => navigate('/login')}>Sign In</button>
+            <button type="button" className="lp-btn lp-btn--ghost" onClick={() => navigate('/login')}>Student Login</button>
+            <button type="button" className="lp-btn lp-btn--ghost lp-btn--teacher" onClick={() => navigate('/login?role=teacher')}>Teacher Login</button>
             <button type="button" className="lp-btn lp-btn--primary" onClick={() => navigate('/register')}>Get Started</button>
           </div>
           <button type="button" className="lp-mobile-toggle" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
@@ -148,7 +149,8 @@ export function LandingPage() {
             <button type="button" onClick={() => scrollTo('find-teachers')}>Find a Teacher</button>
             <button type="button" onClick={() => scrollTo('testimonials')}>Testimonials</button>
             <button type="button" onClick={() => scrollTo('for-teachers')}>Teach on NerdX</button>
-            <button type="button" onClick={() => navigate('/login')}>Sign In</button>
+            <button type="button" onClick={() => navigate('/login')}>Student Login</button>
+            <button type="button" onClick={() => navigate('/login?role=teacher')}>Teacher Login</button>
             <button type="button" className="lp-btn lp-btn--primary lp-btn--full" onClick={() => navigate('/register')}>Get Started</button>
           </div>
         )}
@@ -158,18 +160,22 @@ export function LandingPage() {
         <div className="lp-hero__content">
           <span className="lp-badge">
             <Zap size={14} />
-            AI-Powered Learning Platform
+            AI-Powered Learning & Teaching Platform
           </span>
           <h1 className="lp-hero__title">
-            Master Your Future<br />with <span className="gradient-text">NerdX</span>
+            Learn Smarter. Teach Better.<br />with <span className="gradient-text">NerdX</span>
           </h1>
           <p className="lp-hero__subtitle">
-            Zimbabwe's #1 AI learning platform for ZIMSEC students. Practice exams, get instant AI tutoring, and boost your O-Level & A-Level grades.
+            Zimbabwe's #1 AI learning platform for ZIMSEC & Cambridge students and teachers. Practice exams, get AI tutoring, book live lessons, and grow your teaching career.
           </p>
           <div className="lp-trust-badges">
             <div className="lp-trust-badge">
               <Users size={18} />
               <span><strong>5,000+</strong> Students</span>
+            </div>
+            <div className="lp-trust-badge">
+              <GraduationCap size={18} />
+              <span><strong>50+</strong> Verified Teachers</span>
             </div>
             <div className="lp-trust-badge">
               <Award size={18} />
@@ -184,8 +190,8 @@ export function LandingPage() {
             <button type="button" className="lp-btn lp-btn--primary lp-btn--lg" onClick={() => navigate('/register')}>
               Start Learning Free <ArrowRight size={18} />
             </button>
-            <button type="button" className="lp-btn lp-btn--outline lp-btn--lg" onClick={() => scrollTo('features')}>
-              See How It Works <ChevronRight size={18} />
+            <button type="button" className="lp-btn lp-btn--outline lp-btn--lg lp-btn--teacher-cta" onClick={() => navigate('/register?role=teacher')}>
+              Start Teaching <GraduationCap size={18} />
             </button>
           </div>
         </div>
@@ -394,6 +400,36 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* For Teachers - placed prominently before testimonials */}
+      <section id="for-teachers" className="lp-section lp-section--teachers">
+        <div className="lp-section__inner">
+          <div className="lp-section__header">
+            <span className="lp-badge"><GraduationCap size={14} /> For Teachers</span>
+            <h2 className="lp-section__title">Share Your Knowledge, <span className="gradient-text">Earn on NerdX</span></h2>
+            <p className="lp-section__subtitle">Join Zimbabwe's fastest-growing learning platform as a verified teacher. Set your schedule, connect with students, and make an impact.</p>
+          </div>
+          <div className="lp-teacher-values">
+            {teacherValueProps.map((v) => (
+              <div key={v.title} className="lp-teacher-value">
+                <div className="lp-teacher-value__icon">
+                  <v.icon size={28} />
+                </div>
+                <h3 className="lp-teacher-value__title">{v.title}</h3>
+                <p className="lp-teacher-value__desc">{v.description}</p>
+              </div>
+            ))}
+          </div>
+          <div className="lp-teachers-actions">
+            <button type="button" className="lp-btn lp-btn--primary lp-btn--lg" onClick={() => navigate('/register?role=teacher')}>
+              Start Teaching on NerdX <ArrowRight size={18} />
+            </button>
+            <button type="button" className="lp-btn lp-btn--outline lp-btn--lg" onClick={() => navigate('/login?role=teacher')}>
+              Teacher Sign In <ArrowRight size={18} />
+            </button>
+          </div>
+        </div>
+      </section>
+
       <section id="testimonials" className="lp-section lp-section--alt">
         <div className="lp-section__inner">
           <div className="lp-section__header">
@@ -423,40 +459,19 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section id="for-teachers" className="lp-section lp-section--teachers">
-        <div className="lp-section__inner">
-          <div className="lp-section__header">
-            <span className="lp-badge"><GraduationCap size={14} /> For Teachers</span>
-            <h2 className="lp-section__title">Share Your Knowledge, <span className="gradient-text">Earn on NerdX</span></h2>
-            <p className="lp-section__subtitle">Join Zimbabwe's fastest-growing learning platform as a verified teacher. Set your schedule, connect with students, and make an impact.</p>
-          </div>
-          <div className="lp-teacher-values">
-            {teacherValueProps.map((v) => (
-              <div key={v.title} className="lp-teacher-value">
-                <div className="lp-teacher-value__icon">
-                  <v.icon size={28} />
-                </div>
-                <h3 className="lp-teacher-value__title">{v.title}</h3>
-                <p className="lp-teacher-value__desc">{v.description}</p>
-              </div>
-            ))}
-          </div>
-          <div className="lp-teachers-actions">
-            <button type="button" className="lp-btn lp-btn--primary lp-btn--lg" onClick={() => navigate('/register?role=teacher')}>
-              Start Teaching on NerdX <ArrowRight size={18} />
-            </button>
-          </div>
-        </div>
-      </section>
-
       <section className="lp-final-cta">
         <div className="lp-final-cta__inner">
-          <h2 className="lp-final-cta__title">Ready to Ace Your Exams?</h2>
-          <p className="lp-final-cta__subtitle">Join thousands of ZIMSEC students already learning smarter with NerdX.</p>
-          <button type="button" className="lp-btn lp-btn--white lp-btn--lg" onClick={() => navigate('/register')}>
-            Get Started Free <ArrowRight size={18} />
-          </button>
-          <p className="lp-final-cta__note">No credit card required. Start learning in seconds.</p>
+          <h2 className="lp-final-cta__title">Ready to Get Started?</h2>
+          <p className="lp-final-cta__subtitle">Whether you're a student looking to ace your exams or a teacher ready to make an impact — NerdX is your platform.</p>
+          <div className="lp-final-cta__buttons">
+            <button type="button" className="lp-btn lp-btn--white lp-btn--lg" onClick={() => navigate('/register')}>
+              Start Learning <ArrowRight size={18} />
+            </button>
+            <button type="button" className="lp-btn lp-btn--outline-white lp-btn--lg" onClick={() => navigate('/register?role=teacher')}>
+              Start Teaching <GraduationCap size={18} />
+            </button>
+          </div>
+          <p className="lp-final-cta__note">No credit card required. Create your account in seconds.</p>
         </div>
       </section>
 
@@ -495,8 +510,10 @@ export function LandingPage() {
             </div>
             <div className="lp-footer__col">
               <h4>Get Started</h4>
-              <button type="button" onClick={() => navigate('/register')}>Sign Up</button>
-              <button type="button" onClick={() => navigate('/login')}>Sign In</button>
+              <button type="button" onClick={() => navigate('/register')}>Student Sign Up</button>
+              <button type="button" onClick={() => navigate('/register?role=teacher')}>Teacher Sign Up</button>
+              <button type="button" onClick={() => navigate('/login')}>Student Login</button>
+              <button type="button" onClick={() => navigate('/login?role=teacher')}>Teacher Login</button>
             </div>
           </div>
         </div>

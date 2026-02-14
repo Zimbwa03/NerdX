@@ -361,3 +361,112 @@
   .hist-essay-actions { flex-direction: column; }
   .hist-essay-submit-btn, .hist-essay-next-btn { width: 100%; }
 }
+
+/* Light mode overrides */
+[data-theme="light"] .hist-essay-page {
+  background: #f7f7fb;
+  color: #0f172a;
+}
+
+[data-theme="light"] .hist-essay-bg {
+  background:
+    radial-gradient(circle at 15% 25%, rgba(93, 64, 55, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 85% 75%, rgba(141, 110, 99, 0.08) 0%, transparent 40%);
+}
+
+[data-theme="light"] .hist-essay-back {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .hist-essay-back:hover {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .hist-essay-badge,
+[data-theme="light"] .hist-essay-meta-chip {
+  background: rgba(93, 64, 55, 0.12);
+  border-color: rgba(93, 64, 55, 0.25);
+  color: #4e342e;
+}
+
+[data-theme="light"] .hist-essay-header h1 {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .hist-essay-header p {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .hist-essay-context-card,
+[data-theme="light"] .hist-essay-part-card,
+[data-theme="light"] .hist-essay-teacher-card,
+[data-theme="light"] .hist-essay-fb-card,
+[data-theme="light"] .hist-essay-score-banner {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .hist-essay-context-title,
+[data-theme="light"] .hist-essay-part-title,
+[data-theme="light"] .hist-essay-part-label,
+[data-theme="light"] .hist-essay-score-label,
+[data-theme="light"] .hist-essay-teacher-card h3,
+[data-theme="light"] .hist-essay-fb-section-title,
+[data-theme="light"] .hist-essay-model-answer-title {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .hist-essay-context-text,
+[data-theme="light"] .hist-essay-part-question,
+[data-theme="light"] .hist-essay-tool-status,
+[data-theme="light"] .hist-essay-teacher-card p,
+[data-theme="light"] .hist-essay-fb-text,
+[data-theme="light"] .hist-essay-model-answer-text,
+[data-theme="light"] .hist-essay-fb-points li {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .hist-essay-tool-btn {
+  background: #f8f9fc;
+  border-color: rgba(15, 23, 42, 0.1);
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .hist-essay-tool-btn:hover:not(:disabled) {
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .hist-essay-textarea {
+  background: #f8f9fc;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .hist-essay-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .hist-essay-char-count {
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .hist-essay-score-value .num {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .hist-essay-score-value .den {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .hist-essay-model-toggle {
+  background: rgba(93, 64, 55, 0.1);
+  color: #4e342e;
+}
+
+[data-theme="light"] .hist-essay-model-toggle:hover {
+  background: rgba(93, 64, 55, 0.18);
+}

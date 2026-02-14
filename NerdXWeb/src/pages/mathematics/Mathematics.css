@@ -377,3 +377,28 @@
         display: none;
     }
 }
+/* Light mode overrides */
+[data-theme="light"] .math-universe-page {
+  background: #f7f7fb;
+  color: #0f172a;
+}
+
+[data-theme="light"] .math-universe-background {
+  background:
+    radial-gradient(circle at 15% 50%, rgba(124, 77, 255, 0.1) 0%, transparent 30%),
+    radial-gradient(circle at 85% 30%, rgba(0, 230, 118, 0.08) 0%, transparent 30%);
+}
+
+[data-theme="light"] .math-universe-page h1,
+[data-theme="light"] .math-universe-page h2,
+[data-theme="light"] .math-universe-page h3,
+[data-theme="light"] .math-universe-page h4,
+[data-theme="light"] .math-universe-page h5,
+[data-theme="light"] .math-universe-page h6 {
+  color: #0f172a;
+}
+
+[data-theme="light"] .math-universe-page p,
+[data-theme="light"] .math-universe-page li {
+  color: #475467;
+}

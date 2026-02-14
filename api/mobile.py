@@ -377,6 +377,7 @@ def login():
         
         user_identifier = (data.get('identifier', '').strip() or data.get('email', '').strip() or data.get('phone_number', '').strip()).lower()
         password = data.get('password', '')
+        requested_role = data.get('role')  # Optional: 'student' or 'teacher'
         
         if not user_identifier or not password:
             return jsonify({'success': False, 'message': 'Identifier and password are required'}), 400
@@ -560,6 +561,19 @@ def login():
         # Determine user ID (chat_id)
         user_id = user_data.get('chat_id')
         
+        # Determine user role
+        stored_role = user_data.get('role', 'student')
+        is_teacher = stored_role == 'teacher'
+        
+        # Role validation: if client specified a role, check it matches
+        if requested_role and requested_role in ('student', 'teacher'):
+            if requested_role != stored_role:
+                role_label = 'teacher' if stored_role == 'teacher' else 'student'
+                return jsonify({
+                    'success': False,
+                    'message': f'This account is registered as a {role_label}. Please select "{role_label.title()}" to sign in.'
+                }), 403
+        
         # Generate token
         token = generate_token(user_id)
         
@@ -592,7 +606,9 @@ def login():
                 'surname': user_data.get('surname'),
                 'email': user_data.get('email'),
                 'credits': _credits_display(credit_info.get('total', 0)),
-                'credit_breakdown': credit_info_display
+                'credit_breakdown': credit_info_display,
+                'role': stored_role,
+                'is_teacher': is_teacher,
             },
             'notifications': notifications,
             'message': 'Login successful'
@@ -1017,6 +1033,11 @@ def register():
         password = data.get('password', '')
         date_of_birth = data.get('date_of_birth')
         referred_by = data.get('referred_by')
+        role = data.get('role', 'student')  # 'student' or 'teacher'
+        
+        # Validate role
+        if role not in ('student', 'teacher'):
+            role = 'student'
         
         # Validation
         if not name or not surname:
@@ -1073,7 +1094,8 @@ def register():
                 password_hash=password_hash,
                 password_salt=salt,
                 email=email,
-                phone_number=phone_number
+                phone_number=phone_number,
+                role=role
             )
             
             # Generate token
@@ -1117,6 +1139,8 @@ def register():
                     'phone_number': phone_number,
                     'credits': credit_info_display.get("total", "0.0"),
                     'credit_breakdown': credit_info_display,
+                    'role': role,
+                    'is_teacher': role == 'teacher',
                 },
                 'notifications': notifications,
                 'message': 'Registration successful'

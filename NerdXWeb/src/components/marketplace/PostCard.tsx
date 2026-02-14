@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Heart, MessageCircle, Trash2, Clock, Lightbulb, Image, Video, BookOpen, FileText } from 'lucide-react';
 import { SubjectBadge } from './SubjectBadge';
 import { CommentThread } from './CommentThread';
@@ -9,6 +10,7 @@ interface PostCardProps {
   currentUserId?: string;
   currentUserName?: string;
   isOwner?: boolean;
+  showTeacherLink?: boolean;
   onLike?: (postId: string) => Promise<{ liked: boolean; newCount: number }>;
   onDelete?: (postId: string) => void;
   onAddComment?: (postId: string, content: string) => Promise<PostComment | null>;
@@ -39,7 +41,9 @@ function timeAgo(dateStr: string): string {
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
   const days = Math.floor(hrs / 24);
+  if (days === 1) return 'Yesterday';
   if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
   return new Date(dateStr).toLocaleDateString();
 }
 
@@ -48,6 +52,7 @@ export function PostCard({
   currentUserId,
   currentUserName,
   isOwner = false,
+  showTeacherLink = false,
   onLike,
   onDelete,
   onAddComment,
@@ -56,8 +61,9 @@ export function PostCard({
   const [liked, setLiked] = useState(post.user_has_liked || false);
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const [commentsCount, setCommentsCount] = useState(post.comments_count);
-  const [showComments, setShowComments] = useState(false);
+  const [showAllComments, setShowAllComments] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
+  const [likeAnimation, setLikeAnimation] = useState(false);
 
   const handleLike = async () => {
     if (!currentUserId || !onLike || likeLoading) return;
@@ -66,6 +72,10 @@ export function PostCard({
       const result = await onLike(post.id);
       setLiked(result.liked);
       setLikesCount(result.newCount);
+      if (result.liked) {
+        setLikeAnimation(true);
+        setTimeout(() => setLikeAnimation(false), 600);
+      }
     } finally {
       setLikeLoading(false);
     }
@@ -86,19 +96,29 @@ export function PostCard({
     .toUpperCase()
     .slice(0, 2);
 
+  const teacherProfileUrl = post.teacher_id ? `/app/marketplace/teacher/${post.teacher_id}` : '#';
+
   return (
-    <div className="post-card">
+    <div className="post-card post-card--v2">
       {/* Header */}
       <div className="post-card__header">
-        <div className="post-card__avatar">
-          {post.teacher_image ? (
-            <img src={post.teacher_image} alt={post.teacher_name} />
-          ) : (
-            <span>{initials}</span>
-          )}
-        </div>
+        <Link to={teacherProfileUrl} className="post-card__avatar-link">
+          <div className="post-card__avatar">
+            {post.teacher_image ? (
+              <img src={post.teacher_image} alt={post.teacher_name} />
+            ) : (
+              <span>{initials}</span>
+            )}
+          </div>
+        </Link>
         <div className="post-card__meta">
-          <span className="post-card__author">{post.teacher_name || 'Teacher'}</span>
+          {showTeacherLink ? (
+            <Link to={teacherProfileUrl} className="post-card__author post-card__author--link">
+              {post.teacher_name || 'Teacher'}
+            </Link>
+          ) : (
+            <span className="post-card__author">{post.teacher_name || 'Teacher'}</span>
+          )}
           <span className="post-card__time">
             <Clock size={12} />
             {timeAgo(post.created_at)}
@@ -143,7 +163,7 @@ export function PostCard({
       {/* Actions bar */}
       <div className="post-card__actions">
         <button
-          className={`post-card__action-btn post-card__like${liked ? ' post-card__like--active' : ''}`}
+          className={`post-card__action-btn post-card__like${liked ? ' post-card__like--active' : ''}${likeAnimation ? ' post-card__like--pulse' : ''}`}
           onClick={handleLike}
           disabled={!currentUserId || likeLoading}
         >
@@ -151,26 +171,28 @@ export function PostCard({
           <span>{likesCount}</span>
         </button>
         <button
-          className={`post-card__action-btn post-card__comment-btn${showComments ? ' post-card__comment-btn--active' : ''}`}
-          onClick={() => setShowComments(!showComments)}
+          className={`post-card__action-btn post-card__comment-btn${showAllComments ? ' post-card__comment-btn--active' : ''}`}
+          onClick={() => setShowAllComments(!showAllComments)}
         >
           <MessageCircle size={18} />
           <span>{commentsCount}</span>
         </button>
       </div>
 
-      {/* Comments thread */}
-      {showComments && (
-        <CommentThread
-          postId={post.id}
-          currentUserId={currentUserId}
-          currentUserName={currentUserName}
-          onAddComment={onAddComment}
-          onDeleteComment={onDeleteComment}
-          onCommentAdded={handleCommentAdded}
-          onCommentDeleted={handleCommentDeleted}
-        />
-      )}
+      {/* Inline preview comments (always show first 2) */}
+      <CommentThread
+        postId={post.id}
+        currentUserId={currentUserId}
+        currentUserName={currentUserName}
+        onAddComment={onAddComment}
+        onDeleteComment={onDeleteComment}
+        onCommentAdded={handleCommentAdded}
+        onCommentDeleted={handleCommentDeleted}
+        previewMode={!showAllComments}
+        previewCount={2}
+        totalComments={commentsCount}
+        onExpandRequest={() => setShowAllComments(true)}
+      />
     </div>
   );
 }

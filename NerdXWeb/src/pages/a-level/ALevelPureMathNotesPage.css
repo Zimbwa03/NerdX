@@ -316,6 +316,222 @@
   stroke-width: 2.2;
 }
 
+.alevel-diagram-card .curve.thirteen {
+  stroke: #22d3ee;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.fourteen {
+  stroke: #a3e635;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.fifteen {
+  stroke: #f97316;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.sixteen {
+  stroke: #38bdf8;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.seventeen {
+  stroke: #facc15;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.eighteen {
+  stroke: #4ade80;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.nineteen {
+  stroke: #22d3ee;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.twenty {
+  stroke: #facc15;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.twentyone {
+  stroke: #f97316;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.twentytwo {
+  stroke: #22d3ee;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.twentythree {
+  stroke: #facc15;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.twentyfour {
+  stroke: #fb7185;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.twentyfive {
+  stroke: #60a5fa;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.twentysix {
+  stroke: #22d3ee;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.twentyseven {
+  stroke: #facc15;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.twentyeight {
+  stroke: #22d3ee;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.twentynine {
+  stroke: #facc15;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.thirty {
+  stroke: #fb7185;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.thirtyone {
+  stroke: #22d3ee;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.thirtytwo {
+  stroke: #f97316;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.thirtythree {
+  stroke: #facc15;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.thirtyfour {
+  stroke: #22d3ee;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.thirtyfive {
+  stroke: #fb7185;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.thirtysix {
+  stroke: #a3e635;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.thirtyseven {
+  stroke: #facc15;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.thirtyeight {
+  stroke: #60a5fa;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.thirtynine {
+  stroke: #22d3ee;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.forty {
+  stroke: #fb7185;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.fortyone {
+  stroke: #facc15;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.fortytwo {
+  stroke: #22d3ee;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.fortythree {
+  stroke: #facc15;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.fortyfour {
+  stroke: #38bdf8;
+  fill: rgba(56, 189, 248, 0.12);
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.fortyfive {
+  stroke: #fb7185;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.fortysix {
+  stroke: #a3e635;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.fortyseven {
+  stroke: #60a5fa;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.fortyeight {
+  stroke: #f97316;
+  fill: none;
+  stroke-width: 2.2;
+}
+
 .alevel-diagram-card .asymptote {
   stroke: rgba(248, 250, 252, 0.55);
   stroke-width: 1.5;
@@ -385,6 +601,16 @@
   margin-top: 8px;
 }
 
+.alevel-inline-math p {
+  margin-bottom: 0;
+}
+
+.alevel-diagram-caption {
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.76);
+  line-height: 1.4;
+}
+
 .alevel-next-topic-card {
   border-left: 4px solid #8b5cf6;
 }
@@ -407,4 +633,116 @@
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+/* Light mode overrides */
+[data-theme="light"] .alevel-notes-page .subject-header-v2 {
+  border-color: rgba(124, 77, 255, 0.2);
+}
+
+[data-theme="light"] .alevel-notes-pill-row {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+[data-theme="light"] .alevel-notes-pill {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .alevel-notes-pill.active.lower,
+[data-theme="light"] .alevel-notes-pill.active.upper {
+  background: rgba(124, 77, 255, 0.14);
+  border-color: rgba(124, 77, 255, 0.35);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .alevel-notes-search {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="light"] .alevel-notes-search input {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .alevel-notes-search input::placeholder {
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .alevel-notes-starter {
+  background: #f8f9fc;
+  border-color: rgba(124, 77, 255, 0.2);
+}
+
+[data-theme="light"] .alevel-notes-starter-icon {
+  background: rgba(124, 77, 255, 0.12);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .alevel-notes-starter-content h3 {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .alevel-notes-starter-content p {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .alevel-notes-starter-link {
+  background: rgba(124, 77, 255, 0.14);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .alevel-notes-topic-card {
+  background: #ffffff;
+  border-color: rgba(124, 77, 255, 0.2);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .alevel-notes-topic-card p {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .alevel-notes-topic-num {
+  color: #4c1d95;
+}
+
+[data-theme="light"] .alevel-notes-topic-paper {
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .alevel-topic-meta-strip span {
+  background: rgba(124, 77, 255, 0.12);
+  border-color: rgba(124, 77, 255, 0.25);
+  color: #4c1d95;
+}
+
+[data-theme="light"] .alevel-section-index {
+  color: #4c1d95;
+}
+
+[data-theme="light"] .alevel-diagram-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+[data-theme="light"] .alevel-diagram-card p,
+[data-theme="light"] .alevel-diagram-caption {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .alevel-diagram-card svg {
+  background: #f1f3f9;
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="light"] .alevel-division-table {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .alevel-division-table td {
+  border-color: rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="light"] .alevel-back-to-index-link {
+  color: #4c1d95;
 }

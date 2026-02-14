@@ -30,7 +30,7 @@ export function TeacherProfilePage() {
   const [reviews, setReviews] = useState<TeacherReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
-  const [activeTab, setActiveTab] = useState<'about' | 'feed' | 'reviews' | 'availability'>('about');
+  const [activeTab, setActiveTab] = useState<'about' | 'feed' | 'reviews' | 'availability'>('feed');
   const [posts, setPosts] = useState<TeacherPost[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
 
@@ -105,9 +105,9 @@ export function TeacherProfilePage() {
     load();
   }, [teacherId]);
 
-  // Load posts when Feed tab is opened
+  // Load posts eagerly (feed is default tab)
   useEffect(() => {
-    if (activeTab !== 'feed' || !teacherId) return;
+    if (!teacherId) return;
     let cancelled = false;
     (async () => {
       setPostsLoading(true);
@@ -118,7 +118,7 @@ export function TeacherProfilePage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [activeTab, teacherId, user?.id]);
+  }, [teacherId, user?.id]);
 
   const handleLikePost = async (postId: string) => {
     if (!user) return { liked: false, newCount: 0 };
@@ -197,19 +197,19 @@ export function TeacherProfilePage() {
 
   return (
     <div className="teacher-profile-page">
-      {/* Header */}
-      <div className="tp-header">
+      {/* Header - Facebook-style profile */}
+      <div className="tp-header tp-header--fb">
         <Link to="/app/marketplace" className="tp-header__back">
           <ArrowLeft size={20} />
         </Link>
         <div className="tp-header__banner" />
         <div className="tp-header__content">
-          <div className="tp-avatar">
+          <div className="tp-avatar tp-avatar--large">
             {teacher.profile_image_url ? (
               <img src={teacher.profile_image_url} alt={teacher.full_name} className="tp-avatar__img" />
             ) : (
               <div className="tp-avatar__placeholder">
-                <User size={48} />
+                {`${(teacher.full_name || 'T')[0]}${(teacher.surname || '')[0] || ''}`.toUpperCase()}
               </div>
             )}
             {teacher.verification_status === 'approved' && (
@@ -232,6 +232,9 @@ export function TeacherProfilePage() {
                 {teacher.years_of_experience} years experience
               </span>
             </div>
+            {teacher.bio && (
+              <p className="tp-header__bio">{teacher.bio.length > 150 ? teacher.bio.slice(0, 150) + '...' : teacher.bio}</p>
+            )}
             <div className="tp-header__subjects">
               {teacher.subjects?.map((s) => (
                 <SubjectBadge key={s.id} subject={s.subject_name} level={s.academic_level} />

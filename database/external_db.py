@@ -1393,7 +1393,7 @@ def is_user_registered_by_email(email):
     registration = get_user_registration_by_email(email)
     return registration is not None
 
-def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_nerdx_id=None, password_hash=None, password_salt=None, email=None, phone_number=None):
+def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_nerdx_id=None, password_hash=None, password_salt=None, email=None, phone_number=None, role='student'):
     """Create new user registration - MUST succeed in Supabase or fail completely"""
     try:
         logger.info(f"🔄 Creating user registration for {chat_id} with referral: {referred_by_nerdx_id}")
@@ -1448,7 +1448,8 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
             'referred_by_nerdx_id': referred_by_nerdx_id,
             'registration_date': datetime.utcnow().isoformat(),
             'credits': 0,  # Explicitly set to 0 - welcome bonus will add 1500 units
-            'welcome_bonus_claimed': False  # Explicitly set to False - will be set to True by claim_welcome_bonus()
+            'welcome_bonus_claimed': False,  # Explicitly set to False - will be set to True by claim_welcome_bonus()
+            'role': role if role in ('student', 'teacher') else 'student'  # Account role
         }
 
         # Add optional auth fields if provided

@@ -941,3 +941,28 @@
 }
 
 /* Flashcard styles moved to FlashcardSection.css */
+/* Light mode overrides */
+[data-theme="light"] {
+  --science-bg-depth: #f7f7fb;
+  --science-glass-border: rgba(15, 23, 42, 0.08);
+  --science-glass-bg: rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="light"] .science-universe-page {
+  background: var(--science-bg-depth);
+  color: #0f172a;
+}
+
+[data-theme="light"] .science-universe-page h1,
+[data-theme="light"] .science-universe-page h2,
+[data-theme="light"] .science-universe-page h3,
+[data-theme="light"] .science-universe-page h4,
+[data-theme="light"] .science-universe-page h5,
+[data-theme="light"] .science-universe-page h6 {
+  color: #0f172a;
+}
+
+[data-theme="light"] .science-universe-page p,
+[data-theme="light"] .science-universe-page li {
+  color: #475467;
+}

@@ -548,6 +548,75 @@ export async function getTeacherPosts(
   }
 }
 
+/**
+ * Fetch all teachers' posts globally, paginated, ordered by newest first.
+ * Joins teacher name & image for each post.
+ */
+export async function getAllPosts(
+  page: number = 1,
+  limit: number = 10,
+  currentUserId?: string,
+): Promise<TeacherPost[]> {
+  try {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, error } = await supabase
+      .from('teacher_posts')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    if (error || !data || data.length === 0) return [];
+
+    // Collect unique teacher IDs
+    const teacherIds = [...new Set(data.map((p: any) => p.teacher_id))];
+
+    // Batch fetch teacher info
+    const { data: teacherProfiles } = await supabase
+      .from('teacher_profiles')
+      .select('id, full_name, profile_image_url')
+      .in('id', teacherIds);
+
+    const teacherMap = new Map<string, { name: string; image?: string }>();
+    if (teacherProfiles) {
+      for (const tp of teacherProfiles) {
+        teacherMap.set(tp.id, {
+          name: tp.full_name || 'Teacher',
+          image: tp.profile_image_url || undefined,
+        });
+      }
+    }
+
+    // Enrich posts
+    const posts: TeacherPost[] = [];
+    for (const p of data) {
+      let userHasLiked = false;
+      if (currentUserId) {
+        const { data: likeData } = await supabase
+          .from('post_likes')
+          .select('id')
+          .eq('post_id', p.id)
+          .eq('user_id', currentUserId)
+          .maybeSingle();
+        userHasLiked = !!likeData;
+      }
+      const info = teacherMap.get(p.teacher_id);
+      posts.push({
+        ...p,
+        teacher_name: info?.name || 'Teacher',
+        teacher_image: info?.image || undefined,
+        user_has_liked: userHasLiked,
+      } as TeacherPost);
+    }
+
+    return posts;
+  } catch (err) {
+    console.error('[Feed] getAllPosts exception:', err);
+    return [];
+  }
+}
+
 export async function deletePost(postId: string): Promise<boolean> {
   try {
     const { error } = await supabase

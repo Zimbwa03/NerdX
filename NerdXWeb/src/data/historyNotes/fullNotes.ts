@@ -3308,8 +3308,8 @@ The chartered company model gave Britain administrative and military instruments
   ],
 };
 
-historyNotes['Peace Settlements during the Armed Struggle'] = {
-  topic: 'Peace Settlements during the Armed Struggle',
+historyNotes['Peace Settlements in the Armed Struggle'] = {
+  topic: 'Peace Settlements in the Armed Struggle',
   subject: 'History',
   summary: 'Form 3 coverage of peace negotiations from 1964 to 1979, including early British mediation, Geneva and Lusaka efforts, the Internal Settlement, and the Lancaster House settlement.',
   sections: [
@@ -3893,8 +3893,8 @@ Long-term significance:
     'End essays with a clear judgement on historical significance.',
   ],
 };
-historyNotes['Decisive Phase of the Armed Struggle (1972-1979)'] = {
-  topic: 'Decisive Phase of the Armed Struggle (1972-1979)',
+historyNotes['Decisive Phase 1972-1979'] = {
+  topic: 'Decisive Phase 1972-1979',
   subject: 'History',
   summary: 'Form 3 Topic 1 examines the decisive phase of the armed struggle (1972-1979), focusing on strategic expansion, mass mobilization, external support, Rhodesian counter-strategies, and the road to Lancaster House.',
   sections: [
@@ -3976,8 +3976,8 @@ Lancaster House (1979) formalized the ceasefire process and constitutional trans
   ],
 };
 
-historyNotes['Second Phase of the Armed Struggle (Mobilisation Phase)'] = {
-  topic: 'Second Phase of the Armed Struggle (Mobilisation Phase)',
+historyNotes['Second Phase of the Armed Struggle (Mobilisation)'] = {
+  topic: 'Second Phase of the Armed Struggle (Mobilisation)',
   subject: 'History',
   summary: 'Form 3 Topic 2 analyses the mobilisation phase (1972-1979), showing how strategy shifted from isolated armed action to integrated mass-based guerrilla warfare.',
   sections: [
@@ -4731,8 +4731,8 @@ The BSAC administration did not just occupy land; it **replaced** the ancient, e
   ],
 };
 
-historyNotes['Causes of the Second Chimurenga / Armed Struggle in Zimbabwe'] = {
-  topic: 'Causes of the Second Chimurenga / Armed Struggle in Zimbabwe',
+historyNotes['Causes of the Second Chimurenga/Umvukela in Zimbabwe (1966-1979)'] = {
+  topic: 'Causes of the Second Chimurenga/Umvukela in Zimbabwe (1966-1979)',
   subject: 'History',
   summary: 'Form 3 Topic 1 explains why Zimbabwe moved from constitutional protest to armed liberation struggle, with full analysis of political, economic, social, and immediate trigger factors.',
   sections: [
@@ -5299,8 +5299,8 @@ UN-linked climate and disaster programs are increasingly central because recurri
   ],
 };
 
-historyNotes['Provisions of the Constitution of Zimbabwe'] = {
-  topic: 'Provisions of the Constitution of Zimbabwe',
+historyNotes['Provisions of the Constitution'] = {
+  topic: 'Provisions of the Constitution',
   subject: 'History',
   summary: 'Form 3 Topic 12 provides detailed study of the Constitution as supreme law: governance structure, rights provisions, institutions, devolution, and enforcement.',
   sections: [
