@@ -9152,6 +9152,833 @@ Always interpret asymptotes as limiting behaviour, not necessarily reachable val
     );
 }
 
+// Deep expansion for Topic 3 (Lower Sixth): indices, surds, and logarithms chapter upgrade.
+const indicesSurdsLogsTopic = aLevelPureMathNotes['Indices, Surds and Logarithms'];
+if (indicesSurdsLogsTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Advanced Indices and Exponential Models',
+            content: `## Core index structure revisited
+
+For $a>0$:
+- $a^m\\cdot a^n=a^{m+n}$
+- $\\frac{a^m}{a^n}=a^{m-n}$
+- $(a^m)^n=a^{mn}$
+- $a^{-n}=\\frac{1}{a^n}$
+- $a^{\\frac{p}{q}}=\\sqrt[q]{a^p}$
+
+## Standard simplification pipeline
+1. Rewrite all terms with common base where possible.
+2. Convert roots to fractional indices.
+3. Apply laws carefully in one direction at a time.
+4. Return final answer in exact form.
+
+## Exponential growth/decay models
+
+Continuous model:
+$$N(t)=N_0e^{kt}$$
+
+Discrete multiplier model:
+$$N(t)=N_0(1+r)^t$$
+
+where $r$ may be negative for decay.
+
+## Exam trap
+
+Do not treat:
+$$a^m+a^n=a^{m+n}$$
+This is false in general.`,
+            worked_examples: [
+                {
+                    question: 'Simplify $\\frac{27^{2/3}\\cdot9^{-1/2}}{3^{-1}}$.',
+                    steps: [
+                        'Write in base 3: $27=3^3$ and $9=3^2$.',
+                        '$27^{2/3}=(3^3)^{2/3}=3^2=9$.',
+                        '$9^{-1/2}=(3^2)^{-1/2}=3^{-1}=\\frac{1}{3}$.',
+                        'Numerator: $9\\cdot\\frac{1}{3}=3$.',
+                        'Denominator: $3^{-1}=\\frac{1}{3}$.',
+                        'So $\\frac{3}{1/3}=9$.'
+                    ],
+                    final_answer: '$9$'
+                },
+                {
+                    question: 'Solve $2^{x+1}=16\\cdot2^{x-3}$.',
+                    steps: [
+                        'Write $16=2^4$.',
+                        'Right side: $2^4\\cdot2^{x-3}=2^{x+1}$.',
+                        'Equation becomes $2^{x+1}=2^{x+1}$.',
+                        'Identity true for all real $x$.'
+                    ],
+                    final_answer: 'All real values of $x$.'
+                },
+                {
+                    question: 'A culture doubles every 3 hours. If initial amount is 500, find amount after 12 hours.',
+                    steps: [
+                        '12 hours contains $\\frac{12}{3}=4$ doubling periods.',
+                        'So amount $=500\\cdot2^4$.',
+                        '$2^4=16$, therefore amount is $500\\cdot16=8000$.'
+                    ],
+                    final_answer: '$8000$ units.'
+                }
+            ]
+        },
+        {
+            title: '11. Surd Mastery and Rationalisation Techniques',
+            content: `## Surd forms
+
+A surd is an irrational root expression in exact form, for example:
+$$\\sqrt{2},\\;\\sqrt{5},\\;2\\sqrt{3}.$$
+
+## Simplification strategy
+1. Factor radicand into perfect square times remainder.
+2. Extract perfect square root.
+3. Combine like surds only.
+
+## Rationalising denominators
+
+### Case A: denominator $\\sqrt{a}$
+Multiply top and bottom by $\\sqrt{a}$.
+
+### Case B: denominator $a+\\sqrt{b}$
+Use conjugate:
+$$a-\\sqrt{b}.$$
+
+Because:
+$$(a+\\sqrt{b})(a-\\sqrt{b})=a^2-b.$$
+
+## Important identity
+$$\\sqrt{m}\\cdot\\sqrt{n}=\\sqrt{mn},\\quad \\frac{\\sqrt{m}}{\\sqrt{n}}=\\sqrt{\\frac{m}{n}}\\;(n>0).$$`,
+            worked_examples: [
+                {
+                    question: 'Simplify $\\sqrt{72}-2\\sqrt{8}+\\sqrt{18}$.',
+                    steps: [
+                        '$\\sqrt{72}=\\sqrt{36\\cdot2}=6\\sqrt{2}$.',
+                        '$\\sqrt{8}=\\sqrt{4\\cdot2}=2\\sqrt{2}$, so $-2\\sqrt{8}=-4\\sqrt{2}$.',
+                        '$\\sqrt{18}=\\sqrt{9\\cdot2}=3\\sqrt{2}$.',
+                        'Add coefficients: $(6-4+3)\\sqrt{2}=5\\sqrt{2}$.'
+                    ],
+                    final_answer: '$5\\sqrt{2}$.'
+                },
+                {
+                    question: 'Rationalise $\\frac{5}{2+\\sqrt{3}}$.',
+                    steps: [
+                        'Multiply by conjugate $\\frac{2-\\sqrt{3}}{2-\\sqrt{3}}$.',
+                        'Numerator: $5(2-\\sqrt{3})=10-5\\sqrt{3}$.',
+                        'Denominator: $(2+\\sqrt{3})(2-\\sqrt{3})=4-3=1$.',
+                        'So denominator becomes 1.'
+                    ],
+                    final_answer: '$10-5\\sqrt{3}$.'
+                },
+                {
+                    question: 'Show that $\\frac{1}{\\sqrt{5}-2}=\\sqrt{5}+2$.',
+                    steps: [
+                        'Multiply numerator and denominator by conjugate $(\\sqrt{5}+2)$.',
+                        '$\\frac{1}{\\sqrt{5}-2}\\cdot\\frac{\\sqrt{5}+2}{\\sqrt{5}+2}=\\frac{\\sqrt{5}+2}{(\\sqrt{5})^2-2^2}$.',
+                        'Denominator becomes $5-4=1$.',
+                        'Hence expression equals $\\sqrt{5}+2$.'
+                    ],
+                    final_answer: '$\\frac{1}{\\sqrt{5}-2}=\\sqrt{5}+2$.'
+                }
+            ]
+        },
+        {
+            title: '12. Logarithmic Equations, Inequalities and Change of Base',
+            content: `## Exponential-log inverse relationship
+
+$$y=a^x\\iff x=\\log_a y,\\quad a>0,\\;a\\neq1,\\;y>0.$$
+
+## Log laws
+- $\\log_a(xy)=\\log_a x+\\log_a y$
+- $\\log_a\\left(\\frac{x}{y}\\right)=\\log_a x-\\log_a y$
+- $\\log_a(x^k)=k\\log_a x$
+- $\\log_a b=\\frac{\\log_c b}{\\log_c a}$ (change of base)
+
+## Equation solving pattern
+1. Restrict arguments: log inputs must be positive.
+2. Combine logs to single expression if possible.
+3. Convert to exponential form.
+4. Solve and check domain.
+
+## Inequality note
+
+For $a>1$, $\\log_a x$ is increasing.
+For $0<a<1$, it is decreasing (inequality direction reverses).`,
+            worked_examples: [
+                {
+                    question: 'Solve $\\log_3(x-1)+\\log_3(x+2)=2$.',
+                    steps: [
+                        'Domain: $x-1>0\\Rightarrow x>1$ and $x+2>0$ (already true if $x>1$).',
+                        'Combine: $\\log_3[(x-1)(x+2)]=2$.',
+                        'Convert: $(x-1)(x+2)=3^2=9$.',
+                        'Expand: $x^2+x-2=9\\Rightarrow x^2+x-11=0$.',
+                        '$x=\\frac{-1\\pm\\sqrt{45}}{2}=\\frac{-1\\pm3\\sqrt{5}}{2}$.',
+                        'Apply domain $x>1$: keep positive root only.'
+                    ],
+                    final_answer: '$x=\\frac{-1+3\\sqrt{5}}{2}$.'
+                },
+                {
+                    question: 'Given $\\log_2 7=2.807$, estimate $\\log_4 49$.',
+                    steps: [
+                        '$\\log_4 49=\\frac{\\log_2 49}{\\log_2 4}$ by change of base.',
+                        '$\\log_2 49=\\log_2(7^2)=2\\log_2 7=2(2.807)=5.614$.',
+                        '$\\log_2 4=2$.',
+                        'So $\\log_4 49=\\frac{5.614}{2}=2.807$.'
+                    ],
+                    final_answer: '$\\log_4 49\\approx2.807$.'
+                },
+                {
+                    question: 'Solve $\\ln(x^2-5x+6)=0$.',
+                    steps: [
+                        '$\\ln A=0\\Rightarrow A=1$.',
+                        'So $x^2-5x+6=1\\Rightarrow x^2-5x+5=0$.',
+                        'Use formula: $x=\\frac{5\\pm\\sqrt{25-20}}{2}=\\frac{5\\pm\\sqrt{5}}{2}$.',
+                        'Check log domain: $x^2-5x+6>0$ at both roots because expression equals 1.'
+                    ],
+                    final_answer: '$x=\\frac{5\\pm\\sqrt{5}}{2}$.'
+                }
+            ]
+        },
+        {
+            title: '13. Book Drill: Mixed Structured Questions',
+            content: `## Chapter drill format
+
+This section blends all three strands:
+- indices manipulation
+- surd simplification/rationalisation
+- logarithmic equation solving
+
+Use full method lines exactly as in exam scripts.`,
+            worked_examples: [
+                {
+                    question: 'Simplify and express in index form: $\\frac{(16x^{1/2}y^{-1})^{3/2}}{8x^{-1/4}y^{1/2}}$.',
+                    steps: [
+                        'Apply outer power: $16^{3/2}x^{3/4}y^{-3/2}$.',
+                        '$16^{3/2}=(\\sqrt{16})^3=4^3=64$.',
+                        'Expression becomes $\\frac{64x^{3/4}y^{-3/2}}{8x^{-1/4}y^{1/2}}$.',
+                        'Divide coefficients: $64/8=8$.',
+                        'Subtract powers: $x^{3/4-(-1/4)}=x^1$, $y^{-3/2-1/2}=y^{-2}$.'
+                    ],
+                    final_answer: '$8xy^{-2}=\\frac{8x}{y^2}$.'
+                },
+                {
+                    question: 'Rationalise and simplify: $\\frac{\\sqrt{12}}{\\sqrt{3}-1}$.',
+                    steps: [
+                        '$\\sqrt{12}=2\\sqrt{3}$, so expression is $\\frac{2\\sqrt{3}}{\\sqrt{3}-1}$.',
+                        'Multiply by conjugate: $\\frac{2\\sqrt{3}(\\sqrt{3}+1)}{(\\sqrt{3}-1)(\\sqrt{3}+1)}$.',
+                        'Denominator: $3-1=2$.',
+                        'Numerator: $2\\sqrt{3}(\\sqrt{3}+1)=2(3+\\sqrt{3})=6+2\\sqrt{3}$.',
+                        'Divide by 2: $3+\\sqrt{3}$.'
+                    ],
+                    final_answer: '$3+\\sqrt{3}$.'
+                },
+                {
+                    question: 'Solve $\\log_5(x)+\\log_5(x-4)=2$.',
+                    steps: [
+                        'Domain: $x>0$ and $x-4>0\\Rightarrow x>4$.',
+                        'Combine logs: $\\log_5[x(x-4)]=2$.',
+                        'Convert: $x(x-4)=5^2=25$.',
+                        '$x^2-4x-25=0$.',
+                        '$x=\\frac{4\\pm\\sqrt{16+100}}{2}=\\frac{4\\pm\\sqrt{116}}{2}=2\\pm\\sqrt{29}$.',
+                        'Apply domain $x>4$: valid root is $2+\\sqrt{29}$.'
+                    ],
+                    final_answer: '$x=2+\\sqrt{29}$.'
+                },
+                {
+                    question: 'Given $2^x=7$, evaluate $\\log_2\\left(\\frac{49}{8}\\right)$ in terms of $x$.',
+                    steps: [
+                        '$\\log_2\\left(\\frac{49}{8}\\right)=\\log_2(49)-\\log_2(8)$.',
+                        '$\\log_2(49)=\\log_2(7^2)=2\\log_2 7=2x$.',
+                        '$\\log_2(8)=3$.',
+                        'Therefore expression equals $2x-3$.'
+                    ],
+                    final_answer: '$2x-3$.'
+                }
+            ]
+        }
+    ];
+
+    indicesSurdsLogsTopic.sections = [...indicesSurdsLogsTopic.sections, ...extraSections];
+    indicesSurdsLogsTopic.key_points = Array.from(
+        new Set([
+            ...indicesSurdsLogsTopic.key_points,
+            'Convert roots to fractional indices early when simplifying complex expressions.',
+            'Use conjugates to rationalise binomial surd denominators cleanly.',
+            'State log domain restrictions before solving equations.',
+            'Change-of-base is essential when calculator base differs from question base.',
+            'For logarithmic inequalities, check if base is greater or less than 1.',
+        ])
+    );
+    indicesSurdsLogsTopic.exam_tips = Array.from(
+        new Set([
+            ...indicesSurdsLogsTopic.exam_tips,
+            'Do not cancel terms across addition inside logs or surds.',
+            'In surd questions, keep exact values; avoid decimal approximations unless requested.',
+            'Always re-check candidate log solutions against argument positivity.',
+            'Write one law per line in index/log proofs to secure method marks.',
+        ])
+    );
+    indicesSurdsLogsTopic.visual_descriptions = Array.from(
+        new Set([
+            ...indicesSurdsLogsTopic.visual_descriptions,
+            'Exponential-log inverse curve pair on shared axes.',
+            'Rationalisation flow using conjugates for surd denominators.',
+            'Logarithm law map linking product, quotient, and power rules.',
+            'Index law pyramid showing negative and fractional powers.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 4 (Lower Sixth): quadratic functions chapter upgrade.
+const quadraticFunctionsTopic = aLevelPureMathNotes['Quadratic Functions'];
+if (quadraticFunctionsTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Vertex Form, Axis of Symmetry, and Graph Control',
+            content: `## Vertex form as the graph key
+
+Write:
+$$y=a(x-h)^2+k$$
+where:
+- vertex is $(h,k)$
+- axis of symmetry is $x=h$
+- $a>0$ opens upward, $a<0$ opens downward
+- larger $|a|$ gives a narrower parabola
+
+## Converting standard form to vertex form
+
+From:
+$$y=ax^2+bx+c$$
+complete the square:
+$$y=a\\left(x+\\frac{b}{2a}\\right)^2+\\left(c-\\frac{b^2}{4a}\\right).$$
+
+## Fast vertex coordinate from standard form
+$$x_{\\text{vertex}}=-\\frac{b}{2a},\\quad y_{\\text{vertex}}=f\\left(-\\frac{b}{2a}\\right).$$
+
+## Sketch sequence
+1. Opening direction from sign of $a$.
+2. Axis and vertex.
+3. $y$-intercept from $x=0$.
+4. Solve for roots (if real).
+5. Draw symmetric curve.`,
+            worked_examples: [
+                {
+                    question: 'Convert $y=2x^2-8x+3$ to vertex form and state the vertex.',
+                    steps: [
+                        'Factor 2 from quadratic terms: $y=2(x^2-4x)+3$.',
+                        'Complete square inside: $x^2-4x=(x-2)^2-4$.',
+                        'So $y=2[(x-2)^2-4]+3=2(x-2)^2-8+3$.',
+                        'Hence $y=2(x-2)^2-5$.'
+                    ],
+                    final_answer: 'Vertex form: $y=2(x-2)^2-5$, vertex $(2,-5)$.'
+                },
+                {
+                    question: 'Find axis of symmetry and turning point of $y=-x^2+6x-1$.',
+                    steps: [
+                        '$a=-1, b=6$, so $x_{\\text{vertex}}=-\\frac{b}{2a}=-\\frac{6}{-2}=3$.',
+                        'Substitute: $y(3)=-9+18-1=8$.',
+                        'Turning point is maximum because $a<0$.'
+                    ],
+                    final_answer: 'Axis: $x=3$, turning point $(3,8)$ (maximum).'
+                },
+                {
+                    question: 'Given $y=a(x+1)^2-4$ passes through $(1,4)$, find $a$.',
+                    steps: [
+                        'Substitute $(x,y)=(1,4)$:',
+                        '$4=a(2)^2-4=4a-4$.',
+                        '$8=4a\\Rightarrow a=2$.'
+                    ],
+                    final_answer: '$a=2$, so equation is $y=2(x+1)^2-4$.'
+                }
+            ]
+        },
+        {
+            title: '11. Discriminant Analysis and Nature of Roots',
+            content: `## Discriminant
+
+For:
+$$ax^2+bx+c=0$$
+discriminant is:
+$$\\Delta=b^2-4ac.$$
+
+## Root classification
+- $\\Delta>0$: two distinct real roots
+- $\\Delta=0$: one repeated real root
+- $\\Delta<0$: no real roots (complex conjugate pair)
+
+## Geometric interpretation
+
+Discriminant tells how many times the parabola intersects the $x$-axis.
+
+## Parameter problems
+
+When coefficients include parameter $k$, form $\\Delta$ in terms of $k$, then solve inequalities for required root type.`,
+            worked_examples: [
+                {
+                    question: 'Determine the nature of roots of $3x^2-5x+2=0$.',
+                    steps: [
+                        '$a=3, b=-5, c=2$.',
+                        '$\\Delta=b^2-4ac=25-24=1$.',
+                        '$\\Delta>0$, so two distinct real roots.'
+                    ],
+                    final_answer: 'Two distinct real roots.'
+                },
+                {
+                    question: 'Find values of $k$ for which $x^2-4x+k=0$ has equal roots.',
+                    steps: [
+                        'Equal roots require $\\Delta=0$.',
+                        '$\\Delta=(-4)^2-4(1)(k)=16-4k$.',
+                        'Set to zero: $16-4k=0\\Rightarrow k=4$.'
+                    ],
+                    final_answer: '$k=4$.'
+                },
+                {
+                    question: 'For what values of $m$ does $x^2+(m-2)x+5=0$ have no real roots?',
+                    steps: [
+                        'Need $\\Delta<0$.',
+                        '$\\Delta=(m-2)^2-20<0$.',
+                        'So $(m-2)^2<20$.',
+                        '$-\\sqrt{20}<m-2<\\sqrt{20}$.',
+                        '$2-2\\sqrt{5}<m<2+2\\sqrt{5}$.'
+                    ],
+                    final_answer: '$2-2\\sqrt{5}<m<2+2\\sqrt{5}$.'
+                }
+            ]
+        },
+        {
+            title: '12. Quadratic Inequalities and Sign-Region Method',
+            content: `## Standard method
+
+To solve:
+$$ax^2+bx+c\\;\\gtrless\\;0$$
+1. Solve $ax^2+bx+c=0$ to get critical points.
+2. Mark regions on number line.
+3. Use test points or parabola orientation.
+4. Apply strict/non-strict endpoint inclusion.
+
+## Orientation shortcut
+
+If $a>0$, parabola is above axis outside roots and below between roots.
+If $a<0$, opposite sign pattern.
+
+## Cases with repeated roots
+
+If repeated root, expression does not change sign at that point.`,
+            worked_examples: [
+                {
+                    question: 'Solve $x^2-5x+6>0$.',
+                    steps: [
+                        'Factor: $x^2-5x+6=(x-2)(x-3)$.',
+                        'Roots: $x=2,3$.',
+                        '$a=1>0$, so positive outside interval between roots.',
+                        'Strict inequality excludes roots.'
+                    ],
+                    final_answer: '$x\\in(-\\infty,2)\\cup(3,\\infty)$.'
+                },
+                {
+                    question: 'Solve $-2x^2+8x-6\\ge0$.',
+                    steps: [
+                        'Multiply by $-1$ and reverse inequality: $2x^2-8x+6\\le0$.',
+                        'Divide by 2: $x^2-4x+3\\le0=(x-1)(x-3)\\le0$.',
+                        'Upward parabola is non-positive between roots including endpoints.'
+                    ],
+                    final_answer: '$x\\in[1,3]$.'
+                },
+                {
+                    question: 'Solve $(x-4)^2<9$.',
+                    steps: [
+                        'Take square inequality: $|x-4|<3$.',
+                        'So $-3<x-4<3$.',
+                        'Add 4: $1<x<7$.'
+                    ],
+                    final_answer: '$x\\in(1,7)$.'
+                }
+            ]
+        },
+        {
+            title: '13. Modelling and Book Drill (Structured Mix)',
+            content: `## Modelling with quadratics
+
+Quadratic models appear in:
+- projectile paths
+- area optimization
+- revenue-profit approximations
+
+General modelling route:
+1. Build equation from conditions/points.
+2. Extract vertex for optimum (max/min).
+3. Interpret roots in context.
+
+## Structured drill target
+
+Blend:
+- equation solving
+- discriminant parameter questions
+- inequalities
+- graph interpretation and construction.`,
+            worked_examples: [
+                {
+                    question: 'A ball follows $h(t)=-5t^2+20t+1$. Find maximum height and time attained.',
+                    steps: [
+                        '$a=-5, b=20$.',
+                        '$t_{\\text{max}}=-\\frac{b}{2a}=-\\frac{20}{-10}=2$.',
+                        '$h(2)=-5(4)+40+1=21$.',
+                        'Since $a<0$, this is maximum.'
+                    ],
+                    final_answer: 'Maximum height is $21$ units at $t=2$ s.'
+                },
+                {
+                    question: 'Find quadratic with roots 2 and -5 and passing through $(0,-20)$.',
+                    steps: [
+                        'Use factor form: $y=k(x-2)(x+5)$.',
+                        'Use point $(0,-20)$: $-20=k(-2)(5)=-10k$.',
+                        'So $k=2$.',
+                        'Equation: $y=2(x-2)(x+5)$.'
+                    ],
+                    final_answer: '$y=2(x-2)(x+5)=2x^2+6x-20$.'
+                },
+                {
+                    question: 'Given $x^2+px+12=0$ has roots differing by 2, find $p$.',
+                    steps: [
+                        'Let roots be $\\alpha,\\beta$ with $|\\alpha-\\beta|=2$.',
+                        'Use identity: $(\\alpha-\\beta)^2=(\\alpha+\\beta)^2-4\\alpha\\beta$.',
+                        'Here $\\alpha+\\beta=-p$ and $\\alpha\\beta=12$.',
+                        'So $4=p^2-48\\Rightarrow p^2=52$.',
+                        'Hence $p=\\pm2\\sqrt{13}$.'
+                    ],
+                    final_answer: '$p=2\\sqrt{13}$ or $p=-2\\sqrt{13}$.'
+                },
+                {
+                    question: 'Solve simultaneously: $y=x^2-4x+3$ and $y=2x-1$.',
+                    steps: [
+                        'Set equal: $x^2-4x+3=2x-1$.',
+                        'Rearrange: $x^2-6x+4=0$.',
+                        'Use formula: $x=\\frac{6\\pm\\sqrt{36-16}}{2}=3\\pm\\sqrt{5}$.',
+                        'Substitute into $y=2x-1$: $y=5\\pm2\\sqrt{5}$.'
+                    ],
+                    final_answer: 'Intersection points: $(3+\\sqrt5,\\;5+2\\sqrt5)$ and $(3-\\sqrt5,\\;5-2\\sqrt5)$.'
+                }
+            ]
+        }
+    ];
+
+    quadraticFunctionsTopic.sections = [...quadraticFunctionsTopic.sections, ...extraSections];
+    quadraticFunctionsTopic.key_points = Array.from(
+        new Set([
+            ...quadraticFunctionsTopic.key_points,
+            'Vertex form gives immediate graph control: location, opening direction, and stretch.',
+            'Discriminant links algebra directly to graph intersection count.',
+            'Quadratic inequalities are solved reliably via roots plus sign regions.',
+            'Use parameterized discriminant conditions for root-type questions.',
+            'In modelling, vertex usually represents optimum value in context.',
+        ])
+    );
+    quadraticFunctionsTopic.exam_tips = Array.from(
+        new Set([
+            ...quadraticFunctionsTopic.exam_tips,
+            'State the discriminant expression before substituting values.',
+            'When multiplying inequalities by negative values, reverse inequality sign.',
+            'Show all completing-square steps; skipped steps often lose method marks.',
+            'Always interpret roots and turning points in context units.',
+        ])
+    );
+    quadraticFunctionsTopic.visual_descriptions = Array.from(
+        new Set([
+            ...quadraticFunctionsTopic.visual_descriptions,
+            'Parabola family showing opening up/down and varying stretch.',
+            'Discriminant-root count map (two roots, repeated root, no real roots).',
+            'Quadratic sign chart across root intervals.',
+            'Vertex shift diagram from y=x^2 to y=a(x-h)^2+k.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 5 (Lower Sixth): functions chapter upgrade.
+const functionsTopic = aLevelPureMathNotes['Functions'];
+if (functionsTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Function Mapping Matrix and Relation Logic',
+            content: `## Function as a mapping matrix
+
+Think of a function as a mapping matrix between two sets:
+- input set (domain)
+- output set (codomain)
+
+Each input row must map to exactly one output column.
+
+## Valid vs invalid mapping matrix ideas
+
+Valid function:
+- one input -> one output
+
+Still valid:
+- many inputs -> same output (many-to-one)
+
+Invalid:
+- one input -> two different outputs
+
+## Relation test checklist
+1. List all ordered pairs.
+2. Check repeated first coordinates.
+3. If a first coordinate has different second coordinates, not a function.
+4. If repeated with same second coordinate, still a function.
+
+## Real-world matrix interpretation
+
+Input matrix:
+- time, quantity, temperature, distance
+
+Output matrix:
+- cost, speed, area, profit
+
+A model is useful only when each input state gives a unique predicted output.`,
+            worked_examples: [
+                {
+                    question: 'Determine whether relation $R=\\{(1,4),(2,5),(3,6),(1,7)\\}$ is a function.',
+                    steps: [
+                        'Check first coordinates: 1, 2, 3, 1.',
+                        'Input 1 maps to 4 and 7 (two outputs).',
+                        'This violates function rule.'
+                    ],
+                    final_answer: 'Not a function.'
+                },
+                {
+                    question: 'Determine whether $S=\\{(-2,3),(-1,3),(0,3),(1,5)\\}$ is a function.',
+                    steps: [
+                        'Each input appears once: -2, -1, 0, 1.',
+                        'No input maps to two different outputs.',
+                        'Many-to-one at output 3 is allowed.'
+                    ],
+                    final_answer: 'Yes, it is a function.'
+                },
+                {
+                    question: 'Given table: $x: -1,0,1,2$ and $f(x): 0,1,4,9$, decide if function and identify pattern.',
+                    steps: [
+                        'Each x has exactly one output value.',
+                        'So this is a function.',
+                        'Outputs match $f(x)=x^2+2x+1=(x+1)^2$ for listed x values.'
+                    ],
+                    final_answer: 'Function; consistent with quadratic rule $f(x)=(x+1)^2$.'
+                }
+            ]
+        },
+        {
+            title: '11. Composite and Inverse Function Matrix (Deep Operations)',
+            content: `## Composite matrix pipeline
+
+For two functions $f$ and $g$:
+- first layer: apply $g$
+- second layer: apply $f$
+
+So:
+$$f\\circ g(x)=f(g(x)).$$
+
+## Domain filter in composites
+
+Input must survive both stages:
+1. in domain of $g$
+2. output of $g$ in domain of $f$
+
+## Inverse function matrix idea
+
+If $f$ maps:
+$$x\\to y$$
+then inverse maps:
+$$y\\to x.$$
+
+Graphically, inverse reflects original graph in line $y=x$.
+
+## Verification protocol
+
+To prove inverse:
+1. compute $f(f^{-1}(x))$
+2. compute $f^{-1}(f(x))$
+3. both must simplify to $x$ on valid domains.`,
+            worked_examples: [
+                {
+                    question: 'Let $f(x)=\\sqrt{x-1}$ and $g(x)=x^2+1$. Find $f\\circ g(x)$ and its domain.',
+                    steps: [
+                        '$f\\circ g(x)=f(g(x))=\\sqrt{(x^2+1)-1}=\\sqrt{x^2}$.',
+                        '$\\sqrt{x^2}=|x|$.',
+                        'Domain of $g$ is all real x.',
+                        'Need $g(x)-1\\ge0\\Rightarrow x^2\\ge0$, always true.'
+                    ],
+                    final_answer: '$f\\circ g(x)=|x|$, domain: all real numbers.'
+                },
+                {
+                    question: 'Given $h(x)=\\frac{2x-3}{x+4}$, find $h^{-1}(x)$.',
+                    steps: [
+                        'Set $y=\\frac{2x-3}{x+4}$.',
+                        'Swap: $x=\\frac{2y-3}{y+4}$.',
+                        'Cross multiply: $x(y+4)=2y-3$.',
+                        '$xy+4x=2y-3$.',
+                        '$xy-2y=-3-4x$.',
+                        '$y(x-2)=-(4x+3)$.',
+                        '$y=\\frac{-(4x+3)}{x-2}=\\frac{4x+3}{2-x}$.'
+                    ],
+                    final_answer: '$h^{-1}(x)=\\frac{4x+3}{2-x}$, with $x\\ne2$.'
+                },
+                {
+                    question: 'If $f(x)=3x-1$ and $g(x)=\\frac{x+1}{3}$, test whether $g=f^{-1}$.',
+                    steps: [
+                        '$f(g(x))=3\\left(\\frac{x+1}{3}\\right)-1=x+1-1=x$.',
+                        '$g(f(x))=\\frac{(3x-1)+1}{3}=\\frac{3x}{3}=x$.',
+                        'Both compositions return x.'
+                    ],
+                    final_answer: 'Yes, $g=f^{-1}$.'
+                }
+            ]
+        },
+        {
+            title: '12. Transformation Matrix for Graph Families',
+            content: `## Transformation matrix view
+
+Take base graph $y=f(x)$ and apply matrix-like operations:
+- horizontal shift: $x\\to x-a$
+- horizontal scale: $x\\to bx$
+- vertical scale: $y\\to ay$
+- vertical shift: $y\\to y+d$
+
+General transformed form:
+$$y=a\\,f(b(x-c))+d.$$
+
+## Parameter effects
+- $c$: right shift if positive
+- $d$: upward shift if positive
+- $a$: vertical stretch and x-axis reflection if negative
+- $b$: horizontal scale by $1/|b|$ and y-axis reflection if negative
+
+## Matrix walkthrough checklist
+1. Start from key points of parent graph.
+2. Transform x-coordinates using inside parameters.
+3. Transform y-coordinates using outside parameters.
+4. Plot transformed key points and sketch.`,
+            worked_examples: [
+                {
+                    question: 'Describe transformations from $y=x^2$ to $y=-2(x-3)^2+5$.',
+                    steps: [
+                        '$(x-3)$ means shift right 3.',
+                        'Factor 2 means vertical stretch by 2.',
+                        'Negative sign reflects in x-axis.',
+                        '+5 shifts graph upward by 5.'
+                    ],
+                    final_answer: 'Right 3, stretch vertically by 2, reflect in x-axis, then up 5.'
+                },
+                {
+                    question: 'Find image of point $(2,4)$ on $y=f(x)$ under $y=3f(x-1)-2$.',
+                    steps: [
+                        '$x-1$: shift right by 1, so x-coordinate becomes 3.',
+                        'Vertical transform: $y\\to3y-2$.',
+                        'From y=4, new y is $3(4)-2=10$.'
+                    ],
+                    final_answer: 'Image point is $(3,10)$.'
+                },
+                {
+                    question: 'Write transformed equation of $f(x)=\\sqrt{x}$ after left shift 4 and reflection in x-axis.',
+                    steps: [
+                        'Left shift 4 means replace x by x+4.',
+                        'Reflection in x-axis multiplies output by -1.'
+                    ],
+                    final_answer: '$y=-\\sqrt{x+4}$.'
+                }
+            ]
+        },
+        {
+            title: '13. Function Domain-Range Matrix and Full Book Drill',
+            content: `## Domain-range matrix workflow
+
+For each function:
+1. list algebraic restrictions
+2. convert to interval domain
+3. identify extrema/asymptotes
+4. build range set
+5. verify with graph logic
+
+## Full mixed drill themes
+- notation and substitution
+- domain/range deduction
+- inverse checks
+- composition with restrictions
+- transformations and graph interpretation`,
+            worked_examples: [
+                {
+                    question: 'Find domain and range of $f(x)=\\frac{x-1}{x^2-4x+3}$.',
+                    steps: [
+                        'Factor denominator: $x^2-4x+3=(x-1)(x-3)$.',
+                        'Original expression simplifies to $\\frac{1}{x-3}$ but original domain excludes x=1 and x=3.',
+                        'So domain: all real except 1 and 3.',
+                        'For range of $\\frac{1}{x-3}$: y cannot be 0.',
+                        'Also x=1 corresponds to y=-1/2 removed from graph as hole.',
+                        'Hence y cannot be 0 or -1/2.'
+                    ],
+                    final_answer: 'Domain: $\\mathbb{R}\\setminus\\{1,3\\}$, Range: $\\mathbb{R}\\setminus\\{0,-\\frac12\\}$.'
+                },
+                {
+                    question: 'Solve $f(g(x))=5$ for $f(x)=2x+1$ and $g(x)=\\sqrt{x+4}$.',
+                    steps: [
+                        '$f(g(x))=2\\sqrt{x+4}+1$.',
+                        'Set equal to 5: $2\\sqrt{x+4}+1=5$.',
+                        '$2\\sqrt{x+4}=4\\Rightarrow\\sqrt{x+4}=2$.',
+                        '$x+4=4\\Rightarrow x=0$.',
+                        'Domain check: x>=-4, so x=0 valid.'
+                    ],
+                    final_answer: '$x=0$.'
+                },
+                {
+                    question: 'Given $p(x)=x^2-6x+8$, find p(1), p^{-1}(0) set, and minimum value.',
+                    steps: [
+                        '$p(1)=1-6+8=3$.',
+                        '$p^{-1}(0)$ means solve $p(x)=0$: $(x-2)(x-4)=0$, so x=2 or x=4.',
+                        'Complete square: $p(x)=(x-3)^2-1$.',
+                        'Minimum value is -1 at x=3.'
+                    ],
+                    final_answer: '$p(1)=3$, $p^{-1}(0)=\\{2,4\\}$, minimum value -1.'
+                },
+                {
+                    question: 'Find function with inverse itself and passing through (0,1).',
+                    steps: [
+                        'Self-inverse condition often satisfied by line symmetric about y=x.',
+                        'General form for reflection-symmetric line: $y=x$ or $y=-x+c$.',
+                        'Using point (0,1): for $y=-x+c$, c=1.',
+                        'Check self-inverse: solving x=-y+1 gives y=-x+1 again.'
+                    ],
+                    final_answer: 'One valid function is $f(x)=-x+1$ (also self-inverse).'
+                }
+            ]
+        }
+    ];
+
+    functionsTopic.sections = [...functionsTopic.sections, ...extraSections];
+    functionsTopic.key_points = Array.from(
+        new Set([
+            ...functionsTopic.key_points,
+            'A mapping is a function only when each input has exactly one output.',
+            'Composite domains must satisfy both inner and outer function restrictions.',
+            'Inverse existence requires one-to-one behavior on the chosen domain.',
+            'General transformation form a f(b(x-c))+d controls all shifts, scales, and reflections.',
+            'Domain and range should always be justified algebraically and graphically.',
+        ])
+    );
+    functionsTopic.exam_tips = Array.from(
+        new Set([
+            ...functionsTopic.exam_tips,
+            'When finding inverse, swap x and y first, then solve cleanly for y.',
+            'In composite questions, explicitly state domain restrictions before final answer.',
+            'Use interval notation consistently and avoid mixing with set notation mid-solution.',
+            'For transformation questions, describe operations in correct order.',
+        ])
+    );
+    functionsTopic.visual_descriptions = Array.from(
+        new Set([
+            ...functionsTopic.visual_descriptions,
+            'Function mapping matrix from domain set to codomain set.',
+            'Inverse reflection diagram across y=x.',
+            'Transformation matrix showing effect of a, b, c, d in y=a f(b(x-c))+d.',
+            'Composite function flowchart: input -> g -> f -> output.',
+        ])
+    );
+}
+
 // Helper function to get notes for a specific topic
 export function getALevelPureMathNotes(topicName: string): MathTopicNotes | null {
     // Fast path: exact match

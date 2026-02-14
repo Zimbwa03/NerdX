@@ -268,14 +268,76 @@
   stroke-width: 2.2;
 }
 
+.alevel-diagram-card .curve.five {
+  stroke: #22d3ee;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.six {
+  stroke: #f472b6;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.seven {
+  stroke: #a78bfa;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.eight {
+  stroke: #34d399;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.nine {
+  stroke: #f59e0b;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.ten {
+  stroke: #ef4444;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.eleven {
+  stroke: #38bdf8;
+  fill: none;
+  stroke-width: 2.2;
+}
+
+.alevel-diagram-card .curve.twelve {
+  stroke: #fb7185;
+  fill: none;
+  stroke-width: 2.2;
+}
+
 .alevel-diagram-card .asymptote {
   stroke: rgba(248, 250, 252, 0.55);
   stroke-width: 1.5;
   stroke-dasharray: 5 4;
 }
 
+.alevel-diagram-card .diag-mirror {
+  stroke: rgba(196, 181, 253, 0.8);
+  stroke-width: 1.4;
+  stroke-dasharray: 4 4;
+}
+
 .alevel-diagram-card .root-mark {
   fill: #facc15;
+}
+
+.alevel-diagram-card .vertex-mark {
+  fill: #a78bfa;
+}
+
+.alevel-diagram-card .vertex-mark.alt {
+  fill: #34d399;
 }
 
 .alevel-diagram-card .root-mark.hollow {
@@ -293,6 +355,17 @@
 .alevel-diagram-card .diagram-label {
   fill: rgba(226, 232, 240, 0.9);
   font-size: 11px;
+}
+
+.alevel-diagram-card .diagram-rect {
+  fill: rgba(30, 41, 59, 0.7);
+  stroke: rgba(148, 163, 184, 0.45);
+  stroke-width: 1.2;
+}
+
+.alevel-diagram-card .diagram-arrow {
+  stroke: rgba(148, 163, 184, 0.8);
+  stroke-width: 1.4;
 }
 
 .alevel-division-table {
