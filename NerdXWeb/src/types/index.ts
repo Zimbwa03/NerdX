@@ -152,6 +152,80 @@ export interface PostComment {
   created_at: string;
 }
 
+// ─── Teacher Dashboard Analytics Types ────────────────────────────────────────
+
+export interface TeacherDashboardStats {
+  id: string;
+  teacher_id: string;
+  total_lessons_completed: number;
+  total_hours_taught: number;
+  total_students: number;
+  completion_rate: number;
+  avg_session_duration_min: number;
+  this_month_lessons: number;
+  this_month_hours: number;
+  last_updated: string;
+}
+
+export type AttendanceStatus = 'attended' | 'missed' | 'late';
+
+export interface LessonAttendance {
+  id: string;
+  booking_id: string;
+  teacher_id: string;
+  student_id: string;
+  student_name?: string;
+  subject: string;
+  date: string;
+  status: AttendanceStatus;
+  duration_minutes: number;
+  teacher_notes?: string;
+  created_at: string;
+}
+
+export interface WeeklyLessonData {
+  day: string;        // e.g. "Mon", "Tue"
+  date: string;       // YYYY-MM-DD
+  lessons: number;
+}
+
+export interface MonthlyRatingData {
+  month: string;      // e.g. "Jan", "Feb"
+  avgRating: number;
+  reviewCount: number;
+}
+
+export interface SubjectDistribution {
+  subject: string;
+  count: number;
+  percentage: number;
+}
+
+export interface EngagementData {
+  week: string;       // e.g. "Week 1"
+  bookings: number;
+  completed: number;
+}
+
+export interface ActivityItem {
+  id: string;
+  type: 'booking' | 'lesson_completed' | 'review' | 'comment' | 'post';
+  title: string;
+  description: string;
+  timestamp: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface FeedbackItem {
+  id: string;
+  type: 'review' | 'comment';
+  studentName: string;
+  content: string;
+  rating?: number;
+  timestamp: string;
+  postTitle?: string;
+}
+
 export interface TeacherOnboardingData {
   // Step 1: Personal Details
   full_name: string;

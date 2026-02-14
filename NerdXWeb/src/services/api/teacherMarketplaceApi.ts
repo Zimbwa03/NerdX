@@ -12,6 +12,14 @@ import type {
   TeacherPost,
   PostComment,
   PostType,
+  TeacherDashboardStats,
+  LessonAttendance,
+  WeeklyLessonData,
+  MonthlyRatingData,
+  SubjectDistribution,
+  EngagementData,
+  ActivityItem,
+  FeedbackItem,
 } from '../../types';
 
 // ─── Helper: generate a UUID (browser-safe) ──────────────────────────────────
@@ -788,5 +796,437 @@ export async function deleteComment(commentId: string, postId: string): Promise<
     return true;
   } catch {
     return false;
+  }
+}
+
+// ─── Teacher Dashboard Analytics API ──────────────────────────────────────────
+
+/**
+ * Get or compute aggregated dashboard stats for a teacher.
+ * If no cached stats exist, computes from lesson_bookings and inserts a row.
+ */
+export async function getTeacherDashboardStats(teacherId: string): Promise<TeacherDashboardStats | null> {
+  try {
+    // Try to get existing stats
+    const { data: existing } = await supabase
+      .from('teacher_dashboard_stats')
+      .select('*')
+      .eq('teacher_id', teacherId)
+      .single();
+
+    // Get all bookings for this teacher to compute/refresh stats
+    const { data: allBookings } = await supabase
+      .from('lesson_bookings')
+      .select('*')
+      .eq('teacher_id', teacherId);
+
+    const bookings = (allBookings || []) as LessonBooking[];
+    const completed = bookings.filter(b => b.status === 'completed');
+    const confirmed = bookings.filter(b => b.status === 'confirmed');
+    const uniqueStudents = new Set(bookings.map(b => b.student_id));
+
+    // Calculate hours (assuming 1-hour default per lesson if no time calc possible)
+    const totalHours = completed.reduce((sum, b) => {
+      const start = b.start_time?.split(':').map(Number) || [0, 0];
+      const end = b.end_time?.split(':').map(Number) || [1, 0];
+      const hours = (end[0] - start[0]) + (end[1] - start[1]) / 60;
+      return sum + Math.max(hours, 0.5);
+    }, 0);
+
+    const completionRate = bookings.length > 0
+      ? (completed.length / (completed.length + confirmed.length || 1)) * 100
+      : 0;
+
+    const avgDuration = completed.length > 0 ? (totalHours * 60) / completed.length : 0;
+
+    // This month stats
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    const thisMonthCompleted = completed.filter(b => b.date >= monthStart);
+    const thisMonthHours = thisMonthCompleted.reduce((sum, b) => {
+      const start = b.start_time?.split(':').map(Number) || [0, 0];
+      const end = b.end_time?.split(':').map(Number) || [1, 0];
+      const hours = (end[0] - start[0]) + (end[1] - start[1]) / 60;
+      return sum + Math.max(hours, 0.5);
+    }, 0);
+
+    const stats: Omit<TeacherDashboardStats, 'id'> = {
+      teacher_id: teacherId,
+      total_lessons_completed: completed.length,
+      total_hours_taught: Math.round(totalHours * 100) / 100,
+      total_students: uniqueStudents.size,
+      completion_rate: Math.round(completionRate * 10) / 10,
+      avg_session_duration_min: Math.round(avgDuration * 10) / 10,
+      this_month_lessons: thisMonthCompleted.length,
+      this_month_hours: Math.round(thisMonthHours * 100) / 100,
+      last_updated: new Date().toISOString(),
+    };
+
+    if (existing) {
+      // Update existing stats
+      await supabase
+        .from('teacher_dashboard_stats')
+        .update(stats)
+        .eq('teacher_id', teacherId);
+      return { ...existing, ...stats } as TeacherDashboardStats;
+    } else {
+      // Insert new stats
+      const newRow = { id: uuid(), ...stats };
+      await supabase.from('teacher_dashboard_stats').insert(newRow);
+      return newRow as TeacherDashboardStats;
+    }
+  } catch (err) {
+    console.error('[Dashboard] getTeacherDashboardStats error:', err);
+    return null;
+  }
+}
+
+/**
+ * Get lesson history with attendance for a teacher.
+ */
+export async function getLessonHistory(
+  teacherId: string,
+  limit: number = 20,
+): Promise<(LessonBooking & { attendance?: LessonAttendance })[]> {
+  try {
+    const { data: bookingsData, error } = await supabase
+      .from('lesson_bookings')
+      .select('*')
+      .eq('teacher_id', teacherId)
+      .order('date', { ascending: false })
+      .limit(limit);
+
+    if (error || !bookingsData) return [];
+
+    // Fetch attendance records for these bookings
+    const bookingIds = bookingsData.map((b: LessonBooking) => b.id);
+    const { data: attendanceData } = await supabase
+      .from('lesson_attendance')
+      .select('*')
+      .in('booking_id', bookingIds);
+
+    const attendanceMap = new Map<string, LessonAttendance>();
+    if (attendanceData) {
+      for (const a of attendanceData) {
+        attendanceMap.set(a.booking_id, a as LessonAttendance);
+      }
+    }
+
+    return bookingsData.map((b: LessonBooking) => ({
+      ...b,
+      attendance: attendanceMap.get(b.id),
+    }));
+  } catch (err) {
+    console.error('[Dashboard] getLessonHistory error:', err);
+    return [];
+  }
+}
+
+/**
+ * Record attendance for a lesson.
+ */
+export async function recordLessonAttendance(
+  bookingId: string,
+  data: {
+    teacher_id: string;
+    student_id: string;
+    student_name?: string;
+    subject: string;
+    date: string;
+    status: 'attended' | 'missed' | 'late';
+    duration_minutes: number;
+    teacher_notes?: string;
+  },
+): Promise<LessonAttendance | null> {
+  try {
+    const row = {
+      id: uuid(),
+      booking_id: bookingId,
+      ...data,
+      created_at: new Date().toISOString(),
+    };
+    const { error } = await supabase.from('lesson_attendance').insert(row);
+    if (error) {
+      console.error('[Dashboard] recordLessonAttendance error:', error.message);
+      return null;
+    }
+    return row as LessonAttendance;
+  } catch (err) {
+    console.error('[Dashboard] recordLessonAttendance exception:', err);
+    return null;
+  }
+}
+
+/**
+ * Get a unified feedback feed combining reviews and post comments for a teacher.
+ */
+export async function getStudentFeedbackFeed(
+  teacherId: string,
+  limit: number = 20,
+): Promise<FeedbackItem[]> {
+  try {
+    // Fetch reviews
+    const { data: reviews } = await supabase
+      .from('teacher_reviews')
+      .select('*')
+      .eq('teacher_id', teacherId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    // Fetch post comments via teacher's posts
+    const { data: posts } = await supabase
+      .from('teacher_posts')
+      .select('id, content')
+      .eq('teacher_id', teacherId);
+
+    const postIds = (posts || []).map((p: { id: string }) => p.id);
+    let comments: PostComment[] = [];
+    if (postIds.length > 0) {
+      const { data: commentsData } = await supabase
+        .from('post_comments')
+        .select('*')
+        .in('post_id', postIds)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      comments = (commentsData || []) as PostComment[];
+    }
+
+    // Convert to unified feed items
+    const feedItems: FeedbackItem[] = [];
+
+    for (const r of (reviews || []) as TeacherReview[]) {
+      feedItems.push({
+        id: r.id,
+        type: 'review',
+        studentName: r.student_name || 'Student',
+        content: r.comment,
+        rating: r.rating,
+        timestamp: r.created_at,
+      });
+    }
+
+    for (const c of comments) {
+      const post = posts?.find((p: { id: string; content: string }) => p.id === c.post_id);
+      feedItems.push({
+        id: c.id,
+        type: 'comment',
+        studentName: c.user_name || 'Student',
+        content: c.content,
+        timestamp: c.created_at,
+        postTitle: post?.content?.slice(0, 50) || 'Post',
+      });
+    }
+
+    // Sort by timestamp descending
+    feedItems.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    return feedItems.slice(0, limit);
+  } catch (err) {
+    console.error('[Dashboard] getStudentFeedbackFeed error:', err);
+    return [];
+  }
+}
+
+/**
+ * Get weekly lesson data for charts (past 4 weeks).
+ */
+export async function getWeeklyLessonData(teacherId: string): Promise<{ weekly: WeeklyLessonData[]; engagement: EngagementData[]; subjects: SubjectDistribution[] }> {
+  try {
+    const now = new Date();
+    const fourWeeksAgo = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000);
+    const startDate = fourWeeksAgo.toISOString().split('T')[0];
+
+    const { data: bookings } = await supabase
+      .from('lesson_bookings')
+      .select('*')
+      .eq('teacher_id', teacherId)
+      .gte('date', startDate)
+      .order('date', { ascending: true });
+
+    const bks = (bookings || []) as LessonBooking[];
+
+    // Weekly lesson data (per day for current week)
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - now.getDay());
+    weekStart.setHours(0, 0, 0, 0);
+
+    const weekly: WeeklyLessonData[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart);
+      d.setDate(weekStart.getDate() + i);
+      const dateStr = d.toISOString().split('T')[0];
+      const count = bks.filter(b => b.date === dateStr && (b.status === 'completed' || b.status === 'confirmed')).length;
+      weekly.push({ day: dayNames[d.getDay()], date: dateStr, lessons: count });
+    }
+
+    // Engagement data (per week for past 4 weeks)
+    const engagement: EngagementData[] = [];
+    for (let w = 0; w < 4; w++) {
+      const wStart = new Date(now.getTime() - (3 - w) * 7 * 24 * 60 * 60 * 1000);
+      const wEnd = new Date(wStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const wStartStr = wStart.toISOString().split('T')[0];
+      const wEndStr = wEnd.toISOString().split('T')[0];
+      const weekBookings = bks.filter(b => b.date >= wStartStr && b.date < wEndStr);
+      engagement.push({
+        week: `Week ${w + 1}`,
+        bookings: weekBookings.length,
+        completed: weekBookings.filter(b => b.status === 'completed').length,
+      });
+    }
+
+    // Subject distribution
+    const subjectCounts = new Map<string, number>();
+    for (const b of bks) {
+      subjectCounts.set(b.subject, (subjectCounts.get(b.subject) || 0) + 1);
+    }
+    const totalSubjectLessons = bks.length || 1;
+    const subjects: SubjectDistribution[] = Array.from(subjectCounts.entries()).map(([subject, count]) => ({
+      subject,
+      count,
+      percentage: Math.round((count / totalSubjectLessons) * 100),
+    }));
+
+    return { weekly, engagement, subjects };
+  } catch (err) {
+    console.error('[Dashboard] getWeeklyLessonData error:', err);
+    return { weekly: [], engagement: [], subjects: [] };
+  }
+}
+
+/**
+ * Get monthly average rating trend (last 6 months).
+ */
+export async function getMonthlyRatingTrend(teacherId: string): Promise<MonthlyRatingData[]> {
+  try {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const now = new Date();
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    const startDate = sixMonthsAgo.toISOString();
+
+    const { data: reviews } = await supabase
+      .from('teacher_reviews')
+      .select('*')
+      .eq('teacher_id', teacherId)
+      .gte('created_at', startDate)
+      .order('created_at', { ascending: true });
+
+    const revs = (reviews || []) as TeacherReview[];
+    const result: MonthlyRatingData[] = [];
+
+    for (let i = 0; i < 6; i++) {
+      const monthDate = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+      const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+      const monthStr = monthDate.toISOString().split('T')[0];
+      const monthEndStr = monthEnd.toISOString().split('T')[0];
+
+      const monthReviews = revs.filter(r => {
+        const d = r.created_at.split('T')[0];
+        return d >= monthStr && d <= monthEndStr;
+      });
+
+      const avgRating = monthReviews.length > 0
+        ? monthReviews.reduce((sum, r) => sum + r.rating, 0) / monthReviews.length
+        : 0;
+
+      result.push({
+        month: monthNames[monthDate.getMonth()],
+        avgRating: Math.round(avgRating * 10) / 10,
+        reviewCount: monthReviews.length,
+      });
+    }
+
+    return result;
+  } catch (err) {
+    console.error('[Dashboard] getMonthlyRatingTrend error:', err);
+    return [];
+  }
+}
+
+/**
+ * Get recent activity timeline for the teacher dashboard.
+ */
+export async function getTeacherActivityTimeline(teacherId: string, limit: number = 15): Promise<ActivityItem[]> {
+  try {
+    const items: ActivityItem[] = [];
+
+    // Fetch recent bookings
+    const { data: recentBookings } = await supabase
+      .from('lesson_bookings')
+      .select('*')
+      .eq('teacher_id', teacherId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    for (const b of (recentBookings || []) as LessonBooking[]) {
+      if (b.status === 'completed') {
+        items.push({
+          id: `lesson-${b.id}`,
+          type: 'lesson_completed',
+          title: 'Lesson Completed',
+          description: `${b.subject} lesson on ${b.date}`,
+          timestamp: b.created_at,
+        });
+      } else if (b.status === 'pending' || b.status === 'confirmed') {
+        items.push({
+          id: `booking-${b.id}`,
+          type: 'booking',
+          title: b.status === 'confirmed' ? 'Booking Confirmed' : 'New Booking Request',
+          description: `${b.subject} on ${b.date} at ${b.start_time}`,
+          timestamp: b.created_at,
+        });
+      }
+    }
+
+    // Fetch recent reviews
+    const { data: recentReviews } = await supabase
+      .from('teacher_reviews')
+      .select('*')
+      .eq('teacher_id', teacherId)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    for (const r of (recentReviews || []) as TeacherReview[]) {
+      items.push({
+        id: `review-${r.id}`,
+        type: 'review',
+        title: 'New Review',
+        description: `${r.student_name || 'A student'} gave you ${r.rating} stars`,
+        timestamp: r.created_at,
+        metadata: { rating: r.rating },
+      });
+    }
+
+    // Fetch recent post comments
+    const { data: posts } = await supabase
+      .from('teacher_posts')
+      .select('id, content')
+      .eq('teacher_id', teacherId);
+
+    if (posts && posts.length > 0) {
+      const postIds = posts.map((p: { id: string }) => p.id);
+      const { data: recentComments } = await supabase
+        .from('post_comments')
+        .select('*')
+        .in('post_id', postIds)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      for (const c of (recentComments || []) as PostComment[]) {
+        items.push({
+          id: `comment-${c.id}`,
+          type: 'comment',
+          title: 'New Comment',
+          description: `${c.user_name} commented on your post`,
+          timestamp: c.created_at,
+        });
+      }
+    }
+
+    // Sort by timestamp descending
+    items.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    return items.slice(0, limit);
+  } catch (err) {
+    console.error('[Dashboard] getTeacherActivityTimeline error:', err);
+    return [];
   }
 }

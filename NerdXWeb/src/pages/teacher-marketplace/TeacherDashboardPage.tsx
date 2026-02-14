@@ -1,10 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { FloatingParticles } from '../../components/FloatingParticles';
 import { StarRating } from '../../components/marketplace/StarRating';
 import { AvailabilityGrid } from '../../components/marketplace/AvailabilityGrid';
 import { PostCard } from '../../components/marketplace/PostCard';
 import { CreatePostForm } from '../../components/marketplace/CreatePostForm';
+import { TeacherAnalyticsCharts } from '../../components/marketplace/TeacherAnalyticsCharts';
+import { LessonCalendarWidget } from '../../components/marketplace/LessonCalendarWidget';
+import { StudentFeedbackFeed } from '../../components/marketplace/StudentFeedbackFeed';
+import { QuickStartLesson } from '../../components/marketplace/QuickStartLesson';
+import { ActivityTimeline } from '../../components/marketplace/ActivityTimeline';
 import {
   getTeacherProfileByUserId,
   getTeacherBookings,
@@ -16,37 +22,63 @@ import {
   toggleLike,
   addComment,
   deleteComment,
+  getTeacherDashboardStats,
+  getStudentFeedbackFeed,
+  getWeeklyLessonData,
+  getMonthlyRatingTrend,
+  getTeacherActivityTimeline,
 } from '../../services/api/teacherMarketplaceApi';
 import { DAYS_OF_WEEK, TIME_SLOTS } from '../../data/marketplaceConstants';
-import type { TeacherProfile, LessonBooking, DayOfWeek, TeacherPost, PostComment, PostType } from '../../types';
+import type {
+  TeacherProfile, LessonBooking, DayOfWeek, TeacherPost, PostComment, PostType,
+  TeacherDashboardStats, WeeklyLessonData, EngagementData, MonthlyRatingData,
+  SubjectDistribution, FeedbackItem, ActivityItem,
+} from '../../types';
 import {
   ArrowLeft, User, ShieldCheck, Clock, Calendar, Star, BookOpen,
   MessageSquare, Loader2, Edit3, Plus, Trash2, Check, X,
-  AlertCircle, CheckCircle, BarChart3, Rss, Video
+  AlertCircle, CheckCircle, BarChart3, Rss, Video, TrendingUp,
+  Award, Users, Zap, ChevronRight, Settings, LayoutDashboard,
 } from 'lucide-react';
+
+type SidebarSection = 'overview' | 'lessons' | 'posts' | 'availability' | 'bookings';
 
 export function TeacherDashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Core state
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
   const [bookings, setBookings] = useState<LessonBooking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'availability' | 'posts'>('overview');
+  const [activeSection, setActiveSection] = useState<SidebarSection>('overview');
   const [myPosts, setMyPosts] = useState<TeacherPost[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Analytics state
+  const [dashStats, setDashStats] = useState<TeacherDashboardStats | null>(null);
+  const [weeklyData, setWeeklyData] = useState<WeeklyLessonData[]>([]);
+  const [engagementData, setEngagementData] = useState<EngagementData[]>([]);
+  const [ratingTrend, setRatingTrend] = useState<MonthlyRatingData[]>([]);
+  const [subjectDist, setSubjectDist] = useState<SubjectDistribution[]>([]);
+  const [feedbackItems, setFeedbackItems] = useState<FeedbackItem[]>([]);
+  const [activityItems, setActivityItems] = useState<ActivityItem[]>([]);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
   // Availability editor
   const [editingAvailability, setEditingAvailability] = useState(false);
   const [availSlots, setAvailSlots] = useState<{ day_of_week: DayOfWeek; start_time: string; end_time: string }[]>([]);
   const [savingAvail, setSavingAvail] = useState(false);
 
-  // Redirect non-teachers to student dashboard
+  // Redirect non-teachers
   useEffect(() => {
     if (user && user.role === 'student' && !user.is_teacher) {
       navigate('/app', { replace: true });
     }
   }, [user, navigate]);
 
+  // Load profile and bookings
   useEffect(() => {
     async function load() {
       if (!user) return;
@@ -57,7 +89,7 @@ export function TeacherDashboardPage() {
         const bk = await getTeacherBookings(teacherProfile.id);
         setBookings(bk);
         setAvailSlots(
-          (teacherProfile.availability || []).map((a) => ({
+          (teacherProfile.availability || []).map(a => ({
             day_of_week: a.day_of_week,
             start_time: a.start_time,
             end_time: a.end_time,
@@ -69,54 +101,43 @@ export function TeacherDashboardPage() {
     load();
   }, [user]);
 
-  const handleConfirmBooking = async (bookingId: string) => {
-    const success = await updateBookingStatus(bookingId, 'confirmed');
-    if (success) {
-      // Refresh bookings to get the generated room_id
-      if (profile) {
-        const refreshed = await getTeacherBookings(profile.id);
-        setBookings(refreshed);
-      } else {
-        setBookings(bookings.map((b) => (b.id === bookingId ? { ...b, status: 'confirmed' } : b)));
-      }
-    }
-  };
-
-  const handleCancelBooking = async (bookingId: string) => {
-    const success = await updateBookingStatus(bookingId, 'cancelled');
-    if (success) {
-      setBookings(bookings.map((b) => (b.id === bookingId ? { ...b, status: 'cancelled' } : b)));
-    }
-  };
-
-  const handleAddSlot = () => {
-    setAvailSlots([...availSlots, { day_of_week: 'Monday', start_time: '09:00', end_time: '10:00' }]);
-  };
-
-  const handleRemoveSlot = (idx: number) => {
-    setAvailSlots(availSlots.filter((_, i) => i !== idx));
-  };
-
-  const handleSlotChange = (idx: number, field: string, value: string) => {
-    setAvailSlots(availSlots.map((s, i) => (i === idx ? { ...s, [field]: value } : s)));
-  };
-
-  const handleSaveAvailability = async () => {
-    if (!profile) return;
-    setSavingAvail(true);
-    const success = await setTeacherAvailability(profile.id, availSlots);
-    if (success) {
-      setEditingAvailability(false);
-      // Refresh
-      const updated = await getTeacherProfileByUserId(user!.id);
-      if (updated) setProfile(updated);
-    }
-    setSavingAvail(false);
-  };
-
-  // Load posts when My Posts tab is opened
+  // Load analytics data after profile loads
   useEffect(() => {
-    if (activeTab !== 'posts' || !profile) return;
+    if (!profile) return;
+    let cancelled = false;
+
+    (async () => {
+      setAnalyticsLoading(true);
+      try {
+        const [stats, chartData, ratings, feedback, activity] = await Promise.all([
+          getTeacherDashboardStats(profile.id),
+          getWeeklyLessonData(profile.id),
+          getMonthlyRatingTrend(profile.id),
+          getStudentFeedbackFeed(profile.id),
+          getTeacherActivityTimeline(profile.id),
+        ]);
+
+        if (cancelled) return;
+
+        if (stats) setDashStats(stats);
+        setWeeklyData(chartData.weekly);
+        setEngagementData(chartData.engagement);
+        setSubjectDist(chartData.subjects);
+        setRatingTrend(ratings);
+        setFeedbackItems(feedback);
+        setActivityItems(activity);
+      } catch (err) {
+        console.error('Failed to load analytics:', err);
+      }
+      if (!cancelled) setAnalyticsLoading(false);
+    })();
+
+    return () => { cancelled = true; };
+  }, [profile?.id]);
+
+  // Load posts when section is opened
+  useEffect(() => {
+    if (activeSection !== 'posts' || !profile) return;
     let cancelled = false;
     (async () => {
       setPostsLoading(true);
@@ -127,186 +148,241 @@ export function TeacherDashboardPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [activeTab, profile?.id, user?.id]);
+  }, [activeSection, profile?.id, user?.id]);
 
-  const handleCreatePost = async (
-    teacherId: string,
-    content: string,
-    postType: PostType,
-    mediaUrl?: string | null,
-    subjectTag?: string | null,
-  ) => {
+  // Booking handlers
+  const handleConfirmBooking = useCallback(async (bookingId: string) => {
+    const success = await updateBookingStatus(bookingId, 'confirmed');
+    if (success && profile) {
+      const refreshed = await getTeacherBookings(profile.id);
+      setBookings(refreshed);
+    }
+  }, [profile]);
+
+  const handleCancelBooking = useCallback(async (bookingId: string) => {
+    const success = await updateBookingStatus(bookingId, 'cancelled');
+    if (success) {
+      setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
+    }
+  }, []);
+
+  // Availability handlers
+  const handleAddSlot = () => {
+    setAvailSlots([...availSlots, { day_of_week: 'Monday', start_time: '09:00', end_time: '10:00' }]);
+  };
+  const handleRemoveSlot = (idx: number) => setAvailSlots(availSlots.filter((_, i) => i !== idx));
+  const handleSlotChange = (idx: number, field: string, value: string) => {
+    setAvailSlots(availSlots.map((s, i) => i === idx ? { ...s, [field]: value } : s));
+  };
+  const handleSaveAvailability = async () => {
+    if (!profile) return;
+    setSavingAvail(true);
+    const success = await setTeacherAvailability(profile.id, availSlots);
+    if (success) {
+      setEditingAvailability(false);
+      const updated = await getTeacherProfileByUserId(user!.id);
+      if (updated) setProfile(updated);
+    }
+    setSavingAvail(false);
+  };
+
+  // Post handlers
+  const handleCreatePost = async (teacherId: string, content: string, postType: PostType, mediaUrl?: string | null, subjectTag?: string | null) => {
     return createPost(teacherId, content, postType, mediaUrl, subjectTag);
   };
-
-  const handlePostCreated = (newPost: TeacherPost) => {
-    setMyPosts((prev) => [newPost, ...prev]);
-  };
-
+  const handlePostCreated = (newPost: TeacherPost) => setMyPosts(prev => [newPost, ...prev]);
   const handleDeletePost = async (postId: string) => {
     const success = await deletePostApi(postId);
-    if (success) {
-      setMyPosts((prev) => prev.filter((p) => p.id !== postId));
-    }
+    if (success) setMyPosts(prev => prev.filter(p => p.id !== postId));
   };
-
   const handleLikePost = async (postId: string) => {
     if (!user) return { liked: false, newCount: 0 };
     const result = await toggleLike(postId, user.id);
-    setMyPosts((prev) =>
-      prev.map((p) =>
-        p.id === postId
-          ? { ...p, user_has_liked: result.liked, likes_count: result.newCount }
-          : p,
-      ),
-    );
+    setMyPosts(prev => prev.map(p => p.id === postId ? { ...p, user_has_liked: result.liked, likes_count: result.newCount } : p));
     return result;
   };
-
   const handleAddComment = async (postId: string, content: string): Promise<PostComment | null> => {
     if (!user) return null;
     const userName = `${user.name} ${user.surname?.charAt(0) || ''}.`;
     return addComment(postId, user.id, userName, content);
   };
-
   const handleDeleteComment = async (commentId: string, postId: string) => {
     await deleteComment(commentId, postId);
-    setMyPosts((prev) =>
-      prev.map((p) =>
-        p.id === postId ? { ...p, comments_count: Math.max(0, p.comments_count - 1) } : p,
-      ),
-    );
+    setMyPosts(prev => prev.map(p => p.id === postId ? { ...p, comments_count: Math.max(0, p.comments_count - 1) } : p));
   };
 
-  const pendingBookings = bookings.filter((b) => b.status === 'pending');
-  const confirmedBookings = bookings.filter((b) => b.status === 'confirmed');
-  const completedBookings = bookings.filter((b) => b.status === 'completed');
+  const pendingBookings = bookings.filter(b => b.status === 'pending');
+  const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
+  const completedBookings = bookings.filter(b => b.status === 'completed');
 
+  // Loading state
   if (loading) {
     return (
-      <div className="tp-loading">
-        <Loader2 size={32} className="marketplace-loading__spinner" />
-        <span>Loading teacher dashboard...</span>
+      <div className="td-v2-loading">
+        <FloatingParticles count={10} />
+        <div className="td-v2-loading__content">
+          <Loader2 size={36} className="td-v2-spinner" />
+          <span>Loading your dashboard...</span>
+        </div>
       </div>
     );
   }
 
+  // No profile state
   if (!profile) {
     return (
-      <div className="marketplace-empty">
-        <User size={48} />
-        <h3>No Teacher Profile Found</h3>
-        <p>You haven't created a teacher profile yet.</p>
-        <button type="button" className="to-btn to-btn--primary" onClick={() => navigate('/app/teacher-onboarding')}>
-          Create Teacher Profile
-        </button>
+      <div className="td-v2-no-profile">
+        <FloatingParticles count={10} />
+        <div className="td-v2-no-profile__content">
+          <User size={56} />
+          <h2>No Teacher Profile Found</h2>
+          <p>You haven't created a teacher profile yet. Get started to reach students!</p>
+          <button className="td-v2-btn td-v2-btn--primary td-v2-btn--lg" onClick={() => navigate('/app/teacher-onboarding')}>
+            <Plus size={18} /> Create Teacher Profile
+          </button>
+        </div>
       </div>
     );
   }
 
-  const statusBadge = {
-    pending: { icon: Clock, label: 'Pending Verification', className: 'td-status--pending' },
-    approved: { icon: CheckCircle, label: 'Verified', className: 'td-status--approved' },
-    rejected: { icon: AlertCircle, label: 'Rejected', className: 'td-status--rejected' },
+  const statusConfig = {
+    pending: { icon: Clock, label: 'Pending Verification', cls: 'pending' },
+    approved: { icon: CheckCircle, label: 'Verified Teacher', cls: 'approved' },
+    rejected: { icon: AlertCircle, label: 'Rejected', cls: 'rejected' },
   }[profile.verification_status];
 
+  const StatusIcon = statusConfig.icon;
+
+  const sidebarNav: { id: SidebarSection; label: string; icon: typeof LayoutDashboard; badge?: number }[] = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    { id: 'lessons', label: 'Lessons', icon: BookOpen, badge: confirmedBookings.length },
+    { id: 'bookings', label: 'Bookings', icon: Calendar, badge: pendingBookings.length },
+    { id: 'posts', label: 'My Posts', icon: Rss },
+    { id: 'availability', label: 'Availability', icon: Clock },
+  ];
+
   return (
-    <div className="teacher-dashboard">
-      <div className="td-header">
-        <Link to="/app" className="td-header__back">
+    <div className="td-v2">
+      <FloatingParticles count={12} />
+
+      {/* Mobile header */}
+      <div className="td-v2-mobile-header">
+        <Link to="/app" className="td-v2-mobile-header__back">
           <ArrowLeft size={20} />
         </Link>
         <h1>Teacher Dashboard</h1>
+        <button className="td-v2-mobile-header__menu" onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <LayoutDashboard size={20} />
+        </button>
       </div>
 
-      {/* Profile summary */}
-      <div className="td-profile-card">
-        <div className="td-profile-card__avatar">
-          {profile.profile_image_url ? (
-            <img src={profile.profile_image_url} alt="" className="td-profile-card__img" />
-          ) : (
-            <div className="td-profile-card__placeholder"><User size={36} /></div>
-          )}
+      {/* Sidebar */}
+      <aside className={`td-v2-sidebar ${sidebarOpen ? 'td-v2-sidebar--open' : ''}`}>
+        <div className="td-v2-sidebar__header">
+          <Link to="/app" className="td-v2-sidebar__back">
+            <ArrowLeft size={18} />
+            <span>Back to App</span>
+          </Link>
         </div>
-        <div className="td-profile-card__info">
-          <h2>{profile.full_name} {profile.surname}</h2>
-          <div className={`td-status ${statusBadge.className}`}>
-            <statusBadge.icon size={14} />
-            {statusBadge.label}
+
+        {/* Profile card in sidebar */}
+        <div className="td-v2-sidebar__profile">
+          <div className="td-v2-sidebar__avatar">
+            {profile.profile_image_url ? (
+              <img src={profile.profile_image_url} alt={profile.full_name} />
+            ) : (
+              <div className="td-v2-sidebar__avatar-placeholder"><User size={28} /></div>
+            )}
+            {profile.verification_status === 'approved' && (
+              <span className="td-v2-sidebar__verified"><ShieldCheck size={12} /></span>
+            )}
           </div>
-          <div className="td-profile-card__rating">
-            <StarRating rating={profile.average_rating || 0} size={14} showValue reviewCount={profile.total_reviews} />
+          <h3 className="td-v2-sidebar__name">{profile.full_name} {profile.surname}</h3>
+          <div className={`td-v2-sidebar__status td-v2-sidebar__status--${statusConfig.cls}`}>
+            <StatusIcon size={12} /> {statusConfig.label}
+          </div>
+          <div className="td-v2-sidebar__rating">
+            <StarRating rating={profile.average_rating || 0} size={13} showValue reviewCount={profile.total_reviews} />
           </div>
         </div>
+
+        {/* Navigation */}
+        <nav className="td-v2-sidebar__nav">
+          {sidebarNav.map(item => {
+            const NavIcon = item.icon;
+            return (
+              <button
+                key={item.id}
+                className={`td-v2-sidebar__nav-item ${activeSection === item.id ? 'td-v2-sidebar__nav-item--active' : ''}`}
+                onClick={() => { setActiveSection(item.id); setSidebarOpen(false); }}
+              >
+                <NavIcon size={18} />
+                <span>{item.label}</span>
+                {item.badge != null && item.badge > 0 && (
+                  <span className="td-v2-sidebar__badge">{item.badge}</span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Quick Start in sidebar */}
+        <div className="td-v2-sidebar__quick-start">
+          <QuickStartLesson bookings={bookings} onConfirmBooking={handleConfirmBooking} loading={loading} />
+        </div>
+
+        {/* View profile link */}
         <button
-          type="button"
-          className="to-btn to-btn--outline to-btn--sm"
+          className="td-v2-sidebar__view-profile"
           onClick={() => navigate(`/app/marketplace/teacher/${profile.id}`)}
         >
           <Edit3 size={14} /> View Public Profile
+          <ChevronRight size={14} />
         </button>
-      </div>
+      </aside>
 
-      {/* Stats */}
-      <div className="td-stats">
-        <div className="td-stat-card">
-          <BarChart3 size={20} />
-          <span className="td-stat-card__value">{bookings.length}</span>
-          <span className="td-stat-card__label">Total Bookings</span>
-        </div>
-        <div className="td-stat-card">
-          <Calendar size={20} />
-          <span className="td-stat-card__value">{confirmedBookings.length}</span>
-          <span className="td-stat-card__label">Upcoming</span>
-        </div>
-        <div className="td-stat-card">
-          <Star size={20} />
-          <span className="td-stat-card__value">{(profile.average_rating || 0).toFixed(1)}</span>
-          <span className="td-stat-card__label">Avg Rating</span>
-        </div>
-        <div className="td-stat-card">
-          <MessageSquare size={20} />
-          <span className="td-stat-card__value">{profile.total_reviews || 0}</span>
-          <span className="td-stat-card__label">Reviews</span>
-        </div>
-        <div className="td-stat-card">
-          <Rss size={20} />
-          <span className="td-stat-card__value">{myPosts.length}</span>
-          <span className="td-stat-card__label">Posts</span>
-        </div>
-      </div>
+      {/* Overlay for mobile sidebar */}
+      {sidebarOpen && <div className="td-v2-sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
-      {/* Tabs */}
-      <div className="tp-tabs">
-        <button type="button" className={`tp-tab${activeTab === 'overview' ? ' tp-tab--active' : ''}`} onClick={() => setActiveTab('overview')}>
-          <BarChart3 size={16} /> Overview
-        </button>
-        <button type="button" className={`tp-tab${activeTab === 'bookings' ? ' tp-tab--active' : ''}`} onClick={() => setActiveTab('bookings')}>
-          <Calendar size={16} /> Bookings ({pendingBookings.length} pending)
-        </button>
-        <button type="button" className={`tp-tab${activeTab === 'availability' ? ' tp-tab--active' : ''}`} onClick={() => setActiveTab('availability')}>
-          <Clock size={16} /> Availability
-        </button>
-        <button type="button" className={`tp-tab${activeTab === 'posts' ? ' tp-tab--active' : ''}`} onClick={() => setActiveTab('posts')}>
-          <Rss size={16} /> My Posts
-        </button>
-      </div>
+      {/* Main Content */}
+      <main className="td-v2-main">
+        {/* ═══════════ OVERVIEW SECTION ═══════════ */}
+        {activeSection === 'overview' && (
+          <div className="td-v2-overview">
+            {/* Hero header */}
+            <div className="td-v2-hero">
+              <div className="td-v2-hero__text">
+                <h1>Welcome back, {profile.full_name.split(' ')[0]}!</h1>
+                <p>Here's what's happening with your teaching today.</p>
+              </div>
+              <div className="td-v2-hero__badges">
+                <div className="td-v2-hero__badge">
+                  <Zap size={16} />
+                  <span>{confirmedBookings.length} lesson{confirmedBookings.length !== 1 ? 's' : ''} today</span>
+                </div>
+                <div className="td-v2-hero__badge">
+                  <Clock size={16} />
+                  <span>{pendingBookings.length} pending</span>
+                </div>
+                <div className="td-v2-hero__badge">
+                  <Star size={16} />
+                  <span>{profile.total_reviews || 0} reviews</span>
+                </div>
+              </div>
+            </div>
 
-      <div className="td-body">
-        {/* Overview */}
-        {activeTab === 'overview' && (
-          <div className="td-overview">
+            {/* Verification notices */}
             {profile.verification_status === 'pending' && (
-              <div className="td-notice td-notice--warning">
+              <div className="td-v2-notice td-v2-notice--warning">
                 <Clock size={18} />
                 <div>
                   <strong>Profile Under Review</strong>
-                  <p>Your teacher profile is currently being verified. This usually takes 1-3 business days. You'll be notified once approved.</p>
+                  <p>Your teacher profile is being verified. This usually takes 1-3 business days.</p>
                 </div>
               </div>
             )}
             {profile.verification_status === 'rejected' && (
-              <div className="td-notice td-notice--error">
+              <div className="td-v2-notice td-v2-notice--error">
                 <AlertCircle size={18} />
                 <div>
                   <strong>Profile Not Approved</strong>
@@ -315,44 +391,96 @@ export function TeacherDashboardPage() {
               </div>
             )}
 
-            {pendingBookings.length > 0 && (
-              <div className="td-section">
-                <h3><Clock size={16} /> Pending Bookings</h3>
-                {pendingBookings.slice(0, 3).map((b) => (
-                  <div key={b.id} className="td-booking-card">
-                    <div className="td-booking-card__info">
-                      <span className="td-booking-card__subject"><BookOpen size={14} /> {b.subject}</span>
-                      <span className="td-booking-card__time"><Calendar size={14} /> {b.date} at {b.start_time}</span>
-                    </div>
-                    <div className="td-booking-card__actions">
-                      <button type="button" className="to-btn to-btn--primary to-btn--sm" onClick={() => handleConfirmBooking(b.id)}>
-                        <Check size={14} /> Confirm
-                      </button>
-                      <button type="button" className="to-btn to-btn--outline to-btn--sm" onClick={() => handleCancelBooking(b.id)}>
-                        <X size={14} /> Decline
-                      </button>
-                    </div>
-                  </div>
-                ))}
+            {/* Stat cards */}
+            <div className="td-v2-stat-cards">
+              <div className="td-v2-stat-card td-v2-stat-card--purple">
+                <div className="td-v2-stat-card__icon"><BookOpen size={20} /></div>
+                <div className="td-v2-stat-card__data">
+                  <span className="td-v2-stat-card__value">{dashStats?.total_lessons_completed || completedBookings.length}</span>
+                  <span className="td-v2-stat-card__label">Lessons Completed</span>
+                </div>
+                <TrendingUp size={14} className="td-v2-stat-card__trend" />
               </div>
-            )}
+              <div className="td-v2-stat-card td-v2-stat-card--cyan">
+                <div className="td-v2-stat-card__icon"><Users size={20} /></div>
+                <div className="td-v2-stat-card__data">
+                  <span className="td-v2-stat-card__value">{dashStats?.total_students || new Set(bookings.map(b => b.student_id)).size}</span>
+                  <span className="td-v2-stat-card__label">Students Taught</span>
+                </div>
+                <TrendingUp size={14} className="td-v2-stat-card__trend" />
+              </div>
+              <div className="td-v2-stat-card td-v2-stat-card--gold">
+                <div className="td-v2-stat-card__icon"><Star size={20} /></div>
+                <div className="td-v2-stat-card__data">
+                  <span className="td-v2-stat-card__value">{(profile.average_rating || 0).toFixed(1)}</span>
+                  <span className="td-v2-stat-card__label">Avg Rating</span>
+                </div>
+                <Award size={14} className="td-v2-stat-card__trend" />
+              </div>
+              <div className="td-v2-stat-card td-v2-stat-card--green">
+                <div className="td-v2-stat-card__icon"><TrendingUp size={20} /></div>
+                <div className="td-v2-stat-card__data">
+                  <span className="td-v2-stat-card__value">{dashStats?.completion_rate?.toFixed(0) || 0}%</span>
+                  <span className="td-v2-stat-card__label">Completion Rate</span>
+                </div>
+                <CheckCircle size={14} className="td-v2-stat-card__trend" />
+              </div>
+            </div>
+
+            {/* Analytics Charts */}
+            <div className="td-v2-section">
+              <div className="td-v2-section__header">
+                <BarChart3 size={20} />
+                <h2>Analytics</h2>
+              </div>
+              <TeacherAnalyticsCharts
+                weeklyData={weeklyData}
+                engagementData={engagementData}
+                ratingTrend={ratingTrend}
+                subjectDistribution={subjectDist}
+                loading={analyticsLoading}
+              />
+            </div>
+
+            {/* Upcoming Lessons Calendar */}
+            <div className="td-v2-section">
+              <LessonCalendarWidget bookings={bookings} loading={loading} />
+            </div>
+
+            {/* Two-column: Feedback + Activity */}
+            <div className="td-v2-two-col">
+              <div className="td-v2-two-col__left">
+                <StudentFeedbackFeed items={feedbackItems} loading={analyticsLoading} />
+              </div>
+              <div className="td-v2-two-col__right">
+                <ActivityTimeline items={activityItems} loading={analyticsLoading} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═══════════ LESSONS SECTION ═══════════ */}
+        {activeSection === 'lessons' && (
+          <div className="td-v2-lessons-section">
+            <div className="td-v2-section__header">
+              <BookOpen size={20} />
+              <h2>Upcoming Lessons</h2>
+            </div>
+
+            <LessonCalendarWidget bookings={bookings} loading={loading} />
 
             {confirmedBookings.length > 0 && (
-              <div className="td-section">
-                <h3><Video size={16} /> Upcoming Lessons</h3>
-                {confirmedBookings.slice(0, 3).map((b) => (
-                  <div key={b.id} className="td-booking-card td-booking-card--confirmed">
-                    <div className="td-booking-card__info">
-                      <span className="td-booking-card__subject"><BookOpen size={14} /> {b.subject}</span>
-                      <span className="td-booking-card__time"><Calendar size={14} /> {b.date} at {b.start_time}</span>
+              <div className="td-v2-lesson-list">
+                <h3>Confirmed Lessons</h3>
+                {confirmedBookings.map(b => (
+                  <div key={b.id} className="td-v2-lesson-card td-v2-lesson-card--confirmed">
+                    <div className="td-v2-lesson-card__info">
+                      <span className="td-v2-lesson-card__subject"><BookOpen size={14} /> {b.subject}</span>
+                      <span className="td-v2-lesson-card__time"><Calendar size={14} /> {b.date} &middot; {b.start_time} - {b.end_time}</span>
                     </div>
-                    <div className="td-booking-card__actions">
+                    <div className="td-v2-lesson-card__actions">
                       {b.room_id && (
-                        <button
-                          type="button"
-                          className="vc-join-btn vc-join-btn--sm"
-                          onClick={() => navigate(`/app/classroom/${b.id}`)}
-                        >
+                        <button className="td-v2-btn td-v2-btn--join" onClick={() => navigate(`/app/classroom/${b.id}`)}>
                           <Video size={14} /> Join Classroom
                         </button>
                       )}
@@ -362,14 +490,16 @@ export function TeacherDashboardPage() {
               </div>
             )}
 
-            {profile.reviews && profile.reviews.length > 0 && (
-              <div className="td-section">
-                <h3><MessageSquare size={16} /> Recent Reviews</h3>
-                {profile.reviews.slice(0, 3).map((r) => (
-                  <div key={r.id} className="td-review-mini">
-                    <StarRating rating={r.rating} size={12} />
-                    <p>"{r.comment.slice(0, 100)}{r.comment.length > 100 ? '...' : ''}"</p>
-                    <span className="td-review-mini__author">— {r.student_name}</span>
+            {completedBookings.length > 0 && (
+              <div className="td-v2-lesson-list">
+                <h3>Completed ({completedBookings.length})</h3>
+                {completedBookings.slice(0, 5).map(b => (
+                  <div key={b.id} className="td-v2-lesson-card td-v2-lesson-card--completed">
+                    <div className="td-v2-lesson-card__info">
+                      <span className="td-v2-lesson-card__subject"><BookOpen size={14} /> {b.subject}</span>
+                      <span className="td-v2-lesson-card__time"><Calendar size={14} /> {b.date}</span>
+                    </div>
+                    <span className="td-v2-lesson-card__badge"><CheckCircle size={14} /> Completed</span>
                   </div>
                 ))}
               </div>
@@ -377,125 +507,106 @@ export function TeacherDashboardPage() {
           </div>
         )}
 
-        {/* Bookings */}
-        {activeTab === 'bookings' && (
-          <div className="td-bookings">
+        {/* ═══════════ BOOKINGS SECTION ═══════════ */}
+        {activeSection === 'bookings' && (
+          <div className="td-v2-bookings-section">
+            <div className="td-v2-section__header">
+              <Calendar size={20} />
+              <h2>Booking Management</h2>
+              <span className="td-v2-section__count">{bookings.length} total</span>
+            </div>
+
             {bookings.length === 0 ? (
-              <div className="marketplace-empty">
+              <div className="td-v2-empty-state">
                 <Calendar size={48} />
                 <h3>No Bookings Yet</h3>
                 <p>When students book lessons with you, they'll appear here.</p>
               </div>
             ) : (
-              <div className="td-booking-list">
-                {bookings.map((b) => (
-                  <div key={b.id} className={`td-booking-card td-booking-card--${b.status}`}>
-                    <div className="td-booking-card__info">
-                      <span className="td-booking-card__subject"><BookOpen size={14} /> {b.subject}</span>
-                      <span className="td-booking-card__time">
-                        <Calendar size={14} /> {b.date} &middot; {b.start_time} - {b.end_time}
-                      </span>
-                      <span className={`td-booking-card__status td-booking-card__status--${b.status}`}>
-                        {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
-                      </span>
-                    </div>
-                    <div className="td-booking-card__actions">
-                      {b.status === 'pending' && (
-                        <>
-                          <button type="button" className="to-btn to-btn--primary to-btn--sm" onClick={() => handleConfirmBooking(b.id)}>
+              <>
+                {/* Pending Bookings */}
+                {pendingBookings.length > 0 && (
+                  <div className="td-v2-booking-group">
+                    <h3 className="td-v2-booking-group__title">
+                      <Clock size={16} /> Pending ({pendingBookings.length})
+                    </h3>
+                    {pendingBookings.map(b => (
+                      <div key={b.id} className="td-v2-booking-card td-v2-booking-card--pending">
+                        <div className="td-v2-booking-card__info">
+                          <span className="td-v2-booking-card__subject"><BookOpen size={14} /> {b.subject}</span>
+                          <span className="td-v2-booking-card__time">
+                            <Calendar size={14} /> {b.date} &middot; {b.start_time} - {b.end_time}
+                          </span>
+                        </div>
+                        <div className="td-v2-booking-card__actions">
+                          <button className="td-v2-btn td-v2-btn--confirm" onClick={() => handleConfirmBooking(b.id)}>
                             <Check size={14} /> Confirm
                           </button>
-                          <button type="button" className="to-btn to-btn--outline to-btn--sm" onClick={() => handleCancelBooking(b.id)}>
-                            <X size={14} />
+                          <button className="td-v2-btn td-v2-btn--decline" onClick={() => handleCancelBooking(b.id)}>
+                            <X size={14} /> Decline
                           </button>
-                        </>
-                      )}
-                      {b.status === 'confirmed' && b.room_id && (
-                        <button
-                          type="button"
-                          className="vc-join-btn vc-join-btn--sm"
-                          onClick={() => navigate(`/app/classroom/${b.id}`)}
-                        >
-                          <Video size={14} /> Join Classroom
-                        </button>
-                      )}
-                    </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+                )}
 
-        {/* Availability */}
-        {activeTab === 'availability' && (
-          <div className="td-availability">
-            {!editingAvailability ? (
-              <>
-                <AvailabilityGrid availability={profile.availability || []} />
-                <button
-                  type="button"
-                  className="to-btn to-btn--primary"
-                  onClick={() => setEditingAvailability(true)}
-                >
-                  <Edit3 size={16} /> Edit Availability
-                </button>
+                {/* Confirmed Bookings */}
+                {confirmedBookings.length > 0 && (
+                  <div className="td-v2-booking-group">
+                    <h3 className="td-v2-booking-group__title">
+                      <CheckCircle size={16} /> Confirmed ({confirmedBookings.length})
+                    </h3>
+                    {confirmedBookings.map(b => (
+                      <div key={b.id} className="td-v2-booking-card td-v2-booking-card--confirmed">
+                        <div className="td-v2-booking-card__info">
+                          <span className="td-v2-booking-card__subject"><BookOpen size={14} /> {b.subject}</span>
+                          <span className="td-v2-booking-card__time">
+                            <Calendar size={14} /> {b.date} &middot; {b.start_time} - {b.end_time}
+                          </span>
+                        </div>
+                        <div className="td-v2-booking-card__actions">
+                          {b.room_id && (
+                            <button className="td-v2-btn td-v2-btn--join" onClick={() => navigate(`/app/classroom/${b.id}`)}>
+                              <Video size={14} /> Join
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Completed Bookings */}
+                {completedBookings.length > 0 && (
+                  <div className="td-v2-booking-group">
+                    <h3 className="td-v2-booking-group__title">
+                      <Award size={16} /> Completed ({completedBookings.length})
+                    </h3>
+                    {completedBookings.slice(0, 10).map(b => (
+                      <div key={b.id} className="td-v2-booking-card td-v2-booking-card--completed">
+                        <div className="td-v2-booking-card__info">
+                          <span className="td-v2-booking-card__subject"><BookOpen size={14} /> {b.subject}</span>
+                          <span className="td-v2-booking-card__time"><Calendar size={14} /> {b.date}</span>
+                        </div>
+                        <span className="td-v2-booking-card__status-badge"><CheckCircle size={12} /> Done</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </>
-            ) : (
-              <div className="td-avail-editor">
-                <h3>Edit Your Availability</h3>
-                {availSlots.map((slot, idx) => (
-                  <div key={idx} className="td-avail-slot">
-                    <select
-                      value={slot.day_of_week}
-                      onChange={(e) => handleSlotChange(idx, 'day_of_week', e.target.value)}
-                    >
-                      {DAYS_OF_WEEK.map((d) => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </select>
-                    <select
-                      value={slot.start_time}
-                      onChange={(e) => handleSlotChange(idx, 'start_time', e.target.value)}
-                    >
-                      {TIME_SLOTS.map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
-                    <span>to</span>
-                    <select
-                      value={slot.end_time}
-                      onChange={(e) => handleSlotChange(idx, 'end_time', e.target.value)}
-                    >
-                      {TIME_SLOTS.map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
-                    <button type="button" className="td-avail-slot__remove" onClick={() => handleRemoveSlot(idx)}>
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ))}
-                <button type="button" className="to-btn to-btn--outline to-btn--sm" onClick={handleAddSlot}>
-                  <Plus size={14} /> Add Time Slot
-                </button>
-                <div className="td-avail-editor__actions">
-                  <button type="button" className="to-btn to-btn--primary" onClick={handleSaveAvailability} disabled={savingAvail}>
-                    {savingAvail ? <Loader2 size={14} className="to-spinner" /> : <Check size={14} />}
-                    Save Availability
-                  </button>
-                  <button type="button" className="to-btn to-btn--outline" onClick={() => setEditingAvailability(false)}>
-                    Cancel
-                  </button>
-                </div>
-              </div>
             )}
           </div>
         )}
 
-        {/* My Posts */}
-        {activeTab === 'posts' && (
-          <div className="td-posts">
+        {/* ═══════════ POSTS SECTION ═══════════ */}
+        {activeSection === 'posts' && (
+          <div className="td-v2-posts-section">
+            <div className="td-v2-section__header">
+              <Rss size={20} />
+              <h2>My Posts</h2>
+            </div>
+
             <CreatePostForm
               teacherId={profile.id}
               teacherName={`${profile.full_name} ${profile.surname}`}
@@ -505,13 +616,13 @@ export function TeacherDashboardPage() {
             />
 
             {postsLoading ? (
-              <div className="tp-feed__loading">
-                <Loader2 size={24} className="marketplace-loading__spinner" />
+              <div className="td-v2-posts-loading">
+                <Loader2 size={24} className="td-v2-spinner" />
                 <span>Loading your posts...</span>
               </div>
             ) : myPosts.length > 0 ? (
-              <div className="tp-feed__list">
-                {myPosts.map((post) => (
+              <div className="td-v2-posts-list">
+                {myPosts.map(post => (
                   <PostCard
                     key={post.id}
                     post={post}
@@ -526,7 +637,7 @@ export function TeacherDashboardPage() {
                 ))}
               </div>
             ) : (
-              <div className="tp-feed__empty">
+              <div className="td-v2-empty-state">
                 <Rss size={48} />
                 <h3>No Posts Yet</h3>
                 <p>Share tips, resources, and updates with your students. Posts help build your reputation!</p>
@@ -534,7 +645,59 @@ export function TeacherDashboardPage() {
             )}
           </div>
         )}
-      </div>
+
+        {/* ═══════════ AVAILABILITY SECTION ═══════════ */}
+        {activeSection === 'availability' && (
+          <div className="td-v2-availability-section">
+            <div className="td-v2-section__header">
+              <Clock size={20} />
+              <h2>Availability</h2>
+            </div>
+
+            {!editingAvailability ? (
+              <div className="td-v2-availability-view">
+                <AvailabilityGrid availability={profile.availability || []} />
+                <button className="td-v2-btn td-v2-btn--primary" onClick={() => setEditingAvailability(true)}>
+                  <Edit3 size={16} /> Edit Availability
+                </button>
+              </div>
+            ) : (
+              <div className="td-v2-avail-editor">
+                <h3>Edit Your Availability</h3>
+                {availSlots.map((slot, idx) => (
+                  <div key={idx} className="td-v2-avail-slot">
+                    <select value={slot.day_of_week} onChange={e => handleSlotChange(idx, 'day_of_week', e.target.value)}>
+                      {DAYS_OF_WEEK.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                    <select value={slot.start_time} onChange={e => handleSlotChange(idx, 'start_time', e.target.value)}>
+                      {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <span className="td-v2-avail-slot__sep">to</span>
+                    <select value={slot.end_time} onChange={e => handleSlotChange(idx, 'end_time', e.target.value)}>
+                      {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <button className="td-v2-avail-slot__remove" onClick={() => handleRemoveSlot(idx)}>
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+                <button className="td-v2-btn td-v2-btn--outline td-v2-btn--sm" onClick={handleAddSlot}>
+                  <Plus size={14} /> Add Time Slot
+                </button>
+                <div className="td-v2-avail-editor__actions">
+                  <button className="td-v2-btn td-v2-btn--primary" onClick={handleSaveAvailability} disabled={savingAvail}>
+                    {savingAvail ? <Loader2 size={14} className="td-v2-spinner" /> : <Check size={14} />}
+                    Save Availability
+                  </button>
+                  <button className="td-v2-btn td-v2-btn--outline" onClick={() => setEditingAvailability(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </main>
     </div>
   );
 }
