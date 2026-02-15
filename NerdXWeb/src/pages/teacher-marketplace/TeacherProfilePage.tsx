@@ -133,10 +133,10 @@ export function TeacherProfilePage() {
     return result;
   };
 
-  const handleAddComment = async (postId: string, content: string): Promise<PostComment | null> => {
+  const handleAddComment = async (postId: string, content: string, parentId?: string | null): Promise<PostComment | null> => {
     if (!user) return null;
     const userName = `${user.name} ${user.surname?.charAt(0) || ''}.`;
-    return addComment(postId, user.id, userName, content);
+    return addComment(postId, user.id, userName, content, parentId);
   };
 
   const handleDeleteComment = async (commentId: string, postId: string) => {

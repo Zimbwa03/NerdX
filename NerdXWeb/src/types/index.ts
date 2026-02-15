@@ -150,6 +150,9 @@ export interface PostComment {
   user_name: string;
   content: string;
   created_at: string;
+  parent_id?: string | null;
+  /** Client-side only: nested replies */
+  replies?: PostComment[];
 }
 
 // ─── Teacher Dashboard Analytics Types ────────────────────────────────────────

@@ -1,17 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { teacherApi } from '../../services/api/teacherApi';
 import { attachmentsApi } from '../../services/api/attachmentsApi';
 import { API_BASE_URL } from '../../services/api/config';
 import { MathRenderer } from '../../components/MathRenderer';
-import { DEFAULT_QUICK_QUESTIONS, QUICK_QUESTIONS, SUBJECT_ICONS } from '../../data/teacherConstants';
+import { DEFAULT_QUICK_QUESTIONS, QUICK_QUESTIONS } from '../../data/teacherConstants';
 import {
   Send,
   Plus,
   FileText,
   Image as ImageIcon,
   Search,
+  Camera,
   Copy,
   ThumbsUp,
   ThumbsDown,
@@ -20,6 +21,10 @@ import {
   MessageSquarePlus,
   History,
   MoreHorizontal,
+  Mic,
+  Square,
+  Loader2,
+  Sparkles,
 } from 'lucide-react';
 
 interface Message {
@@ -31,7 +36,14 @@ interface Message {
   image_urls?: string[];
 }
 
+interface SelectedImage {
+  id: string;
+  file: File;
+  previewUrl: string;
+}
+
 const MAX_IMAGES = 10;
+const MAX_INPUT_LENGTH = 1200;
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -55,6 +67,37 @@ function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
+function createSelectedImage(file: File): SelectedImage {
+  return {
+    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    file,
+    previewUrl: URL.createObjectURL(file),
+  };
+}
+
+function revokeSelectedImages(images: SelectedImage[]) {
+  images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object') {
+    const maybeAxiosError = error as {
+      response?: { data?: { message?: string }; status?: number };
+      message?: string;
+    };
+    return maybeAxiosError.response?.data?.message || maybeAxiosError.message || fallback;
+  }
+
+  if (typeof error === 'string' && error.trim()) return error;
+  return fallback;
+}
+
+function isPaymentRequired(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const maybeAxiosError = error as { response?: { status?: number } };
+  return maybeAxiosError.response?.status === 402;
+}
+
 export function TeacherChatPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -65,6 +108,7 @@ export function TeacherChatPage() {
     initialMessage?: string;
     prefillMessage?: string;
   };
+
   const { subject, gradeLevel, topic, initialMessage, prefillMessage } = state;
   const { user, updateUser } = useAuth();
 
@@ -76,148 +120,244 @@ export function TeacherChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showQuickAsk, setShowQuickAsk] = useState(true);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
   const [zoomImage, setZoomImage] = useState<string | null>(null);
   const [sessionEnded, setSessionEnded] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcribingAudio, setTranscribingAudio] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const addMenuRef = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioChunksRef = useRef<BlobPart[]>([]);
   const initialMessageSentRef = useRef(false);
   const prefillAppliedRef = useRef(false);
+  const creditsRef = useRef<number>(user?.credits ?? 0);
 
-  const quickQuestions = subject ? (QUICK_QUESTIONS[subject] ?? DEFAULT_QUICK_QUESTIONS) : DEFAULT_QUICK_QUESTIONS;
+  const quickQuestions = useMemo(
+    () => (subject ? (QUICK_QUESTIONS[subject] ?? DEFAULT_QUICK_QUESTIONS) : DEFAULT_QUICK_QUESTIONS),
+    [subject],
+  );
+
+  const subjectInitials = useMemo(() => {
+    if (!subject) return 'AI';
+    return subject
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('');
+  }, [subject]);
+
+  const clearSelectedImages = useCallback(() => {
+    setSelectedImages((prev) => {
+      if (prev.length) revokeSelectedImages(prev);
+      return [];
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      clearSelectedImages();
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, [clearSelectedImages]);
+
+  useEffect(() => {
+    creditsRef.current = user?.credits ?? 0;
+  }, [user?.credits]);
+
+  useEffect(() => {
+    if (!showAddMenu) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (!addMenuRef.current) return;
+      if (!addMenuRef.current.contains(event.target as Node)) {
+        setShowAddMenu(false);
+      }
+    };
+
+    window.addEventListener('mousedown', handleOutsideClick);
+    return () => window.removeEventListener('mousedown', handleOutsideClick);
+  }, [showAddMenu]);
 
   useEffect(() => {
     if (!subject || !gradeLevel) {
       navigate('/app/teacher', { replace: true });
       return;
     }
+
     initialMessageSentRef.current = false;
     prefillAppliedRef.current = false;
     setSessionId(null);
     setMessages([]);
     setInput('');
-    setSelectedFiles([]);
+    clearSelectedImages();
     setShowQuickAsk(true);
     setShowAddMenu(false);
     setSessionEnded(null);
+
     let cancelled = false;
+
     (async () => {
       setStarting(true);
       setError(null);
       try {
-        const credits = user?.credits ?? 0;
+        const credits = creditsRef.current;
         if (credits <= 0) {
           setError('You need credits to use Teacher Mode. Please top up.');
           setStarting(false);
           return;
         }
+
         const session = await teacherApi.startSession(subject, gradeLevel, topic);
         if (cancelled) return;
+
         if (session?.session_id) {
           setSessionId(session.session_id);
           setMessages([
             {
               id: '0',
               role: 'assistant',
-              content: session.initial_message || 'Welcome to Teacher Mode! How can I help you learn today?',
+              content: session.initial_message || 'Welcome to Teacher Mode. How can I help you learn today?',
             },
           ]);
-          if (session.credits_remaining !== undefined) updateUser({ credits: session.credits_remaining });
+          if (session.credits_remaining !== undefined) {
+            updateUser({ credits: session.credits_remaining });
+          }
         } else {
           setError('Failed to start session. Please try again.');
         }
-      } catch (err: any) {
+      } catch (error: unknown) {
         if (!cancelled) {
-          setError(err.response?.data?.message || err.message || 'Failed to start session.');
+          setError(getErrorMessage(error, 'Failed to start session.'));
         }
       } finally {
-        if (!cancelled) setStarting(false);
+        if (!cancelled) {
+          setStarting(false);
+        }
       }
     })();
-    return () => { cancelled = true; };
-  }, [subject, gradeLevel, topic, navigate]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [subject, gradeLevel, topic, navigate, user?.id, updateUser, clearSelectedImages]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, sending]);
 
-  const handleSend = async (overrideText?: string) => {
-    const query = (overrideText ?? input).trim();
-    const hasImages = selectedFiles.length > 0;
-    if ((!query && !hasImages) || !sessionId || sending) return;
-    const credits = user?.credits ?? 0;
-    if (credits <= 0) {
-      setError('You need credits to continue. Please top up.');
-      return;
-    }
+  const handleSend = useCallback(
+    async (overrideText?: string) => {
+      const query = (overrideText ?? input).trim();
+      const queuedImages = [...selectedImages];
+      const hasImages = queuedImages.length > 0;
 
-    const userMsg: Message = {
-      id: `u-${Date.now()}`,
-      role: 'user',
-      content: query || '📷 (images)',
-      image_urls: selectedFiles.length ? await Promise.all(selectedFiles.map((f) => fileToDataUrl(f))) : undefined,
-    };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput('');
-    setSelectedFiles([]);
-    setShowQuickAsk(false);
-    setSending(true);
-    setError(null);
+      if ((!query && !hasImages) || !sessionId || sending || isRecording || transcribingAudio) return;
 
-    try {
-      let contextPackId: string | undefined;
-      if (hasImages) {
-        const pack = await attachmentsApi.analyzeImages({
-          images: selectedFiles,
-          prompt: query || undefined,
-          chatId: sessionId,
-        });
-        contextPackId = pack?.id;
-      }
-      const res = await teacherApi.sendMessage(sessionId, query || 'What do you see in these images?', contextPackId);
-      if (res?.session_ended) {
-        setSessionEnded(res.response);
-        setSending(false);
+      const credits = creditsRef.current;
+      if (credits <= 0) {
+        setError('You need credits to continue. Please top up.');
         return;
       }
-      if (res?.response) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `a-${Date.now()}`,
-            role: 'assistant',
-            content: res.response,
-            graph_url: res.graph_url,
-            video_url: res.video_url,
-          },
-        ]);
+
+      const userMsg: Message = {
+        id: `u-${Date.now()}`,
+        role: 'user',
+        content: query || '[images attached]',
+        image_urls: hasImages ? await Promise.all(queuedImages.map((img) => fileToDataUrl(img.file))) : undefined,
+      };
+
+      setMessages((prev) => [...prev, userMsg]);
+      setInput('');
+      clearSelectedImages();
+      setShowQuickAsk(false);
+      setSending(true);
+      setError(null);
+      setShowAddMenu(false);
+
+      try {
+        let contextPackId: string | undefined;
+
+        if (hasImages) {
+          const pack = await attachmentsApi.analyzeImages({
+            images: queuedImages.map((img) => img.file),
+            prompt: query || undefined,
+            chatId: sessionId,
+          });
+          contextPackId = pack?.id;
+        }
+
+        const response = await teacherApi.sendMessage(
+          sessionId,
+          query || 'What do you see in these images?',
+          contextPackId,
+        );
+
+        if (response?.session_ended) {
+          setSessionEnded(response.response);
+          setSending(false);
+          return;
+        }
+
+        if (response?.response) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `a-${Date.now()}`,
+              role: 'assistant',
+              content: response.response,
+              graph_url: response.graph_url,
+              video_url: response.video_url,
+            },
+          ]);
+        }
+
+        if (response?.credits_remaining !== undefined) {
+          updateUser({ credits: response.credits_remaining });
+        }
+      } catch (error: unknown) {
+        const msg = getErrorMessage(error, 'Failed to send message.');
+        setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
+        setError(msg);
+        if (isPaymentRequired(error)) {
+          setSessionEnded(msg);
+        }
+      } finally {
+        setSending(false);
       }
-      if (res?.credits_remaining !== undefined) updateUser({ credits: res.credits_remaining });
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'Failed to send message.';
-      setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
-      setError(msg);
-      if (err.response?.status === 402) setSessionEnded(msg);
-    } finally {
-      setSending(false);
-    }
-  };
+    },
+    [
+      clearSelectedImages,
+      input,
+      isRecording,
+      selectedImages,
+      sending,
+      sessionId,
+      transcribingAudio,
+      updateUser,
+    ],
+  );
 
   useEffect(() => {
     if (!sessionId || starting || sending) return;
+
     const msg = (initialMessage || '').trim();
     if (!msg || initialMessageSentRef.current) return;
 
     initialMessageSentRef.current = true;
-    // Avoid blocking the render cycle; Teacher Mode handles errors via `error` and `sessionEnded`.
     void handleSend(msg);
   }, [handleSend, initialMessage, sending, sessionId, starting]);
 
   useEffect(() => {
     if (!sessionId || starting) return;
     if ((initialMessage || '').trim()) return;
+
     const msg = (prefillMessage || '').trim();
     if (!msg || prefillAppliedRef.current) return;
 
@@ -229,45 +369,66 @@ export function TeacherChatPage() {
   const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !sessionId || sending) return;
+
     e.target.value = '';
     setSending(true);
     setShowAddMenu(false);
+    setError(null);
+
     try {
       const base64 = await fileToBase64(file);
       const mime = file.type || 'application/pdf';
       const analysis = await teacherApi.analyzeDocument(base64, mime);
+
       if (analysis?.analysis) {
         setMessages((prev) => [
           ...prev,
           {
             id: `doc-${Date.now()}`,
             role: 'assistant',
-            content: `📄 **Document Analysis**\n\n**File:** ${file.name}\n\n${analysis.analysis}`,
+            content: `Document analysis\n\nFile: ${file.name}\n\n${analysis.analysis}`,
           },
         ]);
       }
-    } catch (err) {
+    } catch {
       setError('Failed to analyze document.');
     } finally {
       setSending(false);
     }
   };
 
+  const pushImages = (incomingFiles: File[]) => {
+    const accepted = incomingFiles.filter((file) => file.type.startsWith('image/'));
+    if (!accepted.length) return;
+
+    setSelectedImages((prev) => {
+      const openSlots = Math.max(0, MAX_IMAGES - prev.length);
+      const nextBatch = accepted.slice(0, openSlots).map(createSelectedImage);
+      return [...prev, ...nextBatch];
+    });
+
+    if (selectedImages.length + accepted.length > MAX_IMAGES) {
+      setError(`You can attach up to ${MAX_IMAGES} images per message.`);
+    }
+
+    setShowAddMenu(false);
+    setShowQuickAsk(false);
+  };
+
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     e.target.value = '';
-    setSelectedFiles((prev) => {
-      const next = [...prev, ...files].slice(0, MAX_IMAGES);
-      return next;
-    });
-    setShowAddMenu(false);
+    pushImages(files);
   };
 
   const handleWebSearch = async () => {
     const query = window.prompt('Search the web for:');
     if (!query?.trim() || !sessionId || sending) return;
+
     setSending(true);
     setShowAddMenu(false);
+    setError(null);
+
     try {
       const result = await teacherApi.searchWeb(query);
       if (result?.response) {
@@ -276,7 +437,7 @@ export function TeacherChatPage() {
           {
             id: `search-${Date.now()}`,
             role: 'assistant',
-            content: `🌐 **Search Results**\n\nQuery: "${query}"\n\n${result.response}`,
+            content: `Web search results\n\nQuery: "${query}"\n\n${result.response}`,
           },
         ]);
       }
@@ -287,8 +448,14 @@ export function TeacherChatPage() {
     }
   };
 
-  const removeSelectedImage = (index: number) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  const removeSelectedImage = (imageId: string) => {
+    setSelectedImages((prev) => {
+      const target = prev.find((image) => image.id === imageId);
+      if (target) {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+      return prev.filter((image) => image.id !== imageId);
+    });
   };
 
   const copyToClipboard = (text: string) => {
@@ -296,24 +463,106 @@ export function TeacherChatPage() {
   };
 
   const shareMessage = (content: string) => {
+    if (!content.trim()) return;
+
     if (navigator.share) {
-      navigator.share({ title: 'Teacher Mode', text: content }).catch(() => copyToClipboard(content));
+      navigator
+        .share({ title: 'Teacher Mode', text: content })
+        .catch(() => copyToClipboard(content));
     } else {
       copyToClipboard(content);
     }
   };
 
+  const startRecording = async () => {
+    if (sending || transcribingAudio) return;
+
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setError('Audio recording is not supported in this browser.');
+      return;
+    }
+
+    setError(null);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.start();
+      setIsRecording(true);
+      setShowAddMenu(false);
+    } catch {
+      setError('Microphone access failed. Please allow microphone permission and try again.');
+    }
+  };
+
+  const stopRecording = async () => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder) return;
+
+    setTranscribingAudio(true);
+
+    try {
+      recorder.stop();
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
+
+      await new Promise<void>((resolve) => {
+        recorder.onstop = () => resolve();
+      });
+
+      const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      audioChunksRef.current = [];
+
+      if (!blob.size) {
+        setError('No audio was captured. Please try again.');
+        return;
+      }
+
+      const audioFile = new File([blob], `teacher-voice-${Date.now()}.webm`, {
+        type: 'audio/webm',
+      });
+
+      const result = await teacherApi.transcribeAudio(audioFile);
+
+      if (result.success && result.text?.trim()) {
+        setInput((prev) => (prev.trim() ? `${prev}\n${result.text!.trim()}` : result.text!.trim()));
+        setShowQuickAsk(false);
+      } else {
+        setError(result.message || 'Voice transcription failed.');
+      }
+    } catch {
+      setError('Voice transcription failed. Please try again.');
+    } finally {
+      setIsRecording(false);
+      setTranscribingAudio(false);
+      mediaRecorderRef.current = null;
+    }
+  };
+
+  const hasMessageContent = input.trim().length > 0 || selectedImages.length > 0;
+
   if (!subject || !gradeLevel) return null;
 
   if (starting) {
     return (
-      <div className="teacher-mode-page">
-        <div className="teacher-mode-loading">
-          {error || 'Starting Teacher Mode...'}
-        </div>
+      <div className="teacher-mode-page teacher-mode-page--v3">
+        <div className="teacher-mode-loading">{error || 'Starting Teacher Mode...'}</div>
         {error && (
           <div className="teacher-chat-actions-row">
-            <Link to="/app/teacher" className="teacher-chat-back-btn">Back to Setup</Link>
+            <Link to="/app/teacher" className="teacher-chat-back-btn">
+              Back to setup
+            </Link>
           </div>
         )}
       </div>
@@ -322,235 +571,314 @@ export function TeacherChatPage() {
 
   if (!sessionId && !starting) {
     return (
-      <div className="teacher-mode-page">
-        <div className="teacher-mode-loading">{error || 'Unable to start session'}</div>
+      <div className="teacher-mode-page teacher-mode-page--v3">
+        <div className="teacher-mode-loading">{error || 'Unable to start session.'}</div>
         <div className="teacher-chat-actions-row">
-          <button type="button" onClick={() => window.location.reload()}>Retry</button>
-          <Link to="/app/teacher">Back to Setup</Link>
+          <button type="button" onClick={() => window.location.reload()}>
+            Retry
+          </button>
+          <Link to="/app/teacher">Back to setup</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="teacher-mode-page teacher-chat-gpt-layout">
-      {/* Left sidebar - ChatGPT style */}
-      <aside className="teacher-chat-sidebar">
-        <Link to="/app/teacher" className="teacher-chat-sidebar-new" aria-label="New chat">
-          <MessageSquarePlus size={20} />
-        </Link>
-        <Link to="/app/teacher/history" className="teacher-chat-sidebar-item" aria-label="History">
-          <History size={20} />
-        </Link>
-        <div className="teacher-chat-sidebar-spacer" />
-        <div className="teacher-chat-sidebar-user" title={`${user?.credits ?? 0} credits`}>
-          <span className="teacher-chat-sidebar-credits">{user?.credits ?? 0}</span>
-          <span className="teacher-chat-sidebar-credits-label">credits</span>
-        </div>
-      </aside>
-
-      {/* Main area: top bar + messages + input */}
-      <div className="teacher-chat-main">
-        <header className="teacher-chat-topbar">
-          <div className="teacher-chat-topbar-title">
-            <span className="teacher-chat-topbar-icon">{SUBJECT_ICONS[subject] ?? '👨‍🏫'}</span>
-            <span>{subject} Tutor</span>
-            <span className="teacher-chat-topbar-sub">{gradeLevel}</span>
+    <div className="teacher-mode-page teacher-mode-page--v3">
+      <div className="teacher-chat-shell">
+        <aside className="teacher-chat-rail" aria-label="Teacher actions">
+          <Link to="/app/teacher" className="teacher-chat-rail-btn" aria-label="New session" title="New session">
+            <MessageSquarePlus size={18} />
+          </Link>
+          <Link to="/app/teacher/history" className="teacher-chat-rail-btn" aria-label="History" title="History">
+            <History size={18} />
+          </Link>
+          <div className="teacher-chat-rail-spacer" />
+          <div className="teacher-chat-rail-credits" title={`${user?.credits ?? 0} credits`}>
+            <span className="teacher-chat-rail-credits-value">{user?.credits ?? 0}</span>
+            <span className="teacher-chat-rail-credits-label">credits</span>
           </div>
-          <div className="teacher-chat-topbar-actions">
-            <button type="button" className="teacher-chat-topbar-btn" onClick={() => shareMessage(messages[messages.length - 1]?.content || '')} title="Share">
-              <Share2 size={18} />
-              <span>Share</span>
-            </button>
-            <button type="button" className="teacher-chat-topbar-btn teacher-chat-topbar-btn-icon" aria-label="More">
-              <MoreHorizontal size={18} />
-            </button>
-          </div>
-        </header>
+        </aside>
 
-        <div className="teacher-mode-chat">
-          <div className="teacher-messages">
-          {messages.map((m) =>
-            m.role === 'user' ? (
-              <div key={m.id} className="teacher-msg-row teacher-msg-row-user">
-                <div className="teacher-msg-bubble teacher-msg-bubble-user">
-                  {m.image_urls?.length ? (
-                    <div className="teacher-msg-images">
-                      {m.image_urls.slice(0, MAX_IMAGES).map((url, i) => (
-                        <img key={i} src={url} alt="" className="teacher-msg-thumb" />
-                      ))}
-                    </div>
-                  ) : null}
-                  <span>{m.content}</span>
+        <main className="teacher-chat-main-v3">
+          <header className="teacher-chat-header-v3">
+            <div className="teacher-chat-header-main">
+              <div className="teacher-chat-subject-avatar">{subjectInitials}</div>
+              <div className="teacher-chat-header-text-v3">
+                <h1>{subject} Tutor</h1>
+                <div className="teacher-chat-meta-row-v3">
+                  <span>{gradeLevel}</span>
+                  {topic ? <span>Topic: {topic}</span> : <span>Topic: Any</span>}
+                  <span>Session active</span>
                 </div>
-              </div>
-            ) : (
-              <div key={m.id} className="teacher-msg-row teacher-msg-row-assistant">
-                <div className="teacher-msg-bubble teacher-msg-bubble-assistant">
-                  <div className="teacher-msg-assistant-content">
-                    <MathRenderer content={m.content} fontSize={16} />
-                    {m.graph_url && (
-                      <div className="teacher-graph-wrap">
-                        <button
-                          type="button"
-                          className="teacher-graph-clickable"
-                          onClick={() => setZoomImage(`${API_BASE_URL}${m.graph_url}`)}
-                        >
-                          <img src={`${API_BASE_URL}${m.graph_url}`} alt="Graph" />
-                        </button>
-                        <span className="teacher-graph-caption">Mathematical Graph</span>
-                      </div>
-                    )}
-                    {m.video_url && (
-                      <div className="teacher-video-wrap">
-                        <video
-                          src={`${API_BASE_URL}${m.video_url}`}
-                          controls
-                          className="teacher-video-el"
-                        />
-                      </div>
-                    )}
-                  </div>
-                  <div className="teacher-msg-actions">
-                    <button type="button" onClick={() => copyToClipboard(m.content)} title="Copy">
-                      <Copy size={14} />
-                    </button>
-                    <button type="button" title="Good" aria-label="Good"><ThumbsUp size={14} /></button>
-                    <button type="button" title="Bad" aria-label="Bad"><ThumbsDown size={14} /></button>
-                    <button type="button" onClick={() => shareMessage(m.content)} title="Share">
-                      <Share2 size={14} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )
-          )}
-          {sending && (
-            <div className="teacher-msg-row teacher-msg-row-assistant">
-              <div className="teacher-msg-bubble teacher-msg-bubble-assistant teacher-typing-wrap">
-                <span className="teacher-typing-dot" /> <span className="teacher-typing-dot" /> <span className="teacher-typing-dot" />
               </div>
             </div>
-          )}
-          <div ref={scrollRef} />
-        </div>
-
-        {error && <div className="teacher-chat-error">{error}</div>}
-
-        {showQuickAsk && quickQuestions.length > 0 && (
-          <div className="teacher-quick-ask">
-            {quickQuestions.map((q, i) => (
+            <div className="teacher-chat-header-actions-v3">
               <button
-                key={i}
                 type="button"
-                className="teacher-quick-ask-chip"
-                onClick={() => { setInput(q); setShowQuickAsk(false); }}
-                disabled={sending}
+                className="teacher-chat-topbar-btn"
+                onClick={() => shareMessage(messages[messages.length - 1]?.content || '')}
+                title="Share latest response"
               >
-                {q}
+                <Share2 size={16} />
+                <span>Share</span>
               </button>
-            ))}
-          </div>
-        )}
+              <button type="button" className="teacher-chat-topbar-btn teacher-chat-topbar-btn-icon" aria-label="More options">
+                <MoreHorizontal size={18} />
+              </button>
+            </div>
+          </header>
 
-        {/* ChatGPT-style input bar: centered, rounded */}
-        <div className="teacher-chat-input-wrap">
-          {selectedFiles.length > 0 && (
-            <div className="teacher-selected-images-inline">
-              {selectedFiles.map((file, i) => (
-                <div key={i} className="teacher-selected-img-wrap">
-                  <img src={URL.createObjectURL(file)} alt="" className="teacher-selected-img" />
-                  <button type="button" className="teacher-selected-img-remove" onClick={() => removeSelectedImage(i)} aria-label="Remove">
-                    <X size={14} />
-                  </button>
+          <section className="teacher-chat-scroll">
+            <div className="teacher-chat-stream">
+              {messages.map((message) =>
+                message.role === 'user' ? (
+                  <div key={message.id} className="teacher-msg-row teacher-msg-row-user">
+                    <div className="teacher-msg-bubble teacher-msg-bubble-user">
+                      {message.image_urls?.length ? (
+                        <div className="teacher-msg-images">
+                          {message.image_urls.slice(0, MAX_IMAGES).map((url, index) => (
+                            <img key={`${message.id}-img-${index}`} src={url} alt="Attachment" className="teacher-msg-thumb" />
+                          ))}
+                        </div>
+                      ) : null}
+                      <span>{message.content}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div key={message.id} className="teacher-msg-row teacher-msg-row-assistant">
+                    <div className="teacher-msg-bubble teacher-msg-bubble-assistant">
+                      <div className="teacher-msg-assistant-content">
+                        <MathRenderer content={message.content} fontSize={16} />
+
+                        {message.graph_url && (
+                          <div className="teacher-graph-wrap">
+                            <button
+                              type="button"
+                              className="teacher-graph-clickable"
+                              onClick={() => setZoomImage(`${API_BASE_URL}${message.graph_url}`)}
+                            >
+                              <img src={`${API_BASE_URL}${message.graph_url}`} alt="Generated graph" />
+                            </button>
+                            <span className="teacher-graph-caption">Generated graph</span>
+                          </div>
+                        )}
+
+                        {message.video_url && (
+                          <div className="teacher-video-wrap">
+                            <video src={`${API_BASE_URL}${message.video_url}`} controls className="teacher-video-el" />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="teacher-msg-actions">
+                        <button type="button" onClick={() => copyToClipboard(message.content)} title="Copy response">
+                          <Copy size={14} />
+                        </button>
+                        <button type="button" title="Helpful" aria-label="Helpful">
+                          <ThumbsUp size={14} />
+                        </button>
+                        <button type="button" title="Needs improvement" aria-label="Needs improvement">
+                          <ThumbsDown size={14} />
+                        </button>
+                        <button type="button" onClick={() => shareMessage(message.content)} title="Share response">
+                          <Share2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ),
+              )}
+
+              {sending && (
+                <div className="teacher-msg-row teacher-msg-row-assistant">
+                  <div className="teacher-msg-bubble teacher-msg-bubble-assistant teacher-typing-wrap">
+                    <span className="teacher-typing-dot" />
+                    <span className="teacher-typing-dot" />
+                    <span className="teacher-typing-dot" />
+                  </div>
                 </div>
+              )}
+
+              <div ref={scrollRef} />
+            </div>
+          </section>
+
+          {error && <div className="teacher-chat-error">{error}</div>}
+
+          {showQuickAsk && quickQuestions.length > 0 && (
+            <div className="teacher-quick-ask teacher-quick-ask--v3">
+              {quickQuestions.map((question, index) => (
+                <button
+                  key={`${question}-${index}`}
+                  type="button"
+                  className="teacher-quick-ask-chip"
+                  onClick={() => {
+                    setInput(question);
+                    setShowQuickAsk(false);
+                  }}
+                  disabled={sending || isRecording || transcribingAudio}
+                >
+                  <Sparkles size={14} />
+                  <span>{question}</span>
+                </button>
               ))}
             </div>
           )}
-          <div className="teacher-chat-input-bar">
-            <div className="teacher-add-wrap">
+
+          <footer className="teacher-chat-composer-wrap">
+            {selectedImages.length > 0 && (
+              <div className="teacher-selected-images-inline">
+                {selectedImages.map((image) => (
+                  <div key={image.id} className="teacher-selected-img-wrap">
+                    <img src={image.previewUrl} alt={image.file.name} className="teacher-selected-img" />
+                    <button
+                      type="button"
+                      className="teacher-selected-img-remove"
+                      onClick={() => removeSelectedImage(image.id)}
+                      aria-label="Remove image"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {transcribingAudio && (
+              <div className="teacher-audio-status" role="status" aria-live="polite">
+                <Loader2 size={14} className="spin" />
+                <span>Transcribing audio...</span>
+              </div>
+            )}
+
+            <div className="teacher-chat-composer" ref={addMenuRef}>
+              <div className="teacher-add-wrap">
+                <button
+                  type="button"
+                  className="teacher-chat-input-add"
+                  onClick={() => setShowAddMenu((prev) => !prev)}
+                  disabled={sending || isRecording || transcribingAudio}
+                  aria-label="Add content"
+                >
+                  <Plus size={20} />
+                </button>
+
+                {showAddMenu && (
+                  <div className="teacher-add-menu teacher-add-menu--v3">
+                    <button type="button" onClick={() => fileInputRef.current?.click()}>
+                      <FileText size={16} />
+                      <span>Upload document</span>
+                    </button>
+                    <button type="button" onClick={() => imageInputRef.current?.click()}>
+                      <ImageIcon size={16} />
+                      <span>Attach images (up to {MAX_IMAGES})</span>
+                    </button>
+                    <button type="button" onClick={() => cameraInputRef.current?.click()}>
+                      <Camera size={16} />
+                      <span>Capture photo</span>
+                    </button>
+                    <button type="button" onClick={handleWebSearch}>
+                      <Search size={16} />
+                      <span>Web search</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf,image/*"
+                className="teacher-hidden-input"
+                onChange={handleDocumentUpload}
+              />
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="teacher-hidden-input"
+                onChange={handleImageSelect}
+              />
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="teacher-hidden-input"
+                onChange={handleImageSelect}
+              />
+
+              <textarea
+                value={input}
+                onChange={(event) => {
+                  setInput(event.target.value.slice(0, MAX_INPUT_LENGTH));
+                  if (event.target.value.trim()) setShowQuickAsk(false);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    void handleSend();
+                  }
+                }}
+                placeholder={isRecording ? 'Recording... tap stop to transcribe' : 'Ask anything...'}
+                rows={1}
+                disabled={sending || isRecording || transcribingAudio}
+                className="teacher-chat-input-field"
+              />
+
               <button
                 type="button"
-                className="teacher-chat-input-add"
-                onClick={() => setShowAddMenu(!showAddMenu)}
-                disabled={sending}
-                aria-label="Attach"
+                className={`teacher-chat-mic-btn${isRecording ? ' is-recording' : ''}`}
+                onClick={() => {
+                  if (isRecording) {
+                    void stopRecording();
+                  } else {
+                    void startRecording();
+                  }
+                }}
+                disabled={sending || transcribingAudio}
+                aria-label={isRecording ? 'Stop recording' : 'Start voice recording'}
+                title={isRecording ? 'Stop recording' : 'Record voice'}
               >
-                <Plus size={20} />
+                {isRecording ? <Square size={16} /> : <Mic size={16} />}
               </button>
-              {showAddMenu && (
-                <div className="teacher-add-menu">
-                  <button type="button" onClick={() => fileInputRef.current?.click()}>
-                    <FileText size={18} /> Upload Document
-                  </button>
-                  <button type="button" onClick={() => imageInputRef.current?.click()}>
-                    <ImageIcon size={18} /> Attach Images (up to {MAX_IMAGES})
-                  </button>
-                  <button type="button" onClick={handleWebSearch}>
-                    <Search size={18} /> Web Search
-                  </button>
-                </div>
-              )}
+
+              <button
+                type="button"
+                className="teacher-chat-send-btn"
+                onClick={() => void handleSend()}
+                disabled={!hasMessageContent || sending || isRecording || transcribingAudio}
+                aria-label="Send message"
+              >
+                <Send size={18} />
+              </button>
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="application/pdf,image/*"
-              className="teacher-hidden-input"
-              onChange={handleDocumentUpload}
-            />
-            <input
-              ref={imageInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="teacher-hidden-input"
-              onChange={handleImageSelect}
-            />
-            <textarea
-              value={input}
-              onChange={(e) => { setInput(e.target.value); if (e.target.value.trim()) setShowQuickAsk(false); }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-              }}
-              placeholder="Ask anything..."
-              rows={1}
-              disabled={sending}
-              className="teacher-chat-input-field"
-            />
-            <button
-              type="button"
-              className="teacher-chat-send-btn"
-              onClick={() => handleSend()}
-              disabled={sending || (!input.trim() && selectedFiles.length === 0)}
-              aria-label="Send"
-            >
-              <Send size={18} />
-            </button>
-          </div>
-        </div>
-      </div>
+          </footer>
+        </main>
       </div>
 
       {zoomImage && (
-        <div
-          className="teacher-zoom-overlay"
-          onClick={() => setZoomImage(null)}
-          role="dialog"
-          aria-label="Zoom image"
-        >
-          <img src={zoomImage} alt="" onClick={(e) => e.stopPropagation()} />
+        <div className="teacher-zoom-overlay" onClick={() => setZoomImage(null)} role="dialog" aria-label="Zoomed graph">
+          <img src={zoomImage} alt="Zoomed graph" onClick={(event) => event.stopPropagation()} />
         </div>
       )}
 
       {sessionEnded && (
         <div className="teacher-session-ended-overlay">
           <div className="teacher-session-ended-box">
-            <h3>Session Ended</h3>
+            <h3>Session ended</h3>
             <p>{sessionEnded}</p>
             <div className="teacher-chat-actions-row">
-              <button type="button" onClick={() => { setSessionEnded(null); navigate('/app/teacher'); }}>
-                OK
+              <button
+                type="button"
+                onClick={() => {
+                  setSessionEnded(null);
+                  navigate('/app/teacher');
+                }}
+              >
+                Back to setup
               </button>
             </div>
           </div>

@@ -2606,8 +2606,8 @@ def generate_question():
             'teaching_explanation': question_data.get('teaching_explanation', '') or question_data.get('real_world_application', '')
         }
         
-        # Normalize spacing for mathematics/Pure Math; keep LaTeX intact so web and app can render it (MathRenderer/KaTeX)
-        if subject in ('mathematics', 'a_level_pure_math'):
+        # Normalize spacing for all STEM subjects; keep LaTeX intact so web and app can render it (MathRenderer/KaTeX)
+        if subject in ('mathematics', 'a_level_pure_math', 'combined_science'):
             try:
                 spacing_keys = ('solution', 'explanation', 'teaching_explanation', 'concept_explanation')
                 for key in ('question_text', 'solution', 'explanation', 'teaching_explanation', 'concept_explanation', 'hint', 'hint_level_1', 'hint_level_2', 'hint_level_3'):
@@ -2615,19 +2615,6 @@ def generate_question():
                         question[key] = LaTeXConverter.normalize_explanation_spacing(question[key])
             except Exception as e:
                 logger.warning(f"Spacing normalization in quiz payload failed (non-blocking): {e}")
-        # Combined science: convert LaTeX to readable for compatibility where clients may not render LaTeX
-        elif subject == 'combined_science':
-            try:
-                lc = LaTeXConverter()
-                spacing_keys = ('solution', 'explanation', 'teaching_explanation', 'concept_explanation')
-                for key in ('question_text', 'solution', 'explanation', 'teaching_explanation', 'concept_explanation', 'hint', 'hint_level_1', 'hint_level_2', 'hint_level_3'):
-                    if question.get(key) and isinstance(question[key], str):
-                        s = lc.latex_to_readable_text(question[key])
-                        if key in spacing_keys:
-                            s = LaTeXConverter.normalize_explanation_spacing(s)
-                        question[key] = s
-            except Exception as e:
-                logger.warning(f"LaTeX conversion in quiz payload failed (non-blocking): {e}")
         
         # Include structured payload for the app (so it can render parts and resubmit for marking)
         if subject == 'combined_science' and question_type_mobile == 'structured':
@@ -2858,19 +2845,18 @@ def generate_question():
             if bes_essay_solution_parts:
                 question['solution'] = '\n'.join(bes_essay_solution_parts)
 
-        # For combined_science only: convert LaTeX in structured_question to readable text. Mathematics/Pure Math keep LaTeX for client rendering.
+        # Normalize spacing in structured_question for combined_science (keep LaTeX intact for client MathRenderer/KaTeX)
         if subject == 'combined_science' and question.get('structured_question'):
             try:
-                lc = LaTeXConverter()
                 sq = question['structured_question']
                 if sq.get('stem') and isinstance(sq['stem'], str):
-                    sq['stem'] = lc.latex_to_readable_text(sq['stem'])
+                    sq['stem'] = LaTeXConverter.normalize_explanation_spacing(sq['stem'])
                 for p in (sq.get('parts') or []):
                     for f in ('model_answer', 'question', 'content'):
                         if p.get(f) and isinstance(p[f], str):
-                            p[f] = lc.latex_to_readable_text(p[f])
+                            p[f] = LaTeXConverter.normalize_explanation_spacing(p[f])
             except Exception as e:
-                logger.warning(f"LaTeX conversion for structured_question failed (non-blocking): {e}")
+                logger.warning(f"Spacing normalization for structured_question failed (non-blocking): {e}")
         
         # Deduct credits ONLY after we have successfully produced a question payload.
         # For CS/biology include format (mcq/structured/essay) so Supabase credit_transactions are clear
@@ -3531,8 +3517,9 @@ Step 3: Identify where your approach differed and learn from it.
                 if formatted_solution:
                     detailed_solution = '\n'.join(formatted_solution)
         
-        # Preserve full LaTeX for Mathematics/Pure Math, but keep text conversion for Combined Science.
-        if subject in ('mathematics', 'a_level_pure_math'):
+        # Preserve full LaTeX for all STEM subjects (Mathematics, Pure Math, Combined Science).
+        # Both web (MathRenderer) and mobile (WebView+KaTeX) can now render LaTeX natively.
+        if subject in ('mathematics', 'a_level_pure_math', 'combined_science'):
             try:
                 detailed_solution = LaTeXConverter.normalize_explanation_spacing(detailed_solution or '')
                 # Keep max_length very high so math working is not truncated.
@@ -3544,22 +3531,7 @@ Step 3: Identify where your approach differed and learn from it.
                         v = LaTeXConverter.normalize_explanation_spacing(v)
                         analysis_result[k] = LaTeXConverter.format_explanation_professionally(v, max_length=20000)
             except Exception as e:
-                logger.warning(f"Math LaTeX-preserving formatting in submit-answer failed (non-blocking): {e}")
-        elif subject == 'combined_science':
-            try:
-                lc = LaTeXConverter()
-                detailed_solution = lc.latex_to_readable_text(detailed_solution or '')
-                detailed_solution = LaTeXConverter.normalize_explanation_spacing(detailed_solution)
-                detailed_solution = LaTeXConverter.format_explanation_professionally(detailed_solution, max_length=16000)
-                feedback = LaTeXConverter.format_explanation_professionally(feedback or '', max_length=600)
-                for k in ('what_went_right', 'what_went_wrong', 'improvement_tips', 'encouragement', 'related_topic', 'step_by_step_explanation'):
-                    v = analysis_result.get(k)
-                    if v and isinstance(v, str):
-                        v = lc.latex_to_readable_text(v)
-                        v = LaTeXConverter.normalize_explanation_spacing(v)
-                        analysis_result[k] = LaTeXConverter.format_explanation_professionally(v, max_length=4000)
-            except Exception as e:
-                logger.warning(f"LaTeX conversion in submit-answer failed (non-blocking): {e}")
+                logger.warning(f"LaTeX-preserving formatting in submit-answer failed (non-blocking): {e}")
         
         return jsonify({
             'success': True,

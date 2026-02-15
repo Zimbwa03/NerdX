@@ -209,17 +209,17 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 mb-2">
-                            <a href="/analytics" class="btn btn-outline-primary btn-block">
+                            <a href="/admin/analytics" class="btn btn-outline-primary btn-block">
                                 <i class="fas fa-users"></i> View User Analytics
                             </a>
                         </div>
                         <div class="col-md-3 mb-2">
-                            <a href="/revenue" class="btn btn-outline-success btn-block">
+                            <a href="/admin/revenue" class="btn btn-outline-success btn-block">
                                 <i class="fas fa-chart-line"></i> Revenue Dashboard
                             </a>
                         </div>
                         <div class="col-md-3 mb-2">
-                            <a href="/payments" class="btn btn-outline-warning btn-block">
+                            <a href="/admin/payments" class="btn btn-outline-warning btn-block">
                                 <i class="fas fa-credit-card"></i> Review Payments
                             </a>
                         </div>
@@ -237,6 +237,8 @@
 
 <script>
 let dailyActivityChart;
+// Base URL prefix for admin API routes (blueprint is mounted at /admin)
+const API_BASE = '/admin';
 
 document.addEventListener('DOMContentLoaded', function() {
     loadOverviewData();
@@ -255,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadOverviewData() {
     try {
         console.log('Loading dashboard data...');
-        const response = await fetch('/api/stats');
+        const response = await fetch(API_BASE + '/api/stats');
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -314,7 +316,7 @@ async function loadOverviewData() {
 
 async function createDailyActivityChart() {
     try {
-        const response = await fetch('/api/activity');
+        const response = await fetch(API_BASE + '/api/activity');
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -370,7 +372,7 @@ async function createDailyActivityChart() {
 async function loadRecentUsers() {
     try {
         console.log('Loading recent users...');
-        const response = await fetch('/api/users?limit=5', {
+        const response = await fetch(API_BASE + '/api/users?limit=5', {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -459,7 +461,7 @@ function refreshData() {
 
 async function loadSystemHealth() {
     try {
-        const response = await fetch('/api/system/health');
+        const response = await fetch(API_BASE + '/api/system/health');
         if (!response.ok) return;
         const health = await response.json();
 
@@ -489,8 +491,8 @@ function updateHealthIndicator(elementId, status, okText, failText) {
 async function loadAdvancedMetrics() {
     try {
         const [activityResponse, engagementResponse] = await Promise.all([
-            fetch('/api/activity'),
-            fetch('/api/users/engagement')
+            fetch(API_BASE + '/api/activity'),
+            fetch(API_BASE + '/api/users/engagement')
         ]);
         
         const activity = await activityResponse.json();

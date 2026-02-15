@@ -180,7 +180,7 @@ function removeUser(index) {
 
 // Load notifications
 function loadNotifications() {
-    fetch('/api/notifications/list')
+    fetch('/admin/api/notifications/list')
         .then(res => res.json())
         .then(data => {
             const listDiv = document.getElementById('notificationsList');
@@ -246,7 +246,7 @@ document.getElementById('notificationForm').addEventListener('submit', function(
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
 
-    fetch('/api/notifications/send', {
+    fetch('/admin/api/notifications/send', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)

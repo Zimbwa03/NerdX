@@ -4,6 +4,20 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import {
+  Award,
+  BarChart3,
+  BookOpen,
+  Brain,
+  CircleHelp,
+  Flame,
+  Gem,
+  MapPinned,
+  Target,
+  TrendingUp,
+  Trophy,
+  Zap,
+} from 'lucide-react';
 import { dktApi, type KnowledgeMap, type AIInsights } from '../services/api/dktApi';
 import {
   gamificationService,
@@ -113,6 +127,114 @@ function WeeklyActivityChart({ data }: { data: DailyActivity[] }) {
   );
 }
 
+function WeeklyMomentumChart({ data }: { data: DailyActivity[] }) {
+  const safeData = data.length > 0 ? data : Array.from({ length: 7 }, () => ({ questionsAnswered: 0, correctAnswers: 0 } as DailyActivity));
+  const values = safeData.map((d) => d.questionsAnswered);
+  const maxVal = Math.max(...values, 1);
+
+  const width = 420;
+  const height = 190;
+  const padX = 24;
+  const padY = 20;
+  const baseY = height - 30;
+  const graphHeight = baseY - padY;
+  const stepX = safeData.length > 1 ? (width - padX * 2) / (safeData.length - 1) : 0;
+
+  const points = safeData.map((item, idx) => {
+    const x = padX + idx * stepX;
+    const y = padY + ((maxVal - item.questionsAnswered) / maxVal) * graphHeight;
+    return { x, y };
+  });
+
+  const linePath = points.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  const areaPath = `${linePath} L ${points[points.length - 1]?.x ?? padX} ${baseY} L ${points[0]?.x ?? padX} ${baseY} Z`;
+  const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+  return (
+    <div className="momentum-chart-wrap">
+      <svg className="momentum-chart-svg" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="momentumAreaFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="rgba(41,121,255,0.42)" />
+            <stop offset="100%" stopColor="rgba(41,121,255,0.03)" />
+          </linearGradient>
+          <linearGradient id="momentumLineStroke" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#2979FF" />
+            <stop offset="100%" stopColor="#00E676" />
+          </linearGradient>
+        </defs>
+
+        {[0, 1, 2, 3].map((tick) => {
+          const y = padY + (graphHeight / 3) * tick;
+          return (
+            <line
+              key={tick}
+              x1={padX}
+              y1={y}
+              x2={width - padX}
+              y2={y}
+              stroke="rgba(148,163,184,0.2)"
+              strokeDasharray="4 6"
+            />
+          );
+        })}
+
+        <path d={areaPath} fill="url(#momentumAreaFill)" />
+        <path d={linePath} fill="none" stroke="url(#momentumLineStroke)" strokeWidth="3" strokeLinecap="round" />
+
+        {points.map((p, idx) => (
+          <g key={idx}>
+            <circle cx={p.x} cy={p.y} r="4.5" fill="#0F172A" stroke="#60A5FA" strokeWidth="2" />
+            <text x={p.x} y={baseY + 18} textAnchor="middle" className="momentum-chart-label">
+              {dayLabels[idx]}
+            </text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function SubjectPerformanceTable({ subjects }: { subjects: SubjectMasteryData[] }) {
+  const rows = [...subjects].sort((a, b) => b.mastery - a.mastery).slice(0, 6);
+
+  return (
+    <div className="performance-table-wrap">
+      <table className="performance-table">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Mastery</th>
+            <th>Skills</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((subject) => {
+            const status = subject.mastery >= 75 ? 'Advanced' : subject.mastery >= 50 ? 'Building' : 'Needs Focus';
+            const statusClass = subject.mastery >= 75 ? 'status-advanced' : subject.mastery >= 50 ? 'status-building' : 'status-focus';
+            return (
+              <tr key={subject.subject}>
+                <td>{subject.displayName}</td>
+                <td>
+                  <div className="table-mastery-cell">
+                    <span>{subject.mastery}%</span>
+                    <div className="table-mastery-track">
+                      <span style={{ width: `${subject.mastery}%`, background: subject.color }} />
+                    </div>
+                  </div>
+                </td>
+                <td>{subject.masteredSkills}/{subject.skillsCount}</td>
+                <td><span className={`performance-status ${statusClass}`}>{status}</span></td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function DonutChart({ mastery, color, icon, displayName }: SubjectMasteryData) {
   const r = 32;
   const stroke = 7;
@@ -143,7 +265,7 @@ function StreakCalendar({ history, streak }: { history: boolean[]; streak: numbe
   return (
     <div className="streak-calendar-section">
       <div className="streak-header">
-        <span className="streak-fire">🔥</span>
+        <span className="streak-fire"><Flame size={16} /></span>
         <span className="streak-num">{streak}</span>
         <span className="streak-label">day streak</span>
       </div>
@@ -342,6 +464,26 @@ export function ProgressPage() {
     { label: 'Top Performer', percent: 0, status: 'Locked' },
   ];
 
+  const weeklyOverview = useMemo(() => {
+    const totals = weeklyActivity.reduce((acc, day) => {
+      acc.questions += day.questionsAnswered;
+      acc.correct += day.correctAnswers;
+      if (day.questionsAnswered > 0) acc.activeDays += 1;
+      return acc;
+    }, { questions: 0, correct: 0, activeDays: 0 });
+
+    const avgPerDay = totals.activeDays > 0 ? Math.round(totals.questions / totals.activeDays) : 0;
+    const accuracy = totals.questions > 0 ? Math.round((totals.correct / totals.questions) * 100) : 0;
+
+    return {
+      totalQuestions: totals.questions,
+      totalCorrect: totals.correct,
+      activeDays: totals.activeDays,
+      avgPerDay,
+      accuracy,
+    };
+  }, [weeklyActivity]);
+
   if (isLoading) {
     return (
       <div className="progress-dashboard loading-state">
@@ -376,30 +518,71 @@ export function ProgressPage() {
       {/* === Quick Stats Grid with glass cards === */}
       <section className="stats-grid stats-grid--glass">
         <div className="stat-card stat-streak glass-stat">
-          <span className="stat-icon">🔥</span>
+          <span className="stat-icon"><Flame size={22} /></span>
           <span className="stat-value">{overallStats?.streak ?? 0}</span>
           <span className="stat-label">Day Streak</span>
         </div>
         <div className="stat-card stat-accuracy glass-stat">
-          <span className="stat-icon">📊</span>
+          <span className="stat-icon"><BarChart3 size={22} /></span>
           <span className="stat-value">{overallStats?.accuracy ?? 0}%</span>
           <span className="stat-label">Accuracy</span>
         </div>
         <div className="stat-card stat-questions glass-stat">
-          <span className="stat-icon">❓</span>
+          <span className="stat-icon"><CircleHelp size={22} /></span>
           <span className="stat-value">{overallStats?.totalQuestions ?? 0}</span>
           <span className="stat-label">Questions</span>
         </div>
         <div className="stat-card stat-xp glass-stat">
-          <span className="stat-icon">💎</span>
+          <span className="stat-icon"><Gem size={22} /></span>
           <span className="stat-value">{overallStats?.totalXP ?? 0}</span>
           <span className="stat-label">Total XP</span>
         </div>
       </section>
 
+      <section className="progress-analytics-grid section-card--fade-in">
+        <article className="glass-card analytics-panel">
+          <div className="section-title">
+            <TrendingUp size={18} />
+            <h3>Weekly Momentum</h3>
+          </div>
+          <p className="section-subtitle">Consistent dashboard-style activity tracking for the last 7 days</p>
+          <div className="momentum-kpi-row">
+            <div className="momentum-kpi">
+              <span>Total Questions</span>
+              <strong>{weeklyOverview.totalQuestions}</strong>
+            </div>
+            <div className="momentum-kpi">
+              <span>Weekly Accuracy</span>
+              <strong>{weeklyOverview.accuracy}%</strong>
+            </div>
+            <div className="momentum-kpi">
+              <span>Active Days</span>
+              <strong>{weeklyOverview.activeDays}/7</strong>
+            </div>
+            <div className="momentum-kpi">
+              <span>Avg / Active Day</span>
+              <strong>{weeklyOverview.avgPerDay}</strong>
+            </div>
+          </div>
+          <WeeklyMomentumChart data={weeklyActivity} />
+        </article>
+
+        <article className="glass-card analytics-panel">
+          <div className="section-title">
+            <Target size={18} />
+            <h3>Performance Board</h3>
+          </div>
+          <p className="section-subtitle">Top subjects, mastery progress, and skill coverage</p>
+          <SubjectPerformanceTable subjects={subjectMastery} />
+        </article>
+      </section>
+
       {/* === Learning Level Progress (matches dashboard sidebar) === */}
       <section className="glass-card section-card section-card--fade-in">
-        <h3>📈 Your Learning Level</h3>
+        <div className="section-title">
+          <TrendingUp size={18} />
+          <h3>Your Learning Level</h3>
+        </div>
         <p className="section-subtitle">Track your progression through mastery tiers</p>
         <LevelProgressSection levels={levelProgress} />
       </section>
@@ -408,7 +591,10 @@ export function ProgressPage() {
       <section className="insights-summary glass-card section-card--fade-in">
         <div className="insights-header-row">
           <div>
-            <h3>🧠 AI Learning Insights</h3>
+            <div className="section-title">
+              <Brain size={18} />
+              <h3>AI Learning Insights</h3>
+            </div>
             {aiInsights?.personalized_message && (
               <p className="insights-message">{aiInsights.personalized_message}</p>
             )}
@@ -438,7 +624,11 @@ export function ProgressPage() {
               <div className="study-plan-list">
                 {aiInsights.study_plan.map((item, i) => (
                   <div key={i} className={`study-plan-item priority-${item.priority || 'medium'}`}>
-                    <span className="plan-priority">{item.priority === 'high' ? '🔴' : item.priority === 'low' ? '🟢' : '🟡'}</span>
+                    <span
+                      className={`plan-priority-dot ${
+                        item.priority === 'high' ? 'is-high' : item.priority === 'low' ? 'is-low' : 'is-medium'
+                      }`}
+                    />
                     <div className="plan-content">
                       <span className="plan-action">{item.action}</span>
                       <span className="plan-desc">{item.description}</span>
@@ -454,14 +644,20 @@ export function ProgressPage() {
 
       {/* === Weekly Activity Chart === */}
       <section className="glass-card section-card section-card--fade-in">
-        <h3>📈 Weekly Activity</h3>
+        <div className="section-title">
+          <BarChart3 size={18} />
+          <h3>Weekly Activity</h3>
+        </div>
         <p className="section-subtitle">Questions answered this week</p>
         <WeeklyActivityChart data={weeklyActivity} />
       </section>
 
       {/* === Subject Mastery === */}
       <section className="glass-card section-card section-card--fade-in">
-        <h3>📚 Subject Mastery</h3>
+        <div className="section-title">
+          <BookOpen size={18} />
+          <h3>Subject Mastery</h3>
+        </div>
         <p className="section-subtitle">Your progress across subjects</p>
         <div className="mastery-grid">
           {subjectMastery.map(s => (
@@ -472,14 +668,20 @@ export function ProgressPage() {
 
       {/* === Streak Calendar === */}
       <section className="glass-card section-card section-card--fade-in">
-        <h3>📅 Consistency Tracker</h3>
+        <div className="section-title">
+          <Flame size={18} />
+          <h3>Consistency Tracker</h3>
+        </div>
         <StreakCalendar history={streakHistory} streak={overallStats?.streak ?? 0} />
       </section>
 
       {/* === Focus Areas === */}
       {aiInsights?.focus_areas && aiInsights.focus_areas.length > 0 && (
         <section className="glass-card section-card section-card--fade-in">
-          <h3>🎯 Focus Areas</h3>
+          <div className="section-title">
+            <Target size={18} />
+            <h3>Focus Areas</h3>
+          </div>
           <p className="section-subtitle">Skills that need your attention</p>
           <div className="focus-areas-list">
             {aiInsights.focus_areas.map((area, i) => (
@@ -508,7 +710,10 @@ export function ProgressPage() {
       {/* === Achievement Gallery === */}
       <section className="glass-card section-card section-card--fade-in">
         <div className="section-header-row">
-          <h3>🏆 Achievements</h3>
+          <div className="section-title">
+            <Trophy size={18} />
+            <h3>Achievements</h3>
+          </div>
           <span className="badge-count">{unlockedBadges.length} / {badges.length} unlocked</span>
         </div>
         <div className="badge-gallery">
@@ -523,7 +728,10 @@ export function ProgressPage() {
 
       {/* === Knowledge Map === */}
       <section className="glass-card section-card section-card--fade-in">
-        <h3>🗺️ Knowledge Map</h3>
+        <div className="section-title">
+          <MapPinned size={18} />
+          <h3>Knowledge Map</h3>
+        </div>
         <div className="km-summary">
           <div className="km-stat green"><span>{kmSkills.mastered}</span><label>Mastered</label></div>
           <div className="km-stat amber"><span>{kmSkills.learning}</span><label>Learning</label></div>
@@ -550,25 +758,28 @@ export function ProgressPage() {
 
       {/* === Lifetime Statistics === */}
       <section className="glass-card section-card lifetime-stats section-card--fade-in">
-        <h3>📊 Lifetime Statistics</h3>
+        <div className="section-title">
+          <BarChart3 size={18} />
+          <h3>Lifetime Statistics</h3>
+        </div>
         <div className="lifetime-grid">
           <div className="lifetime-item glass-stat">
-            <span className="lt-icon">📝</span>
+            <span className="lt-icon"><BookOpen size={22} /></span>
             <span className="lt-value">{overallStats?.totalQuizzes ?? 0}</span>
             <span className="lt-label">Quizzes Completed</span>
           </div>
           <div className="lifetime-item glass-stat">
-            <span className="lt-icon">⚡</span>
+            <span className="lt-icon"><Zap size={22} /></span>
             <span className="lt-value">{overallStats?.totalXP ?? 0}</span>
             <span className="lt-label">Total XP Earned</span>
           </div>
           <div className="lifetime-item glass-stat">
-            <span className="lt-icon">💯</span>
+            <span className="lt-icon"><Target size={22} /></span>
             <span className="lt-value">{overallStats?.perfectScores ?? 0}</span>
             <span className="lt-label">Perfect Scores</span>
           </div>
           <div className="lifetime-item glass-stat">
-            <span className="lt-icon">🏅</span>
+            <span className="lt-icon"><Award size={22} /></span>
             <span className="lt-value">{overallStats?.longestStreak ?? 0}</span>
             <span className="lt-label">Longest Streak</span>
           </div>

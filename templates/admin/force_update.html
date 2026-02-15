@@ -280,7 +280,7 @@ function setMigrationMessage(platform) {
 
 // Load existing versions
 function loadVersions() {
-    fetch('/api/app-versions')
+    fetch('/admin/api/app-versions')
         .then(res => res.json())
         .then(data => {
             if (data.versions) {
@@ -357,7 +357,7 @@ function submitForm(platform) {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
 
-    fetch('/api/app-versions', {
+    fetch('/admin/api/app-versions', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)

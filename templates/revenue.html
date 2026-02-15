@@ -317,7 +317,7 @@ async function loadAllData() {
 
 async function loadAdvancedAnalytics() {
     try {
-        const response = await fetch('/api/advanced-analytics');
+        const response = await fetch('/admin/api/advanced-analytics');
         const data = await response.json();
         currentAnalytics = data;
         
@@ -346,7 +346,7 @@ async function loadAdvancedAnalytics() {
 
 async function loadProfitAnalytics() {
     try {
-        const response = await fetch('/api/profit-analytics');
+        const response = await fetch('/admin/api/profit-analytics');
         const data = await response.json();
         
         // Update cost per credit display
@@ -359,7 +359,7 @@ async function loadProfitAnalytics() {
 
 async function loadRevenuePredictions() {
     try {
-        const response = await fetch('/api/revenue-predictions?days=30');
+        const response = await fetch('/admin/api/revenue-predictions?days=30');
         const data = await response.json();
         
         if (data.error) {
@@ -391,7 +391,7 @@ async function loadRevenuePredictions() {
 
 async function loadAIRecommendations() {
     try {
-        const response = await fetch('/api/ai-recommendations');
+        const response = await fetch('/admin/api/ai-recommendations');
         const data = await response.json();
         
         const container = document.getElementById('aiRecommendations');
@@ -432,7 +432,7 @@ async function loadAIRecommendations() {
 
 async function loadCreditTransactions() {
     try {
-        const response = await fetch('/api/credit-transactions?limit=20');
+        const response = await fetch('/admin/api/credit-transactions?limit=20');
         const data = await response.json();
         
         const tbody = document.getElementById('creditTransactionsBody');

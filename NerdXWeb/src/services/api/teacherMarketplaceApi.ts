@@ -745,9 +745,10 @@ export async function addComment(
   userId: string,
   userName: string,
   content: string,
+  parentId?: string | null,
 ): Promise<PostComment | null> {
   try {
-    const row = {
+    const row: Record<string, unknown> = {
       id: uuid(),
       post_id: postId,
       user_id: userId,
@@ -755,6 +756,7 @@ export async function addComment(
       content,
       created_at: new Date().toISOString(),
     };
+    if (parentId) row.parent_id = parentId;
     const { error } = await supabase.from('post_comments').insert(row);
     if (error) {
       console.error('[Feed] addComment error:', error.message);

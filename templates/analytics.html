@@ -286,9 +286,9 @@ function setupSourceFilter() {
 async function loadUserAnalytics() {
     try {
         const [statsResponse, activityResponse, engagementResponse] = await Promise.all([
-            fetch('/api/stats'),
-            fetch('/api/activity'),
-            fetch('/api/users/engagement')
+            fetch('/admin/api/stats'),
+            fetch('/admin/api/activity'),
+            fetch('/admin/api/users/engagement')
         ]);
         
         const stats = await statsResponse.json();
@@ -332,7 +332,7 @@ async function loadUserAnalytics() {
 async function loadUserDirectory() {
     try {
         // Get enhanced user engagement data
-        const engagementResponse = await fetch('/api/users/engagement');
+        const engagementResponse = await fetch('/admin/api/users/engagement');
         const engagementData = await engagementResponse.json();
         
         const tbody = document.getElementById('usersTableBody');

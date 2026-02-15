@@ -38,6 +38,13 @@ export interface WebSearchResult {
   response: string;
 }
 
+export interface TranscriptionResult {
+  success: boolean;
+  text?: string;
+  language?: string;
+  message?: string;
+}
+
 export const teacherApi = {
   startSession: async (
     subject: string,
@@ -104,5 +111,14 @@ export const teacherApi = {
   searchWeb: async (query: string): Promise<WebSearchResult | null> => {
     const response = await api.post('/api/mobile/teacher/search', { query });
     return (response.data?.data ?? null) as WebSearchResult | null;
+  },
+
+  transcribeAudio: async (audioFile: File): Promise<TranscriptionResult> => {
+    const formData = new FormData();
+    formData.append('audio', audioFile);
+    const response = await api.post<TranscriptionResult>('/api/mobile/voice/transcribe', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
   },
 };

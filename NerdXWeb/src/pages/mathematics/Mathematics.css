@@ -3,18 +3,21 @@
 
 .math-universe-page {
     font-family: 'Outfit', sans-serif;
-    min-height: 100vh;
+    min-height: calc(100vh - var(--app-header-height, 64px) - 36px);
     background: #090a1a;
     /* Deep space dark */
     color: #fff;
     position: relative;
     overflow-x: hidden;
-    padding-bottom: 60px;
+    padding-bottom: 20px;
+    flex: 1;
 
     /* Full width breakout */
     width: 100vw;
     margin-left: calc(-50vw + 50%);
     margin-right: calc(-50vw + 50%);
+    margin-top: -16px;
+    margin-bottom: -20px;
 }
 
 /* --- Animated Background --- */

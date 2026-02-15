@@ -2,12 +2,15 @@ import os
 import json
 import logging
 import psycopg2
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Tuple
 from flask import Blueprint, render_template, request, jsonify
-from database.external_db import add_credits, deduct_credits, get_user_registration
+from database.external_db import add_credits, deduct_credits, get_user_registration, make_supabase_request
 from services.user_service import UserService
 from services.question_service import QuestionService
 from services.payment_service import PaymentService
 from utils.validators import validators
+from utils.vertex_ai_helper import try_vertex_text
 
 logger = logging.getLogger(__name__)
 
@@ -706,6 +709,559 @@ def get_credit_statistics():
     except Exception as e:
         logger.error(f"Error getting credit statistics: {e}")
         return jsonify({'error': str(e)}), 500
+
+
+def _parse_iso_datetime(value: Any) -> datetime | None:
+    """Best-effort ISO datetime parser."""
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed
+    except Exception:
+        return None
+
+
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    try:
+        return float(value)
+    except Exception:
+        return default
+
+
+def _build_teacher_progress(
+    profile: Dict[str, Any],
+    subjects: List[Dict[str, Any]],
+    qualifications: List[Dict[str, Any]],
+    completed_lessons: int,
+) -> Dict[str, Any]:
+    """Compute a progress score for each teacher application lifecycle."""
+    profile_basics_ready = all([
+        bool(profile.get('full_name')),
+        bool(profile.get('email')),
+        bool(profile.get('whatsapp')),
+        bool(profile.get('bio')),
+        bool(profile.get('experience_description')),
+    ])
+    has_subjects = len(subjects) > 0
+    has_qualifications = len(qualifications) > 0
+    has_certificates = any(bool(q.get('certificate_url')) for q in qualifications)
+    has_media = bool(profile.get('profile_image_url') or profile.get('intro_video_url'))
+    has_completed_lesson = completed_lessons > 0
+
+    steps = {
+        'application_submitted': True,
+        'profile_completed': profile_basics_ready,
+        'subjects_added': has_subjects,
+        'qualifications_added': has_qualifications,
+        'certificates_uploaded': has_certificates,
+        'media_uploaded': has_media,
+        'first_lesson_completed': has_completed_lesson,
+    }
+    total_steps = len(steps)
+    done_steps = sum(1 for value in steps.values() if value)
+    progress_score = round((done_steps / total_steps) * 100) if total_steps else 0
+
+    return {
+        'score': progress_score,
+        'completed_steps': done_steps,
+        'total_steps': total_steps,
+        'steps': steps,
+    }
+
+
+def _build_teacher_intelligence_payload(
+    search_query: str = '',
+    status_filter: str = 'all',
+) -> Dict[str, Any]:
+    """Aggregate teacher applications, docs, and performance for admin intelligence."""
+    now_utc = datetime.now(timezone.utc)
+    today_str = now_utc.date().isoformat()
+    query = (search_query or '').strip().lower()
+    status = (status_filter or 'all').strip().lower()
+
+    profiles = make_supabase_request(
+        "GET",
+        "teacher_profiles",
+        select="id,user_id,full_name,surname,email,whatsapp,bio,experience_description,years_of_experience,profile_image_url,intro_video_url,verification_status,created_at,updated_at",
+        use_service_role=True,
+    ) or []
+    subjects = make_supabase_request(
+        "GET",
+        "teacher_subjects",
+        select="id,teacher_id,subject_name,academic_level,form_levels,curriculum",
+        use_service_role=True,
+    ) or []
+    qualifications = make_supabase_request(
+        "GET",
+        "teacher_qualifications",
+        select="id,teacher_id,title,institution,certificate_url,year,qualification_type",
+        use_service_role=True,
+    ) or []
+    bookings = make_supabase_request(
+        "GET",
+        "lesson_bookings",
+        select="id,teacher_id,student_id,subject,date,start_time,end_time,status,created_at",
+        use_service_role=True,
+    ) or []
+    posts = make_supabase_request(
+        "GET",
+        "teacher_posts",
+        select="id,teacher_id,created_at",
+        use_service_role=True,
+    ) or []
+    reviews = make_supabase_request(
+        "GET",
+        "teacher_reviews",
+        select="id,teacher_id,rating,created_at,student_id",
+        use_service_role=True,
+    ) or []
+
+    subjects_by_teacher: Dict[str, List[Dict[str, Any]]] = {}
+    qualifications_by_teacher: Dict[str, List[Dict[str, Any]]] = {}
+    bookings_by_teacher: Dict[str, List[Dict[str, Any]]] = {}
+    posts_by_teacher: Dict[str, List[Dict[str, Any]]] = {}
+    reviews_by_teacher: Dict[str, List[Dict[str, Any]]] = {}
+
+    for row in subjects:
+        teacher_id = str(row.get('teacher_id') or '')
+        if teacher_id:
+            subjects_by_teacher.setdefault(teacher_id, []).append(row)
+    for row in qualifications:
+        teacher_id = str(row.get('teacher_id') or '')
+        if teacher_id:
+            qualifications_by_teacher.setdefault(teacher_id, []).append(row)
+    for row in bookings:
+        teacher_id = str(row.get('teacher_id') or '')
+        if teacher_id:
+            bookings_by_teacher.setdefault(teacher_id, []).append(row)
+    for row in posts:
+        teacher_id = str(row.get('teacher_id') or '')
+        if teacher_id:
+            posts_by_teacher.setdefault(teacher_id, []).append(row)
+    for row in reviews:
+        teacher_id = str(row.get('teacher_id') or '')
+        if teacher_id:
+            reviews_by_teacher.setdefault(teacher_id, []).append(row)
+
+    teachers: List[Dict[str, Any]] = []
+    all_students: set[str] = set()
+
+    for profile in profiles:
+        teacher_id = str(profile.get('id') or '')
+        if not teacher_id:
+            continue
+
+        teacher_subjects = subjects_by_teacher.get(teacher_id, [])
+        teacher_qualifications = qualifications_by_teacher.get(teacher_id, [])
+        teacher_bookings = bookings_by_teacher.get(teacher_id, [])
+        teacher_posts = posts_by_teacher.get(teacher_id, [])
+        teacher_reviews = reviews_by_teacher.get(teacher_id, [])
+
+        verification_status = str(profile.get('verification_status') or 'pending').lower()
+        if verification_status not in {'pending', 'approved', 'rejected'}:
+            verification_status = 'pending'
+
+        total_lessons = len(teacher_bookings)
+        completed_lessons = 0
+        pending_lessons = 0
+        upcoming_lessons = 0
+        teacher_students: set[str] = set()
+        for booking in teacher_bookings:
+            booking_status = str(booking.get('status') or '').lower()
+            booking_date = str(booking.get('date') or '')
+            student_id = str(booking.get('student_id') or '')
+            if student_id:
+                teacher_students.add(student_id)
+                all_students.add(student_id)
+            if booking_status == 'completed':
+                completed_lessons += 1
+            if booking_status == 'pending':
+                pending_lessons += 1
+            if booking_status in {'pending', 'confirmed'} and booking_date >= today_str:
+                upcoming_lessons += 1
+
+        ratings = [_safe_float(review.get('rating')) for review in teacher_reviews if review.get('rating') is not None]
+        avg_rating = round(sum(ratings) / len(ratings), 2) if ratings else 0.0
+        total_reviews = len(ratings)
+
+        certificates = [q for q in teacher_qualifications if q.get('certificate_url')]
+        documents: List[Dict[str, Any]] = []
+        if profile.get('profile_image_url'):
+            documents.append({
+                'id': f'{teacher_id}-profile-image',
+                'type': 'profile_image',
+                'title': 'Profile Image',
+                'url': profile.get('profile_image_url'),
+            })
+        if profile.get('intro_video_url'):
+            documents.append({
+                'id': f'{teacher_id}-intro-video',
+                'type': 'intro_video',
+                'title': 'Intro Video',
+                'url': profile.get('intro_video_url'),
+            })
+        for qualification in teacher_qualifications:
+            documents.append({
+                'id': qualification.get('id'),
+                'type': 'certificate' if qualification.get('certificate_url') else 'qualification',
+                'title': qualification.get('title') or 'Qualification',
+                'institution': qualification.get('institution') or '',
+                'year': qualification.get('year'),
+                'qualification_type': qualification.get('qualification_type') or 'Other',
+                'url': qualification.get('certificate_url'),
+            })
+
+        progress = _build_teacher_progress(
+            profile=profile,
+            subjects=teacher_subjects,
+            qualifications=teacher_qualifications,
+            completed_lessons=completed_lessons,
+        )
+
+        created_at = str(profile.get('created_at') or '')
+        created_dt = _parse_iso_datetime(created_at)
+        application_age_days = (now_utc.date() - created_dt.date()).days if created_dt else None
+        is_new_application = bool(
+            verification_status == 'pending'
+            and created_dt is not None
+            and application_age_days is not None
+            and application_age_days <= 14
+        )
+
+        display_name = " ".join(
+            part for part in [str(profile.get('full_name') or '').strip(), str(profile.get('surname') or '').strip()] if part
+        ).strip() or "Unnamed Teacher"
+
+        teachers.append({
+            'id': teacher_id,
+            'user_id': profile.get('user_id'),
+            'display_name': display_name,
+            'full_name': profile.get('full_name') or '',
+            'surname': profile.get('surname') or '',
+            'email': profile.get('email') or '',
+            'whatsapp': profile.get('whatsapp') or '',
+            'bio': profile.get('bio') or '',
+            'experience_description': profile.get('experience_description') or '',
+            'years_of_experience': profile.get('years_of_experience') or 0,
+            'verification_status': verification_status,
+            'created_at': created_at,
+            'updated_at': profile.get('updated_at'),
+            'application_age_days': application_age_days,
+            'is_new_application': is_new_application,
+            'subjects': teacher_subjects,
+            'subject_names': sorted({str(subject.get('subject_name') or '').strip() for subject in teacher_subjects if subject.get('subject_name')}),
+            'qualifications': teacher_qualifications,
+            'documents': documents,
+            'metrics': {
+                'total_lessons': total_lessons,
+                'completed_lessons': completed_lessons,
+                'pending_lessons': pending_lessons,
+                'upcoming_lessons': upcoming_lessons,
+                'total_students': len(teacher_students),
+                'posts_count': len(teacher_posts),
+                'avg_rating': avg_rating,
+                'total_reviews': total_reviews,
+                'certificates_count': len(certificates),
+                'documents_count': len(documents),
+            },
+            'progress': progress,
+        })
+
+    teachers.sort(key=lambda row: row.get('created_at') or '', reverse=True)
+
+    def _matches_filters(teacher: Dict[str, Any]) -> bool:
+        teacher_status = str(teacher.get('verification_status') or 'pending')
+        if status not in {'all', ''}:
+            if status in {'verified', 'approved'} and teacher_status != 'approved':
+                return False
+            if status == 'pending' and teacher_status != 'pending':
+                return False
+            if status == 'rejected' and teacher_status != 'rejected':
+                return False
+            if status in {'not_verified', 'unverified'} and teacher_status == 'approved':
+                return False
+            if status == 'new' and not teacher.get('is_new_application'):
+                return False
+
+        if query:
+            search_fields = [
+                str(teacher.get('display_name') or ''),
+                str(teacher.get('email') or ''),
+                str(teacher.get('whatsapp') or ''),
+                " ".join(teacher.get('subject_names') or []),
+                teacher_status,
+            ]
+            joined = " ".join(search_fields).lower()
+            if query not in joined:
+                return False
+        return True
+
+    filtered_teachers = [teacher for teacher in teachers if _matches_filters(teacher)]
+
+    def _status_counts(data: List[Dict[str, Any]]) -> Dict[str, int]:
+        counts = {'pending': 0, 'approved': 0, 'rejected': 0}
+        for teacher in data:
+            teacher_status = str(teacher.get('verification_status') or 'pending')
+            if teacher_status in counts:
+                counts[teacher_status] += 1
+        return counts
+
+    def _activity_summary(data: List[Dict[str, Any]]) -> Dict[str, Any]:
+        if not data:
+            return {
+                'total_lessons_completed': 0,
+                'upcoming_lessons': 0,
+                'total_students': 0,
+                'total_posts': 0,
+                'average_teacher_rating': 0.0,
+            }
+        total_completed = sum(int(teacher['metrics']['completed_lessons']) for teacher in data)
+        total_upcoming = sum(int(teacher['metrics']['upcoming_lessons']) for teacher in data)
+        total_posts = sum(int(teacher['metrics']['posts_count']) for teacher in data)
+        total_students = sum(int(teacher['metrics']['total_students']) for teacher in data)
+        rated_teachers = [float(teacher['metrics']['avg_rating']) for teacher in data if float(teacher['metrics']['avg_rating']) > 0]
+        avg_rating = round(sum(rated_teachers) / len(rated_teachers), 2) if rated_teachers else 0.0
+        return {
+            'total_lessons_completed': total_completed,
+            'upcoming_lessons': total_upcoming,
+            'total_students': total_students,
+            'total_posts': total_posts,
+            'average_teacher_rating': avg_rating,
+        }
+
+    all_status_counts = _status_counts(teachers)
+    filtered_status_counts = _status_counts(filtered_teachers)
+
+    performance_graph = sorted(
+        filtered_teachers,
+        key=lambda teacher: (
+            int(teacher['metrics']['completed_lessons']),
+            float(teacher['metrics']['avg_rating']),
+            int(teacher['metrics']['total_students']),
+        ),
+        reverse=True,
+    )[:8]
+
+    return {
+        'generated_at': now_utc.isoformat(),
+        'filters': {'query': search_query or '', 'status': status_filter or 'all'},
+        'summary': {
+            'overall': {
+                'total_teachers': len(teachers),
+                'new_applications': sum(1 for teacher in teachers if teacher.get('is_new_application')),
+                'verified_teachers': all_status_counts['approved'],
+                'not_verified_teachers': all_status_counts['pending'] + all_status_counts['rejected'],
+                'status_counts': all_status_counts,
+                'activity': _activity_summary(teachers),
+                'unique_students_platform': len(all_students),
+            },
+            'in_view': {
+                'total_teachers': len(filtered_teachers),
+                'new_applications': sum(1 for teacher in filtered_teachers if teacher.get('is_new_application')),
+                'verified_teachers': filtered_status_counts['approved'],
+                'not_verified_teachers': filtered_status_counts['pending'] + filtered_status_counts['rejected'],
+                'status_counts': filtered_status_counts,
+                'activity': _activity_summary(filtered_teachers),
+            },
+        },
+        'status_distribution': [
+            {'status': 'pending', 'label': 'Pending Review', 'count': filtered_status_counts['pending']},
+            {'status': 'approved', 'label': 'Verified', 'count': filtered_status_counts['approved']},
+            {'status': 'rejected', 'label': 'Rejected', 'count': filtered_status_counts['rejected']},
+        ],
+        'performance_graph': [
+            {
+                'teacher_id': teacher['id'],
+                'name': teacher['display_name'],
+                'completed_lessons': teacher['metrics']['completed_lessons'],
+                'upcoming_lessons': teacher['metrics']['upcoming_lessons'],
+                'students': teacher['metrics']['total_students'],
+                'posts': teacher['metrics']['posts_count'],
+                'rating': teacher['metrics']['avg_rating'],
+                'progress_score': teacher['progress']['score'],
+            }
+            for teacher in performance_graph
+        ],
+        'teachers': filtered_teachers,
+    }
+
+
+def _build_teacher_ai_fallback_response(question: str, teachers: List[Dict[str, Any]], summary: Dict[str, Any]) -> str:
+    """Fallback deterministic response when Vertex AI is unavailable."""
+    if not teachers:
+        return "No teacher data is available for the selected filters."
+
+    q = (question or '').lower()
+    pending_teachers = [teacher for teacher in teachers if teacher.get('verification_status') == 'pending']
+    verified_teachers = [teacher for teacher in teachers if teacher.get('verification_status') == 'approved']
+    top_by_lessons = sorted(teachers, key=lambda teacher: int(teacher['metrics']['completed_lessons']), reverse=True)[:3]
+
+    lines = ["Vertex AI is currently unavailable, so this is a deterministic summary."]
+    if "pending" in q or "application" in q:
+        lines.append(f"Pending applications: {len(pending_teachers)}")
+        for teacher in pending_teachers[:5]:
+            lines.append(
+                f"- {teacher['display_name']} (progress {teacher['progress']['score']}%, documents {teacher['metrics']['documents_count']})"
+            )
+    elif "verified" in q:
+        lines.append(f"Verified teachers: {len(verified_teachers)}")
+        for teacher in verified_teachers[:5]:
+            lines.append(
+                f"- {teacher['display_name']} (rating {teacher['metrics']['avg_rating']}, lessons {teacher['metrics']['completed_lessons']})"
+            )
+    elif "top" in q or "best" in q or "lesson" in q:
+        lines.append("Top teachers by completed lessons:")
+        for teacher in top_by_lessons:
+            lines.append(
+                f"- {teacher['display_name']}: {teacher['metrics']['completed_lessons']} completed, {teacher['metrics']['total_students']} students"
+            )
+    else:
+        lines.append(
+            f"Teachers in view: {summary.get('total_teachers', len(teachers))}, verified: {summary.get('verified_teachers', 0)}, not verified: {summary.get('not_verified_teachers', 0)}."
+        )
+        sample_teacher = teachers[0]
+        lines.append(
+            f"Sample teacher: {sample_teacher['display_name']} ({sample_teacher['verification_status']}), progress {sample_teacher['progress']['score']}%, "
+            f"completed lessons {sample_teacher['metrics']['completed_lessons']}, rating {sample_teacher['metrics']['avg_rating']}."
+        )
+
+    lines.append("Try again shortly for Vertex AI powered narrative analysis.")
+    return "\n".join(lines)
+
+
+@admin_bp.route('/api/teachers/intelligence')
+def get_teacher_intelligence():
+    """Admin dataset for teacher applications, documents, verification, and performance."""
+    try:
+        search_query = request.args.get('q', '')
+        status_filter = request.args.get('status', 'all')
+        payload = _build_teacher_intelligence_payload(search_query=search_query, status_filter=status_filter)
+        return jsonify(payload)
+    except Exception as e:
+        logger.error(f"Error building teacher intelligence payload: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@admin_bp.route('/api/teachers/<teacher_id>/verify', methods=['POST'])
+def update_teacher_verification(teacher_id):
+    """Approve or reject a teacher application."""
+    try:
+        data = request.get_json(silent=True) or {}
+        action = data.get('action', '').lower()
+        reason = data.get('reason', '').strip()
+
+        if action not in ('approve', 'reject'):
+            return jsonify({'success': False, 'error': 'Action must be "approve" or "reject"'}), 400
+
+        new_status = 'approved' if action == 'approve' else 'rejected'
+
+        # Update verification_status in teacher_profiles
+        result = make_supabase_request(
+            "PATCH",
+            "teacher_profiles",
+            data={"verification_status": new_status},
+            filters={"id": f"eq.{teacher_id}"},
+            use_service_role=True,
+        )
+
+        if result is None:
+            return jsonify({'success': False, 'error': 'Database update failed'}), 500
+
+        label = 'approved' if action == 'approve' else 'rejected'
+        logger.info(f"Teacher {teacher_id} {label} by admin. Reason: {reason or 'N/A'}")
+
+        return jsonify({
+            'success': True,
+            'message': f'Teacher has been {label} successfully.',
+            'new_status': new_status,
+        })
+
+    except Exception as e:
+        logger.error(f"Error updating teacher verification: {e}", exc_info=True)
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@admin_bp.route('/api/teachers/ai-assistant', methods=['POST'])
+def teacher_intelligence_ai_assistant():
+    """AI assistant for teacher monitoring using Vertex AI."""
+    try:
+        data = request.get_json(silent=True) or {}
+        question = (data.get('query') or '').strip()
+        if not question:
+            return jsonify({'error': 'Query is required'}), 400
+
+        teacher_id = (data.get('teacher_id') or '').strip()
+        status_filter = data.get('status', 'all')
+        search_query = data.get('search', '')
+
+        payload = _build_teacher_intelligence_payload(search_query=search_query, status_filter=status_filter)
+        teachers = payload.get('teachers', [])
+
+        if teacher_id:
+            teachers = [teacher for teacher in teachers if str(teacher.get('id')) == teacher_id]
+            if not teachers:
+                return jsonify({'error': 'Selected teacher was not found in the current data scope'}), 404
+
+        context_teachers = teachers[:60]
+        condensed_teachers = []
+        for teacher in context_teachers:
+            condensed_teachers.append({
+                'id': teacher.get('id'),
+                'name': teacher.get('display_name'),
+                'verification_status': teacher.get('verification_status'),
+                'progress_score': teacher.get('progress', {}).get('score', 0),
+                'subjects': teacher.get('subject_names', [])[:8],
+                'metrics': teacher.get('metrics', {}),
+                'documents': [
+                    {
+                        'type': doc.get('type'),
+                        'title': doc.get('title'),
+                        'has_url': bool(doc.get('url')),
+                    }
+                    for doc in teacher.get('documents', [])[:10]
+                ],
+            })
+
+        summary = payload.get('summary', {}).get('in_view', {})
+        model_prompt = (
+            "You are the NerdX Teacher Intelligence AI Agent for admin operations.\n"
+            f"Today's date is {datetime.now(timezone.utc).date().isoformat()}.\n"
+            "Answer the admin's question using ONLY the JSON data provided.\n"
+            "If the data is missing, explicitly say what is missing.\n"
+            "Keep the answer concise and operational with:\n"
+            "1) Direct answer\n"
+            "2) Key supporting evidence\n"
+            "3) Recommended next admin action\n\n"
+            f"Admin question: {question}\n\n"
+            "Teacher dataset JSON:\n"
+            f"{json.dumps({'summary': summary, 'teachers': condensed_teachers}, ensure_ascii=True)}"
+        )
+
+        ai_answer = try_vertex_text(
+            model_prompt,
+            model="gemini-2.5-flash",
+            logger=logger,
+            context="teacher_intelligence_admin_assistant",
+        )
+        model_used = 'vertex-ai-gemini-2.5-flash'
+        if not ai_answer:
+            ai_answer = _build_teacher_ai_fallback_response(question, context_teachers, summary)
+            model_used = 'fallback-deterministic'
+
+        return jsonify({
+            'success': True,
+            'answer': ai_answer,
+            'model_used': model_used,
+            'teacher_count_in_context': len(context_teachers),
+            'generated_at': datetime.now(timezone.utc).isoformat(),
+        })
+    except Exception as e:
+        logger.error(f"Error running teacher AI assistant: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
 
 @admin_bp.route('/api/broadcast', methods=['POST'])
 def broadcast_message():

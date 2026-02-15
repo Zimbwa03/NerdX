@@ -1,5 +1,5 @@
 // Authentication context provider for NerdX Web App
-import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, type ReactNode } from 'react';
 import type { User } from '../types';
 import { creditsApi } from '../services/api/creditsApi';
 import { setAuthToken, clearAuthToken } from '../services/api/config';
@@ -40,6 +40,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isSupabaseAuthReady, setIsSupabaseAuthReady] = useState(false);
   const [creditNotification, setCreditNotification] = useState<CreditNotificationData | null>(null);
   const creditSyncInFlight = useRef(false);
+  const userRef = useRef<User | null>(null);
+
+  // Keep userRef in sync with user state
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   useEffect(() => {
     loadStoredAuth();
@@ -128,13 +134,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshCredits = useCallback(async (includeBreakdown = false) => {
-    if (!user || creditSyncInFlight.current) return;
+    const currentUser = userRef.current;
+    if (!currentUser || creditSyncInFlight.current) return;
     creditSyncInFlight.current = true;
     try {
       if (includeBreakdown) {
         const info = await creditsApi.getCreditInfo();
         if (info) {
-          const total = typeof info.total === 'number' ? info.total : ((info.balance ?? user.credits ?? 0) as number);
+          const total = typeof info.total === 'number' ? info.total : ((info.balance ?? currentUser.credits ?? 0) as number);
           updateUser({ credits: total, credit_breakdown: info as User['credit_breakdown'] | undefined });
           return;
         }
@@ -152,14 +159,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       creditSyncInFlight.current = false;
     }
-  }, [user, updateUser]);
+  }, [updateUser]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
     refreshCredits(true);
     const intervalId = setInterval(() => refreshCredits(false), 30000);
     return () => clearInterval(intervalId);
-  }, [user?.id, refreshCredits]);
+    // Only re-run when user logs in/out (id changes), not on every user object update
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const clearCreditNotification = () => setCreditNotification(null);
 

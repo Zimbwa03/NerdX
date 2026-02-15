@@ -10,7 +10,12 @@ import {
     formatCreditCost,
     getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
-import { ArrowLeft, BookOpen, Atom, Play, Zap, Info, X, FileText } from 'lucide-react';
+import {
+    ArrowLeft, BookOpen, Atom, Play, Zap, Info, X, FileText,
+    Ruler, Activity, ArrowUp, Box, RotateCw, Thermometer,
+    Radio, Plug, Magnet, Cpu,
+    type LucideIcon,
+} from 'lucide-react';
 import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 import { physicsTopics } from '../../data/scienceNotes/physics';
 import '../sciences/ScienceUniverse.css'; // Shared premium styles
@@ -37,6 +42,26 @@ const SUBJECT = {
     name: 'O Level Physics',
     color: '#06B6D4',
 };
+
+/** Return a unique icon per physics topic. */
+function getPhysTopicIcon(name: string): LucideIcon {
+    const n = name.toLowerCase();
+    if (n.includes('measurement') || n.includes('physical quantit')) return Ruler;
+    if (n.includes('kinematics') || n.includes('motion')) return Activity;
+    if (n.includes('turning effect')) return RotateCw;
+    if (n.includes('force') || n.includes('dynamics') || n.includes('machine')) return ArrowUp;
+    if (n.includes('mass') || n.includes('weight') || n.includes('density')) return Box;
+    if (n.includes('energy') || n.includes('power') || n.includes('work')) return Zap;
+    if (n.includes('pressure')) return ArrowUp;
+    if (n.includes('thermal') || n.includes('heat')) return Thermometer;
+    if (n.includes('wave') || n.includes('light') || n.includes('sound') || n.includes('optic')) return Radio;
+    if (n.includes('electricity') || n.includes('circuit') || n.includes('current')) return Plug;
+    if (n.includes('electromagnetism')) return Cpu;
+    if (n.includes('magnetism')) return Magnet;
+    if (n.includes('electronics') || n.includes('logic gate')) return Cpu;
+    if (n.includes('nuclear') || n.includes('atomic') || n.includes('modern')) return Atom;
+    return Atom;
+}
 
 export const PhysicsTopicsPage = () => {
     const navigate = useNavigate();
@@ -214,18 +239,21 @@ export const PhysicsTopicsPage = () => {
                     </p>
 
                     <div className="science-topics-grid">
-                        {displayTopics.map((topic) => (
-                            <div
-                                key={topic.id}
-                                className="science-topic-card"
-                                onClick={() => openStartQuiz(topic)}
-                            >
-                                <div className="topic-icon-small">
-                                    <Atom size={20} />
+                        {displayTopics.map((topic) => {
+                            const TopicIcon = getPhysTopicIcon(topic.name);
+                            return (
+                                <div
+                                    key={topic.id}
+                                    className="science-topic-card"
+                                    onClick={() => openStartQuiz(topic)}
+                                >
+                                    <div className="topic-icon-small">
+                                        <TopicIcon size={20} />
+                                    </div>
+                                    <span className="topic-card-name">{topic.name}</span>
                                 </div>
-                                <span className="topic-card-name">{topic.name}</span>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     {/* Secondary Section: Study Notes */}

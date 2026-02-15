@@ -18,7 +18,14 @@ def login_required(f):
         # Check if user is logged in
         admin_user = admin_auth_service.verify_session()
         if not admin_user:
-            if request.is_json:
+            # Return JSON 401 for API/AJAX/fetch requests instead of redirecting
+            is_api_request = (
+                request.is_json
+                or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                or 'application/json' in request.headers.get('Accept', '')
+                or '/api/' in request.path
+            )
+            if is_api_request:
                 return jsonify({'error': 'Authentication required'}), 401
             return redirect(url_for('auth.login'))
         

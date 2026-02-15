@@ -10,7 +10,12 @@ import {
     formatCreditCost,
     getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
-import { ArrowLeft, BookOpen, Atom, FlaskConical, Play, Info, X, FileText } from 'lucide-react';
+import {
+    ArrowLeft, BookOpen, Atom, FlaskConical, Play, Info, X, FileText,
+    Droplets, Link2, Zap, Flame, Battery, RefreshCw, Beaker,
+    Hammer, Wind, Cloud, Hexagon, LayoutGrid, Calculator, Gauge,
+    type LucideIcon,
+} from 'lucide-react';
 import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 import { chemistryTopics } from '../../data/scienceNotes/chemistry';
 import '../sciences/ScienceUniverse.css'; // Shared premium styles
@@ -38,6 +43,28 @@ const SUBJECT = {
     name: 'O Level Chemistry',
     color: '#F59E0B',
 };
+
+/** Return a unique icon per chemistry topic. */
+function getChemTopicIcon(name: string): LucideIcon {
+    const n = name.toLowerCase();
+    if (n.includes('states of matter') || n.includes('particulate')) return Droplets;
+    if (n.includes('atom') || n.includes('element') || n.includes('compound')) return Atom;
+    if (n.includes('bonding')) return Link2;
+    if (n.includes('stoichiometry') || n.includes('formulae') || n.includes('mole')) return Calculator;
+    if (n.includes('periodic table') || n.includes('periodicity')) return LayoutGrid;
+    if (n.includes('reaction') || n.includes('kinetics')) return Zap;
+    if (n.includes('energetics') || n.includes('energy from')) return Flame;
+    if (n.includes('electrochemistry') || n.includes('electrolysis')) return Battery;
+    if (n.includes('redox')) return RefreshCw;
+    if (n.includes('acid') || n.includes('base') || n.includes('salt')) return Beaker;
+    if (n.includes('non-metal')) return Wind;
+    if (n.includes('metal')) return Hammer;
+    if (n.includes('environment') || n.includes('atmosphere')) return Cloud;
+    if (n.includes('organic') || n.includes('polymer')) return Hexagon;
+    if (n.includes('experimental') || n.includes('analysis') || n.includes('technique')) return FlaskConical;
+    if (n.includes('equilibri')) return Gauge;
+    return FlaskConical;
+}
 
 export const ChemistryTopicsPage = () => {
     const navigate = useNavigate();
@@ -215,18 +242,21 @@ export const ChemistryTopicsPage = () => {
                     </p>
 
                     <div className="science-topics-grid">
-                        {displayTopics.map((topic) => (
-                            <div
-                                key={topic.id}
-                                className="science-topic-card"
-                                onClick={() => openStartQuiz(topic)}
-                            >
-                                <div className="topic-icon-small">
-                                    <FlaskConical size={20} />
+                        {displayTopics.map((topic) => {
+                            const TopicIcon = getChemTopicIcon(topic.name);
+                            return (
+                                <div
+                                    key={topic.id}
+                                    className="science-topic-card"
+                                    onClick={() => openStartQuiz(topic)}
+                                >
+                                    <div className="topic-icon-small">
+                                        <TopicIcon size={20} />
+                                    </div>
+                                    <span className="topic-card-name">{topic.name}</span>
                                 </div>
-                                <span className="topic-card-name">{topic.name}</span>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     {/* Secondary Section: Study Notes */}

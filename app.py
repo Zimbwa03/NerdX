@@ -19,6 +19,8 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
+# Enable werkzeug request logging even when debug=False
+logging.getLogger('werkzeug').setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
 class Base(DeclarativeBase):
@@ -36,7 +38,8 @@ app.config.update(
     SEND_FILE_MAX_AGE_DEFAULT=300,  # Cache static files
     MAX_CONTENT_LENGTH=16 * 1024 * 1024,  # 16MB max upload
     JSON_SORT_KEYS=False,  # Faster JSON serialization
-    JSONIFY_PRETTYPRINT_REGULAR=False  # Faster JSON responses
+    JSONIFY_PRETTYPRINT_REGULAR=False,  # Faster JSON responses
+    TEMPLATES_AUTO_RELOAD=True  # Always reload templates from disk
 )
 
 # Configure the database with better connection handling
@@ -81,6 +84,12 @@ logging.info("⚡ Fast startup mode - initialization deferred")
 
 # Configure CORS
 CORS(app, origins=['*'])
+
+# Log all incoming requests for debugging
+@app.after_request
+def log_request(response):
+    logger.info(f"{request.method} {request.path} -> {response.status_code}")
+    return response
 
 # Route to serve static files (graphs, images, etc.)
 @app.route('/static/<path:filename>')

@@ -91,19 +91,24 @@ export function DashboardPage() {
     }
   }, [user, navigate]);
 
+  // Stable references for data fetching (only change on login/logout, not credit updates)
+  const userId = user?.id;
+  const userRole = user?.role;
+  const isTeacher = userRole === 'teacher';
+
   // Fetch live dashboard data (AI Insights, Progress, Levels, Weekly Activity)
   const loadDashboardData = useCallback(async () => {
-    if (!user || user.role === 'teacher') return;
+    if (!userId || isTeacher) return;
     setDashboardLoading(true);
     try {
-      const data = await fetchDashboardData(user.id);
+      const data = await fetchDashboardData(userId);
       setDashboardData(data);
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     } finally {
       setDashboardLoading(false);
     }
-  }, [user]);
+  }, [userId, isTeacher]);
 
   useEffect(() => {
     loadDashboardData();
@@ -111,21 +116,21 @@ export function DashboardPage() {
 
   // Fetch student's confirmed bookings
   useEffect(() => {
-    if (!user || user.role === 'teacher') return;
+    if (!userId || isTeacher) return;
     (async () => {
-      const bookings = await getStudentBookings(user.id);
+      const bookings = await getStudentBookings(userId);
       const confirmed = bookings.filter((b) => b.status === 'confirmed' && b.room_id);
       setUpcomingLessons(confirmed);
     })();
-  }, [user]);
+  }, [userId, isTeacher]);
 
   // Fetch latest posts for feed preview
   useEffect(() => {
-    if (!user || user.role === 'teacher') return;
+    if (!userId || isTeacher) return;
     (async () => {
       setFeedLoading(true);
       try {
-        const posts = await getAllPosts(1, 3, user.id);
+        const posts = await getAllPosts(1, 3, userId);
         setFeedPosts(posts);
       } catch {
         // silent fail
@@ -133,7 +138,7 @@ export function DashboardPage() {
         setFeedLoading(false);
       }
     })();
-  }, [user]);
+  }, [userId, isTeacher]);
 
   // Build live insights snapshots for the AI Insights panel
   const insightsSnapshots = dashboardData ? [

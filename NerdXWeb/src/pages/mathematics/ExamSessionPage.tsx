@@ -9,11 +9,8 @@ import {
   type QuestionResponse,
 } from '../../services/api/examApi';
 import { MathRenderer } from '../../components/MathRenderer';
+import { isMathRenderSubject, hasLatex } from '../../utils/mathSubjects';
 import { Flag, Grid3X3, ChevronLeft, ChevronRight, Upload } from 'lucide-react';
-
-function hasLatex(text: string): boolean {
-  return /\\\(|\\\[|\$/.test(text);
-}
 
 export function ExamSessionPage() {
   const { state } = useLocation() as {
@@ -50,8 +47,9 @@ export function ExamSessionPage() {
 
   const totalQuestions = session?.total_questions ?? examConfig?.total_questions ?? 10;
   const currentIndex = currentResponse?.question_index ?? 0;
+  const useMathRenderer = isMathRenderSubject(examConfig?.subject);
   const allowAnswerImage =
-    examConfig?.subject === 'mathematics' || examConfig?.subject === 'combined_science' ||
+    useMathRenderer ||
     (examConfig?.subject === 'business_enterprise_skills' && (currentResponse?.question?.question_type === 'essay' || currentResponse?.question?.question_type === 'STRUCTURED'));
 
   useEffect(() => {
@@ -302,7 +300,7 @@ export function ExamSessionPage() {
           {q.prompt_to_student && (
             <p className="exam-question-prompt">{q.prompt_to_student}</p>
           )}
-          {hasLatex(q.stem) ? (
+          {(useMathRenderer || hasLatex(q.stem)) ? (
             <MathRenderer content={q.stem} fontSize={16} />
           ) : (
             <p className="exam-question-stem">{q.stem}</p>
@@ -319,7 +317,7 @@ export function ExamSessionPage() {
                 onClick={() => setSelectedAnswer(opt.label)}
               >
                 <span className="exam-option-label">{opt.label}</span>
-                {hasLatex(opt.text) ? (
+                {(useMathRenderer || hasLatex(opt.text)) ? (
                   <MathRenderer content={opt.text} fontSize={15} />
                 ) : (
                   <span>{opt.text}</span>
@@ -333,7 +331,11 @@ export function ExamSessionPage() {
               <div key={part.part} className="exam-structured-part">
                 <span className="exam-part-label">({part.part})</span>
                 <span className="exam-part-marks">[{part.marks} mark{part.marks > 1 ? 's' : ''}]</span>
-                <p>{part.prompt}</p>
+                {(useMathRenderer || hasLatex(part.prompt)) ? (
+                  <MathRenderer content={part.prompt} fontSize={15} />
+                ) : (
+                  <p>{part.prompt}</p>
+                )}
               </div>
             ))}
             <textarea

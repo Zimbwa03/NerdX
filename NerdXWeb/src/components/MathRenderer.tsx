@@ -2,13 +2,30 @@
  * MathRenderer - Renders Markdown-ish text with LaTeX math using KaTeX.
  * Matches mobile MathRenderer behavior for O-Level Mathematics notes.
  * Normalizes naked LaTeX (e.g. \frac{1}{2}, \cap) so it renders as math.
+ *
+ * Uses katex.renderToString() directly during HTML generation for reliable
+ * rendering that doesn't depend on DOM side-effects or re-render timing.
  */
-import { useEffect, useRef, useMemo } from 'react';
+import { useMemo } from 'react';
 import 'katex/dist/katex.min.css';
-import renderMathInElement from 'katex/dist/contrib/auto-render.mjs';
+import katex from 'katex';
 import { normalizeLatexForRender } from '../utils/latexForMathRenderer';
 
 const MATH_PLACEHOLDER = '__MATH__';
+
+function renderKatex(math: string, displayMode: boolean): string {
+  try {
+    return katex.renderToString(math, {
+      displayMode,
+      throwOnError: false,
+      strict: false,
+      trust: true,
+    });
+  } catch {
+    // If KaTeX fails, return the raw math wrapped in a span
+    return `<span class="katex-error">${math}</span>`;
+  }
+}
 
 function processContent(content: string): string {
   if (!content) return '';
@@ -16,38 +33,36 @@ function processContent(content: string): string {
   // Wrap naked LaTeX in $ $ so KaTeX can render it (e.g. \frac{1}{2}, P \cap Q)
   const normalized = normalizeLatexForRender(content);
 
-  const mathBlocks: string[] = [];
+  const mathBlocks: { math: string; display: boolean }[] = [];
   const tableBlocks: string[] = [];
-  const blockquoteBlocks: string[] = [];
 
   let processed = normalized;
 
   // Extract display math ($$...$$ or \[...\])
   processed = processed.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) => {
     const idx = mathBlocks.length;
-    mathBlocks.push(math.trim());
-    return `${MATH_PLACEHOLDER}${idx}D${MATH_PLACEHOLDER}`;
+    mathBlocks.push({ math: math.trim(), display: true });
+    return `${MATH_PLACEHOLDER}${idx}${MATH_PLACEHOLDER}`;
   });
   processed = processed.replace(/\\\[([\s\S]*?)\\\]/g, (_, math) => {
     const idx = mathBlocks.length;
-    mathBlocks.push(math.trim());
-    return `${MATH_PLACEHOLDER}${idx}D${MATH_PLACEHOLDER}`;
+    mathBlocks.push({ math: math.trim(), display: true });
+    return `${MATH_PLACEHOLDER}${idx}${MATH_PLACEHOLDER}`;
   });
 
   // Extract inline math ($...$ or \(...\))
   processed = processed.replace(/\\\(([\s\S]*?)\\\)/g, (_, math) => {
     const idx = mathBlocks.length;
-    mathBlocks.push(math.trim());
-    return `${MATH_PLACEHOLDER}${idx}I${MATH_PLACEHOLDER}`;
+    mathBlocks.push({ math: math.trim(), display: false });
+    return `${MATH_PLACEHOLDER}${idx}${MATH_PLACEHOLDER}`;
   });
   processed = processed.replace(/\$([^$\n]+)\$/g, (_, math) => {
     const idx = mathBlocks.length;
-    mathBlocks.push(math);
-    return `${MATH_PLACEHOLDER}${idx}I${MATH_PLACEHOLDER}`;
+    mathBlocks.push({ math, display: false });
+    return `${MATH_PLACEHOLDER}${idx}${MATH_PLACEHOLDER}`;
   });
 
   // Extract markdown tables BEFORE escaping HTML
-  // Match tables: lines starting with |, with at least a header row and separator row
   const tableRegex = /(\|[^\n]+\|\r?\n)(\|[-:\s|]+\|\r?\n)((?:\|[^\n]+\|\r?\n?)+)/g;
   processed = processed.replace(tableRegex, (match) => {
     const idx = tableBlocks.length;
@@ -55,37 +70,16 @@ function processContent(content: string): string {
     return `__TABLE__${idx}__TABLE__`;
   });
 
-  // Extract blockquotes (> syntax)
-  const blockquoteRegex = /(?:^|\n)(&gt;|\>) ([^\n]+)/g;
-
   // Escape HTML
   processed = processed
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
-  // Restore math blocks
-  mathBlocks.forEach((math, idx) => {
-    const displayPattern = `${MATH_PLACEHOLDER}${idx}D${MATH_PLACEHOLDER}`;
-    const inlinePattern = `${MATH_PLACEHOLDER}${idx}I${MATH_PLACEHOLDER}`;
-    const fixed = math.replace(/\\\\/g, '\\');
-    if (processed.includes(displayPattern)) {
-      processed = processed.replace(displayPattern, `$$${fixed}$$`);
-    } else {
-      processed = processed.replace(inlinePattern, `$${fixed}$`);
-    }
-  });
-
-  // Restore and render tables
-  tableBlocks.forEach((table, idx) => {
-    const tableHtml = renderMarkdownTable(table);
-    processed = processed.replace(`__TABLE__${idx}__TABLE__`, tableHtml);
-  });
-
-  // Handle blockquotes (> text)
+  // Handle blockquotes (> text) before other formatting
   processed = processed.replace(/(?:^|\n)(?:&gt;|>) ([^\n]+)/g, '</p><blockquote class="md-blockquote">$1</blockquote><p>');
 
-  // Markdown formatting
+  // Markdown formatting (placeholders survive this - they're plain alphanumeric)
   processed = processed
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/\*([^*]+)\*/g, '<em>$1</em>')
@@ -98,6 +92,21 @@ function processContent(content: string): string {
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br/>');
 
+  // Restore math blocks AFTER markdown — render directly to KaTeX HTML
+  // (This avoids KaTeX's complex HTML being corrupted by markdown regexes)
+  mathBlocks.forEach((block, idx) => {
+    const placeholder = `${MATH_PLACEHOLDER}${idx}${MATH_PLACEHOLDER}`;
+    const fixed = block.math.replace(/\\\\/g, '\\');
+    const rendered = renderKatex(fixed, block.display);
+    processed = processed.replace(placeholder, rendered);
+  });
+
+  // Restore and render tables
+  tableBlocks.forEach((table, idx) => {
+    const tableHtml = renderMarkdownTable(table);
+    processed = processed.replace(`__TABLE__${idx}__TABLE__`, tableHtml);
+  });
+
   return `<p>${processed}</p>`;
 }
 
@@ -108,20 +117,16 @@ function renderMarkdownTable(tableStr: string): string {
   const lines = tableStr.split(/\r?\n/).filter(line => line.trim());
   if (lines.length < 2) return tableStr;
 
-  // Parse header row
   const headerCells = lines[0]
     .split('|')
-    .slice(1, -1) // Remove empty first/last from | split
+    .slice(1, -1)
     .map(cell => cell.trim());
 
-  // Skip separator row (lines[1])
-  // Parse body rows
   const bodyRows = lines.slice(2).map(line => {
     return line
       .split('|')
       .slice(1, -1)
       .map(cell => {
-        // Process inline markdown within cells
         let cellContent = cell.trim();
         cellContent = cellContent.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
         cellContent = cellContent.replace(/\*([^*]+)\*/g, '<em>$1</em>');
@@ -130,7 +135,6 @@ function renderMarkdownTable(tableStr: string): string {
       });
   });
 
-  // Build HTML table
   let html = '<div class="md-table-wrapper"><table class="md-table">';
   html += '<thead><tr>';
   headerCells.forEach(cell => {
@@ -159,23 +163,10 @@ interface MathRendererProps {
 }
 
 export function MathRenderer({ content, fontSize = 16, className = '' }: MathRendererProps) {
-  const ref = useRef<HTMLDivElement>(null);
   const html = useMemo(() => processContent(content || ''), [content]);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    renderMathInElement(ref.current, {
-      delimiters: [
-        { left: '$$', right: '$$', display: true },
-        { left: '$', right: '$', display: false },
-      ],
-      throwOnError: false,
-    });
-  }, [html]);
 
   return (
     <div
-      ref={ref}
       className={`math-renderer ${className}`}
       style={{ fontSize }}
       dangerouslySetInnerHTML={{ __html: html }}

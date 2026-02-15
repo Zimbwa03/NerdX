@@ -2,6 +2,104 @@
 
 {% block title %}Admin Panel - NerdX Quiz Bot{% endblock %}
 
+{% block extra_head %}
+<style>
+/* Teacher AI Chat Interface */
+.ti-chat-bubble {
+    display: flex;
+    gap: 10px;
+    max-width: 95%;
+    animation: tiFadeIn 0.3s ease;
+}
+@keyframes tiFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.ti-chat-bubble.ti-chat-user {
+    flex-direction: row-reverse;
+    align-self: flex-end;
+}
+.ti-chat-bubble.ti-chat-ai {
+    align-self: flex-start;
+}
+.ti-chat-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+}
+.ti-chat-ai .ti-chat-avatar {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+}
+.ti-chat-user .ti-chat-avatar {
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    color: #fff;
+}
+.ti-chat-content {
+    flex: 1;
+    min-width: 0;
+}
+.ti-chat-text {
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+.ti-chat-ai .ti-chat-text {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-top-left-radius: 4px;
+    color: rgba(255,255,255,0.9);
+}
+.ti-chat-user .ti-chat-text {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border-top-right-radius: 4px;
+    color: #fff;
+}
+.ti-chat-meta {
+    font-size: 0.65rem;
+    opacity: 0.5;
+    margin-top: 4px;
+    padding: 0 6px;
+}
+.ti-chat-user .ti-chat-meta {
+    text-align: right;
+}
+.ti-chat-typing {
+    display: flex;
+    gap: 4px;
+    padding: 12px 16px;
+}
+.ti-chat-typing span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    animation: tiTypingBounce 1.4s infinite ease-in-out;
+}
+.ti-chat-typing span:nth-child(2) { animation-delay: 0.16s; }
+.ti-chat-typing span:nth-child(3) { animation-delay: 0.32s; }
+@keyframes tiTypingBounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+}
+/* Scrollbar styling for chat */
+#tiChatMessages::-webkit-scrollbar { width: 5px; }
+#tiChatMessages::-webkit-scrollbar-track { background: transparent; }
+#tiChatMessages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+#tiChatMessages::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+/* Auto-grow textarea */
+#tiAiPrompt { overflow: hidden; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row mb-4">
     <div class="col">
@@ -37,6 +135,12 @@
         <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab">
             <i class="fas fa-credit-card me-1"></i>
             Payments
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="teachers-intelligence-tab" data-bs-toggle="tab" data-bs-target="#teachers-intelligence" type="button" role="tab">
+            <i class="fas fa-chalkboard-teacher me-1"></i>
+            Teacher Intelligence
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -570,6 +674,225 @@
         </div>
     </div>
 
+    <!-- Teacher Intelligence Tab -->
+    <div class="tab-pane fade" id="teachers-intelligence" role="tabpanel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h5 class="mb-1">
+                    <i class="fas fa-robot me-2 text-primary"></i>
+                    Advanced Teacher Monitoring
+                </h5>
+                <p class="text-muted mb-0">Track applications, verification documents, performance metrics, and AI analysis.</p>
+            </div>
+            <button class="btn btn-outline-primary" id="tiRefreshBtn" type="button">
+                <i class="fas fa-sync-alt me-1"></i>
+                Refresh Data
+            </button>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-start border-primary border-4 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="small text-muted">Teachers In View</div>
+                        <div class="h4 mb-0" id="tiTotalTeachers">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-start border-warning border-4 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="small text-muted">New Applications</div>
+                        <div class="h4 mb-0" id="tiNewApplications">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-start border-success border-4 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="small text-muted">Verified Teachers</div>
+                        <div class="h4 mb-0" id="tiVerifiedTeachers">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-start border-danger border-4 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="small text-muted">Not Verified</div>
+                        <div class="h4 mb-0" id="tiNotVerifiedTeachers">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-3">
+            <div class="card-body py-3">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-2 mb-md-0">
+                        <div class="fw-bold fs-5" id="tiLessonsCompleted">0</div>
+                        <div class="small text-muted">Lessons Completed</div>
+                    </div>
+                    <div class="col-md-3 mb-2 mb-md-0">
+                        <div class="fw-bold fs-5" id="tiUpcomingLessons">0</div>
+                        <div class="small text-muted">Upcoming Lessons</div>
+                    </div>
+                    <div class="col-md-3 mb-2 mb-md-0">
+                        <div class="fw-bold fs-5" id="tiTotalStudents">0</div>
+                        <div class="small text-muted">Total Student Reach</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="fw-bold fs-5" id="tiTotalPosts">0</div>
+                        <div class="small text-muted">Teacher Posts</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Verification Status Graph</h6>
+                    </div>
+                    <div class="card-body" id="tiStatusGraph">
+                        <div class="text-muted small">No data loaded yet.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-signal me-2"></i>Top Teacher Performance Graph</h6>
+                    </div>
+                    <div class="card-body" id="tiPerformanceGraph">
+                        <div class="text-muted small">No data loaded yet.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-xl-8">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="fas fa-search me-2"></i>Teacher Applications and Progress</h6>
+                        <div class="d-flex gap-2">
+                            <input type="text" class="form-control form-control-sm" id="tiSearchInput" placeholder="Search teacher by name, email, subject..." style="width: 240px;">
+                            <select class="form-select form-select-sm" id="tiStatusFilter" style="width: 170px;">
+                                <option value="all">All</option>
+                                <option value="new">New Applications</option>
+                                <option value="pending">Pending Review</option>
+                                <option value="approved">Verified</option>
+                                <option value="rejected">Rejected</option>
+                                <option value="not_verified">Not Verified</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="px-3 py-2 border-bottom small text-muted">
+                            Showing <span id="tiFilteredCount">0</span> teachers
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Teacher</th>
+                                        <th>Verification</th>
+                                        <th style="min-width: 170px;">Progress</th>
+                                        <th>Lessons</th>
+                                        <th>Students</th>
+                                        <th>Posts</th>
+                                        <th>Rating</th>
+                                        <th>Documents</th>
+                                        <th>View</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tiTeachersTable">
+                                    <tr>
+                                        <td colspan="9" class="text-center text-muted py-4">Open this tab to load teacher intelligence data.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card shadow-sm h-100 d-flex flex-column" id="tiAiChatCard">
+                    <div class="card-header d-flex justify-content-between align-items-center" style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+                        <h6 class="mb-0"><i class="fas fa-brain me-2"></i>AI Teacher Assistant</h6>
+                        <div class="d-flex align-items-center gap-2">
+                            <select id="tiAiTeacherSelect" class="form-select form-select-sm" style="width: auto; max-width: 160px; font-size: 0.75rem; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); color: inherit;">
+                                <option value="">All Teachers</option>
+                            </select>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="tiClearChat()" title="Clear chat" style="padding: 2px 8px; font-size: 0.7rem;">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="tiChatMessages" style="flex: 1 1 auto; overflow-y: auto; padding: 16px; min-height: 320px; max-height: 480px; display: flex; flex-direction: column; gap: 12px; background: rgba(0,0,0,0.15);">
+                        <!-- Welcome message -->
+                        <div class="ti-chat-bubble ti-chat-ai">
+                            <div class="ti-chat-avatar"><i class="fas fa-robot"></i></div>
+                            <div class="ti-chat-content">
+                                <div class="ti-chat-text">Hello! I'm your <strong>Teacher Intelligence Agent</strong>. I can help you with:<br>
+                                    <span style="opacity:0.85;">- Verification status and pending reviews<br>
+                                    - Teacher performance and activity metrics<br>
+                                    - Document and certificate analysis<br>
+                                    - Recommendations for teacher management</span><br><br>
+                                    Ask me anything about your teachers!
+                                </div>
+                                <div class="ti-chat-meta">Vertex AI &middot; Gemini 2.5 Flash</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="border-top: 1px solid rgba(255,255,255,0.08); padding: 12px;">
+                        <form id="tiAiForm" class="d-flex gap-2 align-items-end">
+                            <textarea id="tiAiPrompt" class="form-control form-control-sm" rows="1" placeholder="Ask about teachers..." style="resize: none; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); color: inherit; flex: 1; max-height: 80px;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();document.getElementById('tiAiForm').requestSubmit();}"></textarea>
+                            <button type="submit" class="btn btn-primary btn-sm" id="tiAiAskBtn" style="height: 36px; width: 36px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0;">
+                                <i class="fas fa-paper-plane" style="font-size: 0.8rem;"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-id-card me-2"></i>Teacher Detail and Verification Documents</h6>
+                <span class="small text-muted" id="tiDetailTimestamp">No teacher selected</span>
+            </div>
+            <div class="card-body" id="tiTeacherDetail">
+                <div class="text-muted">Select a teacher to inspect full application details, certificates, and progress steps.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Teacher Modal -->
+    <div class="modal fade" id="tiRejectModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: #1a1d2e; border: 1px solid rgba(255,255,255,0.1);">
+                <div class="modal-header border-0">
+                    <h6 class="modal-title"><i class="fas fa-times-circle text-danger me-2"></i>Reject Teacher Application</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-3">Please provide a reason for rejecting this teacher's application. This helps maintain transparency.</p>
+                    <textarea id="tiRejectReason" class="form-control form-control-sm" rows="3" placeholder="Reason for rejection (e.g., incomplete documents, unverifiable credentials...)" style="background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); color: inherit;"></textarea>
+                    <input type="hidden" id="tiRejectTeacherId" value="">
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="tiConfirmReject()">
+                        <i class="fas fa-times-circle me-1"></i>Confirm Rejection
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Settings Tab -->
     <div class="tab-pane fade" id="settings" role="tabpanel">
         <div class="row">
@@ -739,6 +1062,600 @@ const TOPICS = {
     "English": ["Formal Letter Writing", "Informal Letter Writing", "Article Writing", "Report Writing", "Speech Writing", "Narrative Essays", "Descriptive Essays", "Argumentative Essays", "Comprehension Skills", "Vocabulary Building", "Grammar and Language", "Literary Devices", "Reading Skills", "Writing Skills"]
 };
 
+const teacherIntelState = {
+    loaded: false,
+    teachers: [],
+    selectedTeacherId: null
+};
+let teacherSearchDebounce = null;
+
+function tiEscapeHtml(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function tiNumber(value) {
+    return Number(value || 0).toLocaleString();
+}
+
+function tiStatusLabel(status) {
+    const normalized = String(status || 'pending').toLowerCase();
+    if (normalized === 'approved') return 'Verified';
+    if (normalized === 'rejected') return 'Rejected';
+    return 'Pending Review';
+}
+
+function tiStatusBadgeClass(status) {
+    const normalized = String(status || 'pending').toLowerCase();
+    if (normalized === 'approved') return 'bg-success';
+    if (normalized === 'rejected') return 'bg-danger';
+    return 'bg-warning text-dark';
+}
+
+function tiRenderSummary(summary) {
+    const inView = summary?.in_view || {};
+    const activity = inView.activity || {};
+    document.getElementById('tiTotalTeachers').textContent = tiNumber(inView.total_teachers);
+    document.getElementById('tiNewApplications').textContent = tiNumber(inView.new_applications);
+    document.getElementById('tiVerifiedTeachers').textContent = tiNumber(inView.verified_teachers);
+    document.getElementById('tiNotVerifiedTeachers').textContent = tiNumber(inView.not_verified_teachers);
+    document.getElementById('tiLessonsCompleted').textContent = tiNumber(activity.total_lessons_completed);
+    document.getElementById('tiUpcomingLessons').textContent = tiNumber(activity.upcoming_lessons);
+    document.getElementById('tiTotalStudents').textContent = tiNumber(activity.total_students);
+    document.getElementById('tiTotalPosts').textContent = tiNumber(activity.total_posts);
+}
+
+function tiRenderStatusGraph(distribution) {
+    const container = document.getElementById('tiStatusGraph');
+    if (!container) return;
+    if (!distribution || distribution.length === 0) {
+        container.innerHTML = '<div class="text-muted small">No verification data available.</div>';
+        return;
+    }
+
+    const maxCount = Math.max(...distribution.map((item) => Number(item.count || 0)), 1);
+    container.innerHTML = distribution.map((item) => {
+        const count = Number(item.count || 0);
+        const width = Math.max((count / maxCount) * 100, count > 0 ? 8 : 2);
+        const statusClass = item.status === 'approved'
+            ? 'bg-success'
+            : item.status === 'rejected'
+                ? 'bg-danger'
+                : 'bg-warning';
+        return `
+            <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>${tiEscapeHtml(item.label || item.status)}</span>
+                    <span class="fw-semibold">${tiNumber(count)}</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar ${statusClass}" role="progressbar" style="width: ${width}%"></div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function tiRenderPerformanceGraph(performanceGraph) {
+    const container = document.getElementById('tiPerformanceGraph');
+    if (!container) return;
+    if (!performanceGraph || performanceGraph.length === 0) {
+        container.innerHTML = '<div class="text-muted small">No performance data available.</div>';
+        return;
+    }
+
+    const maxLessons = Math.max(...performanceGraph.map((item) => Number(item.completed_lessons || 0)), 1);
+    container.innerHTML = performanceGraph.map((item) => {
+        const completed = Number(item.completed_lessons || 0);
+        const width = Math.max((completed / maxLessons) * 100, completed > 0 ? 8 : 2);
+        return `
+            <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>${tiEscapeHtml(item.name || 'Teacher')}</span>
+                    <span>${tiNumber(completed)} lessons</span>
+                </div>
+                <div class="progress mb-1" style="height: 9px;">
+                    <div class="progress-bar bg-primary" style="width: ${width}%"></div>
+                </div>
+                <div class="small text-muted">
+                    Rating ${Number(item.rating || 0).toFixed(1)} | Students ${tiNumber(item.students)} | Upcoming ${tiNumber(item.upcoming_lessons)}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function tiRenderTeacherTable(teachers) {
+    const tbody = document.getElementById('tiTeachersTable');
+    const filteredCount = document.getElementById('tiFilteredCount');
+    if (!tbody) return;
+
+    filteredCount.textContent = tiNumber(teachers.length);
+
+    if (!teachers || teachers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">No teachers match this filter.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = teachers.map((teacher) => {
+        const metrics = teacher.metrics || {};
+        const progressScore = Number(teacher.progress?.score || 0);
+        return `
+            <tr>
+                <td>
+                    <div class="fw-semibold">${tiEscapeHtml(teacher.display_name || 'Teacher')}</div>
+                    <div class="small text-muted">${tiEscapeHtml(teacher.email || '')}</div>
+                </td>
+                <td><span class="badge ${tiStatusBadgeClass(teacher.verification_status)}">${tiStatusLabel(teacher.verification_status)}</span></td>
+                <td style="min-width: 170px;">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>${progressScore}%</span>
+                        <span class="text-muted">${teacher.progress?.completed_steps || 0}/${teacher.progress?.total_steps || 0}</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-info" style="width: ${Math.max(progressScore, 2)}%"></div>
+                    </div>
+                </td>
+                <td>
+                    <div class="small">Done: ${tiNumber(metrics.completed_lessons)}</div>
+                    <div class="small text-muted">Upcoming: ${tiNumber(metrics.upcoming_lessons)}</div>
+                </td>
+                <td>${tiNumber(metrics.total_students)}</td>
+                <td>${tiNumber(metrics.posts_count)}</td>
+                <td>${Number(metrics.avg_rating || 0).toFixed(1)} <span class="text-muted small">(${tiNumber(metrics.total_reviews)})</span></td>
+                <td>
+                    <span class="badge bg-light text-dark">${tiNumber(metrics.documents_count)} docs</span>
+                    <span class="badge bg-secondary">${tiNumber(metrics.certificates_count)} cert</span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" type="button" onclick="selectTeacherForIntelligence('${teacher.id}')">
+                        View
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function tiPopulateAiTeacherSelect(teachers) {
+    const select = document.getElementById('tiAiTeacherSelect');
+    if (!select) return;
+    const currentValue = select.value || '';
+    const options = ['<option value="">All teachers in current view</option>'];
+    teachers.forEach((teacher) => {
+        options.push(`<option value="${tiEscapeHtml(teacher.id)}">${tiEscapeHtml(teacher.display_name || 'Teacher')}</option>`);
+    });
+    select.innerHTML = options.join('');
+    if (currentValue && teachers.some((teacher) => teacher.id === currentValue)) {
+        select.value = currentValue;
+    }
+}
+
+function tiRenderTeacherDetail(teacher) {
+    const detailContainer = document.getElementById('tiTeacherDetail');
+    const timestamp = document.getElementById('tiDetailTimestamp');
+    if (!detailContainer) return;
+    if (!teacher) {
+        detailContainer.innerHTML = '<div class="text-muted">Select a teacher to inspect full application details, certificates, and progress steps.</div>';
+        timestamp.textContent = 'No teacher selected';
+        return;
+    }
+
+    const metrics = teacher.metrics || {};
+    const steps = teacher.progress?.steps || {};
+    const stepOrder = [
+        ['application_submitted', 'Application Submitted'],
+        ['profile_completed', 'Profile Information Complete'],
+        ['subjects_added', 'Subjects Added'],
+        ['qualifications_added', 'Qualifications Added'],
+        ['certificates_uploaded', 'Certificates Uploaded'],
+        ['media_uploaded', 'Profile Media Uploaded'],
+        ['first_lesson_completed', 'First Lesson Completed']
+    ];
+
+    const stepsHtml = stepOrder.map(([key, label]) => {
+        const done = Boolean(steps[key]);
+        return `
+            <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                <span>${label}</span>
+                <span class="badge ${done ? 'bg-success' : 'bg-secondary'}">${done ? 'Done' : 'Pending'}</span>
+            </li>
+        `;
+    }).join('');
+
+    const docs = teacher.documents || [];
+    const docsHtml = docs.length > 0
+        ? `
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Title</th>
+                            <th>Institution</th>
+                            <th>Year</th>
+                            <th>File</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${docs.map((doc) => `
+                            <tr>
+                                <td>${tiEscapeHtml(doc.type || 'document')}</td>
+                                <td>${tiEscapeHtml(doc.title || 'Document')}</td>
+                                <td>${tiEscapeHtml(doc.institution || '-')}</td>
+                                <td>${doc.year || '-'}</td>
+                                <td>${doc.url ? `<a href="${tiEscapeHtml(doc.url)}" target="_blank" rel="noopener">Open</a>` : '<span class="text-muted">No file</span>'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `
+        : '<div class="text-muted">No documents uploaded yet.</div>';
+
+    const subjects = teacher.subject_names || [];
+    const subjectsHtml = subjects.length > 0
+        ? subjects.map((subject) => `<span class="badge bg-light text-dark me-1 mb-1">${tiEscapeHtml(subject)}</span>`).join('')
+        : '<span class="text-muted">No subjects added</span>';
+
+    detailContainer.innerHTML = `
+        <div class="row g-3">
+            <div class="col-lg-4">
+                <h6 class="mb-1">${tiEscapeHtml(teacher.display_name || 'Teacher')}</h6>
+                <div class="small text-muted mb-2">${tiEscapeHtml(teacher.email || '')} | ${tiEscapeHtml(teacher.whatsapp || 'No WhatsApp')}</div>
+                <div class="mb-2">
+                    <span class="badge ${tiStatusBadgeClass(teacher.verification_status)}" id="tiDetailStatusBadge">${tiStatusLabel(teacher.verification_status)}</span>
+                    ${teacher.is_new_application ? '<span class="badge bg-warning text-dark ms-1">New</span>' : ''}
+                </div>
+                <div class="d-flex gap-2 mb-3" id="tiVerifyActions" data-teacher-id="${teacher.id}">
+                    ${teacher.verification_status !== 'approved' ? `
+                    <button class="btn btn-success btn-sm" onclick="tiVerifyTeacher('${teacher.id}', 'approve')">
+                        <i class="fas fa-check-circle me-1"></i>Approve
+                    </button>` : ''}
+                    ${teacher.verification_status !== 'rejected' ? `
+                    <button class="btn btn-danger btn-sm" onclick="tiShowRejectModal('${teacher.id}')">
+                        <i class="fas fa-times-circle me-1"></i>Reject
+                    </button>` : ''}
+                    ${teacher.verification_status === 'approved' ? '<span class="text-success small align-self-center"><i class="fas fa-check-double me-1"></i>Verified Teacher</span>' : ''}
+                    ${teacher.verification_status === 'rejected' ? '<span class="text-danger small align-self-center"><i class="fas fa-ban me-1"></i>Application Rejected</span>' : ''}
+                </div>
+                <div class="small mb-2">${tiEscapeHtml(teacher.bio || 'No bio provided')}</div>
+                <div class="small text-muted mb-2"><strong>Experience:</strong> ${tiEscapeHtml(teacher.experience_description || 'Not provided')}</div>
+                <div class="small mb-2"><strong>Subjects:</strong><br>${subjectsHtml}</div>
+                <div class="small text-muted"><strong>Application Age:</strong> ${teacher.application_age_days ?? '-'} day(s)</div>
+            </div>
+            <div class="col-lg-4">
+                <h6>Progress (${teacher.progress?.score || 0}%)</h6>
+                <div class="progress mb-2" style="height: 10px;">
+                    <div class="progress-bar bg-info" style="width: ${Math.max(Number(teacher.progress?.score || 0), 2)}%"></div>
+                </div>
+                <ul class="list-group list-group-flush small">${stepsHtml}</ul>
+            </div>
+            <div class="col-lg-4">
+                <h6>Performance Metrics</h6>
+                <div class="small mb-1"><strong>Total Lessons:</strong> ${tiNumber(metrics.total_lessons)}</div>
+                <div class="small mb-1"><strong>Completed Lessons:</strong> ${tiNumber(metrics.completed_lessons)}</div>
+                <div class="small mb-1"><strong>Upcoming Lessons:</strong> ${tiNumber(metrics.upcoming_lessons)}</div>
+                <div class="small mb-1"><strong>Students:</strong> ${tiNumber(metrics.total_students)}</div>
+                <div class="small mb-1"><strong>Posts:</strong> ${tiNumber(metrics.posts_count)}</div>
+                <div class="small mb-1"><strong>Rating:</strong> ${Number(metrics.avg_rating || 0).toFixed(1)} (${tiNumber(metrics.total_reviews)} reviews)</div>
+                <div class="small mb-1"><strong>Certificates:</strong> ${tiNumber(metrics.certificates_count)}</div>
+                <div class="small"><strong>Total Documents:</strong> ${tiNumber(metrics.documents_count)}</div>
+            </div>
+        </div>
+        <hr>
+        <h6>Verification Files and Certificates</h6>
+        ${docsHtml}
+    `;
+    timestamp.textContent = `Selected: ${teacher.display_name || 'Teacher'}`;
+}
+
+function selectTeacherForIntelligence(teacherId) {
+    const teacher = teacherIntelState.teachers.find((row) => row.id === teacherId);
+    if (!teacher) return;
+    teacherIntelState.selectedTeacherId = teacherId;
+    tiRenderTeacherDetail(teacher);
+    const aiScope = document.getElementById('tiAiTeacherSelect');
+    if (aiScope) {
+        aiScope.value = teacherId;
+    }
+}
+
+function loadTeacherIntelligenceData() {
+    const refreshBtn = document.getElementById('tiRefreshBtn');
+    const teachersTable = document.getElementById('tiTeachersTable');
+    const statusFilter = document.getElementById('tiStatusFilter')?.value || 'all';
+    const searchQuery = document.getElementById('tiSearchInput')?.value?.trim() || '';
+
+    if (refreshBtn) {
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Loading...';
+    }
+    if (teachersTable) {
+        teachersTable.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin me-2"></i>Loading teacher intelligence data...</td></tr>';
+    }
+
+    const params = new URLSearchParams();
+    params.set('status', statusFilter);
+    params.set('q', searchQuery);
+
+    return fetch(`/api/admin/api/teachers/intelligence?${params.toString()}`)
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then((data) => {
+            teacherIntelState.loaded = true;
+            teacherIntelState.teachers = data.teachers || [];
+
+            tiRenderSummary(data.summary || {});
+            tiRenderStatusGraph(data.status_distribution || []);
+            tiRenderPerformanceGraph(data.performance_graph || []);
+            tiRenderTeacherTable(teacherIntelState.teachers);
+            tiPopulateAiTeacherSelect(teacherIntelState.teachers);
+
+            if (teacherIntelState.selectedTeacherId) {
+                const selected = teacherIntelState.teachers.find((teacher) => teacher.id === teacherIntelState.selectedTeacherId);
+                if (selected) {
+                    tiRenderTeacherDetail(selected);
+                } else if (teacherIntelState.teachers.length > 0) {
+                    selectTeacherForIntelligence(teacherIntelState.teachers[0].id);
+                } else {
+                    tiRenderTeacherDetail(null);
+                }
+            } else if (teacherIntelState.teachers.length > 0) {
+                selectTeacherForIntelligence(teacherIntelState.teachers[0].id);
+            } else {
+                tiRenderTeacherDetail(null);
+            }
+        })
+        .catch((error) => {
+            console.error('Error loading teacher intelligence:', error);
+            tiRenderTeacherTable([]);
+            document.getElementById('tiStatusGraph').innerHTML = '<div class="text-danger small">Failed to load status graph.</div>';
+            document.getElementById('tiPerformanceGraph').innerHTML = '<div class="text-danger small">Failed to load performance graph.</div>';
+            tiRenderTeacherDetail(null);
+        })
+        .finally(() => {
+            if (refreshBtn) {
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i>Refresh Data';
+            }
+        });
+}
+
+// ── Teacher Approve / Reject ──
+function tiVerifyTeacher(teacherId, action) {
+    const confirmMsg = action === 'approve'
+        ? 'Are you sure you want to approve this teacher?'
+        : 'Are you sure you want to reject this teacher?';
+
+    if (action === 'approve' && !confirm(confirmMsg)) return;
+
+    const actionsDiv = document.getElementById('tiVerifyActions');
+    if (actionsDiv) actionsDiv.innerHTML = '<span class="text-info small"><i class="fas fa-spinner fa-spin me-1"></i>Processing...</span>';
+
+    fetch(`/api/admin/api/teachers/${teacherId}/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: action, reason: '' })
+    })
+        .then(res => res.json().then(body => ({ ok: res.ok, body })))
+        .then(({ ok, body }) => {
+            if (!ok || !body.success) throw new Error(body.error || body.message || 'Action failed');
+            // Update the teacher in local state and re-render
+            const teacher = teacherIntelState.teachers.find(t => t.id === teacherId);
+            if (teacher) {
+                teacher.verification_status = body.new_status;
+                tiRenderTeacherDetail(teacher);
+                tiRenderTeacherTable(teacherIntelState.teachers);
+            }
+            tiShowAlert('success', body.message);
+        })
+        .catch(err => {
+            console.error('Verification error:', err);
+            tiShowAlert('danger', `Failed: ${err.message}`);
+            // Re-render to restore buttons
+            const teacher = teacherIntelState.teachers.find(t => t.id === teacherId);
+            if (teacher) tiRenderTeacherDetail(teacher);
+        });
+}
+
+function tiShowRejectModal(teacherId) {
+    document.getElementById('tiRejectTeacherId').value = teacherId;
+    document.getElementById('tiRejectReason').value = '';
+    const modal = new bootstrap.Modal(document.getElementById('tiRejectModal'));
+    modal.show();
+}
+
+function tiConfirmReject() {
+    const teacherId = document.getElementById('tiRejectTeacherId').value;
+    const reason = document.getElementById('tiRejectReason').value.trim();
+
+    // Close modal
+    const modalEl = document.getElementById('tiRejectModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+
+    const actionsDiv = document.getElementById('tiVerifyActions');
+    if (actionsDiv) actionsDiv.innerHTML = '<span class="text-info small"><i class="fas fa-spinner fa-spin me-1"></i>Processing...</span>';
+
+    fetch(`/api/admin/api/teachers/${teacherId}/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject', reason: reason })
+    })
+        .then(res => res.json().then(body => ({ ok: res.ok, body })))
+        .then(({ ok, body }) => {
+            if (!ok || !body.success) throw new Error(body.error || body.message || 'Rejection failed');
+            const teacher = teacherIntelState.teachers.find(t => t.id === teacherId);
+            if (teacher) {
+                teacher.verification_status = body.new_status;
+                tiRenderTeacherDetail(teacher);
+                tiRenderTeacherTable(teacherIntelState.teachers);
+            }
+            tiShowAlert('warning', body.message);
+        })
+        .catch(err => {
+            console.error('Rejection error:', err);
+            tiShowAlert('danger', `Failed: ${err.message}`);
+            const teacher = teacherIntelState.teachers.find(t => t.id === teacherId);
+            if (teacher) tiRenderTeacherDetail(teacher);
+        });
+}
+
+function tiShowAlert(type, message) {
+    const container = document.getElementById('alertContainer') || document.querySelector('.tab-pane.active');
+    if (!container) return;
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 420px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);';
+    alertDiv.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'times-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    setTimeout(() => { alertDiv.remove(); }, 5000);
+}
+
+// ── Teacher AI Chat Interface ──
+const tiChatHistory = [];
+
+function tiGetTimestamp() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function tiAppendMessage(role, text, meta) {
+    const container = document.getElementById('tiChatMessages');
+    const bubble = document.createElement('div');
+    bubble.className = `ti-chat-bubble ti-chat-${role}`;
+
+    const icon = role === 'ai' ? 'fa-robot' : 'fa-user-shield';
+    const metaText = meta || (role === 'ai' ? 'Vertex AI' : tiGetTimestamp());
+
+    // Format text: convert **bold** and line breaks
+    let formattedText = tiEscapeHtml(text)
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+
+    bubble.innerHTML = `
+        <div class="ti-chat-avatar"><i class="fas ${icon}"></i></div>
+        <div class="ti-chat-content">
+            <div class="ti-chat-text">${formattedText}</div>
+            <div class="ti-chat-meta">${tiEscapeHtml(metaText)}</div>
+        </div>
+    `;
+    container.appendChild(bubble);
+    container.scrollTop = container.scrollHeight;
+    return bubble;
+}
+
+function tiShowTyping() {
+    const container = document.getElementById('tiChatMessages');
+    const bubble = document.createElement('div');
+    bubble.className = 'ti-chat-bubble ti-chat-ai';
+    bubble.id = 'tiTypingIndicator';
+    bubble.innerHTML = `
+        <div class="ti-chat-avatar"><i class="fas fa-robot"></i></div>
+        <div class="ti-chat-content">
+            <div class="ti-chat-text">
+                <div class="ti-chat-typing"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+    `;
+    container.appendChild(bubble);
+    container.scrollTop = container.scrollHeight;
+}
+
+function tiHideTyping() {
+    const el = document.getElementById('tiTypingIndicator');
+    if (el) el.remove();
+}
+
+function tiClearChat() {
+    tiChatHistory.length = 0;
+    const container = document.getElementById('tiChatMessages');
+    container.innerHTML = '';
+    // Re-add welcome message
+    const welcome = document.createElement('div');
+    welcome.className = 'ti-chat-bubble ti-chat-ai';
+    welcome.innerHTML = `
+        <div class="ti-chat-avatar"><i class="fas fa-robot"></i></div>
+        <div class="ti-chat-content">
+            <div class="ti-chat-text">Chat cleared. How can I help you with teacher management?</div>
+            <div class="ti-chat-meta">Vertex AI &middot; Gemini 2.5 Flash</div>
+        </div>
+    `;
+    container.appendChild(welcome);
+}
+
+function tiAutoGrowTextarea() {
+    const ta = document.getElementById('tiAiPrompt');
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 80) + 'px';
+}
+
+function handleTeacherAiSubmit(e) {
+    e.preventDefault();
+    const askBtn = document.getElementById('tiAiAskBtn');
+    const promptEl = document.getElementById('tiAiPrompt');
+    const query = (promptEl?.value || '').trim();
+    const teacherId = document.getElementById('tiAiTeacherSelect')?.value || '';
+    const status = document.getElementById('tiStatusFilter')?.value || 'all';
+    const search = document.getElementById('tiSearchInput')?.value?.trim() || '';
+
+    if (!query) return;
+
+    // Add user message to chat
+    tiAppendMessage('user', query);
+    tiChatHistory.push({ role: 'user', text: query });
+
+    // Clear input and reset height
+    promptEl.value = '';
+    promptEl.style.height = 'auto';
+
+    // Disable send button, show typing
+    askBtn.disabled = true;
+    tiShowTyping();
+
+    fetch('/api/admin/api/teachers/ai-assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, teacher_id: teacherId, status, search })
+    })
+        .then((response) => response.json().then((body) => ({ ok: response.ok, body })))
+        .then(({ ok, body }) => {
+            tiHideTyping();
+            if (!ok) throw new Error(body.error || 'AI request failed');
+            const modelTag = body.model_used || 'Vertex AI';
+            const answer = body.answer || 'No response returned.';
+            tiAppendMessage('ai', answer, `${modelTag} &middot; ${tiGetTimestamp()}`);
+            tiChatHistory.push({ role: 'ai', text: answer });
+        })
+        .catch((error) => {
+            tiHideTyping();
+            console.error('AI assistant error:', error);
+            tiAppendMessage('ai', `Sorry, I encountered an error: ${error.message}\n\nPlease try again.`, 'Error');
+        })
+        .finally(() => {
+            askBtn.disabled = false;
+            promptEl.focus();
+        });
+}
+
+// Auto-grow textarea on input
+document.addEventListener('DOMContentLoaded', function() {
+    const ta = document.getElementById('tiAiPrompt');
+    if (ta) ta.addEventListener('input', tiAutoGrowTextarea);
+});
+
 // Initialize admin panel
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Admin panel DOM loaded, initializing...');
@@ -779,6 +1696,22 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('questionForm').addEventListener('submit', handleQuestionForm);
     document.getElementById('settingsForm').addEventListener('submit', handleSettingsForm);
     document.getElementById('broadcastForm').addEventListener('submit', handleBroadcastForm);
+    document.getElementById('tiAiForm').addEventListener('submit', handleTeacherAiSubmit);
+
+    const teacherTab = document.getElementById('teachers-intelligence-tab');
+    if (teacherTab) {
+        teacherTab.addEventListener('shown.bs.tab', function() {
+            if (!teacherIntelState.loaded) {
+                loadTeacherIntelligenceData();
+            }
+        });
+    }
+    document.getElementById('tiRefreshBtn').addEventListener('click', loadTeacherIntelligenceData);
+    document.getElementById('tiStatusFilter').addEventListener('change', loadTeacherIntelligenceData);
+    document.getElementById('tiSearchInput').addEventListener('input', function() {
+        if (teacherSearchDebounce) clearTimeout(teacherSearchDebounce);
+        teacherSearchDebounce = setTimeout(loadTeacherIntelligenceData, 350);
+    });
     
     // Auto-refresh credit statistics every 30 seconds
     setInterval(loadCreditStatistics, 30000);
@@ -1181,7 +2114,7 @@ function editCredits(userId) {
 }
 
 function exportUsers() {
-    fetch('/api/dashboard/api/export/users')
+    fetch('/admin/api/export/users')
         .then(response => response.json())
         .then(data => {
             alert(data.message || 'Export started');
@@ -2013,6 +2946,15 @@ document.addEventListener('DOMContentLoaded', function() {
     rejectedTab.addEventListener('click', function() {
         loadRejectedPayments();
     });
+    // Activate tab from URL hash (e.g. #teachers-intelligence)
+    const hash = window.location.hash.replace('#', '');
+    if (hash) {
+        const tabBtn = document.getElementById(hash + '-tab');
+        if (tabBtn) {
+            const tab = new bootstrap.Tab(tabBtn);
+            tab.show();
+        }
+    }
 });
 </script>
 {% endblock %}

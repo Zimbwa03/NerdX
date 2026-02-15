@@ -6,7 +6,16 @@ import {
   formatCreditCost,
   getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
-import { ArrowLeft, BookOpen, MessageSquare, Play, Scroll, Info, X, FileText } from 'lucide-react';
+import {
+  ArrowLeft, BookOpen, MessageSquare, Play, Scroll, Info, X, FileText,
+  Archive, Layers, Landmark, Globe, Mountain, Building, Anchor,
+  Flag, Shield, Users, Target, Crown, Flame, Heart, Scale,
+  Swords, AlertTriangle, ShieldCheck, Link2, Map, Bookmark,
+  MapPin, GitMerge, Ban, Crosshair, UserPlus, Handshake,
+  TrendingUp, BadgeCheck, Network, Megaphone, Bomb, Building2,
+  Sparkles,
+  type LucideIcon,
+} from 'lucide-react';
 import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 import {
   historyFormLevels,
@@ -19,6 +28,54 @@ const SUBJECT = {
   id: 'history',
   name: 'O Level History',
   color: '#5D4037',
+};
+
+/** Every history topic gets its own unique icon, keyed by topic ID. */
+const HISTORY_TOPIC_ICONS: Record<string, LucideIcon> = {
+  // ── Form 1 (11 topics) ──
+  introduction_to_history:                       BookOpen,
+  sources_of_history_form1:                      Archive,
+  types_of_history:                              Layers,
+  ancient_civilisation_in_egypt:                  Landmark,
+  spread_of_egyptian_civilisation:                Globe,
+  late_stone_age_and_transition_to_early_iron_age: Mountain,
+  states_formation_in_zimbabwe:                   Building,
+  causes_of_slave_trade:                          Link2,
+  triangular_slave_trade:                         Anchor,
+  impact_of_slave_trade:                          AlertTriangle,
+  abolition_of_slave_trade:                       ShieldCheck,
+
+  // ── Form 2 (10 topics) ──
+  portuguese_prazo_system_zambezi_valley:          Map,
+  early_missionary_activities_1850_1900:           Bookmark,
+  background_to_colonisation_of_zimbabwe:          MapPin,
+  process_of_colonisation_of_zimbabwe:             Flag,
+  anglo_ndebele_war_1893_1894:                     Swords,
+  first_chimurenga_umvukela_1896_1897:             Flame,
+  colonial_policies_1923_1979:                     FileText,
+  federation_rhodesia_nyasaland_1953_1963:          GitMerge,
+  udi_unilateral_declaration_of_independence:       Ban,
+  rise_of_nationalism:                             Users,
+
+  // ── Form 3 (10 topics) ──
+  causes_of_second_chimurenga_umvukela:            Shield,
+  early_phase_armed_struggle:                      Crosshair,
+  second_phase_armed_struggle_mobilisation:         UserPlus,
+  decisive_phase_1972_1979:                        Target,
+  peace_settlements_armed_struggle:                Handshake,
+  social_political_economic_policies_since_1990:    TrendingUp,
+  provisions_of_constitution:                      Scale,
+  child_rights_and_responsibilities:               Heart,
+  principles_of_good_governance:                   BadgeCheck,
+  zimbabwe_regional_international_organisations:    Network,
+
+  // ── Form 4 (6 topics) ──
+  resistance_colonial_rule_mozambique_namibia:      Megaphone,
+  causes_course_results_first_world_war:            Bomb,
+  paris_peace_conference_post_war_treaties:          Scroll,
+  league_of_nations:                               Building2,
+  rise_of_european_dictators:                      Crown,
+  causes_of_second_world_war:                      Sparkles,
 };
 
 export function HistoryTopicsPage() {
@@ -167,18 +224,21 @@ export function HistoryTopicsPage() {
           )}
 
           <div className="science-topics-grid">
-            {displayTopics.map((topic) => (
-              <div
-                key={topic.id}
-                className="science-topic-card"
-                onClick={() => openStartQuiz(topic)}
-              >
-                <div className="topic-icon-small">
-                  <Scroll size={20} />
+            {displayTopics.map((topic) => {
+              const TopicIcon = HISTORY_TOPIC_ICONS[topic.id] ?? Scroll;
+              return (
+                <div
+                  key={topic.id}
+                  className="science-topic-card"
+                  onClick={() => openStartQuiz(topic)}
+                >
+                  <div className="topic-icon-small">
+                    <TopicIcon size={20} />
+                  </div>
+                  <span className="topic-card-name">{topic.name}</span>
                 </div>
-                <span className="topic-card-name">{topic.name}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="topics-section-title" style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 60, marginBottom: 24 }}>

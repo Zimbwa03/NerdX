@@ -88,6 +88,7 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
+            {/* Public auth routes */}
             <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
             <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
             <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
@@ -95,6 +96,10 @@ function App() {
             <Route path="/reset-password" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
             <Route path="/verify-email" element={<PublicRoute><EmailVerificationPage /></PublicRoute>} />
             <Route path="/auth/callback" element={<AuthCallbackPage />} />
+
+            {/* Admin dashboard is served by Flask backend via /admin proxy */}
+
+            {/* Authenticated app routes */}
             <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route index element={<DashboardPage />} />
               <Route path="credits" element={<CreditsPage />} />

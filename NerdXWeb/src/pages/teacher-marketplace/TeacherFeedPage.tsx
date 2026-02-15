@@ -65,9 +65,9 @@ export function TeacherFeedPage() {
     return toggleLike(postId, user.id);
   };
 
-  const handleAddComment = async (postId: string, content: string): Promise<PostComment | null> => {
+  const handleAddComment = async (postId: string, content: string, parentId?: string | null): Promise<PostComment | null> => {
     if (!user) return null;
-    return addComment(postId, user.id, user.name || 'Student', content);
+    return addComment(postId, user.id, user.name || 'Student', content, parentId);
   };
 
   const handleDeleteComment = (commentId: string, _postId: string) => {

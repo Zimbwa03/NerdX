@@ -14,6 +14,24 @@ import {
   CheckCircle2,
   AlertCircle,
   BookOpen,
+  Divide,
+  Superscript,
+  Crosshair,
+  Spline,
+  ListOrdered,
+  Hash,
+  Triangle,
+  TrendingDown,
+  LineChart,
+  Infinity,
+  TrendingUp,
+  GitBranch,
+  Compass,
+  LayoutGrid,
+  Box,
+  Calculator,
+  CircleDot,
+  type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { quizApi, type Question, type Topic } from '../../services/api/quizApi';
@@ -35,6 +53,34 @@ type SixthLevel = 'Lower Sixth' | 'Upper Sixth';
 type QuestionFormat = 'mcq' | 'structured';
 
 const SUBJECT_ID = 'a_level_pure_math';
+
+/** Unique icon per A-Level Pure Math topic. */
+const ALEVEL_MATH_ICONS: Record<string, LucideIcon> = {
+  polynomials: Sigma,
+  rational_functions: Divide,
+  indices_surds_logs: Superscript,
+  quadratic_functions: Crosshair,
+  functions: Spline,
+  coordinate_geometry: Crosshair,
+  sequences_series: ListOrdered,
+  binomial_theorem: Hash,
+  trigonometry_basic: Triangle,
+  differentiation_basic: TrendingDown,
+  applications_differentiation: LineChart,
+  integration_basic: Layers3,
+  further_trigonometry: Triangle,
+  hyperbolic_functions: Infinity,
+  further_differentiation: TrendingUp,
+  further_integration: Layers3,
+  differential_equations: GitBranch,
+  complex_numbers: Compass,
+  matrices: LayoutGrid,
+  vectors_3d: Box,
+  summation_series: Hash,
+  numerical_methods: Calculator,
+  proof: CheckCircle2,
+  groups: CircleDot,
+};
 
 export function ALevelPureMathPage() {
   const navigate = useNavigate();
@@ -308,7 +354,7 @@ export function ALevelPureMathPage() {
                 onClick={() => openStartQuiz(topic)}
               >
                 <div className="topic-icon-small">
-                  <Sigma size={18} />
+                  {(() => { const I = ALEVEL_MATH_ICONS[topic.id] ?? Sigma; return <I size={18} />; })()}
                 </div>
                 <span className="topic-card-name">{topic.name}</span>
                 <div className="alevel-topic-meta-row">

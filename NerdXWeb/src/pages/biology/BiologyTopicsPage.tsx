@@ -10,7 +10,12 @@ import {
     formatCreditCost,
     getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
-import { ArrowLeft, BookOpen, Microscope, FlaskConical, Play, Dna, Info, X, FileText } from 'lucide-react';
+import {
+    ArrowLeft, BookOpen, Microscope, FlaskConical, Play, Dna, Info, X, FileText,
+    ArrowLeftRight, Leaf, Heart, Wind, Droplets, Brain, Thermometer,
+    TreePine, Flower2, HeartPulse, Bug, Globe, Tags,
+    type LucideIcon,
+} from 'lucide-react';
 import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 import { biologyTopics } from '../../data/scienceNotes/biology';
 import '../sciences/ScienceUniverse.css'; // Shared premium styles
@@ -40,6 +45,30 @@ const SUBJECT = {
     name: 'O Level Biology',
     color: '#10B981',
 };
+
+/** Return a unique icon per biology topic. */
+function getBioTopicIcon(name: string): LucideIcon {
+    const n = name.toLowerCase();
+    if (n.includes('cell structure') || n.includes('cell organ')) return Microscope;
+    if (n.includes('movement in and out') || n.includes('osmosis') || n.includes('diffusion')) return ArrowLeftRight;
+    if (n.includes('enzyme')) return FlaskConical;
+    if (n.includes('plant nutrition') || n.includes('photosynthesis')) return Leaf;
+    if (n.includes('animal nutrition') || n.includes('digestion')) return Heart;
+    if (n.includes('transport in plant')) return TreePine;
+    if (n.includes('transport in human') || n.includes('transport in animal')) return HeartPulse;
+    if (n.includes('respiration')) return Wind;
+    if (n.includes('excretion')) return Droplets;
+    if (n.includes('coordination') || n.includes('response') || n.includes('nervous')) return Brain;
+    if (n.includes('homeostasis')) return Thermometer;
+    if (n.includes('drug')) return FlaskConical;
+    if (n.includes('reproduction in plant') || n.includes('plant reproduction')) return Flower2;
+    if (n.includes('reproduction')) return HeartPulse;
+    if (n.includes('inheritance') || n.includes('genetics')) return Dna;
+    if (n.includes('organism') || n.includes('ecosystem') || n.includes('relationship')) return Bug;
+    if (n.includes('environment') || n.includes('human influence')) return Globe;
+    if (n.includes('classification')) return Tags;
+    return Dna;
+}
 
 export const BiologyTopicsPage = () => {
     const navigate = useNavigate();
@@ -217,18 +246,21 @@ export const BiologyTopicsPage = () => {
                     </p>
 
                     <div className="science-topics-grid">
-                        {displayTopics.map((topic) => (
-                            <div
-                                key={topic.id}
-                                className="science-topic-card"
-                                onClick={() => openStartQuiz(topic)}
-                            >
-                                <div className="topic-icon-small">
-                                    <Dna size={20} />
+                        {displayTopics.map((topic) => {
+                            const TopicIcon = getBioTopicIcon(topic.name);
+                            return (
+                                <div
+                                    key={topic.id}
+                                    className="science-topic-card"
+                                    onClick={() => openStartQuiz(topic)}
+                                >
+                                    <div className="topic-icon-small">
+                                        <TopicIcon size={20} />
+                                    </div>
+                                    <span className="topic-card-name">{topic.name}</span>
                                 </div>
-                                <span className="topic-card-name">{topic.name}</span>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     {/* Secondary Section: Study Notes */}

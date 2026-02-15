@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function loadPendingPayments() {
     try {
-        const response = await fetch('/api/pending-payments');
+        const response = await fetch('/admin/api/pending-payments');
         const data = await response.json();
         
         pendingPayments = data.pending_payments || [];
@@ -459,7 +459,7 @@ async function confirmApprovePayment(transactionRef, index) {
         const paymentCard = document.querySelectorAll('.payment-card')[index];
         paymentCard.style.opacity = '0.5';
         
-        const response = await fetch('/api/approve-payment', {
+        const response = await fetch('/admin/api/approve-payment', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -523,7 +523,7 @@ async function confirmRejectPayment() {
         const paymentCard = document.querySelectorAll('.payment-card')[index];
         paymentCard.style.opacity = '0.5';
         
-        const response = await fetch('/api/reject-payment', {
+        const response = await fetch('/admin/api/reject-payment', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

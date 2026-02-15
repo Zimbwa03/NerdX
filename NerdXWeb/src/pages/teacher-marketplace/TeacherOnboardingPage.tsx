@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { FileUploader } from '../../components/marketplace/FileUploader';
 import { SubjectBadge } from '../../components/marketplace/SubjectBadge';
-import { createTeacherProfile, uploadTeacherFile } from '../../services/api/teacherMarketplaceApi';
+import { createTeacherProfile, uploadTeacherFile, getTeacherProfileByUserId } from '../../services/api/teacherMarketplaceApi';
 import {
   MARKETPLACE_SUBJECTS,
   ACADEMIC_LEVELS,
@@ -43,12 +43,35 @@ export function TeacherOnboardingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [checkingProfile, setCheckingProfile] = useState(true);
 
   // Only teachers can access onboarding
   useEffect(() => {
     if (user && user.role === 'student' && !user.is_teacher) {
       navigate('/app', { replace: true });
     }
+  }, [user, navigate]);
+
+  // Redirect teachers who already have a profile to the dashboard
+  useEffect(() => {
+    if (!user) {
+      setCheckingProfile(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const existingProfile = await getTeacherProfileByUserId(user.id);
+        if (!cancelled && existingProfile) {
+          navigate('/app/teacher-dashboard', { replace: true });
+          return;
+        }
+      } catch {
+        // If check fails, allow onboarding to proceed
+      }
+      if (!cancelled) setCheckingProfile(false);
+    })();
+    return () => { cancelled = true; };
   }, [user, navigate]);
 
   // Step 1: Personal Details
@@ -195,6 +218,18 @@ export function TeacherOnboardingPage() {
       setIsSubmitting(false);
     }
   };
+
+  // Show a brief loading state while checking for existing profile
+  if (checkingProfile) {
+    return (
+      <div className="teacher-onboarding" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', color: 'rgba(255,255,255,0.6)' }}>
+          <Loader2 size={28} className="to-spinner" />
+          <span>Checking your profile...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (submitted) {
     return (

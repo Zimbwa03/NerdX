@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -10,12 +10,23 @@ import {
 import { calculateQuizCreditCost } from '../../utils/creditCalculator';
 import { formatQuestionParts } from '../../utils/formatQuestionText';
 import { MathRenderer } from '../../components/MathRenderer';
-import { ArrowLeft, Upload, Check, X } from 'lucide-react';
+import { isMathRenderSubject, hasLatex } from '../../utils/mathSubjects';
+import { ArrowLeft, Upload, Camera, Mic, Square, Loader2, Check, X } from 'lucide-react';
 import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 
-function hasLatex(text: string): boolean {
-  if (!text || typeof text !== 'string') return false;
-  return /\\\(|\\\[|\$|\\frac|\\sqrt|\\sum|\\int|\\overrightarrow|\\vec|\\cap|\\cup|\\in|\\subseteq|\\mid|\\text|\\begin|\\theta|\\alpha|\\beta|\\pi/.test(text);
+/* ---- helpers ---- */
+function fileToBase64(file: File): Promise<{ base64: string; mime_type: string }> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const out = String(reader.result || '');
+      const commaIdx = out.indexOf(',');
+      const base64 = commaIdx >= 0 ? out.slice(commaIdx + 1) : out;
+      resolve({ base64, mime_type: file.type || 'image/png' });
+    };
+    reader.onerror = () => reject(new Error('Failed to read image file.'));
+    reader.readAsDataURL(file);
+  });
 }
 
 interface Subject {
@@ -56,10 +67,17 @@ export function QuizPage() {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [voiceLoading, setVoiceLoading] = useState(false);
+  const [recordingActive, setRecordingActive] = useState(false);
   const questionStartTime = useRef(Date.now());
   const answerImageInputRef = useRef<HTMLInputElement>(null);
+  const captureInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
 
-  const isMathSubject = subject?.id === 'mathematics';
+  const useMathRenderer = isMathRenderSubject(subject?.id);
   const isComputerScience = subject?.id === 'computer_science' || subject?.id === 'a_level_computer_science';
   const isGeography = subject?.id === 'geography' || subject?.id === 'a_level_geography';
   const isCommerce = subject?.id === 'commerce';
@@ -72,7 +90,7 @@ export function QuizPage() {
   );
   const hasOptions = Array.isArray(question?.options) && (question?.options?.length ?? 0) > 0;
   const allowsImageUpload =
-    (isMathSubject && (isStructured || !hasOptions)) ||
+    (useMathRenderer && (isStructured || !hasOptions)) ||
     (isComputerScience && (question?.question_type === 'structured' || question?.question_type === 'essay')) ||
     (isGeography && (question?.question_type === 'structured' || question?.question_type === 'essay')) ||
     (isCommerce && question?.question_type === 'essay') ||
@@ -83,6 +101,16 @@ export function QuizPage() {
       ? !!selectedAnswer
       : !!textAnswer.trim() || !!answerImage;
 
+  // Cleanup media streams on unmount
+  useEffect(() => {
+    return () => {
+      try { mediaRecorderRef.current?.stop(); } catch { /* no-op */ }
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+      }
+    };
+  }, []);
+
   const generateNext = useCallback(async () => {
     setGenerating(true);
     setResult(null);
@@ -91,7 +119,6 @@ export function QuizPage() {
     setStructuredAnswers({});
     setAnswerImage(null);
     try {
-      // Streaming is only supported for mathematics subjects; English and others use generate only
       const canStream =
         !!topic?.id &&
         (subject.id === 'mathematics' || subject.id === 'a_level_pure_math' || subject.id === 'a_level_statistics');
@@ -139,6 +166,95 @@ export function QuizPage() {
       return url ?? undefined;
     } finally {
       setUploadingImage(false);
+    }
+  };
+
+  /* ---- OCR from image (upload / capture) ---- */
+  const handleImageOcr = async (file: File | null | undefined) => {
+    if (!file) return;
+    setOcrLoading(true);
+    try {
+      const payload = await fileToBase64(file);
+      // Use the extract-from-images endpoint (same as History/English)
+      const res = await fetch('/api/mobile/english/essay/extract-from-images', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token') ?? ''}` },
+        body: JSON.stringify({ images: [payload] }),
+      });
+      const json = await res.json();
+      if (json.success && json.data?.extracted_text) {
+        if (isStructured) {
+          // Append to the first empty structured part
+          const firstEmpty = structParts.find((p) => !(structuredAnswers[p.label] ?? '').trim());
+          const targetLabel = firstEmpty?.label ?? structParts[0]?.label;
+          if (targetLabel) {
+            setStructuredAnswers((prev) => ({
+              ...prev,
+              [targetLabel]: ((prev[targetLabel] ?? '') + '\n' + json.data.extracted_text).trim(),
+            }));
+          }
+        } else {
+          setTextAnswer((prev) => (prev.trim() ? prev + '\n' : '') + json.data.extracted_text.trim());
+        }
+      }
+      // Also store the raw image for submission
+      setAnswerImage(file);
+    } catch (err) {
+      console.error('OCR failed:', err);
+    } finally {
+      setOcrLoading(false);
+    }
+  };
+
+  /* ---- Voice recording ---- */
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      const recorder = new MediaRecorder(stream);
+      chunksRef.current = [];
+      recorder.ondataavailable = (ev) => {
+        if (ev.data.size > 0) chunksRef.current.push(ev.data);
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setRecordingActive(true);
+    } catch {
+      console.error('Microphone access failed');
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!mediaRecorderRef.current) return;
+    setVoiceLoading(true);
+    try {
+      mediaRecorderRef.current.stop();
+      mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
+      mediaStreamRef.current = null;
+      await new Promise<void>((resolve) => {
+        if (!mediaRecorderRef.current) return resolve();
+        mediaRecorderRef.current.onstop = () => resolve();
+      });
+      const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+      chunksRef.current = [];
+      const audioFile = new File([blob], 'quiz-voice.webm', { type: 'audio/webm' });
+      const formData = new FormData();
+      formData.append('audio', audioFile);
+      const res = await fetch('/api/mobile/voice/transcribe', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${localStorage.getItem('token') ?? ''}` },
+        body: formData,
+      });
+      const json = await res.json();
+      if (json.success && json.text) {
+        setTextAnswer((prev) => (prev.trim() ? prev + '\n' : '') + json.text.trim());
+      }
+    } catch {
+      console.error('Voice transcription failed');
+    } finally {
+      setRecordingActive(false);
+      setVoiceLoading(false);
+      mediaRecorderRef.current = null;
     }
   };
 
@@ -203,6 +319,85 @@ export function QuizPage() {
     navigate(backTo);
   };
 
+  /* ---- Answer toolbar (Upload / Capture / Voice) ---- */
+  const renderAnswerToolbar = () => {
+    if (!allowsImageUpload || !!result) return null;
+    return (
+      <div className="quiz-answer-toolbar">
+        <button
+          type="button"
+          className="quiz-tool-btn"
+          disabled={ocrLoading || loading || generating}
+          onClick={() => answerImageInputRef.current?.click()}
+        >
+          <Upload size={14} /> Upload
+        </button>
+        <button
+          type="button"
+          className="quiz-tool-btn"
+          disabled={ocrLoading || loading || generating}
+          onClick={() => captureInputRef.current?.click()}
+        >
+          <Camera size={14} /> Capture
+        </button>
+        {recordingActive ? (
+          <button
+            type="button"
+            className="quiz-tool-btn recording"
+            disabled={voiceLoading || loading || generating}
+            onClick={() => { void stopRecording(); }}
+          >
+            <Square size={14} /> Stop
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="quiz-tool-btn"
+            disabled={recordingActive || voiceLoading || loading || generating}
+            onClick={() => { void startRecording(); }}
+          >
+            <Mic size={14} /> Voice
+          </button>
+        )}
+        {ocrLoading && (
+          <span className="quiz-tool-status">
+            <Loader2 size={14} className="spin" /> Analyzing image...
+          </span>
+        )}
+        {voiceLoading && (
+          <span className="quiz-tool-status">
+            <Loader2 size={14} className="spin" /> Transcribing...
+          </span>
+        )}
+        {/* hidden file inputs */}
+        <input
+          ref={answerImageInputRef}
+          type="file"
+          accept="image/*"
+          className="quiz-file-hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.currentTarget.value = '';
+            void handleImageOcr(file);
+          }}
+        />
+        <input
+          ref={captureInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="quiz-file-hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.currentTarget.value = '';
+            void handleImageOcr(file);
+          }}
+        />
+        {answerImage && <span className="quiz-image-name">{answerImage.name}</span>}
+      </div>
+    );
+  };
+
   if (!question && !generating) {
     return (
       <div className="quiz-page">
@@ -248,8 +443,8 @@ export function QuizPage() {
 
       <main className="quiz-main">
         <div className="quiz-question-card">
-          <h2 className="quiz-question-label">Question</h2>
-          {(isMathSubject || hasLatex(formattedQuestion)) ? (
+          <h2 className="quiz-question-label">QUESTION</h2>
+          {(useMathRenderer || hasLatex(formattedQuestion)) ? (
             <MathRenderer content={formattedQuestion} fontSize={16} className="quiz-question-math" />
           ) : (
             <p className="quiz-question-text">{formattedQuestion}</p>
@@ -281,7 +476,7 @@ export function QuizPage() {
                       <span className="quiz-struct-label">{part.label}</span>
                       <span className="quiz-struct-marks">[{part.marks}]</span>
                     </div>
-                    {(isMathSubject || hasLatex(part.question)) ? (
+                    {(useMathRenderer || hasLatex(part.question)) ? (
                       <MathRenderer content={formatQuestionParts(part.question)} fontSize={15} className="quiz-struct-math" />
                     ) : (
                       <p className="quiz-struct-question">{formatQuestionParts(part.question)}</p>
@@ -310,26 +505,7 @@ export function QuizPage() {
                     )}
                   </div>
                 ))}
-                {!result && allowsImageUpload && (
-                  <div className="quiz-answer-image-block">
-                    <input
-                      ref={answerImageInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="quiz-file-hidden"
-                      onChange={(e) => setAnswerImage(e.target.files?.[0] ?? null)}
-                    />
-                    <button
-                      type="button"
-                      className="quiz-upload-btn"
-                      onClick={() => answerImageInputRef.current?.click()}
-                      disabled={uploadingImage}
-                    >
-                      <Upload size={18} /> {answerImage ? 'Change Image' : 'Upload Answer Image'}
-                    </button>
-                    {answerImage && <span className="quiz-image-name">{answerImage.name}</span>}
-                  </div>
-                )}
+                {renderAnswerToolbar()}
               </>
             )}
           </div>
@@ -352,7 +528,7 @@ export function QuizPage() {
                   disabled={!!result}
                 >
                   <span className="quiz-option-label">{label}</span>
-                  {(isMathSubject || hasLatex(opt)) ? (
+                  {(useMathRenderer || hasLatex(opt)) ? (
                     <MathRenderer content={opt} fontSize={15} className="quiz-option-math" />
                   ) : (
                     <span>{opt}</span>
@@ -368,33 +544,14 @@ export function QuizPage() {
           </div>
         ) : (
           <div className="quiz-text-answer-block">
+            {renderAnswerToolbar()}
             <textarea
               value={textAnswer}
               onChange={(e) => setTextAnswer(e.target.value)}
-              placeholder="Enter your answer..."
+              placeholder="Enter your answer...\nYou can also upload a photo of your handwritten answer or use voice input."
               rows={4}
               disabled={!!result}
             />
-            {!result && allowsImageUpload && (
-              <div className="quiz-answer-image-block">
-                <input
-                  ref={answerImageInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="quiz-file-hidden"
-                  onChange={(e) => setAnswerImage(e.target.files?.[0] ?? null)}
-                />
-                <button
-                  type="button"
-                  className="quiz-upload-btn"
-                  onClick={() => answerImageInputRef.current?.click()}
-                  disabled={uploadingImage}
-                >
-                  <Upload size={18} /> {answerImage ? 'Change Image' : 'Upload Answer Image'}
-                </button>
-                {answerImage && <span className="quiz-image-name">{answerImage.name}</span>}
-              </div>
-            )}
           </div>
         )}
 
@@ -417,23 +574,50 @@ export function QuizPage() {
             {result.points_earned > 0 && (
               <span className="quiz-points">+{result.points_earned} points</span>
             )}
-            <p className="quiz-feedback">{result.feedback}</p>
+            <div className="quiz-feedback">
+              {(useMathRenderer || hasLatex(result.feedback)) ? (
+                <MathRenderer content={result.feedback} fontSize={15} className="quiz-feedback-math" />
+              ) : (
+                <p>{result.feedback}</p>
+              )}
+            </div>
             {(result.what_went_right || result.what_went_wrong) && (
               <div className="quiz-feedback-details">
                 {result.what_went_right && (
-                  <p className="quiz-what-right">✓ {result.what_went_right}</p>
+                  <div className="quiz-what-right">
+                    <span className="quiz-feedback-icon">✓</span>
+                    {(useMathRenderer || hasLatex(result.what_went_right)) ? (
+                      <MathRenderer content={result.what_went_right} fontSize={14} />
+                    ) : (
+                      <span>{result.what_went_right}</span>
+                    )}
+                  </div>
                 )}
                 {result.what_went_wrong && (
-                  <p className="quiz-what-wrong">✗ {result.what_went_wrong}</p>
+                  <div className="quiz-what-wrong">
+                    <span className="quiz-feedback-icon">✗</span>
+                    {(useMathRenderer || hasLatex(result.what_went_wrong)) ? (
+                      <MathRenderer content={result.what_went_wrong} fontSize={14} />
+                    ) : (
+                      <span>{result.what_went_wrong}</span>
+                    )}
+                  </div>
                 )}
               </div>
             )}
             {result.improvement_tips && (
-              <p className="quiz-tips">💡 {result.improvement_tips}</p>
+              <div className="quiz-tips">
+                <span className="quiz-feedback-icon">💡</span>
+                {(useMathRenderer || hasLatex(result.improvement_tips)) ? (
+                  <MathRenderer content={result.improvement_tips} fontSize={14} />
+                ) : (
+                  <span>{result.improvement_tips}</span>
+                )}
+              </div>
             )}
             <div className="quiz-solution-block">
               <h3>Solution</h3>
-              {(isMathSubject || hasLatex(result.solution)) ? (
+              {(useMathRenderer || hasLatex(result.solution)) ? (
                 <MathRenderer content={result.solution} fontSize={15} className="quiz-solution-math" />
               ) : (
                 <p>{result.solution}</p>
@@ -442,11 +626,21 @@ export function QuizPage() {
             {result.hint && !result.correct && (
               <div className="quiz-hint-block">
                 <h3>Hint</h3>
-                <p>{result.hint}</p>
+                {(useMathRenderer || hasLatex(result.hint)) ? (
+                  <MathRenderer content={result.hint} fontSize={14} className="quiz-hint-math" />
+                ) : (
+                  <p>{result.hint}</p>
+                )}
               </div>
             )}
             {result.encouragement && (
-              <p className="quiz-encouragement">{result.encouragement}</p>
+              <div className="quiz-encouragement">
+                {(useMathRenderer || hasLatex(result.encouragement)) ? (
+                  <MathRenderer content={result.encouragement} fontSize={14} />
+                ) : (
+                  <p>{result.encouragement}</p>
+                )}
+              </div>
             )}
             <div className="quiz-result-actions">
               <button type="button" className="quiz-next-btn" onClick={handleNext}>

@@ -11,6 +11,7 @@ import {
   getTeacherProfileByUserId,
   completeLesson,
 } from '../../services/api/teacherMarketplaceApi';
+import { supabase } from '../../services/supabase';
 import type { LessonBooking, TeacherProfile } from '../../types';
 import {
   ArrowLeft, BookOpen, Clock, User, Loader2,
@@ -151,8 +152,40 @@ export function VirtualClassroomPage() {
 
         // Validate: user must be either the student or the teacher
         if (user) {
-          const isStudent = bk.student_id === user.id;
-          const isTeacherUser = tp && tp.user_id === user.id;
+          const isStudent = bk.student_id === user.id || bk.student_id === user.email;
+
+          // Resolve Supabase Auth UUID (user.id may be email, tp.user_id is Supabase UUID)
+          let supabaseUid: string | null = null;
+          try {
+            const { data: authData } = await supabase.auth.getUser();
+            supabaseUid = authData?.user?.id || null;
+          } catch {
+            // Supabase session may not be ready
+          }
+
+          // Broad teacher match: check user_id (with both app ID and Supabase UUID), email, and teacher_profile_id
+          let isTeacherUser = false;
+          if (tp) {
+            isTeacherUser =
+              tp.user_id === user.id ||
+              (!!supabaseUid && tp.user_id === supabaseUid) ||
+              (!!tp.email && !!user.email && tp.email.toLowerCase() === user.email.toLowerCase()) ||
+              (user.teacher_profile_id != null && tp.id === user.teacher_profile_id);
+          }
+
+          // Fallback: if teacher profile fetch failed or match failed, check if user owns a profile matching this booking's teacher
+          if (!isTeacherUser && (user.role === 'teacher' || user.is_teacher)) {
+            try {
+              const ownProfile = await getTeacherProfileByUserId(user.id);
+              if (ownProfile && ownProfile.id === bk.teacher_id) {
+                isTeacherUser = true;
+                if (!tp) setTeacher(ownProfile);
+              }
+            } catch {
+              // Best-effort fallback
+            }
+          }
+
           if (!isStudent && !isTeacherUser) {
             setError('You do not have access to this classroom.');
             setLoading(false);
@@ -213,11 +246,12 @@ export function VirtualClassroomPage() {
   };
 
   // ─── Derived state ──────────────────────────────────────────────────────────
-  // teacher.user_id may be a Supabase Auth UUID or an app-level ID, so check both
+  // teacher.user_id may be a Supabase Auth UUID or an app-level ID, so check broadly
   const isTeacher = user && teacher && (
     teacher.user_id === user.id ||
-    teacher.email === user.email ||
-    (user.teacher_profile_id != null && teacher.id === user.teacher_profile_id)
+    (!!teacher.email && !!user.email && teacher.email.toLowerCase() === user.email.toLowerCase()) ||
+    (user.teacher_profile_id != null && teacher.id === user.teacher_profile_id) ||
+    (user.role === 'teacher' || user.is_teacher)
   );
 
   // ─── Loading state ───────────────────────────────────────────────────────────

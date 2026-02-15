@@ -13,7 +13,7 @@ interface PostCardProps {
   showTeacherLink?: boolean;
   onLike?: (postId: string) => Promise<{ liked: boolean; newCount: number }>;
   onDelete?: (postId: string) => void;
-  onAddComment?: (postId: string, content: string) => Promise<PostComment | null>;
+  onAddComment?: (postId: string, content: string, parentId?: string | null) => Promise<PostComment | null>;
   onDeleteComment?: (commentId: string, postId: string) => void;
 }
 

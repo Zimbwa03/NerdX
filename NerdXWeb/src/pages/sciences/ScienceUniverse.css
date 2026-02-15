@@ -26,21 +26,31 @@
     --hist-primary: #795548;
     --hist-accent: #8D6E63;
     --hist-glow: rgba(93, 64, 55, 0.4);
+
+    /* Mathematics Theme (Blue) */
+    --math-primary: #2979FF;
+    --math-accent: #82B1FF;
+    --math-glow: rgba(41, 121, 255, 0.4);
 }
 
 .science-universe-page {
     font-family: 'Outfit', sans-serif;
-    min-height: 100vh;
+    min-height: calc(100vh - var(--app-header-height, 64px) - 36px);
     background: var(--science-bg-depth);
     color: #fff;
     position: relative;
     overflow-x: clip;
-    padding-bottom: 60px;
+    padding-bottom: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 
     /* Full width breakout */
     width: 100vw;
     margin-left: calc(-50vw + 50%);
     margin-right: calc(-50vw + 50%);
+    margin-top: -16px;
+    margin-bottom: -20px;
 }
 
 /* --- Animated Backgrounds --- */
@@ -120,9 +130,9 @@
 .science-hero {
     position: relative;
     z-index: 1;
-    padding: 60px 24px;
+    padding: 36px 24px 28px;
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 24px;
 }
 
 .science-hero-badge {
@@ -133,7 +143,7 @@
     border-radius: 20px;
     font-size: 13px;
     font-weight: 600;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
@@ -163,9 +173,9 @@
 }
 
 .science-hero-title {
-    font-size: 64px;
+    font-size: 52px;
     font-weight: 800;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     line-height: 1.1;
     background-clip: text;
     -webkit-background-clip: text;
@@ -321,49 +331,128 @@
     gap: 20px;
 }
 
+/* --- Shimmer sweep animation --- */
+@keyframes card-shimmer {
+    0% { transform: translateX(-100%) skewX(-15deg); }
+    100% { transform: translateX(250%) skewX(-15deg); }
+}
+
+/* --- Base Topic Card (redesigned for visibility) --- */
 .science-topic-card {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    transition: all 0.3s ease;
+    transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
+                box-shadow 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
+                border-color 0.35s ease,
+                background 0.35s ease;
     cursor: pointer;
     position: relative;
+    overflow: hidden;
 }
 
+/* Shimmer pseudo-element (hidden until hover) */
+.science-topic-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.08) 40%,
+        rgba(255, 255, 255, 0.15) 50%,
+        rgba(255, 255, 255, 0.08) 60%,
+        transparent 100%
+    );
+    transform: translateX(-100%) skewX(-15deg);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.science-topic-card:hover::before {
+    animation: card-shimmer 0.8s ease-out forwards;
+}
+
+/* Base hover */
 .science-topic-card:hover {
-    background: rgba(255, 255, 255, 0.05);
-    transform: translateY(-4px);
+    transform: translateY(-6px) scale(1.02);
 }
 
-.bio .science-topic-card:hover {
-    border-color: rgba(16, 185, 129, 0.3);
-    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.1);
-}
+/* --- Subject-Specific Card Fills & Hover Effects --- */
 
-.chem .science-topic-card:hover {
-    border-color: rgba(245, 158, 11, 0.3);
-    box-shadow: 0 8px 30px rgba(245, 158, 11, 0.1);
-}
-
-.phys .science-topic-card:hover {
-    border-color: rgba(6, 182, 212, 0.3);
-    box-shadow: 0 8px 30px rgba(6, 182, 212, 0.1);
-}
-
-.hist .science-topic-card:hover {
-    border-color: rgba(141, 110, 99, 0.3);
-    box-shadow: 0 8px 30px rgba(93, 64, 55, 0.15);
+/* Mathematics */
+.math .science-topic-card {
+    background: linear-gradient(135deg, rgba(41, 121, 255, 0.12) 0%, rgba(41, 121, 255, 0.04) 100%);
+    border-color: rgba(41, 121, 255, 0.15);
+    box-shadow: 0 2px 12px rgba(41, 121, 255, 0.06), inset 0 1px 0 rgba(130, 177, 255, 0.08);
 }
 
 .math .science-topic-card:hover {
-    border-color: rgba(41, 121, 255, 0.3);
-    box-shadow: 0 8px 30px rgba(41, 121, 255, 0.1);
+    background: linear-gradient(135deg, rgba(41, 121, 255, 0.22) 0%, rgba(41, 121, 255, 0.10) 100%);
+    border-color: rgba(41, 121, 255, 0.4);
+    box-shadow: 0 12px 40px rgba(41, 121, 255, 0.2), 0 0 20px rgba(41, 121, 255, 0.08);
 }
 
+/* Biology */
+.bio .science-topic-card {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.04) 100%);
+    border-color: rgba(16, 185, 129, 0.15);
+    box-shadow: 0 2px 12px rgba(16, 185, 129, 0.06), inset 0 1px 0 rgba(52, 211, 153, 0.08);
+}
+
+.bio .science-topic-card:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0.10) 100%);
+    border-color: rgba(16, 185, 129, 0.4);
+    box-shadow: 0 12px 40px rgba(16, 185, 129, 0.2), 0 0 20px rgba(16, 185, 129, 0.08);
+}
+
+/* Chemistry */
+.chem .science-topic-card {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(245, 158, 11, 0.04) 100%);
+    border-color: rgba(245, 158, 11, 0.15);
+    box-shadow: 0 2px 12px rgba(245, 158, 11, 0.06), inset 0 1px 0 rgba(251, 191, 36, 0.08);
+}
+
+.chem .science-topic-card:hover {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(245, 158, 11, 0.10) 100%);
+    border-color: rgba(245, 158, 11, 0.4);
+    box-shadow: 0 12px 40px rgba(245, 158, 11, 0.2), 0 0 20px rgba(245, 158, 11, 0.08);
+}
+
+/* Physics */
+.phys .science-topic-card {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.04) 100%);
+    border-color: rgba(6, 182, 212, 0.15);
+    box-shadow: 0 2px 12px rgba(6, 182, 212, 0.06), inset 0 1px 0 rgba(103, 232, 249, 0.08);
+}
+
+.phys .science-topic-card:hover {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.22) 0%, rgba(6, 182, 212, 0.10) 100%);
+    border-color: rgba(6, 182, 212, 0.4);
+    box-shadow: 0 12px 40px rgba(6, 182, 212, 0.2), 0 0 20px rgba(6, 182, 212, 0.08);
+}
+
+/* History */
+.hist .science-topic-card {
+    background: linear-gradient(135deg, rgba(93, 64, 55, 0.14) 0%, rgba(93, 64, 55, 0.05) 100%);
+    border-color: rgba(141, 110, 99, 0.18);
+    box-shadow: 0 2px 12px rgba(93, 64, 55, 0.08), inset 0 1px 0 rgba(161, 136, 127, 0.08);
+}
+
+.hist .science-topic-card:hover {
+    background: linear-gradient(135deg, rgba(93, 64, 55, 0.25) 0%, rgba(93, 64, 55, 0.12) 100%);
+    border-color: rgba(141, 110, 99, 0.4);
+    box-shadow: 0 12px 40px rgba(93, 64, 55, 0.2), 0 0 20px rgba(93, 64, 55, 0.1);
+}
+
+/* --- Topic Icon (redesigned with colored backgrounds) --- */
 .topic-icon-small {
     width: 40px;
     height: 40px;
@@ -373,28 +462,81 @@
     justify-content: center;
     font-size: 18px;
     background: rgba(255, 255, 255, 0.05);
+    transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
+                background 0.3s ease,
+                box-shadow 0.3s ease;
 }
 
+/* Icon pulse on card hover */
+.science-topic-card:hover .topic-icon-small {
+    transform: scale(1.12) rotate(5deg);
+}
+
+/* Mathematics icon */
+.math .topic-icon-small {
+    color: var(--math-accent);
+    background: rgba(41, 121, 255, 0.15);
+}
+
+.math .science-topic-card:hover .topic-icon-small {
+    background: rgba(41, 121, 255, 0.28);
+    box-shadow: 0 0 16px rgba(41, 121, 255, 0.25);
+}
+
+/* Biology icon */
 .bio .topic-icon-small {
     color: #34D399;
+    background: rgba(16, 185, 129, 0.15);
 }
 
+.bio .science-topic-card:hover .topic-icon-small {
+    background: rgba(16, 185, 129, 0.28);
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+}
+
+/* Chemistry icon */
 .chem .topic-icon-small {
     color: #FBBF24;
+    background: rgba(245, 158, 11, 0.15);
 }
 
+.chem .science-topic-card:hover .topic-icon-small {
+    background: rgba(245, 158, 11, 0.28);
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.25);
+}
+
+/* Physics icon */
 .phys .topic-icon-small {
     color: #67E8F9;
+    background: rgba(6, 182, 212, 0.15);
 }
 
+.phys .science-topic-card:hover .topic-icon-small {
+    background: rgba(6, 182, 212, 0.28);
+    box-shadow: 0 0 16px rgba(6, 182, 212, 0.25);
+}
+
+/* History icon */
 .hist .topic-icon-small {
     color: #A1887F;
+    background: rgba(93, 64, 55, 0.18);
 }
 
+.hist .science-topic-card:hover .topic-icon-small {
+    background: rgba(93, 64, 55, 0.32);
+    box-shadow: 0 0 16px rgba(93, 64, 55, 0.2);
+}
+
+/* --- Topic Card Name --- */
 .topic-card-name {
     font-weight: 600;
     font-size: 16px;
     color: rgba(255, 255, 255, 0.9);
+    transition: color 0.3s ease;
+}
+
+.science-topic-card:hover .topic-card-name {
+    color: #fff;
 }
 
 /* Responsive */
@@ -404,7 +546,12 @@
     }
 
     .science-hero-title {
-        font-size: 48px;
+        font-size: 40px;
+    }
+
+    .science-hero {
+        padding: 28px 20px 20px;
+        margin-bottom: 16px;
     }
 }
 
@@ -542,7 +689,10 @@
     width: 100%;
     max-width: 1280px;
     margin: 0 auto;
-    padding: 0 24px 48px;
+    padding: 0 24px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Media section */
