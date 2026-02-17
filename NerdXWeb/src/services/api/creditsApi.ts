@@ -78,7 +78,11 @@ export const creditsApi = {
     try {
       const response = await api.get('/api/mobile/credits/packages');
       return response.data.data || [];
-    } catch (error) {
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number; data?: { message?: string } } };
+      if (err.response?.status === 403 && err.response?.data?.message) {
+        throw new Error(err.response.data.message);
+      }
       console.error('Get packages error:', error);
       return [];
     }

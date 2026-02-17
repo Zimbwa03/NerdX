@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { graphApi, getGraphImageUrl, type GraphData } from '../../services/api/graphApi';
 import { API_BASE_URL } from '../../services/api/config';
@@ -34,6 +34,7 @@ function hasLatex(text: string): boolean {
 }
 
 export function GraphPracticePage() {
+  const navigate = useNavigate();
   const { user, updateUser } = useAuth();
   const [mode, setMode] = useState<Mode>('generate');
   const [level, setLevel] = useState<Level>('o_level');
@@ -146,6 +147,11 @@ export function GraphPracticePage() {
       }
     } catch (err) {
       console.error(err);
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 402) {
+        navigate('/app/credits');
+        return;
+      }
       setErrorMessage(getErrorMessage(err));
     } finally {
       setLoading(false);
@@ -171,6 +177,11 @@ export function GraphPracticePage() {
       }
     } catch (err) {
       console.error(err);
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 402) {
+        navigate('/app/credits');
+        return;
+      }
       setErrorMessage(getErrorMessage(err));
     } finally {
       setLoading(false);
@@ -199,6 +210,11 @@ export function GraphPracticePage() {
       }
     } catch (err) {
       console.error(err);
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 402) {
+        navigate('/app/credits');
+        return;
+      }
       setErrorMessage(getErrorMessage(err));
     } finally {
       setAnalyzingImages(false);

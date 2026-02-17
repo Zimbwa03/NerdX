@@ -1,105 +1,237 @@
-import { useParams, Link } from 'react-router-dom';
-import { getTopicNotesBySlug } from '../../data/commerceNotes/notes';
-import { ArrowLeft, Info, CheckCircle, Lightbulb } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import type { NotesSection, TopicNotes } from '../../data/scienceNotes/types';
+import { commerceNotes, getTopicById } from '../../data/oLevelCommerce';
+import { MathRenderer } from '../../components/MathRenderer';
+import { FlashcardSection } from '../../components/FlashcardSection';
+import { useAuth } from '../../context/AuthContext';
+import {
+  ArrowLeft,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+  Info,
+  Lightbulb,
+} from 'lucide-react';
+import { VideoPlayer, AudioPlayer } from '../../components/MediaPlayer';
+import '../sciences/ScienceUniverse.css';
 
-/** Renders content string with **bold**, single newlines as <br>, and double newlines as paragraphs */
-function ContentBlock({ content }: { content: string }) {
-  return (
-    <div className="commerce-notes-detail-body">
-      {content.split(/\n\n+/).map((para, i) => (
-        <p key={i} className="commerce-notes-detail-para">
-          {para.split(/\n/).map((line, lineIdx) => (
-            <span key={lineIdx}>
-              {lineIdx > 0 && <br />}
-              {line.split(/(\*\*[^*]+\*\*)/g).map((bit, j) =>
-                bit.startsWith('**') && bit.endsWith('**') ? (
-                  <strong key={j}>{bit.slice(2, -2)}</strong>
-                ) : (
-                  bit
-                )
-              )}
-            </span>
-          ))}
-        </p>
-      ))}
-    </div>
-  );
-}
+const ACCENT_COLOR = '#B8860B';
 
 export function CommerceNoteDetailPage() {
   const { topicSlug } = useParams<{ topicSlug: string }>();
-  const notes = topicSlug ? getTopicNotesBySlug(topicSlug) : null;
+  const { user } = useAuth();
 
-  if (!topicSlug || !notes) {
+  const topicMeta = useMemo(() => {
+    const topicId = (topicSlug || '').replace(/-/g, '_');
+    return topicId ? getTopicById(topicId) : undefined;
+  }, [topicSlug]);
+
+  const [notes, setNotes] = useState<TopicNotes | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState<Set<number>>(new Set([0]));
+
+  const isMediaLocked = useMemo(() => {
+    const hasPaidCredits = (user?.credit_breakdown?.purchased_credits ?? 0) > 0;
+    return !hasPaidCredits;
+  }, [user]);
+
+  useEffect(() => {
+    if (!topicMeta) {
+      setLoading(false);
+      setNotes(null);
+      return;
+    }
+    const topicNotes = commerceNotes[topicMeta.name];
+    setNotes(topicNotes ?? null);
+    setLoading(false);
+  }, [topicMeta]);
+
+  const toggle = (i: number) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
+  };
+
+  const renderSubsections = (sections?: NotesSection[], depth: number = 0) => {
+    if (!sections?.length) return null;
     return (
-      <div className="commerce-notes-page">
-        <Link to="/app/commerce/notes" className="back-link">
-          <ArrowLeft size={20} /> Back
+      <div className={`science-notes-subsections depth-${depth}`}>
+        {sections.map((section, index) => {
+          const Heading = depth === 0 ? 'h3' : 'h4';
+          return (
+            <div key={`${section.title}-${index}`} className="science-notes-subsection">
+              <Heading className="science-notes-subtitle" style={{ color: ACCENT_COLOR }}>{section.title}</Heading>
+              <MathRenderer content={section.content} fontSize={15} />
+              {renderSubsections(section.subsections, depth + 1)}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="science-universe-page com loading-screen">
+        <div className="science-universe-bg com-bg" />
+        <div className="loading-spinner" style={{ borderColor: ACCENT_COLOR, borderTopColor: 'transparent' }}></div>
+        <div className="loading-text">Loading Commerce Notes...</div>
+      </div>
+    );
+  }
+
+  if (!notes || !topicMeta) {
+    return (
+      <div className="science-universe-page com">
+        <div className="science-universe-bg com-bg" />
+        <Link to="/app/commerce" className="super-back-btn">
+          <ArrowLeft size={24} />
         </Link>
-        <p className="commerce-notes-detail-not-found">
-          Notes for this topic are not available.
-        </p>
+        <div className="science-hero">
+          <h1>Notes Not Found</h1>
+          <p>The requested commerce notes could not be found.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="commerce-notes-page commerce-notes-detail-page">
-      <header className="commerce-notes-detail-header">
-        <Link to="/app/commerce/notes" className="back-link">
-          <ArrowLeft size={20} /> Back to topics
-        </Link>
-        <span className="commerce-notes-detail-subtitle">Commerce Notes</span>
-        <h1 className="commerce-notes-detail-title">{notes.topic}</h1>
-      </header>
+    <div className="science-universe-page com">
+      <div className="science-universe-bg com-bg" />
+      <div className="science-grid-overlay" />
 
-      <div className="commerce-notes-detail-content">
-        <div className="commerce-notes-detail-card commerce-notes-detail-summary">
-          <div className="commerce-notes-detail-card-head">
-            <Info size={24} className="commerce-notes-detail-icon" />
-            <h2 className="commerce-notes-detail-card-title">Summary</h2>
+      <div className="science-notes-header-bar glass-panel">
+        <Link to="/app/commerce" className="back-link">
+          <ArrowLeft size={20} /> Back
+        </Link>
+        <div className="header-breadcrumbs">
+          <span className="crumb-subject" style={{ color: ACCENT_COLOR }}>Commerce</span>
+          <span className="crumb-divider">/</span>
+          <span className="crumb-topic">{notes.topic}</span>
+        </div>
+      </div>
+
+      <h1 className="science-notes-page-title">{notes.topic}</h1>
+
+      <div className="science-notes-content-container">
+        {(notes.audioUrl || notes.videoUrl) && (
+          <div className="science-media-section">
+            <div className="media-grid">
+              {notes.videoUrl && (
+                <VideoPlayer
+                  src={notes.videoUrl}
+                  accentColor={ACCENT_COLOR}
+                  locked={isMediaLocked}
+                />
+              )}
+              {notes.audioUrl && (
+                <AudioPlayer
+                  src={notes.audioUrl}
+                  subject="Commerce"
+                  accentColor={ACCENT_COLOR}
+                  locked={isMediaLocked}
+                />
+              )}
+            </div>
           </div>
-          <div className="commerce-notes-detail-card-body">
-            <ContentBlock content={notes.summary} />
+        )}
+
+        <div className="science-notes-body-grid">
+          <div className="notes-main-col">
+            <div className="science-notes-card summary-card">
+              <div className="card-header highlight" style={{ borderColor: ACCENT_COLOR }}>
+                <Info size={24} style={{ color: ACCENT_COLOR }} />
+                <h3>Summary</h3>
+              </div>
+              <div className="card-content">
+                <MathRenderer content={notes.summary} fontSize={16} />
+              </div>
+            </div>
+
+            <div className="notes-sections-list">
+              {notes.sections.map((section, i) => (
+                <div key={`${section.title}-${i}`} className={`science-notes-card section-card ${expanded.has(i) ? 'expanded' : ''}`}>
+                  <button
+                    type="button"
+                    className="section-header-btn"
+                    onClick={() => toggle(i)}
+                  >
+                    <div className="section-number" style={{ backgroundColor: ACCENT_COLOR }}>{i + 1}</div>
+                    <h3 className="section-title">{section.title}</h3>
+                    {expanded.has(i) ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                  </button>
+
+                  {expanded.has(i) && (
+                    <div className="section-body">
+                      <MathRenderer content={section.content} fontSize={16} />
+                      {renderSubsections(section.subsections)}
+
+                      {section.diagrams && section.diagrams.length > 0 && (
+                        <div className="section-diagrams">
+                          {section.diagrams.map((d, dIdx) => (
+                            <div key={dIdx} className="diagram-box">
+                              {typeof d === 'string' ? (
+                                <img src={d} alt={`Diagram for ${section.title}`} />
+                              ) : null}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="notes-sidebar-col">
+            {notes.key_points?.length > 0 && (
+              <div className="science-notes-card key-points-card">
+                <div className="card-header" style={{ color: ACCENT_COLOR }}>
+                  <CheckCircle size={20} />
+                  <h3>Key Points</h3>
+                </div>
+                <ul className="points-list">
+                  {notes.key_points.map((point, i) => (
+                    <li key={i}>
+                      <span className="bullet" style={{ backgroundColor: ACCENT_COLOR }}></span>
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {notes.exam_tips?.length > 0 && (
+              <div className="science-notes-card exam-tips-card">
+                <div className="card-header" style={{ color: '#F59E0B' }}>
+                  <Lightbulb size={20} />
+                  <h3>Exam Tips</h3>
+                </div>
+                <ul className="points-list">
+                  {notes.exam_tips.map((tip, i) => (
+                    <li key={i}>
+                      <div className="tip-box">
+                        {tip}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
 
-        {notes.sections.map((section, i) => (
-          <div key={i} className="commerce-notes-detail-card commerce-notes-detail-section">
-            <h2 className="commerce-notes-detail-card-title">{section.title}</h2>
-            <div className="commerce-notes-detail-card-body">
-              <ContentBlock content={section.content} />
-            </div>
-          </div>
-        ))}
-
-        {notes.key_points.length > 0 && (
-          <div className="commerce-notes-detail-card commerce-notes-detail-keypoints">
-            <div className="commerce-notes-detail-card-head">
-              <CheckCircle size={24} className="commerce-notes-detail-icon" />
-              <h2 className="commerce-notes-detail-card-title">Key points</h2>
-            </div>
-            <ul className="commerce-notes-detail-list">
-              {notes.key_points.map((point, i) => (
-                <li key={i}>{point}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {notes.exam_tips.length > 0 && (
-          <div className="commerce-notes-detail-card commerce-notes-detail-examtips">
-            <div className="commerce-notes-detail-card-head">
-              <Lightbulb size={24} className="commerce-notes-detail-icon" />
-              <h2 className="commerce-notes-detail-card-title">Exam tips</h2>
-            </div>
-            <ul className="commerce-notes-detail-list">
-              {notes.exam_tips.map((tip, i) => (
-                <li key={i}>{tip}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <FlashcardSection
+          subject="Commerce"
+          topic={notes.topic}
+          notes={notes}
+          accentColor={ACCENT_COLOR}
+        />
       </div>
     </div>
   );

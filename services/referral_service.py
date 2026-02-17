@@ -32,8 +32,8 @@ class ReferralService:
         # Referral rewards - only referrer gets bonus credits
         from config import Config
         self.referral_bonus = {
-            'referrer': Config.REFERRAL_BONUS,  # 5 credits for the person who referred
-            'referee': 0,   # New users get 75 welcome credits via registration, no referral bonus
+            'referrer': Config.REFERRAL_BONUS,  # 10 credits for the person who referred
+            'referee': 0,   # New users get welcome credits via registration, no referral bonus
         }
     
     def generate_referral_code(self, user_id: str) -> Optional[str]:

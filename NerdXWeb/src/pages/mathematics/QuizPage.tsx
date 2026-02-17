@@ -119,9 +119,7 @@ export function QuizPage() {
     setStructuredAnswers({});
     setAnswerImage(null);
     try {
-      const canStream =
-        !!topic?.id &&
-        (subject.id === 'mathematics' || subject.id === 'a_level_pure_math' || subject.id === 'a_level_statistics');
+      const canStream = !!topic?.id && subject.id === 'mathematics';
       let q: Question | null = null;
       if (canStream) {
         q = await quizApi.generateQuestionStream(subject.id, topic!.id, 'medium', {}, formLevel);
@@ -132,6 +130,9 @@ export function QuizPage() {
         const geoFormat = isGeography ? quizQuestionFormat : undefined;
         const commerceFormat = isCommerce ? quizQuestionFormat : undefined;
         const besFormat = isBES ? quizQuestionFormat : undefined;
+        const aLevelPureMathFormat = subject.id === 'a_level_pure_math' ? quizQuestionFormat : undefined;
+        const aLevelPhysicsFormat = subject.id === 'a_level_physics' ? quizQuestionFormat : undefined;
+        const aLevelChemistryFormat = subject.id === 'a_level_chemistry' ? quizQuestionFormat : undefined;
         const topicParam = isGeography || isCommerce || isBES ? (topic?.name ?? topic?.id) : topic?.id;
         q = await quizApi.generateQuestion(
           subject.id,
@@ -140,7 +141,7 @@ export function QuizPage() {
           topic ? 'topical' : 'exam',
           undefined,
           undefined,
-          csFormat ?? geoFormat ?? commerceFormat ?? besFormat,
+          csFormat ?? geoFormat ?? commerceFormat ?? besFormat ?? aLevelPureMathFormat ?? aLevelPhysicsFormat ?? aLevelChemistryFormat,
           mixImagesEnabled,
           undefined,
           csBoard,
@@ -153,10 +154,15 @@ export function QuizPage() {
       questionStartTime.current = Date.now();
     } catch (err) {
       console.error('Generate question error', err);
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 402) {
+        navigate('/app/credits');
+        return;
+      }
     } finally {
       setGenerating(false);
     }
-  }, [subject.id, topic, mixImagesEnabled, updateUser, isComputerScience, isGeography, isCommerce, isBES, quizQuestionFormat, quizBoard, formLevel]);
+  }, [subject.id, topic, mixImagesEnabled, updateUser, isComputerScience, isGeography, isCommerce, isBES, quizQuestionFormat, quizBoard, formLevel, navigate]);
 
   const uploadAnswerImage = async (): Promise<string | undefined> => {
     if (!answerImage) return undefined;
@@ -294,6 +300,11 @@ export function QuizPage() {
       }
     } catch (err) {
       console.error('Submit answer error', err);
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 402) {
+        navigate('/app/credits');
+        return;
+      }
     } finally {
       setLoading(false);
     }
@@ -306,7 +317,10 @@ export function QuizPage() {
       subject: subject.id,
       questionType: topic ? 'topical' : 'exam',
       isImageQuestion: mixImagesEnabled,
-      questionFormat: (isComputerScience || isCommerce) ? quizQuestionFormat : undefined,
+      questionFormat:
+        (isComputerScience || isCommerce || isBES || isGeography || subject.id === 'a_level_pure_math' || subject.id === 'a_level_physics' || subject.id === 'a_level_chemistry')
+          ? quizQuestionFormat
+          : undefined,
     });
     if (userCredits < cost) {
       navigate('/app/credits');
@@ -556,14 +570,19 @@ export function QuizPage() {
         )}
 
         {!result && (
-          <button
-            type="button"
-            className="quiz-submit-btn"
-            onClick={handleSubmit}
-            disabled={!canSubmit || loading}
-          >
-            {loading ? 'Checking…' : 'Submit'}
-          </button>
+          <div className="quiz-result-actions">
+            <button type="button" className="quiz-next-btn" onClick={handleNext} disabled={generating || loading}>
+              Next Question
+            </button>
+            <button
+              type="button"
+              className="quiz-submit-btn"
+              onClick={handleSubmit}
+              disabled={!canSubmit || loading}
+            >
+              {loading ? 'Checking...' : 'Submit'}
+            </button>
+          </div>
         )}
 
         {result && (

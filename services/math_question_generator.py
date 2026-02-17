@@ -115,18 +115,28 @@ class MathQuestionGenerator:
         ],
         "Form 4": [
             "Real Numbers",
+            "Approximation and Accuracy",
+            "Ratios, Rates and Proportions",
             "Financial Mathematics",
             "Measures and Mensuration",
-            "Graphs",
+            "Graphs (Advanced Graphs)",
+            "Travel Graphs",
             "Variation",
-            "Algebra",
-            "Geometry",
-            "Statistics",
+            "Algebraic Expressions",
+            "Quadratic Equations",
+            "Simultaneous Equations",
+            "Change of Subject of Formulae",
+            "Inequalities",
+            "Indices",
+            "Logarithms",
+            "Geometry: Angles and Bearings",
+            "Polygons and Circles",
+            "Similarity and Congruency",
+            "Constructions and Loci",
             "Trigonometry",
             "Vectors",
             "Matrices",
             "Probability",
-            "Transformation",
         ],
     }
 
@@ -639,133 +649,161 @@ class MathQuestionGenerator:
 
     # Form 4 coverage focus (aligned to mobile Form 4 subtopic names).
     FORM_4_COVERAGE_HINTS = {
-        "Limits of Accuracy": [
-            "compute minimum and maximum perimeters/areas using bounds",
-            "solve limits of accuracy problems in practical contexts",
+        "Real Numbers": [
+            "irrational numbers (surds)",
+            "rational vs irrational numbers",
+            "operations involving surds",
+            "number patterns and sequences",
+            "order of operations",
+            "applications of real numbers",
         ],
-        "Consumer Arithmetic (Exchange and Taxes)": [
-            "convert currencies using exchange rates",
-            "calculate PAYE, VAT, customs and excise duty",
+        "Approximation and Accuracy": [
+            "significant figures",
+            "decimal places",
+            "upper and lower limits of accuracy",
+            "error intervals",
+            "estimation in real-life contexts",
         ],
-        "Mensuration: Similar Shapes": [
-            "identify similar shapes and apply scale factors",
-            "compute area and volume of similar shapes",
+        "Ratios, Rates and Proportions": [
+            "ratios and rates",
+            "direct proportion",
+            "inverse proportion",
+            "applications in speed, density, and work",
+            "word problems involving proportionality",
         ],
-        "Mensuration: Prisms and Frustums": [
-            "calculate surface area and volume of prisms",
-            "calculate volume of frustums",
+        "Financial Mathematics": [
+            "simple interest",
+            "compound interest",
+            "hire purchase",
+            "commission",
+            "banking and bank statements",
+            "foreign exchange",
+            "PAYE (income tax)",
+            "VAT, customs, and excise duty",
         ],
-        "Functional Graphs (Cubic and Inverse)": [
-            "draw cubic and inverse function graphs",
-            "solve problems involving cubic or inverse functions",
-            "work with graphs of forms like y=ax^3+b and y=a/x",
+        "Measures and Mensuration": [
+            "area of similar shapes",
+            "surface area of solids",
+            "volume of prisms, cylinders, cones and pyramids",
+            "density",
+            "practical applications of mensuration",
         ],
-        "Travel Graphs (Kinematics)": [
-            "relate displacement, velocity, acceleration and time",
-            "draw and interpret displacement-time and velocity-time graphs",
+        "Graphs (Advanced Graphs)": [
+            "linear graphs revision",
+            "quadratic graphs",
+            "cubic graphs",
+            "inverse graphs",
+            "interpretation of graphs",
         ],
-        "Joint and Partial Variation": [
-            "form equations for joint and partial variation",
-            "compute unknowns from variation formulas and graphs",
+        "Travel Graphs": [
+            "speed-time graphs",
+            "velocity-time graphs",
+            "displacement-time graphs",
+            "area under graphs",
+            "gradient interpretation",
         ],
-        "Algebraic Manipulation (Fractions)": [
-            "simplify algebraic fractions using LCM of denominators",
-            "simplify algebraic fractions by factorisation",
+        "Variation": [
+            "joint variation",
+            "partial variation",
+            "forming equations from variation statements",
+            "solving variation problems",
         ],
-        "Quadratic Equations (Advanced Methods)": [
-            "solve quadratic equations by completing the square",
-            "derive and apply quadratic formula",
-            "solve life-situation quadratic problems",
+        "Algebraic Expressions": [
+            "algebraic fractions",
+            "quadratic expressions",
+            "factorisation (advanced)",
+            "completing the square",
+            "expansion and simplification",
         ],
-        "Linear Programming": [
-            "formulate inequalities from life situations",
-            "represent inequalities on Cartesian plane",
-            "solve optimization problems in feasible regions",
+        "Quadratic Equations": [
+            "solving by factorisation",
+            "completing the square",
+            "quadratic formula",
+            "nature of roots",
+            "applications of quadratic equations",
         ],
-        "Circle Theorems (Angles)": [
-            "use centre/circumference angle theorem",
-            "use angle in semicircle, same segment, and alternate segment theorems",
+        "Simultaneous Equations": [
+            "solving linear simultaneous equations",
+            "solving linear and quadratic simultaneous equations",
+            "graphical solutions",
+            "applications in word problems",
         ],
-        "Circle Theorems (Tangents and Cyclic Quads)": [
-            "use tangent-radius and tangent theorems",
-            "solve cyclic quadrilateral angle problems",
+        "Change of Subject of Formulae": [
+            "rearranging formulae",
+            "subject extraction",
+            "fractional and complex formulae",
+            "applications in science-based problems",
         ],
-        "Locus Definitions": [
-            "define locus and construct standard loci",
-            "construct loci equidistant from points/lines/intersecting lines",
+        "Inequalities": [
+            "linear inequalities",
+            "simultaneous inequalities",
+            "graphs of inequalities",
+            "linear programming",
+            "real-life applications",
         ],
-        "Locus Applications": [
-            "solve practical problems using loci with bearings, scale and area",
-            "apply perpendicular constructions in locus problems",
+        "Indices": [
+            "laws of indices",
+            "indices involving algebraic terms",
+            "zero and negative indices",
+            "solving equations involving indices",
         ],
-        "Data Representation (Cumulative Frequency)": [
-            "construct cumulative frequency tables",
-            "draw and interpret cumulative frequency curves (ogives)",
+        "Logarithms": [
+            "laws of logarithms",
+            "logarithmic equations",
+            "relationship between indices and logarithms",
+            "applications of logarithms",
         ],
-        "Measures of Central Tendency (Graph Based)": [
-            "determine median from ogive",
-            "estimate quartiles from cumulative frequency curve",
+        "Geometry: Angles and Bearings": [
+            "angles of elevation and depression",
+            "three-figure bearings",
+            "compass bearings",
+            "problem solving using bearings",
         ],
-        "Measures of Dispersion (Grouped)": [
-            "compute range, interquartile range, and semi-interquartile range",
-            "interpret importance of interquartile measures",
+        "Polygons and Circles": [
+            "angle properties of polygons",
+            "number of sides of polygons",
+            "circle theorems",
+            "proofs involving circle theorems",
         ],
-        "Trigonometrical Ratios (Advanced Rules)": [
-            "apply sine rule and cosine rule in triangle problems",
-            "convert between degrees and minutes where needed",
+        "Similarity and Congruency": [
+            "similar figures",
+            "congruent figures",
+            "area, volume and mass ratios",
+            "scale factors",
         ],
-        "Trigonometry (3D Problems)": [
-            "solve 3D trigonometry problems using sine and cosine rules",
+        "Constructions and Loci": [
+            "construction of diagrams to scale",
+            "loci definitions",
+            "loci problems in real contexts",
+            "accurate geometrical constructions",
         ],
-        "Vectors (Plane Shapes)": [
-            "express edges/diagonals as linear combinations of vectors",
-            "find scalar values in equal/parallel vector relations and ratios",
+        "Trigonometry": [
+            "trigonometric ratios",
+            "sine rule",
+            "cosine rule",
+            "trigonometric problems in triangles",
+            "applications in bearings and heights",
         ],
-        "Probability: Combined Events": [
-            "define combined events with examples",
-            "compute probabilities for combined events",
+        "Matrices": [
+            "matrix multiplication",
+            "determinants",
+            "singular and non-singular matrices",
+            "inverse matrices",
+            "solving simultaneous equations using matrices",
         ],
-        "Probability Tools": [
-            "construct outcome tables and tree diagrams",
-            "apply probability rules to compute probabilities",
+        "Vectors": [
+            "vector magnitude",
+            "vector addition and subtraction",
+            "scalar multiplication",
+            "vector properties of plane shapes",
+            "applications in geometry",
         ],
-        "Translation (Calculation)": [
-            "find translation vectors from object-image pairs",
-            "use translation vectors to compute image coordinates",
-        ],
-        "Reflection (General Lines)": [
-            "reflect figures in general lines of the form y=mx+c",
-            "determine reflection line/axis from object and image",
-        ],
-        "Reflection (Matrices)": [
-            "find reflection matrices for axes and key lines like y=x and y=-x",
-            "calculate image coordinates using matrix multiplication",
-        ],
-        "Rotation (Matrices)": [
-            "find matrices for rotations about origin through standard angles",
-            "rotate figures with matrices and describe rotation fully",
-        ],
-        "Enlargement (Matrices)": [
-            "use enlargement matrices about origin",
-            "calculate image coordinates using enlargement matrices",
-        ],
-        "Enlargement (General Point)": [
-            "enlarge figures about any point using rational scale factors",
-            "describe enlargement fully from given matrix/object/image",
-        ],
-        "Stretch (Definition)": [
-            "define one-way and two-way stretches",
-            "calculate image coordinates under stretch matrices",
-        ],
-        "Stretch (Description)": [
-            "describe stretch using stretch factors and invariant line/point",
-        ],
-        "Shear (Definition)": [
-            "define shear transformation",
-            "compute/draw images under shear matrices",
-        ],
-        "Shear (Description)": [
-            "describe shear using invariant line and shear factor",
+        "Probability": [
+            "theoretical probability",
+            "combined events",
+            "probability trees",
+            "mutually exclusive events",
+            "applications of probability in real life",
         ],
     }
 

@@ -29,6 +29,9 @@ from database.external_db import (
     get_user_projects,
     get_project_by_id,
     get_project_chat_history,
+    get_wallet_transactions,
+    get_lesson_wallet,
+    LESSON_FEE,
 )
 # Additional Services
 from services.advanced_credit_service import advanced_credit_service
@@ -62,6 +65,7 @@ from services.flashcard_service import flashcard_service
 from services.project_assistant_service import ProjectAssistantService
 from services.history_generator import generate_question as history_generate_question
 from services.history_marking_service import mark_history_essay
+from services.lesson_payment_service import lesson_payment_service
 from utils.url_utils import convert_local_path_to_public_url
 from utils.credit_units import format_credits, units_to_credits, credits_to_units
 from utils.question_cache import QuestionCacheService
@@ -97,6 +101,113 @@ def _credits_remaining(user_id: str) -> int:
     """Get current remaining credits (displayed as whole credits)."""
     units = get_user_credits(user_id) or 0
     return _credits_display(units)
+
+
+def _parse_utc_datetime(value):
+    """Parse datetime-like values to naive UTC datetime."""
+    if value is None:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(value).replace('Z', '+00:00')) if isinstance(value, str) else value
+        if dt is None:
+            return None
+        if getattr(dt, 'tzinfo', None):
+            dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+        return dt
+    except Exception:
+        return None
+
+
+def _resolve_school_context(user_data: Optional[dict]):
+    """Return (school_name, school_expiry_at) for a school student row."""
+    school_name = None
+    school_expiry_at = None
+    if not isinstance(user_data, dict):
+        return school_name, school_expiry_at
+
+    school_name = (user_data.get('school_name') or '').strip() or None
+    school_expiry_at = user_data.get('subscription_expires_at')
+    school_pk = user_data.get('school_id')
+    if not school_pk:
+        return school_name, school_expiry_at
+
+    try:
+        school_rows = make_supabase_request(
+            "GET",
+            "schools",
+            select="name,subscription_expires_at",
+            filters={"id": f"eq.{school_pk}"},
+            use_service_role=True,
+        ) or []
+        if school_rows:
+            school_row = school_rows[0] or {}
+            school_name = (school_row.get('name') or school_name or '').strip() or None
+            school_expiry_at = school_row.get('subscription_expires_at') or school_expiry_at
+    except Exception as e:
+        logger.warning(f"School context lookup failed: {e}")
+
+    return school_name, school_expiry_at
+
+
+def _format_school_expiry_label(expiry_value):
+    """Format school expiry for user-facing text."""
+    exp_dt = _parse_utc_datetime(expiry_value)
+    if not exp_dt:
+        return "Unknown expiry date"
+    return exp_dt.strftime("%d %b %Y")
+
+
+def _is_school_subscription_expired(expiry_value) -> bool:
+    """Return True when expiry exists and is in the past."""
+    exp_dt = _parse_utc_datetime(expiry_value)
+    if not exp_dt:
+        return False
+    return exp_dt < datetime.utcnow()
+
+
+def _build_school_levy_message(school_name: Optional[str], expiry_value, expired: bool = False) -> str:
+    """Message shown for school expiry and school credit-store restrictions."""
+    school_label = (school_name or "your school").strip() or "your school"
+    expiry_label = _format_school_expiry_label(expiry_value)
+    if expired:
+        return (
+            f"Your NerdX access for {school_label} expired on {expiry_label}. "
+            f"System access is now closed. Go to {school_label} and pay the levy to use NerdX."
+        )
+    return (
+        f"Credit Store is disabled for school student accounts. {school_label} pays for NerdX as a school, "
+        f"not as individual students. School expiry date: {expiry_label}. "
+        f"If access expires, go to {school_label} and pay the levy to use NerdX."
+    )
+
+
+def _is_single_device_enforced(user_data: Optional[dict]) -> bool:
+    """
+    Single-device enforcement policy:
+    - school_student accounts: always enforced
+    - non-teacher accounts: enforced
+    - teacher accounts: not enforced
+    """
+    if not isinstance(user_data, dict):
+        return False
+    user_type = (user_data.get('user_type') or '').strip().lower()
+    role = (user_data.get('role') or 'student').strip().lower()
+    return user_type == 'school_student' or role != 'teacher'
+
+
+def _has_active_session(user_data: Optional[dict]) -> bool:
+    """Return True when account already has an active session id."""
+    if not isinstance(user_data, dict):
+        return False
+    return bool((user_data.get('active_session_id') or '').strip())
+
+
+def _single_device_block_message() -> str:
+    """User-facing message for blocked concurrent login."""
+    return (
+        "This account is already logged in on another phone. "
+        "Please log out on that phone first, then sign in on this phone."
+    )
 
 
 def _get_student_first_name(user_id: Optional[str]) -> str:
@@ -395,13 +506,11 @@ def login():
                     expires_at = school.get("subscription_expires_at")
                     if expires_at:
                         try:
-                            exp_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00')) if isinstance(expires_at, str) else expires_at
-                            if getattr(exp_dt, 'tzinfo', None):
-                                exp_dt = exp_dt.astimezone(timezone.utc).replace(tzinfo=None)
-                            if exp_dt < datetime.utcnow():
+                            exp_dt = _parse_utc_datetime(expires_at)
+                            if exp_dt and exp_dt < datetime.utcnow():
                                 return jsonify({
                                     'success': False,
-                                    'message': 'School subscription expired. Contact your school administrator.'
+                                    'message': _build_school_levy_message(school.get("name"), expires_at, expired=True)
                                 }), 403
                         except Exception:
                             pass
@@ -419,7 +528,13 @@ def login():
                             user_data = s
                             break
                     if user_data:
-                        # Single-session: only one device can be logged in. New login overwrites previous session; old token gets 401 on next request.
+                        # Strict single-device policy: block concurrent login until old device logs out.
+                        if _has_active_session(user_data):
+                            return jsonify({
+                                'success': False,
+                                'message': _single_device_block_message()
+                            }), 409
+
                         session_id = str(uuid.uuid4())
                         token = generate_token(user_data["chat_id"], jti=session_id)
                         make_supabase_request(
@@ -438,7 +553,16 @@ def login():
                                 'email': user_data.get('email'),
                                 'credits': _credits_display(credit_units),
                                 'user_type': 'school_student',
-                                'credit_breakdown': {'total': _credits_display(credit_units), 'free_credits': _credits_display(credit_units), 'purchased_credits': 0}
+                                'role': 'student',
+                                'school_name': school.get('name'),
+                                'subscription_expires_at': school.get('subscription_expires_at'),
+                                'credit_breakdown': {
+                                    'total': _credits_display(credit_units),
+                                    'free_credits': 0,
+                                    'purchased_credits': _credits_display(credit_units),
+                                    'welcome_bonus_claimed': True,
+                                    'credit_status': 'paid_school_plan',
+                                },
                             },
                             'notifications': {},
                             'message': 'Login successful'
@@ -573,9 +697,22 @@ def login():
                     'success': False,
                     'message': f'This account is registered as a {role_label}. Please select "{role_label.title()}" to sign in.'
                 }), 403
-        
-        # Generate token
-        token = generate_token(user_id)
+
+        # Strict single-device policy for student accounts.
+        if _is_single_device_enforced(user_data) and _has_active_session(user_data):
+            return jsonify({
+                'success': False,
+                'message': _single_device_block_message()
+            }), 409
+
+        # Generate token (session-bound for enforced accounts)
+        session_id = str(uuid.uuid4()) if _is_single_device_enforced(user_data) else None
+        token = generate_token(user_id, jti=session_id)
+        if session_id:
+            make_supabase_request(
+                "PATCH", "users_registration", {"active_session_id": session_id},
+                filters={"chat_id": f"eq.{user_id}"}, use_service_role=True
+            )
         
         # CREDIT SYSTEM CHECKS
         # 1. Check for welcome bonus (one-time 150 credits)
@@ -620,7 +757,7 @@ def login():
 
 # Helper Functions
 def generate_token(user_id: str, jti: Optional[str] = None) -> str:
-    """Generate JWT token for user. jti (session id) used for school_student single-device enforcement."""
+    """Generate JWT token for user. jti (session id) is used for single-device session enforcement."""
     payload = {
         'user_id': user_id,
         'exp': datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS),
@@ -651,7 +788,7 @@ def verify_password(password: str, password_hash: str, salt: str) -> bool:
     return new_hash.hex() == password_hash
 
 def require_auth(f):
-    """Decorator to require authentication. For school_student, enforces single-device via active_session_id."""
+    """Decorator to require authentication with single-device enforcement for student accounts."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         token = request.headers.get('Authorization', '').replace('Bearer ', '')
@@ -665,24 +802,30 @@ def require_auth(f):
             g.current_user_jti = payload.get('jti')
             user_data = get_user_registration(user_id)
             g.current_user_type = (user_data.get('user_type') or '').strip() if user_data else ''
-            if user_data and g.current_user_type == 'school_student':
+            if user_data and _is_single_device_enforced(user_data):
                 session_jti = payload.get('jti')
                 active_sid = (user_data.get('active_session_id') or '').strip()
                 if active_sid and session_jti != active_sid:
                     return jsonify({
                         'success': False,
-                        'message': 'This account is logged in on another device. Use only one device at a time.'
+                        'message': _single_device_block_message()
                     }), 401
+                # First authenticated request after rollout can bind legacy accounts with empty active_session_id.
+                if (not active_sid) and session_jti:
+                    make_supabase_request(
+                        "PATCH", "users_registration", {"active_session_id": session_jti},
+                        filters={"chat_id": f"eq.{user_id}"}, use_service_role=True
+                    )
+            if user_data and g.current_user_type == 'school_student':
                 exp = user_data.get('subscription_expires_at')
                 if exp:
                     try:
-                        exp_dt = datetime.fromisoformat(exp.replace('Z', '+00:00')) if isinstance(exp, str) else exp
-                        if getattr(exp_dt, 'tzinfo', None):
-                            exp_dt = exp_dt.astimezone(timezone.utc).replace(tzinfo=None)
-                        if exp_dt < datetime.utcnow():
+                        exp_dt = _parse_utc_datetime(exp)
+                        if exp_dt and exp_dt < datetime.utcnow():
+                            school_name, school_expiry_at = _resolve_school_context(user_data)
                             return jsonify({
                                 'success': False,
-                                'message': 'School subscription expired. Contact your school administrator.'
+                                'message': _build_school_levy_message(school_name, school_expiry_at or exp, expired=True)
                             }), 403
                     except Exception:
                         pass
@@ -1098,8 +1241,15 @@ def register():
                 role=role
             )
             
-            # Generate token
-            token = generate_token(user_identifier)
+            # Generate token + session lock for student accounts
+            session_id = str(uuid.uuid4()) if role != 'teacher' else None
+            token = generate_token(user_identifier, jti=session_id)
+            if session_id:
+                make_supabase_request(
+                    "PATCH", "users_registration", {"active_session_id": session_id},
+                    filters={"chat_id": f"eq.{user_identifier}"},
+                    use_service_role=True
+                )
             
             # Get user data
             user_data = get_user_registration(user_identifier)
@@ -1233,7 +1383,20 @@ def social_login():
                 "purchased_credits": _credits_display(credit_info.get("purchased_credits", 0)),
             }
 
-            token = generate_token(email)
+            if _is_single_device_enforced(user_data) and _has_active_session(user_data):
+                return jsonify({
+                    'success': False,
+                    'message': _single_device_block_message()
+                }), 409
+
+            session_id = str(uuid.uuid4()) if _is_single_device_enforced(user_data) else None
+            token = generate_token(email, jti=session_id)
+            if session_id:
+                make_supabase_request(
+                    "PATCH", "users_registration", {"active_session_id": session_id},
+                    filters={"chat_id": f"eq.{user_data.get('chat_id') or email}"},
+                    use_service_role=True
+                )
             
             return jsonify({
                 'success': True,
@@ -1264,12 +1427,15 @@ def social_login():
                 # Use email as user_identifier for social sign-ups
                 # This matches the legacy bot logic where chat_id was the key
                 # For email users, chat_id = email
+                # Check for referral code from request data
+                social_referred_by = data.get('referred_by') or user_info.get('referred_by') or None
+                
                 create_user_registration(
                     chat_id=email,
                     name=given_name,
                     surname=family_name,
                     date_of_birth='2000-01-01', # Default DOB for social
-                    referred_by_nerdx_id=None, # No referral for now
+                    referred_by_nerdx_id=social_referred_by,
                     email=email,
                     password_hash=None, # OAuth users don't have passwords
                     password_salt=None
@@ -1300,7 +1466,13 @@ def social_login():
                         "welcome_message": welcome_result.get("message", "")
                     }
                     
-                    token = generate_token(email)
+                    session_id = str(uuid.uuid4())
+                    token = generate_token(email, jti=session_id)
+                    make_supabase_request(
+                        "PATCH", "users_registration", {"active_session_id": session_id},
+                        filters={"chat_id": f"eq.{email}"},
+                        use_service_role=True
+                    )
                     
                     return jsonify({
                         'success': True,
@@ -1345,9 +1517,23 @@ def verify_otp():
         
         if not is_user_registered(phone_number):
             return jsonify({'success': False, 'message': 'User not found'}), 404
-        
-        token = generate_token(phone_number)
+
         user_data = get_user_registration(phone_number)
+        if _is_single_device_enforced(user_data) and _has_active_session(user_data):
+            return jsonify({
+                'success': False,
+                'message': _single_device_block_message()
+            }), 409
+
+        session_id = str(uuid.uuid4()) if _is_single_device_enforced(user_data) else None
+        token = generate_token(phone_number, jti=session_id)
+        if session_id:
+            make_supabase_request(
+                "PATCH", "users_registration", {"active_session_id": session_id},
+                filters={"chat_id": f"eq.{phone_number}"},
+                use_service_role=True
+            )
+
         credits = get_user_credits(phone_number) or 0
         
         return jsonify({
@@ -1370,9 +1556,9 @@ def verify_otp():
 @mobile_bp.route('/auth/refresh-token', methods=['POST'])
 @require_auth
 def refresh_token():
-    """Refresh JWT token. For school_student, keeps same jti so single-session stays valid."""
+    """Refresh JWT token. Keeps same jti when present so single-device sessions stay valid."""
     try:
-        if getattr(g, 'current_user_type', '') == 'school_student' and getattr(g, 'current_user_jti', None):
+        if getattr(g, 'current_user_jti', None):
             new_token = generate_token(g.current_user_id, jti=g.current_user_jti)
         else:
             new_token = generate_token(g.current_user_id)
@@ -1386,10 +1572,10 @@ def refresh_token():
 @mobile_bp.route('/auth/logout', methods=['POST'])
 @require_auth
 def logout():
-    """Logout user. For school_student, clear active_session_id so they can log in again elsewhere."""
+    """Logout user and clear active_session_id for single-device enforced accounts."""
     try:
         user_data = get_user_registration(g.current_user_id)
-        if user_data and (user_data.get('user_type') or '').strip() == 'school_student':
+        if user_data and _is_single_device_enforced(user_data):
             make_supabase_request(
                 "PATCH", "users_registration", {"active_session_id": None},
                 filters={"chat_id": f"eq.{g.current_user_id}"}, use_service_role=True
@@ -4107,12 +4293,28 @@ def get_credit_info():
     """Get user credit breakdown (total, free_credits, purchased_credits) for display."""
     try:
         credit_info = get_credit_breakdown(g.current_user_id)
+        user_data = get_user_registration(g.current_user_id) or {}
+        is_school_student = (user_data.get('user_type') or '').strip() == 'school_student'
         credit_info_display = {
             **credit_info,
             "total": _credits_display(credit_info.get("total", 0)),
             "free_credits": _credits_display(credit_info.get("free_credits", 0)),
             "purchased_credits": _credits_display(credit_info.get("purchased_credits", 0)),
         }
+        if is_school_student:
+            school_name, school_expiry_at = _resolve_school_context(user_data)
+            credit_info_display.update({
+                "credit_status": "paid_school_plan",
+                "credit_store_enabled": False,
+                "school_name": school_name,
+                "subscription_expires_at": school_expiry_at,
+                "daily_refresh_time": "06:00 Africa/Harare",
+                "credit_store_message": _build_school_levy_message(
+                    school_name,
+                    school_expiry_at,
+                    expired=_is_school_subscription_expired(school_expiry_at),
+                ),
+            })
         return jsonify({
             'success': True,
             'data': credit_info_display
@@ -4218,11 +4420,21 @@ def generate_flashcards():
         )
         if not flashcards:
             return jsonify({'success': False, 'message': 'Failed to generate flashcards.'}), 500
-        deduct_credits(user_id, required_units, 'flashcards_batch', f'Generated {len(flashcards)} flashcards for {topic}')
+
+        # Deduct only after successful generation and return display credits consistently.
+        credits_remaining = _deduct_credits_or_fail(
+            user_id,
+            int(required_units),
+            'flashcards_batch',
+            f'Generated {len(flashcards)} flashcards for {topic}',
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+
         return jsonify({
             'success': True,
             'data': {'flashcards': flashcards},
-            'credits_remaining': (balance - required_units),
+            'credits_remaining': credits_remaining,
         }), 200
     except Exception as e:
         logger.error(f"Generate flashcards error: {e}", exc_info=True)
@@ -4240,12 +4452,15 @@ def generate_single_flashcard():
         notes_content = (data.get('notes_content') or '').strip()
         previous_questions = data.get('previous_questions') or []
         user_id = g.current_user_id
-        credit_result = advanced_credit_service.check_and_deduct_credits(user_id, 'flashcard_single', platform='mobile')
-        if not credit_result.get('success'):
+
+        credit_cost = advanced_credit_service.get_credit_cost('flashcard_single', platform='mobile')
+        current_credits = get_user_credits(user_id) or 0
+        if current_credits < credit_cost:
             return jsonify({
                 'success': False,
-                'message': credit_result.get('message', 'Insufficient credits'),
+                'message': f'Insufficient credits. Required: {_credits_text(credit_cost)}, Available: {_credits_text(current_credits)}',
             }), 402
+
         flashcard = flashcard_service.generate_single_flashcard(
             subject=subject,
             topic=topic,
@@ -4255,10 +4470,20 @@ def generate_single_flashcard():
         )
         if not flashcard:
             return jsonify({'success': False, 'message': 'Failed to generate flashcard.'}), 500
+
+        credits_remaining = _deduct_credits_or_fail(
+            user_id,
+            int(credit_cost),
+            'flashcard_single',
+            f'Generated single flashcard for {topic}',
+        )
+        if credits_remaining is None:
+            return jsonify({'success': False, 'message': 'Transaction failed. Please try again.'}), 500
+
         return jsonify({
             'success': True,
             'data': {'flashcard': flashcard},
-            'credits_remaining': credit_result.get('new_balance', get_user_credits(user_id) or 0),
+            'credits_remaining': credits_remaining,
         }), 200
     except Exception as e:
         logger.error(f"Generate single flashcard error: {e}", exc_info=True)
@@ -4269,6 +4494,18 @@ def generate_single_flashcard():
 def get_credit_packages():
     """Get available credit packages"""
     try:
+        user_data = get_user_registration(g.current_user_id) or {}
+        if (user_data.get('user_type') or '').strip() == 'school_student':
+            school_name, school_expiry_at = _resolve_school_context(user_data)
+            return jsonify({
+                'success': False,
+                'message': _build_school_levy_message(school_name, school_expiry_at),
+                'data': {
+                    'school_name': school_name,
+                    'subscription_expires_at': school_expiry_at,
+                },
+            }), 403
+
         # Get packages from PaymentService to ensure consistency
         from services.payment_service import PaymentService
         payment_service_instance = PaymentService()
@@ -4321,9 +4558,14 @@ def initiate_credit_purchase():
 
         # School-student accounts use daily school credits and should not purchase packages in-app.
         if (user_data.get('user_type') or '').strip() == 'school_student':
+            school_name, school_expiry_at = _resolve_school_context(user_data)
             return jsonify({
                 'success': False,
-                'message': 'School accounts cannot purchase credit packages. Your plan includes daily credits — please contact your school administrator if you need more.'
+                'message': _build_school_levy_message(school_name, school_expiry_at),
+                'data': {
+                    'school_name': school_name,
+                    'subscription_expires_at': school_expiry_at,
+                },
             }), 403
         
         email = data.get('email', user_data.get('email', ''))
@@ -4705,17 +4947,198 @@ def apply_referral_code():
 def get_referral_stats_simple():
     """Get referral statistics (legacy endpoint)"""
     try:
-        # TODO: Get referral stats from database
+        referral_service = ReferralService()
+        stats = referral_service.get_referral_stats(g.current_user_id)
         return jsonify({
             'success': True,
             'data': {
-                'total_referrals': 0,
-                'credits_earned': 0
+                'total_referrals': stats.get('total_referrals', 0),
+                'credits_earned': stats.get('total_bonus_earned', 0)
             }
         }), 200
     except Exception as e:
         logger.error(f"Get referral stats error: {e}")
         return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/user/referral-stats', methods=['GET'])
+@require_auth
+def get_user_referral_stats():
+    """Get detailed referral statistics for the current user"""
+    try:
+        referral_service = ReferralService()
+        stats = referral_service.get_referral_stats(g.current_user_id)
+
+        # Build referred users list with more detail
+        referred_users = []
+        for r in stats.get('recent_referrals', []):
+            referred_users.append({
+                'name': r.get('name', 'Unknown'),
+                'surname': r.get('surname', ''),
+                'joined_date': r.get('date', ''),
+                'nerdx_id': r.get('nerdx_id', ''),
+            })
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'referral_code': stats.get('referral_code', ''),
+                'total_referrals': stats.get('total_referrals', 0),
+                'successful_referrals': stats.get('successful_referrals', 0),
+                'total_bonus_earned': stats.get('total_bonus_earned', 0),
+                'last_referral_date': referred_users[0]['joined_date'] if referred_users else None,
+                'referred_users': referred_users,
+            }
+        }), 200
+    except Exception as e:
+        logger.error(f"Get user referral stats error: {e}")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/user/referral-share', methods=['GET'])
+@require_auth
+def get_user_referral_share():
+    """Get referral share link and message for the current user"""
+    try:
+        referral_service = ReferralService()
+
+        # Get user name for share message
+        user_data = get_user_registration(g.current_user_id)
+        user_name = user_data.get('name', 'Student') if user_data else 'Student'
+
+        share_info = referral_service.get_referral_share_message(g.current_user_id, user_name)
+        if not share_info.get('success'):
+            return jsonify({'success': False, 'message': 'Could not generate share info'}), 500
+
+        referral_code = share_info.get('referral_code', '')
+        web_link = f"https://nerdx.onrender.com/register?ref={referral_code}"
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'referral_code': referral_code,
+                'whatsapp_link': share_info.get('whatsapp_link', ''),
+                'share_message': f"Join NerdX and ace your exams! Sign up using my link and we both win: {web_link}",
+                'bonus_per_referral': 10,
+                'web_link': web_link,
+            }
+        }), 200
+    except Exception as e:
+        logger.error(f"Get user referral share error: {e}")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+# ============================================================================
+# NOTIFICATION EVENT ENDPOINTS
+# ============================================================================
+
+@mobile_bp.route('/notifications/event', methods=['POST'])
+@require_auth
+def create_notification_event():
+    """
+    Create notifications for platform events (new teacher post, comment, etc.)
+    Body:
+      event_type: 'new_post' | 'new_comment'
+      post_id, post_title, teacher_name, teacher_id, comment_author, comment_content
+    """
+    try:
+        data = request.get_json() or {}
+        event_type = data.get('event_type')
+        post_id = data.get('post_id', '')
+        post_title = (data.get('post_title') or '')[:100]
+        teacher_name = data.get('teacher_name', 'A teacher')
+        teacher_id = data.get('teacher_id', '')
+        comment_author = data.get('comment_author', 'Someone')
+        comment_content = (data.get('comment_content') or '')[:80]
+
+        if not event_type:
+            return jsonify({'success': False, 'message': 'event_type is required'}), 400
+
+        if event_type == 'new_post':
+            title = f"New post from {teacher_name}"
+            body = post_title if post_title else f"{teacher_name} shared a new post on the marketplace."
+            notif_type = 'update'
+            metadata = {'action_url': '/app/marketplace', 'action_label': 'View Post', 'post_id': post_id, 'teacher_id': teacher_id, 'event': 'new_post'}
+        elif event_type == 'new_comment':
+            title = f"{comment_author} commented on a post"
+            body = comment_content if comment_content else f"{comment_author} left a comment."
+            notif_type = 'info'
+            metadata = {'action_url': '/app/marketplace', 'action_label': 'View Comment', 'post_id': post_id, 'event': 'new_comment'}
+        else:
+            return jsonify({'success': False, 'message': f'Unknown event_type: {event_type}'}), 400
+
+        notification_data = {
+            'title': title,
+            'body': body,
+            'type': notif_type,
+            'audience': 'all' if event_type == 'new_post' else 'targeted',
+            'metadata': metadata,
+            'status': 'sent',
+        }
+        notification = make_supabase_request('POST', 'notifications', data=notification_data, use_service_role=True)
+        if not notification:
+            return jsonify({'success': False, 'message': 'Failed to create notification'}), 500
+
+        notification_id = notification[0]['id'] if isinstance(notification, list) else notification.get('id')
+        target_user_ids = []
+
+        if event_type == 'new_post':
+            import requests as http_req
+            supabase_url = os.getenv('SUPABASE_URL')
+            service_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+            if supabase_url and service_key:
+                page = 1
+                while True:
+                    resp = http_req.get(
+                        f"{supabase_url}/auth/v1/admin/users",
+                        headers={"apikey": service_key, "Authorization": f"Bearer {service_key}"},
+                        params={"page": page, "per_page": 1000}, timeout=30
+                    )
+                    if resp.status_code == 200:
+                        users = resp.json().get('users', [])
+                        target_user_ids.extend([u['id'] for u in users])
+                        if len(users) < 1000:
+                            break
+                        page += 1
+                    else:
+                        break
+
+        elif event_type == 'new_comment':
+            if teacher_id:
+                tp = make_supabase_request('GET', 'teacher_profiles', select='user_id', filters={'id': f'eq.{teacher_id}'}, use_service_role=True)
+                if tp and len(tp) > 0 and tp[0].get('user_id'):
+                    target_user_ids.append(tp[0]['user_id'])
+            if post_id:
+                comments = make_supabase_request('GET', 'post_comments', select='user_id', filters={'post_id': f'eq.{post_id}'}, use_service_role=True)
+                if comments:
+                    current_uid = None
+                    try:
+                        reg = get_user_registration(g.current_user_id)
+                        if reg:
+                            current_uid = str(reg.get('chat_id') or g.current_user_id)
+                    except Exception:
+                        pass
+                    for c in comments:
+                        uid = c.get('user_id')
+                        if uid and uid not in target_user_ids and uid != current_uid:
+                            target_user_ids.append(uid)
+
+        target_user_ids = list(set(target_user_ids))
+        if not target_user_ids:
+            return jsonify({'success': True, 'notification_id': notification_id, 'recipients_created': 0}), 200
+
+        total_inserted = 0
+        for i in range(0, len(target_user_ids), 1000):
+            batch = target_user_ids[i:i + 1000]
+            recipients = [{'notification_id': notification_id, 'user_id': uid} for uid in batch]
+            result = make_supabase_request('POST', 'notification_recipients', data=recipients, use_service_role=True)
+            if result:
+                total_inserted += len(result) if isinstance(result, list) else 1
+
+        logger.info(f"Notification event '{event_type}': {total_inserted} recipients")
+        return jsonify({'success': True, 'notification_id': notification_id, 'recipients_created': total_inserted}), 200
+
+    except Exception as e:
+        logger.error(f"Notification event error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
 
 # ============================================================================
 # MATH ENDPOINTS
@@ -7681,3 +8104,502 @@ def project_multimodal_chat(project_id):
     except Exception as e:
         logger.exception("project_multimodal_chat failed")
         return jsonify({'success': False, 'message': str(e)}), 500
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LESSON WALLET ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@mobile_bp.route('/wallet/balance', methods=['GET'])
+@require_auth
+def wallet_balance():
+    """Get student lesson wallet balance."""
+    try:
+        user_id = g.current_user_id
+        data = lesson_payment_service.get_wallet_balance(user_id)
+        return jsonify({'success': True, 'data': data}), 200
+    except Exception as e:
+        logger.exception("wallet_balance failed")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/wallet/topup', methods=['POST'])
+@require_auth
+def wallet_topup():
+    """Initiate wallet top-up via EcoCash or Card."""
+    try:
+        user_id = g.current_user_id
+        data = request.get_json() or {}
+        amount = data.get('amount')
+        payment_method = data.get('payment_method', 'ecocash')
+        phone_number = data.get('phone_number', '')
+        email = data.get('email', '')
+
+        if not amount or float(amount) <= 0:
+            return jsonify({'success': False, 'message': 'Valid amount required'}), 400
+
+        # Normalise phone number (same as credits purchase)
+        if phone_number:
+            phone_number = phone_number.strip().replace(' ', '').replace('-', '')
+            if phone_number.startswith('+263'):
+                phone_number = '0' + phone_number[4:]
+            elif phone_number.startswith('263'):
+                phone_number = '0' + phone_number[3:]
+
+        result = lesson_payment_service.initiate_wallet_topup(
+            user_id=user_id,
+            amount=float(amount),
+            payment_method=payment_method,
+            phone_number=phone_number,
+            email=email,
+        )
+
+        if result.get('success'):
+            return jsonify({'success': True, 'data': result}), 200
+        else:
+            return jsonify({'success': False, 'message': result.get('message', 'Top-up failed')}), 400
+    except Exception as e:
+        logger.exception("wallet_topup failed")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/wallet/topup/complete', methods=['POST'])
+@require_auth
+def wallet_topup_complete():
+    """Complete a wallet top-up (called after payment confirmation)."""
+    try:
+        data = request.get_json() or {}
+        reference = data.get('reference')
+        if not reference:
+            return jsonify({'success': False, 'message': 'Reference required'}), 400
+
+        result = lesson_payment_service.complete_wallet_topup(reference)
+        if result.get('success'):
+            return jsonify({'success': True, 'data': result}), 200
+        else:
+            return jsonify({'success': False, 'message': result.get('message', 'Failed')}), 400
+    except Exception as e:
+        logger.exception("wallet_topup_complete failed")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/wallet/transactions', methods=['GET'])
+@require_auth
+def wallet_transactions():
+    """Get wallet transaction history."""
+    try:
+        user_id = g.current_user_id
+        limit = request.args.get('limit', 20, type=int)
+        txns = get_wallet_transactions(user_id, limit=limit)
+        return jsonify({'success': True, 'data': txns}), 200
+    except Exception as e:
+        logger.exception("wallet_transactions failed")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LESSON PAYMENT ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@mobile_bp.route('/lesson/pay', methods=['POST'])
+@require_auth
+def lesson_pay():
+    """Deduct $0.50 from student wallet when lesson starts."""
+    try:
+        user_id = g.current_user_id
+        data = request.get_json() or {}
+        booking_id = data.get('booking_id')
+        teacher_id = data.get('teacher_id')
+
+        if not booking_id:
+            return jsonify({'success': False, 'message': 'booking_id required'}), 400
+
+        result = lesson_payment_service.pay_for_lesson(user_id, booking_id, teacher_id)
+
+        if result.get('success'):
+            return jsonify({'success': True, 'data': result}), 200
+        elif result.get('insufficient_funds'):
+            return jsonify({'success': False, 'message': result['message'], 'data': result}), 402
+        else:
+            return jsonify({'success': False, 'message': result.get('message', 'Payment failed')}), 400
+    except Exception as e:
+        logger.exception("lesson_pay failed")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/lesson/refund', methods=['POST'])
+@require_auth
+def lesson_refund():
+    """Refund a lesson payment back to student wallet."""
+    try:
+        user_id = g.current_user_id
+        data = request.get_json() or {}
+        booking_id = data.get('booking_id')
+        reason = data.get('reason', 'Lesson cancelled')
+
+        if not booking_id:
+            return jsonify({'success': False, 'message': 'booking_id required'}), 400
+
+        result = lesson_payment_service.refund_lesson(user_id, booking_id, reason)
+
+        if result.get('success'):
+            return jsonify({'success': True, 'data': result}), 200
+        else:
+            return jsonify({'success': False, 'message': result.get('message', 'Refund failed')}), 400
+    except Exception as e:
+        logger.exception("lesson_refund failed")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TEACHER EARNINGS & PAYOUT ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@mobile_bp.route('/teacher/earnings', methods=['GET'])
+@require_auth
+def teacher_earnings():
+    """Get teacher earnings dashboard data."""
+    try:
+        user_id = g.current_user_id
+        data = lesson_payment_service.get_earnings_dashboard(user_id)
+        return jsonify({'success': True, 'data': data}), 200
+    except Exception as e:
+        logger.exception("teacher_earnings failed")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/teacher/earnings/history', methods=['GET'])
+@require_auth
+def teacher_earnings_history():
+    """Get detailed teacher earnings history."""
+    try:
+        user_id = g.current_user_id
+        from database.external_db import get_teacher_earnings_history
+        limit = request.args.get('limit', 50, type=int)
+        history = get_teacher_earnings_history(user_id, limit=limit)
+        return jsonify({'success': True, 'data': history}), 200
+    except Exception as e:
+        logger.exception("teacher_earnings_history failed")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/teacher/payout/request', methods=['POST'])
+@require_auth
+def teacher_payout_request():
+    """Request an EcoCash payout for available earnings."""
+    try:
+        user_id = g.current_user_id
+        data = request.get_json() or {}
+        phone_number = data.get('phone_number', '')
+
+        if phone_number:
+            phone_number = phone_number.strip().replace(' ', '').replace('-', '')
+            if phone_number.startswith('+263'):
+                phone_number = '0' + phone_number[4:]
+            elif phone_number.startswith('263'):
+                phone_number = '0' + phone_number[3:]
+
+        result = lesson_payment_service.request_payout(user_id, phone_number)
+
+        if result.get('success'):
+            return jsonify({'success': True, 'data': result}), 200
+        else:
+            return jsonify({'success': False, 'message': result.get('message', 'Payout failed')}), 400
+    except Exception as e:
+        logger.exception("teacher_payout_request failed")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/teacher/payout/complete', methods=['POST'])
+@require_auth
+def teacher_payout_complete():
+    """Mark a teacher payout as completed (processing -> completed)."""
+    try:
+        user_id = g.current_user_id
+        data = request.get_json() or {}
+        payout_id = data.get('payout_id')
+        reference = (data.get('reference') or '').strip()
+
+        if not payout_id:
+            return jsonify({'success': False, 'message': 'payout_id required'}), 400
+        if not reference:
+            return jsonify({'success': False, 'message': 'reference required'}), 400
+
+        result = lesson_payment_service.complete_payout(user_id, payout_id, reference)
+        if result.get('success'):
+            return jsonify({'success': True, 'data': result}), 200
+        return jsonify({'success': False, 'message': result.get('message', 'Failed')}), 400
+    except Exception:
+        logger.exception("teacher_payout_complete failed")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/teacher/payouts', methods=['GET'])
+@require_auth
+def teacher_payouts():
+    """Get teacher payout history."""
+    try:
+        user_id = g.current_user_id
+        from database.external_db import get_teacher_payouts
+        limit = request.args.get('limit', 20, type=int)
+        payouts = get_teacher_payouts(user_id, limit=limit)
+        return jsonify({'success': True, 'data': payouts}), 200
+    except Exception as e:
+        logger.exception("teacher_payouts failed")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LESSON CANCELLATION WITH REFUND RULES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@mobile_bp.route('/teacher/bookings/confirm', methods=['POST'])
+@require_auth
+def teacher_confirm_booking():
+    """Confirm a booking after validating student wallet balance."""
+    try:
+        user_id = g.current_user_id
+        data = request.get_json() or {}
+        booking_id = data.get('booking_id')
+
+        if not booking_id:
+            return jsonify({'success': False, 'message': 'booking_id required'}), 400
+
+        teacher_rows = make_supabase_request(
+            "GET",
+            "teacher_profiles",
+            select="id",
+            filters={"user_id": f"eq.{user_id}"},
+            limit=1,
+            use_service_role=True,
+        ) or []
+        if not teacher_rows:
+            # Fallback: older tokens can carry chat_id while teacher_profiles.user_id stores Supabase UUID.
+            reg = get_user_registration(user_id) or {}
+            teacher_email = (reg.get('email') or '').strip()
+            if teacher_email:
+                teacher_rows = make_supabase_request(
+                    "GET",
+                    "teacher_profiles",
+                    select="id",
+                    filters={"email": f"eq.{teacher_email}"},
+                    limit=1,
+                    use_service_role=True,
+                ) or []
+        if not teacher_rows:
+            return jsonify({'success': False, 'message': 'Teacher profile not found'}), 403
+
+        teacher_profile_id = teacher_rows[0].get('id')
+
+        booking_rows = make_supabase_request(
+            "GET",
+            "lesson_bookings",
+            filters={"id": f"eq.{booking_id}"},
+            use_service_role=True,
+        ) or []
+        if not booking_rows:
+            return jsonify({'success': False, 'message': 'Booking not found'}), 404
+
+        booking = booking_rows[0]
+        if booking.get('teacher_id') != teacher_profile_id:
+            return jsonify({'success': False, 'message': 'Not authorized for this booking'}), 403
+
+        status = (booking.get('status') or '').lower()
+        if status == 'confirmed':
+            return jsonify({'success': True, 'data': {'already_confirmed': True}}), 200
+        if status in {'cancelled', 'completed'}:
+            return jsonify({'success': False, 'message': f'Cannot confirm a {status} booking'}), 400
+
+        student_id = booking.get('student_id')
+        wallet = get_lesson_wallet(student_id) if student_id else None
+        balance = round(float((wallet or {}).get('balance', 0)), 2)
+        if balance < LESSON_FEE:
+            return jsonify({
+                'success': False,
+                'message': f"Student wallet balance is insufficient (${balance:.2f} < ${LESSON_FEE:.2f})",
+                'data': {
+                    'insufficient_funds': True,
+                    'balance': balance,
+                    'required': LESSON_FEE,
+                },
+            }), 402
+
+        room_id = booking.get('room_id') or f"nerdx-{str(booking_id)[:8]}-{uuid.uuid4().hex[:6]}"
+        update_result = make_supabase_request(
+            "PATCH",
+            "lesson_bookings",
+            data={"status": "confirmed", "room_id": room_id},
+            filters={"id": f"eq.{booking_id}"},
+            use_service_role=True,
+        )
+        if update_result is None:
+            return jsonify({'success': False, 'message': 'Failed to confirm booking'}), 500
+
+        return jsonify({
+            'success': True,
+            'data': {'booking_id': booking_id, 'status': 'confirmed', 'room_id': room_id},
+        }), 200
+    except Exception:
+        logger.exception("teacher_confirm_booking failed")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/lesson/cancel', methods=['POST'])
+@require_auth
+def lesson_cancel():
+    """Cancel a lesson booking with automatic refund based on cancellation rules.
+
+    Rules:
+    - Teacher cancels anytime: Full refund to student
+    - Student cancels > 1 hour before: Full refund
+    - Student cancels < 1 hour before: No refund (teacher still earns)
+    - System cancellation (teacher no-show): Full refund
+    """
+    try:
+        user_id = g.current_user_id
+        data = request.get_json() or {}
+        booking_id = data.get('booking_id')
+        cancelled_by = data.get('cancelled_by', 'student')  # 'student', 'teacher', or 'system'
+
+        if not booking_id:
+            return jsonify({'success': False, 'message': 'booking_id required'}), 400
+
+        booking_rows = make_supabase_request(
+            "GET",
+            "lesson_bookings",
+            filters={"id": f"eq.{booking_id}"},
+            use_service_role=True,
+        ) or []
+        if not booking_rows:
+            return jsonify({'success': False, 'message': 'Booking not found'}), 404
+        booking = booking_rows[0]
+
+        student_id = booking.get('student_id')
+        teacher_id = booking.get('teacher_id')
+        booking_status = (booking.get('status') or '').lower()
+
+        if booking_status == 'cancelled':
+            return jsonify({'success': True, 'data': {'booking_id': booking_id, 'already_cancelled': True}}), 200
+
+        # Authorization checks for explicit student/teacher initiated cancellation.
+        if cancelled_by == 'student' and student_id and user_id != student_id:
+            return jsonify({'success': False, 'message': 'Not authorized to cancel this booking as student'}), 403
+
+        if cancelled_by == 'teacher':
+            teacher_rows = make_supabase_request(
+                "GET",
+                "teacher_profiles",
+                select="id",
+                filters={"user_id": f"eq.{user_id}"},
+                limit=1,
+                use_service_role=True,
+            ) or []
+            if not teacher_rows:
+                reg = get_user_registration(user_id) or {}
+                teacher_email = (reg.get('email') or '').strip()
+                if teacher_email:
+                    teacher_rows = make_supabase_request(
+                        "GET",
+                        "teacher_profiles",
+                        select="id",
+                        filters={"email": f"eq.{teacher_email}"},
+                        limit=1,
+                        use_service_role=True,
+                    ) or []
+            if not teacher_rows or teacher_rows[0].get('id') != teacher_id:
+                return jsonify({'success': False, 'message': 'Not authorized to cancel this booking as teacher'}), 403
+
+        if cancelled_by == 'system':
+            is_booking_student = bool(student_id and user_id == student_id)
+            is_booking_teacher = False
+
+            teacher_rows = make_supabase_request(
+                "GET",
+                "teacher_profiles",
+                select="id",
+                filters={"user_id": f"eq.{user_id}"},
+                limit=1,
+                use_service_role=True,
+            ) or []
+            if not teacher_rows:
+                reg = get_user_registration(user_id) or {}
+                teacher_email = (reg.get('email') or '').strip()
+                if teacher_email:
+                    teacher_rows = make_supabase_request(
+                        "GET",
+                        "teacher_profiles",
+                        select="id",
+                        filters={"email": f"eq.{teacher_email}"},
+                        limit=1,
+                        use_service_role=True,
+                    ) or []
+            if teacher_rows and teacher_rows[0].get('id') == teacher_id:
+                is_booking_teacher = True
+
+            if not is_booking_student and not is_booking_teacher:
+                return jsonify({'success': False, 'message': 'Not authorized to perform system cancellation for this booking'}), 403
+
+        normalized_start_time = booking.get('start_time') or ''
+        if isinstance(normalized_start_time, str) and normalized_start_time.count(':') == 1:
+            normalized_start_time = f"{normalized_start_time}:00"
+
+        scheduled_time = (data.get('scheduled_time') or f"{booking.get('date')}T{normalized_start_time}").strip()
+
+        # Check refund eligibility
+        eligibility = lesson_payment_service.check_cancellation_eligibility(
+            booking_id, cancelled_by, scheduled_time
+        )
+
+        # Always update booking status to cancelled as the source of truth.
+        existing_notes = (booking.get('notes') or '').strip()
+        cancel_note = f"Cancelled by {cancelled_by}: {eligibility['reason']}"
+        merged_notes = f"{existing_notes}\n{cancel_note}".strip()[:1200]
+        make_supabase_request(
+            "PATCH",
+            "lesson_bookings",
+            data={"status": "cancelled", "notes": merged_notes},
+            filters={"id": f"eq.{booking_id}"},
+            use_service_role=True,
+        )
+
+        # Teacher no-show flag (best-effort): create attendance row with missed status.
+        if cancelled_by == 'system' and teacher_id and student_id:
+            try:
+                make_supabase_request(
+                    "POST",
+                    "lesson_attendance",
+                    data={
+                        "booking_id": booking_id,
+                        "teacher_id": teacher_id,
+                        "student_id": student_id,
+                        "subject": booking.get('subject') or 'Lesson',
+                        "date": booking.get('date'),
+                        "status": "missed",
+                        "duration_minutes": 0,
+                        "teacher_notes": "Auto-cancelled due to teacher no-show (10-minute grace).",
+                    },
+                    use_service_role=True,
+                )
+            except Exception:
+                logger.warning("Failed to write lesson_attendance missed row for booking %s", booking_id)
+
+        result_data = {
+            'booking_id': booking_id,
+            'cancelled_by': cancelled_by,
+            'booking_status': 'cancelled',
+            'refund_eligible': eligibility['eligible_for_refund'],
+            'reason': eligibility['reason'],
+        }
+
+        if eligibility['eligible_for_refund'] and student_id:
+            refund_result = lesson_payment_service.refund_lesson(
+                student_id, booking_id, eligibility['reason']
+            )
+            result_data['refund'] = refund_result
+        else:
+            result_data['refund'] = {'success': False, 'message': eligibility['reason']}
+
+        return jsonify({'success': True, 'data': result_data}), 200
+    except Exception:
+        logger.exception("lesson_cancel failed")
+        return jsonify({'success': False, 'message': 'Server error'}), 500

@@ -131,10 +131,15 @@ export function ScienceQuizPage() {
       questionStartTime.current = Date.now();
     } catch (err) {
       console.error('Generate question error', err);
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 402) {
+        navigate('/app/credits');
+        return;
+      }
     } finally {
       setGenerating(false);
     }
-  }, [parentSubject, questionFormat, mixImagesEnabled, subject.id, topic, updateUser]);
+  }, [parentSubject, questionFormat, mixImagesEnabled, subject.id, topic, updateUser, navigate]);
 
   const uploadAnswerImage = async (): Promise<string | undefined> => {
     if (!answerImage) return undefined;
@@ -269,6 +274,11 @@ export function ScienceQuizPage() {
       }
     } catch (err) {
       console.error('Submit answer error', err);
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 402) {
+        navigate('/app/credits');
+        return;
+      }
     } finally {
       setLoading(false);
     }

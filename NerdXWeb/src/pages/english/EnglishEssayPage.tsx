@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   englishApi,
@@ -25,6 +25,7 @@ const MARK_ESSAY_TOPICS: FreeResponseTopic[] = [
 type EssayType = 'free_response' | 'guided' | 'mark_essay' | null;
 
 export function EnglishEssayPage() {
+  const navigate = useNavigate();
   const { user, updateUser } = useAuth();
   const [essayType, setEssayType] = useState<EssayType>(null);
   const [loading, setLoading] = useState(false);
@@ -215,6 +216,11 @@ export function EnglishEssayPage() {
         if (result.credits_remaining !== undefined) updateUser({ credits: result.credits_remaining });
       } else setError('Failed to mark essay.');
     } catch (e: unknown) {
+      const status = (e as { response?: { status?: number } })?.response?.status;
+      if (status === 402) {
+        navigate('/app/credits');
+        return;
+      }
       const msg = e && typeof e === 'object' && 'response' in e
         ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
         : 'Failed to mark essay';

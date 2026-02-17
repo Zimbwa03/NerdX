@@ -258,6 +258,11 @@ export function ProjectAssistantChatPage() {
       const updated = await projectAssistantApi.getProject(pid);
       if (updated) setProject(updated);
     } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 402) {
+        navigate('/app/credits');
+        return;
+      }
       const msg = err?.response?.data?.message || err?.message || 'Failed to send message.';
       setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
       setError(msg);

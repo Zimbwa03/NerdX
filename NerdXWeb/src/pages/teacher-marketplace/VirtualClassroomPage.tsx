@@ -11,12 +11,17 @@ import {
   getTeacherProfileByUserId,
   completeLesson,
 } from '../../services/api/teacherMarketplaceApi';
+import { walletApi } from '../../services/api/walletApi';
 import { supabase } from '../../services/supabase';
 import type { LessonBooking, TeacherProfile } from '../../types';
 import {
   ArrowLeft, BookOpen, Clock, User, Loader2,
   Video, PenTool, Minimize2, PhoneOff, AlertTriangle, WifiOff
 } from 'lucide-react';
+
+const LESSON_DURATION_SECONDS = 45 * 60;
+const LESSON_WARNING_SECONDS = 40 * 60;
+const TEACHER_NO_SHOW_GRACE_SECONDS = 10 * 60;
 
 // ─── Error Boundary ────────────────────────────────────────────────────────────
 // Catches runtime errors in Jitsi or tldraw so the whole page doesn't crash
@@ -88,6 +93,35 @@ export function VirtualClassroomPage() {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [lessonPaid, setLessonPaid] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
+  const [payingForLesson, setPayingForLesson] = useState(false);
+  const [showTimeWarning, setShowTimeWarning] = useState(false);
+  const [showAutoEnd, setShowAutoEnd] = useState(false);
+  const [participantCount, setParticipantCount] = useState(1);
+  const [noShowCancelled, setNoShowCancelled] = useState(false);
+  const warningShownRef = useRef(false);
+  const autoEndTriggeredRef = useRef(false);
+  const participantCountRef = useRef(1);
+  const noShowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const noShowTriggeredRef = useRef(false);
+  const jitsiApiRef = useRef<any>(null);
+  const jitsiHandlersRef = useRef<{
+    onVideoConferenceJoined?: () => void;
+    onParticipantJoined?: () => void;
+    onParticipantLeft?: () => void;
+  } | null>(null);
+
+  const clearNoShowTimer = useCallback(() => {
+    if (noShowTimerRef.current) {
+      clearTimeout(noShowTimerRef.current);
+      noShowTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    participantCountRef.current = participantCount;
+  }, [participantCount]);
 
   // ─── Network status ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -100,6 +134,19 @@ export function VirtualClassroomPage() {
       window.removeEventListener('offline', goOffline);
     };
   }, []);
+
+  useEffect(() => {
+    return () => {
+      clearNoShowTimer();
+      const api = jitsiApiRef.current;
+      const handlers = jitsiHandlersRef.current;
+      if (api && handlers) {
+        if (handlers.onVideoConferenceJoined) api.removeListener?.('videoConferenceJoined', handlers.onVideoConferenceJoined);
+        if (handlers.onParticipantJoined) api.removeListener?.('participantJoined', handlers.onParticipantJoined);
+        if (handlers.onParticipantLeft) api.removeListener?.('participantLeft', handlers.onParticipantLeft);
+      }
+    };
+  }, [clearNoShowTimer]);
 
   // ─── Warn before closing tab during active lesson ────────────────────────────
   useEffect(() => {
@@ -204,16 +251,126 @@ export function VirtualClassroomPage() {
     load();
   }, [bookingId, user]);
 
+  // ─── Pay for lesson when student joins ───────────────────────────────────────
+  useEffect(() => {
+    if (!booking || !user || lessonPaid || payingForLesson) return;
+
+    // Only students pay, not teachers
+    const isStudentUser = booking.student_id === user.id || booking.student_id === user.email;
+    if (!isStudentUser) {
+      setLessonPaid(true);
+      return;
+    }
+
+    setPayingForLesson(true);
+    walletApi.payForLesson(booking.id).then((result) => {
+      if (result.success) {
+        setLessonPaid(true);
+      } else if (result.insufficient_funds) {
+        setPaymentError(`Insufficient wallet balance. You need $0.50 but have $${(result.balance ?? 0).toFixed(2)}. Please top up your wallet.`);
+      } else if (result.already_paid) {
+        setLessonPaid(true);
+      } else {
+        setPaymentError(result.message || 'Payment failed. Please try again.');
+      }
+      setPayingForLesson(false);
+    }).catch(() => {
+      setPaymentError('Payment failed. Please check your connection.');
+      setPayingForLesson(false);
+    });
+  }, [booking, user, lessonPaid, payingForLesson]);
+
+  useEffect(() => {
+    if (!booking || !user || !lessonPaid || !lessonActive || paymentError || noShowTriggeredRef.current) {
+      clearNoShowTimer();
+      return;
+    }
+
+    const isStudentUser = booking.student_id === user.id || booking.student_id === user.email;
+    if (!isStudentUser) {
+      clearNoShowTimer();
+      return;
+    }
+
+    if (participantCount >= 2) {
+      clearNoShowTimer();
+      return;
+    }
+
+    const normalizedStartTime = booking.start_time?.split(':').length === 2
+      ? `${booking.start_time}:00`
+      : booking.start_time;
+    const scheduledIso = `${booking.date}T${normalizedStartTime}`;
+    const scheduledStart = new Date(scheduledIso);
+    const now = new Date();
+    const fallbackDeadline = now.getTime() + (TEACHER_NO_SHOW_GRACE_SECONDS * 1000);
+    const deadline = Number.isNaN(scheduledStart.getTime())
+      ? fallbackDeadline
+      : (scheduledStart.getTime() + (TEACHER_NO_SHOW_GRACE_SECONDS * 1000));
+    const delayMs = Math.max(0, deadline - now.getTime());
+
+    noShowTimerRef.current = setTimeout(async () => {
+      if (participantCountRef.current >= 2 || noShowTriggeredRef.current) return;
+      noShowTriggeredRef.current = true;
+      clearNoShowTimer();
+
+      const cancelResult = await walletApi.cancelLesson(
+        booking.id,
+        'system',
+        scheduledIso,
+        booking.student_id,
+      );
+
+      setNoShowCancelled(true);
+      if (cancelResult.success && cancelResult.refund?.success) {
+        setPaymentError('Teacher did not join within 10 minutes. The lesson was cancelled and your wallet was refunded.');
+      } else if (cancelResult.success) {
+        setPaymentError('Teacher did not join within 10 minutes. The lesson was cancelled.');
+      } else {
+        setPaymentError('Teacher did not join within 10 minutes and auto-cancel could not be finalized. Please contact support.');
+      }
+
+      setLessonActive(false);
+      if (timerRef.current) clearInterval(timerRef.current);
+    }, delayMs);
+
+    return clearNoShowTimer;
+  }, [booking, user, lessonPaid, lessonActive, paymentError, participantCount, clearNoShowTimer]);
+
   // ─── Lesson timer ────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!booking || !lessonActive) return;
     timerRef.current = setInterval(() => {
-      setElapsed((prev) => prev + 1);
+      setElapsed((prev) => {
+        const next = prev + 1;
+        // 40-minute warning
+        if (next >= LESSON_WARNING_SECONDS && !warningShownRef.current) {
+          warningShownRef.current = true;
+          setShowTimeWarning(true);
+          setTimeout(() => setShowTimeWarning(false), 10000);
+        }
+        // 45-minute auto-end
+        if (next >= LESSON_DURATION_SECONDS && !autoEndTriggeredRef.current) {
+          autoEndTriggeredRef.current = true;
+          setShowAutoEnd(true);
+        }
+        return next;
+      });
     }, 1000);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [booking, lessonActive]);
+
+  // Auto-end lesson at 45 minutes
+  useEffect(() => {
+    if (showAutoEnd && booking) {
+      const timer = setTimeout(() => {
+        handleEndLesson();
+      }, 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [showAutoEnd, booking]);
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -281,6 +438,39 @@ export function VirtualClassroomPage() {
     );
   }
 
+  // ─── Payment processing state ──────────────────────────────────────────────
+  if (payingForLesson) {
+    return (
+      <div className="vc-loading">
+        <Loader2 size={40} className="spin" />
+        <span>Processing lesson payment...</span>
+        <span className="vc-loading__sub">$0.50 will be deducted from your wallet</span>
+      </div>
+    );
+  }
+
+  if (paymentError) {
+    return (
+      <div className="vc-error">
+        <div className="vc-error__card">
+          <AlertTriangle size={40} className="vc-error__icon" />
+          <h2>{noShowCancelled ? 'Lesson Cancelled' : 'Payment Required'}</h2>
+          <p>{paymentError}</p>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+            {!noShowCancelled && (
+              <button type="button" className="to-btn to-btn--primary" onClick={() => navigate('/app/credits')}>
+                Top Up Wallet
+              </button>
+            )}
+            <button type="button" className="to-btn to-btn--outline" onClick={() => navigate('/app')}>
+              <ArrowLeft size={16} /> Back to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!booking || !booking.room_id) return null;
 
   const displayName = user
@@ -297,6 +487,36 @@ export function VirtualClassroomPage() {
         <div className="vc-offline-banner">
           <WifiOff size={16} />
           <span>You appear to be offline. Video and whiteboard require an internet connection.</span>
+        </div>
+      )}
+
+      {/* 40-minute warning */}
+      {showTimeWarning && (
+        <div className="vc-offline-banner" style={{ background: 'rgba(245, 158, 11, 0.9)' }}>
+          <Clock size={16} />
+          <span>5 minutes remaining! Your lesson will auto-end at 45 minutes.</span>
+          <button
+            type="button"
+            style={{ marginLeft: 'auto', background: 'transparent', border: '1px solid white', color: 'white', padding: '4px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}
+            onClick={() => setShowTimeWarning(false)}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Auto-end notification */}
+      {showAutoEnd && (
+        <div className="vc-offline-banner" style={{ background: 'rgba(239, 68, 68, 0.9)' }}>
+          <Clock size={16} />
+          <span>45-minute lesson completed! Ending in 15 seconds...</span>
+          <button
+            type="button"
+            style={{ marginLeft: 'auto', background: 'transparent', border: '1px solid white', color: 'white', padding: '4px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}
+            onClick={handleEndLesson}
+          >
+            End Now
+          </button>
         </div>
       )}
 
@@ -353,10 +573,15 @@ export function VirtualClassroomPage() {
         </div>
 
         <div className="vc-topbar__center">
-          <span className={`vc-topbar__timer${elapsed >= 3600 ? ' vc-topbar__timer--long' : ''}`}>
+          <span className={`vc-topbar__timer${elapsed >= LESSON_WARNING_SECONDS ? ' vc-topbar__timer--long' : ''}`}>
             <Clock size={14} />
             {formatTime(elapsed)}
           </span>
+          {elapsed < LESSON_DURATION_SECONDS && (
+            <span style={{ fontSize: '11px', opacity: 0.6, marginLeft: '6px' }}>
+              ({formatTime(LESSON_DURATION_SECONDS - elapsed)} left)
+            </span>
+          )}
           <span className="vc-topbar__live">LIVE</span>
         </div>
 
@@ -452,6 +677,31 @@ export function VirtualClassroomPage() {
                 userInfo={{
                   displayName: displayName,
                   email: user?.email || '',
+                }}
+                onApiReady={(externalApi: any) => {
+                  const existingApi = jitsiApiRef.current;
+                  const existingHandlers = jitsiHandlersRef.current;
+                  if (existingApi && existingHandlers) {
+                    if (existingHandlers.onVideoConferenceJoined) existingApi.removeListener?.('videoConferenceJoined', existingHandlers.onVideoConferenceJoined);
+                    if (existingHandlers.onParticipantJoined) existingApi.removeListener?.('participantJoined', existingHandlers.onParticipantJoined);
+                    if (existingHandlers.onParticipantLeft) existingApi.removeListener?.('participantLeft', existingHandlers.onParticipantLeft);
+                  }
+
+                  jitsiApiRef.current = externalApi;
+
+                  const onVideoConferenceJoined = () => setParticipantCount(1);
+                  const onParticipantJoined = () => setParticipantCount(prev => Math.max(1, prev + 1));
+                  const onParticipantLeft = () => setParticipantCount(prev => Math.max(1, prev - 1));
+
+                  jitsiHandlersRef.current = {
+                    onVideoConferenceJoined,
+                    onParticipantJoined,
+                    onParticipantLeft,
+                  };
+
+                  externalApi.addListener?.('videoConferenceJoined', onVideoConferenceJoined);
+                  externalApi.addListener?.('participantJoined', onParticipantJoined);
+                  externalApi.addListener?.('participantLeft', onParticipantLeft);
                 }}
                 onReadyToClose={handleEndLesson}
                 getIFrameRef={(iframeRef) => {

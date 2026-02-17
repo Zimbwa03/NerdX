@@ -38,10 +38,12 @@ import {
   ArrowLeft, User, ShieldCheck, Clock, Calendar, Star, BookOpen,
   MessageSquare, Loader2, Edit3, Plus, Trash2, Check, X,
   AlertCircle, CheckCircle, BarChart3, Rss, Video, TrendingUp,
-  Award, Users, Zap, ChevronRight, Settings, LayoutDashboard,
+  Award, Users, Zap, ChevronRight, Settings, LayoutDashboard, Menu,
+  DollarSign, Wallet, Smartphone, CreditCard,
 } from 'lucide-react';
+import { walletApi, type EarningsDashboard, type TeacherEarning, type TeacherPayout } from '../../services/api/walletApi';
 
-type SidebarSection = 'overview' | 'lessons' | 'posts' | 'availability' | 'bookings';
+type SidebarSection = 'overview' | 'lessons' | 'posts' | 'availability' | 'bookings' | 'earnings';
 
 export function TeacherDashboardPage() {
   const { user } = useAuth();
@@ -70,6 +72,15 @@ export function TeacherDashboardPage() {
   const [editingAvailability, setEditingAvailability] = useState(false);
   const [availSlots, setAvailSlots] = useState<{ day_of_week: DayOfWeek; start_time: string; end_time: string }[]>([]);
   const [savingAvail, setSavingAvail] = useState(false);
+
+  // Earnings state
+  const [earningsData, setEarningsData] = useState<EarningsDashboard | null>(null);
+  const [earningsLoading, setEarningsLoading] = useState(false);
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [payoutPhone, setPayoutPhone] = useState('');
+  const [requestingPayout, setRequestingPayout] = useState(false);
+  const [payoutSuccess, setPayoutSuccess] = useState('');
+  const [payoutError, setPayoutError] = useState('');
 
   // Redirect non-teachers
   useEffect(() => {
@@ -153,21 +164,77 @@ export function TeacherDashboardPage() {
     return () => { cancelled = true; };
   }, [activeSection, profile?.id, userId]);
 
+  // Load earnings when section is opened
+  useEffect(() => {
+    if (activeSection !== 'earnings') return;
+    let cancelled = false;
+    (async () => {
+      setEarningsLoading(true);
+      const data = await walletApi.getEarningsDashboard();
+      if (!cancelled && data) {
+        setEarningsData(data);
+      }
+      if (!cancelled) setEarningsLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [activeSection]);
+
+  // Payout handler
+  const handleRequestPayout = async () => {
+    if (!payoutPhone.trim()) {
+      setPayoutError('Please enter your EcoCash number');
+      return;
+    }
+    setRequestingPayout(true);
+    setPayoutError('');
+    setPayoutSuccess('');
+    const result = await walletApi.requestPayout(payoutPhone.trim());
+    if (result.success) {
+      setPayoutSuccess(result.message);
+      setShowPayoutModal(false);
+      setPayoutPhone('');
+      // Refresh earnings data
+      const data = await walletApi.getEarningsDashboard();
+      if (data) setEarningsData(data);
+    } else {
+      setPayoutError(result.message);
+    }
+    setRequestingPayout(false);
+  };
+
   // Booking handlers
   const handleConfirmBooking = useCallback(async (bookingId: string) => {
     const success = await updateBookingStatus(bookingId, 'confirmed');
     if (success && profile) {
       const refreshed = await getTeacherBookings(profile.id);
       setBookings(refreshed);
+    } else if (!success) {
+      window.alert('Cannot confirm this booking yet. Student lesson wallet balance is below $0.50.');
     }
   }, [profile]);
 
   const handleCancelBooking = useCallback(async (bookingId: string) => {
     const success = await updateBookingStatus(bookingId, 'cancelled');
     if (success) {
+      const booking = bookings.find((b) => b.id === bookingId);
       setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
+      // Teacher-initiated cancellation always refunds the student
+      if (booking) {
+        const normalizedStartTime = booking.start_time?.split(':').length === 2
+          ? `${booking.start_time}:00`
+          : booking.start_time;
+        const scheduledTime = `${booking.date}T${normalizedStartTime}`;
+        walletApi.cancelLesson(
+          bookingId,
+          'teacher',
+          scheduledTime,
+          booking.student_id,
+        ).catch(() => {
+          // Refund is best-effort; if there was no payment, the API returns gracefully.
+        });
+      }
     }
-  }, []);
+  }, [bookings]);
 
   // Availability handlers
   const handleAddSlot = () => {
@@ -228,6 +295,7 @@ export function TeacherDashboardPage() {
 
   const sidebarNav: { id: SidebarSection; label: string; icon: typeof LayoutDashboard; badge?: number }[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    { id: 'earnings', label: 'Earnings', icon: DollarSign },
     { id: 'lessons', label: 'Lessons', icon: BookOpen, badge: confirmedBookings.length },
     { id: 'bookings', label: 'Bookings', icon: Calendar, badge: pendingBookings.length },
     { id: 'posts', label: 'My Posts', icon: Rss },
@@ -259,7 +327,7 @@ export function TeacherDashboardPage() {
         </Link>
         <h1>Teacher Dashboard</h1>
         <button className="td-v2-mobile-header__menu" onClick={() => setSidebarOpen(!sidebarOpen)}>
-          <LayoutDashboard size={20} />
+          {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
@@ -715,6 +783,248 @@ export function TeacherDashboardPage() {
               </>
             ) : (
               <SkeletonBlock lines={4} wide />
+            )}
+          </div>
+        )}
+
+        {/* ═══════════ EARNINGS SECTION ═══════════ */}
+        {activeSection === 'earnings' && (
+          <div className="td-v2-earnings-section">
+            <div className="td-v2-section__header">
+              <DollarSign size={20} />
+              <h2>Earnings</h2>
+            </div>
+
+            {earningsLoading ? (
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <Loader2 size={32} className="td-v2-spinner" />
+                <p style={{ marginTop: '12px', opacity: 0.6 }}>Loading earnings...</p>
+              </div>
+            ) : earningsData ? (
+              <>
+                {/* Earnings summary cards */}
+                <div className="td-v2-stat-cards" style={{ marginBottom: '24px' }}>
+                  <div className="td-v2-stat-card">
+                    <div className="td-v2-stat-card__icon" style={{ background: 'rgba(245, 158, 11, 0.15)' }}>
+                      <Clock size={20} style={{ color: '#F59E0B' }} />
+                    </div>
+                    <div className="td-v2-stat-card__info">
+                      <span className="td-v2-stat-card__value">${earningsData.summary.pending.toFixed(2)}</span>
+                      <span className="td-v2-stat-card__label">Pending ({earningsData.hold_days}-day hold)</span>
+                    </div>
+                  </div>
+                  <div className="td-v2-stat-card">
+                    <div className="td-v2-stat-card__icon" style={{ background: 'rgba(16, 185, 129, 0.15)' }}>
+                      <Wallet size={20} style={{ color: '#10B981' }} />
+                    </div>
+                    <div className="td-v2-stat-card__info">
+                      <span className="td-v2-stat-card__value">${earningsData.summary.available.toFixed(2)}</span>
+                      <span className="td-v2-stat-card__label">Available for Payout</span>
+                    </div>
+                  </div>
+                  <div className="td-v2-stat-card">
+                    <div className="td-v2-stat-card__icon" style={{ background: 'rgba(124, 77, 255, 0.15)' }}>
+                      <TrendingUp size={20} style={{ color: '#7C4DFF' }} />
+                    </div>
+                    <div className="td-v2-stat-card__info">
+                      <span className="td-v2-stat-card__value">${earningsData.summary.total_earned.toFixed(2)}</span>
+                      <span className="td-v2-stat-card__label">Total Earned</span>
+                    </div>
+                  </div>
+                  <div className="td-v2-stat-card">
+                    <div className="td-v2-stat-card__icon" style={{ background: 'rgba(99, 102, 241, 0.15)' }}>
+                      <CheckCircle size={20} style={{ color: '#6366F1' }} />
+                    </div>
+                    <div className="td-v2-stat-card__info">
+                      <span className="td-v2-stat-card__value">${earningsData.summary.total_paid.toFixed(2)}</span>
+                      <span className="td-v2-stat-card__label">Total Paid Out</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rate info */}
+                <div style={{
+                  padding: '14px 18px', borderRadius: '10px', marginBottom: '20px',
+                  background: 'rgba(124, 77, 255, 0.08)', border: '1px solid rgba(124, 77, 255, 0.15)',
+                  display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '13px', color: 'rgba(255,255,255,0.7)'
+                }}>
+                  <span>Lesson fee: <b>${earningsData.lesson_fee.toFixed(2)}</b></span>
+                  <span>Your share: <b>${earningsData.teacher_rate.toFixed(2)}</b> ({100 - parseInt(earningsData.commission_rate)}%)</span>
+                  <span>Platform: <b>{earningsData.commission_rate}</b></span>
+                  <span>Min payout: <b>${earningsData.minimum_payout.toFixed(2)}</b></span>
+                  <span>Hold period: <b>{earningsData.hold_days} days</b></span>
+                </div>
+
+                {/* Payout button */}
+                <div style={{ marginBottom: '24px' }}>
+                  {payoutSuccess && (
+                    <div style={{
+                      padding: '12px 16px', borderRadius: '10px', marginBottom: '12px',
+                      background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.25)',
+                      color: '#10B981', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px'
+                    }}>
+                      <CheckCircle size={16} /> {payoutSuccess}
+                    </div>
+                  )}
+                  <button
+                    className="td-v2-btn td-v2-btn--primary"
+                    onClick={() => { setShowPayoutModal(true); setPayoutError(''); setPayoutSuccess(''); }}
+                    disabled={earningsData.summary.available < earningsData.minimum_payout}
+                    style={{ opacity: earningsData.summary.available < earningsData.minimum_payout ? 0.5 : 1 }}
+                  >
+                    <DollarSign size={16} />
+                    {earningsData.summary.available >= earningsData.minimum_payout
+                      ? `Request Payout ($${earningsData.summary.available.toFixed(2)})`
+                      : `Minimum payout $${earningsData.minimum_payout.toFixed(2)} (you have $${earningsData.summary.available.toFixed(2)})`
+                    }
+                  </button>
+                </div>
+
+                {/* Recent earnings table */}
+                <div style={{ marginBottom: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px' }}>Recent Earnings</h3>
+                  {earningsData.recent_earnings.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {earningsData.recent_earnings.map((e: TeacherEarning) => (
+                        <div key={e.id} style={{
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          padding: '12px 16px', borderRadius: '10px',
+                          background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)'
+                        }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <span style={{ fontSize: '14px', fontWeight: 600 }}>
+                              Lesson — {e.num_students} student{e.num_students > 1 ? 's' : ''}
+                            </span>
+                            <span style={{ fontSize: '12px', opacity: 0.5 }}>
+                              {e.created_at ? new Date(e.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <span style={{ fontWeight: 700, color: '#10B981' }}>+${e.teacher_amount.toFixed(2)}</span>
+                            <span style={{
+                              fontSize: '11px', padding: '2px 8px', borderRadius: '6px',
+                              background: e.status === 'paid' ? 'rgba(16, 185, 129, 0.15)' :
+                                e.status === 'available' ? 'rgba(99, 102, 241, 0.15)' :
+                                e.status === 'cancelled' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                              color: e.status === 'paid' ? '#10B981' :
+                                e.status === 'available' ? '#6366F1' :
+                                e.status === 'cancelled' ? '#EF4444' : '#F59E0B',
+                              fontWeight: 600, textTransform: 'capitalize'
+                            }}>
+                              {e.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '30px 0', opacity: 0.5 }}>
+                      <DollarSign size={32} />
+                      <p style={{ marginTop: '8px' }}>No earnings yet. Complete lessons to start earning!</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Recent payouts */}
+                {earningsData.recent_payouts.length > 0 && (
+                  <div>
+                    <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px' }}>Payout History</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {earningsData.recent_payouts.map((p: TeacherPayout) => (
+                        <div key={p.id} style={{
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          padding: '12px 16px', borderRadius: '10px',
+                          background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)'
+                        }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <span style={{ fontSize: '14px', fontWeight: 600 }}>
+                              EcoCash Payout — {p.earnings_count} lessons
+                            </span>
+                            <span style={{ fontSize: '12px', opacity: 0.5 }}>
+                              {p.phone_number} | {p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <span style={{ fontWeight: 700 }}>${p.amount.toFixed(2)}</span>
+                            <span style={{
+                              fontSize: '11px', padding: '2px 8px', borderRadius: '6px',
+                              background: p.status === 'completed' ? 'rgba(16, 185, 129, 0.15)' :
+                                p.status === 'failed' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                              color: p.status === 'completed' ? '#10B981' :
+                                p.status === 'failed' ? '#EF4444' : '#F59E0B',
+                              fontWeight: 600, textTransform: 'capitalize'
+                            }}>
+                              {p.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '40px 0', opacity: 0.5 }}>
+                <DollarSign size={40} />
+                <p style={{ marginTop: '12px' }}>Earnings data not available.</p>
+              </div>
+            )}
+
+            {/* Payout modal */}
+            {showPayoutModal && (
+              <div className="vc-modal-overlay" onClick={() => setShowPayoutModal(false)}>
+                <div className="vc-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+                  <h3 style={{ marginBottom: '16px' }}>Request EcoCash Payout</h3>
+                  <p style={{ fontSize: '14px', opacity: 0.7, marginBottom: '16px' }}>
+                    Available: <b>${earningsData?.summary.available.toFixed(2)}</b> will be sent to your EcoCash number.
+                  </p>
+
+                  {payoutError && (
+                    <div style={{
+                      padding: '10px 14px', borderRadius: '8px', marginBottom: '12px',
+                      background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.25)',
+                      color: '#EF4444', fontSize: '13px'
+                    }}>
+                      {payoutError}
+                    </div>
+                  )}
+
+                  <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', display: 'block', opacity: 0.7 }}>
+                    EcoCash Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={payoutPhone}
+                    onChange={e => setPayoutPhone(e.target.value)}
+                    placeholder="077..."
+                    maxLength={10}
+                    style={{
+                      width: '100%', padding: '12px 16px', borderRadius: '10px',
+                      border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)',
+                      color: 'white', fontSize: '15px', marginBottom: '16px', boxSizing: 'border-box'
+                    }}
+                  />
+
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      className="td-v2-btn td-v2-btn--outline"
+                      onClick={() => setShowPayoutModal(false)}
+                      style={{ flex: 1 }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="td-v2-btn td-v2-btn--primary"
+                      onClick={handleRequestPayout}
+                      disabled={requestingPayout || !payoutPhone.trim()}
+                      style={{ flex: 1 }}
+                    >
+                      {requestingPayout ? <Loader2 size={16} className="td-v2-spinner" /> : <DollarSign size={16} />}
+                      Request Payout
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}

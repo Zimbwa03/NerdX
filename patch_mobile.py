@@ -1,0 +1,146 @@
+﻿import os
+
+path = 'api/mobile.py'
+with open(path, 'r', encoding='utf-8') as f:
+    lines = f.readlines()
+
+# Find the line with '# MATH ENDPOINTS'
+insert_idx = None
+for i, line in enumerate(lines):
+    if '# MATH ENDPOINTS' in line:
+        # Go back to the === line
+        insert_idx = i - 1  # The line before is ===
+        break
+
+if insert_idx is None:
+    print('ERROR: marker not found')
+else:
+    print(f'Inserting at line {insert_idx}')
+    
+    new_code = [
+        '# ============================================================================\n',
+        '# NOTIFICATION EVENT ENDPOINTS\n',
+        '# ============================================================================\n',
+        '\n',
+        "@mobile_bp.route('/notifications/event', methods=['POST'])\n",
+        '@require_auth\n',
+        'def create_notification_event():\n',
+        '    """Create notifications for platform events (new teacher post, comment, etc.)"""\n',
+        '    try:\n',
+        '        data = request.get_json() or {}\n',
+        "        event_type = data.get('event_type')\n",
+        "        post_id = data.get('post_id', '')\n",
+        "        post_title = (data.get('post_title') or '')[:100]\n",
+        "        teacher_name = data.get('teacher_name', 'A teacher')\n",
+        "        teacher_id = data.get('teacher_id', '')\n",
+        "        comment_author = data.get('comment_author', 'Someone')\n",
+        "        comment_content = (data.get('comment_content') or '')[:80]\n",
+        '\n',
+        '        if not event_type:\n',
+        "            return jsonify({'success': False, 'message': 'event_type is required'}), 400\n",
+        '\n',
+        "        if event_type == 'new_post':\n",
+        '            title = f"New post from {teacher_name}"\n',
+        '            body = post_title if post_title else f"{teacher_name} shared a new post."\n',
+        "            notif_type = 'update'\n",
+        "            metadata = {'action_url': '/app/marketplace', 'action_label': 'View Post',\n",
+        "                        'post_id': post_id, 'teacher_id': teacher_id, 'event': 'new_post'}\n",
+        "        elif event_type == 'new_comment':\n",
+        '            title = f"{comment_author} commented on a post"\n',
+        '            body = comment_content if comment_content else f"{comment_author} left a comment."\n',
+        "            notif_type = 'info'\n",
+        "            metadata = {'action_url': '/app/marketplace', 'action_label': 'View Comment',\n",
+        "                        'post_id': post_id, 'event': 'new_comment'}\n",
+        '        else:\n',
+        '            return jsonify({' + "'success': False, 'message': f'Unknown event_type: {event_type}'" + '}), 400\n',
+        '\n',
+        '        notification_data = {\n',
+        "            'title': title, 'body': body, 'type': notif_type,\n",
+        "            'audience': 'all' if event_type == 'new_post' else 'targeted',\n",
+        "            'metadata': metadata, 'status': 'sent',\n",
+        '        }\n',
+        '        notification = make_supabase_request(\n',
+        "            'POST', 'notifications', data=notification_data, use_service_role=True)\n",
+        '        if not notification:\n',
+        "            return jsonify({'success': False, 'message': 'Failed to create notification'}), 500\n",
+        '\n',
+        "        notification_id = (notification[0]['id']\n",
+        "                           if isinstance(notification, list) else notification.get('id'))\n",
+        '        target_user_ids = []\n',
+        '\n',
+        "        if event_type == 'new_post':\n",
+        '            import requests as http_req\n',
+        "            sb_url = os.getenv('SUPABASE_URL')\n",
+        "            svc_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')\n",
+        '            if sb_url and svc_key:\n',
+        '                pg = 1\n',
+        '                while True:\n',
+        '                    resp = http_req.get(\n',
+        '                        f"{sb_url}/auth/v1/admin/users",\n',
+        '                        headers={"apikey": svc_key, "Authorization": f"Bearer {svc_key}"},\n',
+        '                        params={"page": pg, "per_page": 1000}, timeout=30)\n',
+        '                    if resp.status_code == 200:\n',
+        "                        users = resp.json().get('users', [])\n",
+        "                        target_user_ids.extend([u['id'] for u in users])\n",
+        '                        if len(users) < 1000:\n',
+        '                            break\n',
+        '                        pg += 1\n',
+        '                    else:\n',
+        '                        break\n',
+        '\n',
+        "        elif event_type == 'new_comment':\n",
+        '            if teacher_id:\n',
+        '                tp = make_supabase_request(\n',
+        "                    'GET', 'teacher_profiles', select='user_id',\n",
+        "                    filters={'id': f'eq.{teacher_id}'}, use_service_role=True)\n",
+        "                if tp and len(tp) > 0 and tp[0].get('user_id'):\n",
+        "                    target_user_ids.append(tp[0]['user_id'])\n",
+        '            if post_id:\n',
+        '                comments = make_supabase_request(\n',
+        "                    'GET', 'post_comments', select='user_id',\n",
+        "                    filters={'post_id': f'eq.{post_id}'}, use_service_role=True)\n",
+        '                if comments:\n',
+        '                    current_uid = None\n',
+        '                    try:\n',
+        '                        reg = get_user_registration(g.current_user_id)\n',
+        '                        if reg:\n',
+        "                            current_uid = str(reg.get('chat_id') or g.current_user_id)\n",
+        '                    except Exception:\n',
+        '                        pass\n',
+        '                    for c in comments:\n',
+        "                        uid = c.get('user_id')\n",
+        '                        if uid and uid not in target_user_ids and uid != current_uid:\n',
+        '                            target_user_ids.append(uid)\n',
+        '\n',
+        '        target_user_ids = list(set(target_user_ids))\n',
+        '        if not target_user_ids:\n',
+        "            return jsonify({'success': True, 'notification_id': notification_id,\n",
+        "                            'recipients_created': 0}), 200\n",
+        '\n',
+        '        total_inserted = 0\n',
+        '        for i in range(0, len(target_user_ids), 1000):\n',
+        '            batch = target_user_ids[i:i + 1000]\n',
+        "            recipients = [{'notification_id': notification_id, 'user_id': uid}\n",
+        '                          for uid in batch]\n',
+        '            result = make_supabase_request(\n',
+        "                'POST', 'notification_recipients', data=recipients, use_service_role=True)\n",
+        '            if result:\n',
+        '                total_inserted += len(result) if isinstance(result, list) else 1\n',
+        '\n',
+        '        logger.info(f"Notification event ' + "'" + '{event_type}' + "'" + ': {total_inserted} recipients")\n',
+        "        return jsonify({'success': True, 'notification_id': notification_id,\n",
+        "                        'recipients_created': total_inserted}), 200\n",
+        '\n',
+        '    except Exception as e:\n',
+        '        logger.error(f"Notification event error: {e}", exc_info=True)\n',
+        "        return jsonify({'success': False, 'message': 'Server error'}), 500\n",
+        '\n',
+        '\n',
+    ]
+    
+    lines = lines[:insert_idx] + new_code + lines[insert_idx:]
+    
+    with open(path, 'w', encoding='utf-8') as f:
+        f.writelines(lines)
+    
+    print(f'SUCCESS: Added {len(new_code)} lines at position {insert_idx}')

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   englishApi,
@@ -13,6 +13,7 @@ import { AILoadingOverlay } from '../../components/AILoadingOverlay';
 const COMPREHENSION_CREDITS = 2;
 
 export function EnglishComprehensionPage() {
+  const navigate = useNavigate();
   const { user, updateUser } = useAuth();
   const [comprehension, setComprehension] = useState<ComprehensionData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -49,6 +50,11 @@ export function EnglishComprehensionPage() {
         setError('Failed to generate comprehension. Please try again.');
       }
     } catch (e: unknown) {
+      const status = (e as { response?: { status?: number } })?.response?.status;
+      if (status === 402) {
+        navigate('/app/credits');
+        return;
+      }
       const msg = e && typeof e === 'object' && 'response' in e
         ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
         : 'Failed to generate comprehension';
@@ -96,6 +102,11 @@ export function EnglishComprehensionPage() {
       }
       setSubmitted(true);
     } catch (e: unknown) {
+      const status = (e as { response?: { status?: number } })?.response?.status;
+      if (status === 402) {
+        navigate('/app/credits');
+        return;
+      }
       setError('Failed to grade answers. Please try again.');
       console.error(e);
     } finally {

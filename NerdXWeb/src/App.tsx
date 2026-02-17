@@ -43,6 +43,7 @@ import { CommerceNotesPage } from './pages/commerce/CommerceNotesPage';
 import { CommerceNoteDetailPage } from './pages/commerce/CommerceNoteDetailPage';
 import { GeographyTopicsPage } from './pages/geography/GeographyTopicsPage';
 import { GeographyNotesPage } from './pages/geography/GeographyNotesPage';
+import { GeographyNoteDetailPage } from './pages/geography/GeographyNoteDetailPage';
 import { BESTopicsPage } from './pages/business-enterprise-skills/BESTopicsPage';
 import { BESNotesPage } from './pages/business-enterprise-skills/BESNotesPage';
 import { BESNoteDetailPage } from './pages/business-enterprise-skills/BESNoteDetailPage';
@@ -58,12 +59,26 @@ import { ALevelPlaceholderPage } from './pages/a-level/ALevelPlaceholderPage';
 import { ALevelPureMathPage } from './pages/a-level/ALevelPureMathPage';
 import { ALevelPureMathNotesPage } from './pages/a-level/ALevelPureMathNotesPage';
 import { ALevelPureMathNoteDetailPage } from './pages/a-level/ALevelPureMathNoteDetailPage';
+import { ALevelBiologyTopicsPage } from './pages/a-level-biology/ALevelBiologyTopicsPage';
+import { ALevelBiologyNotesPage } from './pages/a-level-biology/ALevelBiologyNotesPage';
+import { ALevelBiologyNoteDetailPage } from './pages/a-level-biology/ALevelBiologyNoteDetailPage';
+import { ALevelChemistryTopicsPage } from './pages/a-level-chemistry/ALevelChemistryTopicsPage';
+import { ALevelChemistryNotesPage } from './pages/a-level-chemistry/ALevelChemistryNotesPage';
+import { ALevelChemistryNoteDetailPage } from './pages/a-level-chemistry/ALevelChemistryNoteDetailPage';
+import { ALevelPhysicsTopicsPage } from './pages/a-level-physics/ALevelPhysicsTopicsPage';
+import { ALevelPhysicsNotesPage } from './pages/a-level-physics/ALevelPhysicsNotesPage';
+import { ALevelPhysicsNoteDetailPage } from './pages/a-level-physics/ALevelPhysicsNoteDetailPage';
+import { ALevelComputerScienceTopicsPage } from './pages/a-level-computer-science/ALevelComputerScienceTopicsPage';
+import { ALevelComputerScienceNotesPage } from './pages/a-level-computer-science/ALevelComputerScienceNotesPage';
+import { ALevelComputerScienceNoteDetailPage } from './pages/a-level-computer-science/ALevelComputerScienceNoteDetailPage';
+import { ALevelGeographyTopicsPage } from './pages/a-level-geography/ALevelGeographyTopicsPage';
+import { ALevelGeographyNotesPage } from './pages/a-level-geography/ALevelGeographyNotesPage';
+import { ALevelGeographyNoteDetailPage } from './pages/a-level-geography/ALevelGeographyNoteDetailPage';
 import { FormulaSheetPage } from './pages/tools/FormulaSheetPage';
 import { PastPapersPage } from './pages/tools/PastPapersPage';
 import { AccountingPage } from './pages/accounting/AccountingPage';
 import { AccountingNotesPage } from './pages/accounting/AccountingNotesPage';
 import { AccountingNoteDetailPage } from './pages/accounting/AccountingNoteDetailPage';
-import { AccountingTopicsPage } from './pages/accounting/AccountingTopicsPage';
 import { NotificationsPage } from './pages/notifications/NotificationsPage';
 import { NotificationDetailPage } from './pages/notifications/NotificationDetailPage';
 import { ReferralHubPage } from './pages/account/ReferralHubPage';
@@ -81,6 +96,7 @@ import { TeacherFeedPage } from './pages/teacher-marketplace/TeacherFeedPage';
 import { TeacherOnboardingPage } from './pages/teacher-marketplace/TeacherOnboardingPage';
 import { TeacherDashboardPage } from './pages/teacher-marketplace/TeacherDashboardPage';
 import { VirtualClassroomPage } from './pages/teacher-marketplace/VirtualClassroomPage';
+import { StudentLessonsPage } from './pages/teacher-marketplace/StudentLessonsPage';
 
 function App() {
   return (
@@ -119,11 +135,21 @@ function App() {
               <Route path="pure-math" element={<ALevelPureMathPage />} />
               <Route path="pure-math/notes" element={<ALevelPureMathNotesPage />} />
               <Route path="pure-math/notes/:topic" element={<ALevelPureMathNoteDetailPage />} />
-              <Route path="a-level-chemistry" element={<ALevelPlaceholderPage title="A-Level Chemistry" fallbackPath="/app/chemistry" />} />
-              <Route path="a-level-physics" element={<ALevelPlaceholderPage title="A-Level Physics" fallbackPath="/app/physics" />} />
-              <Route path="a-level-biology" element={<ALevelPlaceholderPage title="A-Level Biology" fallbackPath="/app/biology" />} />
-              <Route path="a-level-computer-science" element={<ALevelPlaceholderPage title="A-Level Computer Science" fallbackPath="/app/computer-science" />} />
-              <Route path="a-level-geography" element={<ALevelPlaceholderPage title="A-Level Geography" fallbackPath="/app/geography" />} />
+              <Route path="a-level-chemistry" element={<ALevelChemistryTopicsPage />} />
+              <Route path="a-level-chemistry/notes" element={<ALevelChemistryNotesPage />} />
+              <Route path="a-level-chemistry/notes/:topicId" element={<ALevelChemistryNoteDetailPage />} />
+              <Route path="a-level-physics" element={<ALevelPhysicsTopicsPage />} />
+              <Route path="a-level-physics/notes" element={<ALevelPhysicsNotesPage />} />
+              <Route path="a-level-physics/notes/:topicId" element={<ALevelPhysicsNoteDetailPage />} />
+              <Route path="a-level-biology" element={<ALevelBiologyTopicsPage />} />
+              <Route path="a-level-biology/notes" element={<ALevelBiologyNotesPage />} />
+              <Route path="a-level-biology/notes/:topicId" element={<ALevelBiologyNoteDetailPage />} />
+              <Route path="a-level-computer-science" element={<ALevelComputerScienceTopicsPage />} />
+              <Route path="a-level-computer-science/notes" element={<ALevelComputerScienceNotesPage />} />
+              <Route path="a-level-computer-science/notes/:topicSlug" element={<ALevelComputerScienceNoteDetailPage />} />
+              <Route path="a-level-geography" element={<ALevelGeographyTopicsPage />} />
+              <Route path="a-level-geography/notes" element={<ALevelGeographyNotesPage />} />
+              <Route path="a-level-geography/notes/:topicId" element={<ALevelGeographyNoteDetailPage />} />
               <Route path="project-assistant" element={<ProjectAssistantHubPage />} />
               <Route path="project-assistant/:projectId" element={<ProjectAssistantChatPage />} />
               <Route path="nerdx-live" element={<NerdXLivePage />} />
@@ -131,7 +157,7 @@ function App() {
               <Route path="formula-sheet" element={<FormulaSheetPage />} />
               <Route path="past-papers" element={<PastPapersPage />} />
               <Route path="accounting" element={<AccountingPage />} />
-              <Route path="accounting/topics" element={<AccountingTopicsPage />} />
+              <Route path="accounting/topics" element={<Navigate to="/app/accounting" replace />} />
               <Route path="accounting/notes" element={<AccountingNotesPage />} />
               <Route path="accounting/notes/:topicId" element={<AccountingNoteDetailPage />} />
               <Route path="mathematics" element={<MathematicsTopicsPage />} />
@@ -145,6 +171,7 @@ function App() {
               <Route path="computer-science/notes/:topicSlug" element={<ComputerScienceNoteDetailPage />} />
               <Route path="geography" element={<GeographyTopicsPage />} />
               <Route path="geography/notes" element={<GeographyNotesPage />} />
+              <Route path="geography/notes/:topicId" element={<GeographyNoteDetailPage />} />
               <Route path="commerce" element={<CommerceTopicsPage />} />
               <Route path="commerce/notes" element={<CommerceNotesPage />} />
               <Route path="commerce/notes/:topicSlug" element={<CommerceNoteDetailPage />} />
@@ -178,6 +205,7 @@ function App() {
               <Route path="sciences/notes" element={<ScienceNotesPage />} />
               <Route path="sciences/tutor" element={<Navigate to="/app/teacher" state={{ subject: 'Biology' }} replace />} />
               <Route path="marketplace" element={<FindTeacherPage />} />
+              <Route path="my-lessons" element={<StudentLessonsPage />} />
               <Route path="marketplace/feed" element={<TeacherFeedPage />} />
               <Route path="marketplace/teacher/:teacherId" element={<TeacherProfilePage />} />
               <Route path="marketplace/book/:teacherId" element={<BookLessonPage />} />

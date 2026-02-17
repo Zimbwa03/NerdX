@@ -31,6 +31,26 @@
     --math-primary: #2979FF;
     --math-accent: #82B1FF;
     --math-glow: rgba(41, 121, 255, 0.4);
+
+    /* Geography Theme (Green) */
+    --geo-primary: #2E7D32;
+    --geo-accent: #66BB6A;
+    --geo-glow: rgba(46, 125, 50, 0.4);
+
+    /* Commerce Theme (Gold) */
+    --com-primary: #B8860B;
+    --com-accent: #EEC66B;
+    --com-glow: rgba(184, 134, 11, 0.4);
+
+    /* Accounting Theme (Gold) */
+    --acc-primary: #B8860B;
+    --acc-accent: #EEC66B;
+    --acc-glow: rgba(184, 134, 11, 0.4);
+
+    /* Business Enterprise and Skills Theme (Green) */
+    --bes-primary: #2E7D32;
+    --bes-accent: #81C784;
+    --bes-glow: rgba(46, 125, 50, 0.4);
 }
 
 .science-universe-page {
@@ -97,6 +117,41 @@
     background:
         radial-gradient(circle at 10% 30%, rgba(41, 121, 255, 0.1) 0%, transparent 40%),
         radial-gradient(circle at 85% 70%, rgba(68, 138, 255, 0.08) 0%, transparent 40%);
+}
+
+/* Computer Science Background */
+.cs-bg {
+    background:
+        radial-gradient(circle at 15% 25%, rgba(2, 136, 209, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 75%, rgba(3, 169, 244, 0.1) 0%, transparent 40%);
+}
+
+/* Geography Background */
+.geo-bg {
+    background:
+        radial-gradient(circle at 15% 25%, rgba(46, 125, 50, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 75%, rgba(102, 187, 106, 0.1) 0%, transparent 40%);
+}
+
+/* Commerce Background */
+.com-bg {
+    background:
+        radial-gradient(circle at 15% 25%, rgba(184, 134, 11, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 75%, rgba(238, 198, 107, 0.1) 0%, transparent 40%);
+}
+
+/* Accounting Background */
+.acc-bg {
+    background:
+        radial-gradient(circle at 15% 25%, rgba(184, 134, 11, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 75%, rgba(238, 198, 107, 0.1) 0%, transparent 40%);
+}
+
+/* Business Enterprise and Skills Background */
+.bes-bg {
+    background:
+        radial-gradient(circle at 15% 25%, rgba(46, 125, 50, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 75%, rgba(129, 199, 132, 0.1) 0%, transparent 40%);
 }
 
 .science-grid-overlay {
@@ -274,6 +329,21 @@
     border-color: rgba(41, 121, 255, 0.4);
 }
 
+.cs .science-feature-card:hover {
+    box-shadow: 0 10px 40px rgba(2, 136, 209, 0.15);
+    border-color: rgba(2, 136, 209, 0.4);
+}
+
+.acc .science-feature-card:hover {
+    box-shadow: 0 10px 40px rgba(184, 134, 11, 0.15);
+    border-color: rgba(184, 134, 11, 0.4);
+}
+
+.bes .science-feature-card:hover {
+    box-shadow: 0 10px 40px rgba(46, 125, 50, 0.15);
+    border-color: rgba(46, 125, 50, 0.4);
+}
+
 .feature-icon-box {
     width: 56px;
     height: 56px;
@@ -439,6 +509,19 @@
     box-shadow: 0 12px 40px rgba(6, 182, 212, 0.2), 0 0 20px rgba(6, 182, 212, 0.08);
 }
 
+/* Computer Science */
+.cs .science-topic-card {
+    background: linear-gradient(135deg, rgba(2, 136, 209, 0.12) 0%, rgba(2, 136, 209, 0.04) 100%);
+    border-color: rgba(2, 136, 209, 0.15);
+    box-shadow: 0 2px 12px rgba(2, 136, 209, 0.06), inset 0 1px 0 rgba(79, 195, 247, 0.08);
+}
+
+.cs .science-topic-card:hover {
+    background: linear-gradient(135deg, rgba(2, 136, 209, 0.22) 0%, rgba(2, 136, 209, 0.10) 100%);
+    border-color: rgba(2, 136, 209, 0.4);
+    box-shadow: 0 12px 40px rgba(2, 136, 209, 0.2), 0 0 20px rgba(2, 136, 209, 0.08);
+}
+
 /* History */
 .hist .science-topic-card {
     background: linear-gradient(135deg, rgba(93, 64, 55, 0.14) 0%, rgba(93, 64, 55, 0.05) 100%);
@@ -450,6 +533,32 @@
     background: linear-gradient(135deg, rgba(93, 64, 55, 0.25) 0%, rgba(93, 64, 55, 0.12) 100%);
     border-color: rgba(141, 110, 99, 0.4);
     box-shadow: 0 12px 40px rgba(93, 64, 55, 0.2), 0 0 20px rgba(93, 64, 55, 0.1);
+}
+
+/* Accounting */
+.acc .science-topic-card {
+    background: linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(184, 134, 11, 0.04) 100%);
+    border-color: rgba(184, 134, 11, 0.15);
+    box-shadow: 0 2px 12px rgba(184, 134, 11, 0.06), inset 0 1px 0 rgba(238, 198, 107, 0.08);
+}
+
+.acc .science-topic-card:hover {
+    background: linear-gradient(135deg, rgba(184, 134, 11, 0.22) 0%, rgba(184, 134, 11, 0.10) 100%);
+    border-color: rgba(184, 134, 11, 0.4);
+    box-shadow: 0 12px 40px rgba(184, 134, 11, 0.2), 0 0 20px rgba(184, 134, 11, 0.08);
+}
+
+/* Business Enterprise and Skills */
+.bes .science-topic-card {
+    background: linear-gradient(135deg, rgba(46, 125, 50, 0.12) 0%, rgba(46, 125, 50, 0.04) 100%);
+    border-color: rgba(46, 125, 50, 0.15);
+    box-shadow: 0 2px 12px rgba(46, 125, 50, 0.06), inset 0 1px 0 rgba(129, 199, 132, 0.08);
+}
+
+.bes .science-topic-card:hover {
+    background: linear-gradient(135deg, rgba(46, 125, 50, 0.22) 0%, rgba(46, 125, 50, 0.10) 100%);
+    border-color: rgba(46, 125, 50, 0.4);
+    box-shadow: 0 12px 40px rgba(46, 125, 50, 0.2), 0 0 20px rgba(46, 125, 50, 0.08);
 }
 
 /* --- Topic Icon (redesigned with colored backgrounds) --- */
@@ -516,6 +625,17 @@
     box-shadow: 0 0 16px rgba(6, 182, 212, 0.25);
 }
 
+/* Computer Science icon */
+.cs .topic-icon-small {
+    color: #4FC3F7;
+    background: rgba(2, 136, 209, 0.15);
+}
+
+.cs .science-topic-card:hover .topic-icon-small {
+    background: rgba(2, 136, 209, 0.28);
+    box-shadow: 0 0 16px rgba(2, 136, 209, 0.25);
+}
+
 /* History icon */
 .hist .topic-icon-small {
     color: #A1887F;
@@ -525,6 +645,28 @@
 .hist .science-topic-card:hover .topic-icon-small {
     background: rgba(93, 64, 55, 0.32);
     box-shadow: 0 0 16px rgba(93, 64, 55, 0.2);
+}
+
+/* Accounting icon */
+.acc .topic-icon-small {
+    color: #EEC66B;
+    background: rgba(184, 134, 11, 0.15);
+}
+
+.acc .science-topic-card:hover .topic-icon-small {
+    background: rgba(184, 134, 11, 0.28);
+    box-shadow: 0 0 16px rgba(184, 134, 11, 0.25);
+}
+
+/* Business Enterprise and Skills icon */
+.bes .topic-icon-small {
+    color: #81C784;
+    background: rgba(46, 125, 50, 0.15);
+}
+
+.bes .science-topic-card:hover .topic-icon-small {
+    background: rgba(46, 125, 50, 0.28);
+    box-shadow: 0 0 16px rgba(46, 125, 50, 0.25);
 }
 
 /* --- Topic Card Name --- */
@@ -868,6 +1010,8 @@
 .bio .science-universe-page .science-notes-card.summary-card { border-left-color: var(--bio-primary); }
 .chem .science-universe-page .science-notes-card.summary-card { border-left-color: var(--chem-primary); }
 .phys .science-universe-page .science-notes-card.summary-card { border-left-color: var(--phys-primary); }
+.acc .science-universe-page .science-notes-card.summary-card { border-left-color: var(--acc-primary); }
+.bes .science-universe-page .science-notes-card.summary-card { border-left-color: var(--bes-primary); }
 
 .science-universe-page .science-notes-card .card-header {
     display: flex;
@@ -982,6 +1126,10 @@
 .chem .science-universe-page .section-header-btn:hover { background: rgba(245, 158, 11, 0.08); }
 .phys .science-universe-page .section-header-btn:hover { background: rgba(6, 182, 212, 0.08); }
 .hist .science-universe-page .section-header-btn:hover { background: rgba(93, 64, 55, 0.1); }
+.geo .science-universe-page .section-header-btn:hover { background: rgba(46, 125, 50, 0.1); }
+.com .science-universe-page .section-header-btn:hover { background: rgba(184, 134, 11, 0.1); }
+.acc .science-universe-page .section-header-btn:hover { background: rgba(184, 134, 11, 0.1); }
+.bes .science-universe-page .section-header-btn:hover { background: rgba(46, 125, 50, 0.1); }
 
 .science-universe-page .section-number {
     flex-shrink: 0;

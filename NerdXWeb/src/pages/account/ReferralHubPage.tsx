@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Copy, Gift, Share2, Users } from 'lucide-react';
+import { Copy, Gift, LinkIcon, Share2, Users } from 'lucide-react';
 import { FloatingParticles } from '../../components/FloatingParticles';
 import { accountApi, type ReferralShareLink, type ReferralStats } from '../../services/api/accountApi';
 
@@ -11,6 +11,10 @@ function formatDate(dateString: string | null) {
   } catch {
     return dateString;
   }
+}
+
+function buildWebLink(code: string): string {
+  return code ? `${window.location.origin}/register?ref=${code}` : '';
 }
 
 export function ReferralHubPage() {
@@ -47,7 +51,8 @@ export function ReferralHubPage() {
   };
 
   const referralCode = stats?.referral_code || '';
-  const shareMessage = shareInfo?.share_message || '';
+  const webLink = shareInfo?.web_link || buildWebLink(referralCode);
+  const bonusPerReferral = shareInfo?.bonus_per_referral ?? 10;
 
   const copyCode = async () => {
     if (!referralCode) return;
@@ -59,19 +64,32 @@ export function ReferralHubPage() {
     }
   };
 
+  const copyLink = async () => {
+    if (!webLink) return;
+    try {
+      await navigator.clipboard.writeText(webLink);
+      showToast('Referral link copied!');
+    } catch {
+      showToast('Copy failed');
+    }
+  };
+
   const shareGeneral = async () => {
-    if (!shareMessage) return;
+    const text = webLink
+      ? `Join NerdX and ace your exams! Sign up using my link: ${webLink}`
+      : (shareInfo?.share_message || '');
+    if (!text) return;
     const navAny: any = navigator;
     if (typeof navAny.share === 'function') {
       try {
-        await navAny.share({ text: shareMessage });
+        await navAny.share({ text });
         return;
       } catch {
         /* ignore */
       }
     }
     try {
-      await navigator.clipboard.writeText(shareMessage);
+      await navigator.clipboard.writeText(text);
       showToast('Copied share message');
     } catch {
       showToast('Share not supported');
@@ -79,9 +97,10 @@ export function ReferralHubPage() {
   };
 
   const shareWhatsApp = () => {
-    const url = shareInfo?.whatsapp_link;
-    if (!url) return;
-    window.open(url, '_blank', 'noreferrer');
+    const msg = encodeURIComponent(
+      `Hey! Join NerdX - the AI-powered study platform - using my referral link and get free starter credits:\n\n${webLink}\n\nAce your ZIMSEC exams with AI tutoring, notes, and practice questions!`
+    );
+    window.open(`https://wa.me/?text=${msg}`, '_blank', 'noreferrer');
   };
 
   const successful = stats?.successful_referrals || 0;
@@ -128,7 +147,7 @@ export function ReferralHubPage() {
               </div>
               <div>
                 <h2>Invite friends, earn credits</h2>
-                <p>Earn {shareInfo?.bonus_per_referral ?? 0} credits for each successful referral.</p>
+                <p>Earn <strong>{bonusPerReferral} credits</strong> for each successful referral.</p>
               </div>
             </div>
 
@@ -141,14 +160,40 @@ export function ReferralHubPage() {
                 </button>
               </div>
 
+              {/* Shareable web link */}
+              {webLink && (
+                <div style={{ marginTop: 16 }}>
+                  <div className="referral-code-label">Your referral link</div>
+                  <div className="referral-code-row" style={{ marginTop: 6 }}>
+                    <code className="referral-code" style={{ fontSize: 12, wordBreak: 'break-all' }}>{webLink}</code>
+                    <button type="button" className="referral-btn primary" onClick={copyLink}>
+                      <LinkIcon size={16} /> Copy Link
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="referral-share-row">
-                <button type="button" className="referral-btn" onClick={shareWhatsApp} disabled={!shareInfo?.whatsapp_link}>
+                <button type="button" className="referral-btn" onClick={shareWhatsApp} disabled={!webLink}>
                   WhatsApp
                 </button>
-                <button type="button" className="referral-btn" onClick={shareGeneral} disabled={!shareMessage}>
+                <button type="button" className="referral-btn" onClick={shareGeneral} disabled={!webLink}>
                   <Share2 size={16} /> Share
                 </button>
               </div>
+            </div>
+
+            {/* How it works */}
+            <div style={{
+              marginTop: 20, padding: '16px 18px',
+              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 14, fontSize: 14, lineHeight: 1.7, color: 'rgba(255,255,255,0.7)',
+            }}>
+              <div style={{ fontWeight: 600, color: '#fff', marginBottom: 8 }}>How it works</div>
+              <div>1. Share your link with friends</div>
+              <div>2. They click the link and register on NerdX</div>
+              <div>3. You receive <strong style={{ color: '#10B981' }}>+{bonusPerReferral} credits</strong> instantly</div>
+              <div style={{ marginTop: 6, opacity: 0.6, fontSize: 13 }}>Only you (the referrer) earn credits. New users receive their own welcome bonus.</div>
             </div>
           </section>
 
@@ -193,7 +238,7 @@ export function ReferralHubPage() {
                         </div>
                         <div className="referral-user-date">Joined {formatDate(u.joined_date)}</div>
                       </div>
-                      <div className="referral-user-badge">+5</div>
+                      <div className="referral-user-badge">+{bonusPerReferral}</div>
                     </div>
                   ))}
                 </div>
@@ -227,4 +272,3 @@ export function ReferralHubPage() {
     </div>
   );
 }
-

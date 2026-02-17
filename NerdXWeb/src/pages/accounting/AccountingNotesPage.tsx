@@ -1,84 +1,102 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, ChevronUp, FileText, Receipt } from 'lucide-react';
-import { accountingTopics, type AccountingTopic } from '../../data/accounting/topics';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, BookOpen, Calculator } from 'lucide-react';
+import { accountingTopics } from '../../data/accounting/topics';
+import '../sciences/ScienceUniverse.css';
 
 export function AccountingNotesPage() {
-  const navigate = useNavigate();
-  const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
-
-  const toggle = (topic: AccountingTopic) => {
-    setExpandedTopic((prev) => (prev === topic.id ? null : topic.id));
-  };
+  const notesTopics = accountingTopics.filter((topic) => topic.hasNotes);
 
   return (
-    <div className="accounting-notes-page">
-      <header className="subject-header-v2">
-        <Link to="/app/accounting" className="back-btn-v2">
-          <ArrowLeft size={20} />
-          <span>Back</span>
-        </Link>
-        <div className="subject-header-content">
-          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #B8860B, #8B6914)' }}>
-            <Receipt size={28} />
-          </div>
-          <div>
-            <h1>Accounting Notes</h1>
-            <p>ZIMSEC O Level - Principles of Accounting (7112)</p>
-          </div>
+    <div className="science-universe-page acc">
+      <div className="science-universe-bg acc-bg" />
+      <div className="science-grid-overlay" />
+
+      <Link to="/app/accounting" className="super-back-btn">
+        <ArrowLeft size={24} />
+      </Link>
+
+      <div className="science-hero">
+        <div className="science-hero-badge" style={{ background: 'rgba(184, 134, 11, 0.18)', border: '1px solid rgba(184, 134, 11, 0.35)' }}>
+          <Calculator size={14} />
+          <span>ACCOUNTING NOTES</span>
         </div>
-      </header>
+        <h1 className="science-hero-title" style={{ background: 'linear-gradient(135deg, #B8860B, #DAA520, #F6C453)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          Study Notes
+        </h1>
+        <p style={{ maxWidth: 650, margin: '0 auto', opacity: 0.8 }}>
+          Comprehensive ZIMSEC O-Level Accounting notes with summaries, detailed sections, key points, and exam tips.
+        </p>
+      </div>
 
-      <div className="accounting-notes-wrap">
-        <div className="accounting-notes-intro">
-          <h2>Topics</h2>
-          <p>Tap a topic to see its description; open detailed notes where available.</p>
+      <div style={{ maxWidth: 980, margin: '0 auto', padding: '0 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <BookOpen size={24} style={{ color: '#EEC66B' }} />
+          <span style={{ fontSize: 22, fontWeight: 700 }}>All Topics</span>
+          <span style={{ fontSize: 12, background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: 12 }}>
+            {notesTopics.length} Topics
+          </span>
         </div>
 
-        <div className="accounting-topics-list">
-          {accountingTopics.map((topic, index) => {
-            const expanded = expandedTopic === topic.id;
-            return (
-              <div key={topic.id} className={`accounting-topic ${expanded ? 'expanded' : ''}`}>
-                <button type="button" className="accounting-topic-head" onClick={() => toggle(topic)}>
-                  <div className="accounting-topic-left">
-                    <div className="accounting-topic-index">{index + 1}</div>
-                    <div className="accounting-topic-title">
-                      <div className="accounting-topic-name">{topic.name}</div>
-                      {topic.hasNotes && (
-                        <div className="accounting-topic-badges">
-                          <span className="accounting-badge">
-                            <FileText size={14} /> Notes
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="accounting-topic-right">
-                    {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                  </div>
-                </button>
-
-                {expanded && (
-                  <div className="accounting-topic-body">
-                    <div className="accounting-topic-desc">{topic.description}</div>
-                    {topic.hasNotes && (
-                      <button
-                        type="button"
-                        className="accounting-view-notes"
-                        onClick={() => navigate(`/app/accounting/notes/${topic.id}`)}
-                      >
-                        View detailed notes
-                      </button>
-                    )}
-                  </div>
-                )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {notesTopics.map((topic, idx) => (
+            <Link
+              key={topic.id}
+              to={`/app/accounting/notes/${topic.id}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+                padding: '16px 20px',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 16,
+                color: '#fff',
+                textDecoration: 'none',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'rgba(184, 134, 11, 0.15)';
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(238, 198, 107, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)';
+              }}
+            >
+              <div style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                background: 'rgba(184, 134, 11, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#EEC66B',
+                fontWeight: 700,
+                fontSize: 14,
+                flexShrink: 0,
+              }}>
+                {idx + 1}
               </div>
-            );
-          })}
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 15, fontWeight: 600 }}>{topic.name}</div>
+                <div style={{ fontSize: 13, opacity: 0.65, marginTop: 2 }}>{topic.description}</div>
+              </div>
+              <span style={{
+                padding: '6px 14px',
+                borderRadius: 20,
+                background: 'rgba(184, 134, 11, 0.15)',
+                color: '#EEC66B',
+                fontSize: 12,
+                fontWeight: 600,
+                flexShrink: 0,
+              }}>
+                View Notes
+              </span>
+            </Link>
+          ))}
         </div>
       </div>
     </div>
   );
 }
-

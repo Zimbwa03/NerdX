@@ -4,7 +4,7 @@ import { mathNotesApi } from '../../services/api/mathNotesApi';
 import type { MathTopicNotes } from '../../data/mathNotes/types';
 import { MathRenderer } from '../../components/MathRenderer';
 import { ArrowLeft, Info, ChevronDown, ChevronUp, CheckCircle, Lightbulb, PenLine } from 'lucide-react';
-import { VideoPlayer, AudioPlayer } from '../../components/MediaPlayer';
+import { VideoPlayer } from '../../components/MediaPlayer';
 
 export function MathNotesPage() {
   const { topic: topicSlug } = useParams<{ topic: string }>();
@@ -100,14 +100,6 @@ export function MathNotesPage() {
                   <VideoPlayer
                     src={section.videoUrl}
                     title={`Video: ${section.title}`}
-                    accentColor="#7C4DFF"
-                  />
-                )}
-                {section.audioUrl && (
-                  <AudioPlayer
-                    src={section.audioUrl}
-                    title={`Audio: ${section.title}`}
-                    subject="Mathematics"
                     accentColor="#7C4DFF"
                   />
                 )}

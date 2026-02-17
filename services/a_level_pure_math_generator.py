@@ -455,6 +455,8 @@ COMPREHENSIVE SUBTOPIC COVERAGE:
 - This question MUST test understanding of a SPECIFIC subtopic within {topic}
 - Reference: ZIMSEC 6042 past papers and Cambridge 9709/9231 past papers
 - Questions should rotate through all subtopics to ensure comprehensive topic coverage
+- Align tightly with the learning objectives, subtopics, and template patterns from the notes block for this topic.
+- Across repeated generations for the same topic, progress from simpler fundamentals to more complex exam-style applications.
 {must_use}
 {part1_block}
 
@@ -467,7 +469,8 @@ KEY FORMULAS (use when appropriate):
 TYPICAL QUESTION TYPES FOR THIS TOPIC:
 {', '.join(question_types) if question_types else 'Various standard types'}
 
-CRITICAL MATH FORMATTING RULES - PLAIN TEXT ONLY:
+CRITICAL MATH FORMATTING RULES - LATEX REQUIRED:
+IMPORTANT OVERRIDE: Use standard LaTeX for all mathematical notation, even if examples below show plain text.
 - ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
 - Use Unicode superscripts: x², x³, x⁴, xⁿ (NOT x^2 or $x^2$)
 - Use Unicode subscripts: x₁, x₂, aₙ (NOT x_1 or $x_1$)
@@ -510,7 +513,7 @@ COMMON EXAM TRAPS TO REFERENCE:
 REQUIREMENTS:
 1. Create ONE multiple choice question with exactly 4 options (A, B, C, D)
 2. The question MUST be at A Level standard - NOT O Level
-3. Use PLAIN TEXT Unicode math notation as described above - NO LaTeX
+3. Use LaTeX for all mathematical expressions so MathRenderer/KaTeX can render correctly
 4. All options must be plausible and based on common A-Level misconceptions
 5. For calculation questions, ensure workings are required (not just substitution)
 6. The correct answer must be mathematically rigorous and exact (unless approximation requested)
@@ -606,6 +609,8 @@ COMPREHENSIVE SUBTOPIC COVERAGE:
 - Each part should test a DIFFERENT aspect/subtopic of {topic}
 - Reference: ZIMSEC 6042 past papers and Cambridge 9709/9231 past papers
 - To ensure comprehensive coverage, different subtopics should be tested across multiple question generations
+- Align tightly with the learning objectives, subtopics, and template patterns from the notes block for this topic.
+- Ensure part ordering moves from simpler to more complex cognitive demand.
 {must_use}
 {part1_block}
 
@@ -618,7 +623,8 @@ KEY FORMULAS (use when appropriate):
 TYPICAL QUESTION TYPES FOR THIS TOPIC:
 {', '.join(question_types) if question_types else 'Various standard types'}
 
-CRITICAL MATH FORMATTING RULES - PLAIN TEXT ONLY:
+CRITICAL MATH FORMATTING RULES - LATEX REQUIRED:
+IMPORTANT OVERRIDE: Use standard LaTeX for all mathematical notation, even if examples below show plain text.
 - ABSOLUTELY NO LaTeX delimiters like $ or \\( or \\).
 - Use Unicode superscripts: x², x³, x⁴, xⁿ (NOT x^2 or $x^2$)
 - Use Unicode subscripts: x₁, x₂, aₙ (NOT x_1 or $x_1$)
@@ -677,7 +683,7 @@ REQUIREMENTS:
 5. Include clear mark allocations with method marks (M) and accuracy marks (A)
 6. Provide complete step-by-step worked solutions for each part
 7. Questions should flow logically with parts building on each other
-8. Use PLAIN TEXT Unicode math notation - NO LaTeX
+8. Use LaTeX for all mathematical notation so rendering is consistent
 9. If a diagram/graph (e.g., Argand, function sketch, shape) helps, include a "visualization" block describing what to plot
 10. Include marking scheme with common errors and examiner comments
 
@@ -743,13 +749,10 @@ Generate ONE A Level Pure Mathematics structured question now:"""
         return """You are an expert A Level Pure Mathematics examiner for ZIMSEC examinations.
 Generate questions with clear solutions.
 
-CRITICAL: Use plain text math notation and never use LaTeX or $ symbols:
-- Do not include $ delimiters.
-- Use x^2, x^3, x^n for powers (no LaTeX).
-- Use fractions as a/b or (a+b)/(c+d) (no LaTeX).
-- Use sqrt(...) for square roots.
-- Use symbols like sum, pi, infinity, +/- in plain text.
-- Use asin, acos, atan for inverse trig.
+CRITICAL: Use standard LaTeX for mathematical notation:
+- Use $...$ for inline math and $$...$$ for display math when needed.
+- Prefer canonical LaTeX commands: \\frac, \\sqrt, \\sum, \\int, \\sin, \\cos, \\tan, \\theta.
+- Keep equations syntactically valid for KaTeX/MathRenderer.
 
 Keep explanations concise (2-3 sentences). Always respond with valid, complete JSON only."""
 
@@ -1036,7 +1039,7 @@ Keep explanations concise (2-3 sentences). Always respond with valid, complete J
                     logger.error("Structured question must have at least 2 parts")
                     return None
             
-            # Normalize math formatting to plain text Unicode for app display
+            # Preserve LaTeX notation for frontend MathRenderer/KaTeX
             question_data = self._normalize_question_data(question_data)
             
             return question_data
@@ -1102,7 +1105,7 @@ Keep explanations concise (2-3 sentences). Always respond with valid, complete J
             return None
     
     def _normalize_question_data(self, question_data: Dict) -> Dict:
-        """Convert any LaTeX-like math to plain text Unicode for mobile display."""
+        """Preserve LaTeX from model output and only apply light whitespace cleanup."""
         def normalize(obj):
             if isinstance(obj, str):
                 return self._normalize_math_text(obj)
@@ -1111,122 +1114,15 @@ Keep explanations concise (2-3 sentences). Always respond with valid, complete J
             if isinstance(obj, dict):
                 return {k: normalize(v) for k, v in obj.items()}
             return obj
-        
-        # Top-level string fields
-        for field in ["question", "explanation", "solution", "teaching_explanation"]:
-            if field in question_data:
-                question_data[field] = self._normalize_math_text(question_data[field])
-        
-        # Options
-        if "options" in question_data and isinstance(question_data["options"], dict):
-            question_data["options"] = {k: self._normalize_math_text(v) for k, v in question_data["options"].items()}
-        
-        # Structured parts
-        if "parts" in question_data and isinstance(question_data["parts"], list):
-            normalized_parts = []
-            for part in question_data["parts"]:
-                if not isinstance(part, dict):
-                    normalized_parts.append(part)
-                    continue
-                part_copy = part.copy()
-                for field in ["question", "solution", "mark_scheme", "marking_scheme", "expected_answer"]:
-                    if field in part_copy:
-                        part_copy[field] = normalize(part_copy[field])
-                normalized_parts.append(part_copy)
-            question_data["parts"] = normalized_parts
-        
-        # Common mistakes or other lists
-        if "common_mistakes" in question_data:
-            question_data["common_mistakes"] = normalize(question_data["common_mistakes"])
-        
-        return question_data
-    
+
+        return normalize(question_data)
+
     def _normalize_math_text(self, text: str) -> str:
-        """Best-effort conversion of LaTeX-ish math to plain text Unicode."""
+        """Preserve LaTeX content and normalize spacing only."""
         if not isinstance(text, str):
             return text
-        
-        original = text
-        
-        # Remove surrounding $ or $$ markers
-        text = text.replace("$$", "")
-        text = text.replace("$", "")
-        
-        # Common replacements
-        replacements = {
-            r"\\times": "×",
-            r"\\cdot": "·",
-            r"\\pi": "π",
-            r"\\infty": "∞",
-            r"\\pm": "±",
-            r"\\to": "→",
-            r"\\rightarrow": "→",
-            r"\\Leftarrow": "⟸",
-            r"\\Rightarrow": "⟹",
-            r"\\left": "",
-            r"\\right": "",
-            r"\\,": " ",
-        }
-        for old, new in replacements.items():
-            text = text.replace(old, new)
-        
-        # Fractions: \frac{a}{b} -> (a)/(b)
-        def replace_frac(match):
-            num = match.group(1)
-            den = match.group(2)
-            return f"({num})/({den})"
-        while "\\frac" in text:
-            new_text = re.sub(r"\\frac\{([^{}]+)\}\{([^{}]+)\}", replace_frac, text)
-            if new_text == text:
-                break
-            text = new_text
-        
-        # Square roots: \sqrt{...} -> √(...)
-        text = re.sub(r"\\sqrt\{([^{}]+)\}", r"√(\1)", text)
-        
-        # Trig inverse: \sin^{-1}(x) -> sin⁻¹(x)
-        text = text.replace("\\sin^{-1}", "sin⁻¹")
-        text = text.replace("\\cos^{-1}", "cos⁻¹")
-        text = text.replace("\\tan^{-1}", "tan⁻¹")
-        
-        # Superscripts mapping
-        superscript_map = {
-            "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴",
-            "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹",
-            "+": "⁺", "-": "⁻", "n": "ⁿ", "k": "ᵏ", "m": "ᵐ"
-        }
-        def to_superscript(s: str) -> str:
-            return "".join(superscript_map.get(ch, ch) for ch in s)
-        
-        # ^{...} -> superscript
-        text = re.sub(r"\^\{([^{}]+)\}", lambda m: to_superscript(m.group(1)), text)
-        # ^digit -> superscript
-        text = re.sub(r"\^([0-9+\-nkm])", lambda m: to_superscript(m.group(1)), text)
-        
-        # Subscripts mapping
-        subscript_map = {
-            "0": "₀", "1": "₁", "2": "₂", "3": "₃", "4": "₄",
-            "5": "₅", "6": "₆", "7": "₇", "8": "₈", "9": "₉",
-            "+": "₊", "-": "₋", "n": "ₙ", "k": "ₖ", "m": "ₘ"
-        }
-        def to_subscript(s: str) -> str:
-            return "".join(subscript_map.get(ch, ch) for ch in s)
-        
-        # _{...} -> subscript
-        text = re.sub(r"_\{([^{}]+)\}", lambda m: to_subscript(m.group(1)), text)
-        # _digit -> subscript
-        text = re.sub(r"_([0-9+\-nkm])", lambda m: to_subscript(m.group(1)), text)
-        
-        # Clean remaining backslashes
-        text = text.replace("\\", "")
-        
-        # Collapse multiple spaces
-        text = re.sub(r"\s{2,}", " ", text).strip()
-        
-        if original != text:
-            logger.debug(f"Normalized math text: '{original}' -> '{text}'")
-        return text
-    
+        return re.sub(r"\s{2,}", " ", text).strip()
+
     def _get_fallback_question(self, topic: str, difficulty: str) -> Dict:
         """Return a fallback question when AI generation fails"""
         fallback_questions = {

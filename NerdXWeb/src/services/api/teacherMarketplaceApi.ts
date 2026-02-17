@@ -1,5 +1,6 @@
 // Teacher Marketplace API – Supabase CRUD operations
 import { supabase } from '../supabase';
+import api from './config';
 import type {
   TeacherProfile,
   TeacherSubject,
@@ -432,14 +433,15 @@ export async function updateBookingStatus(
   meetLink?: string,
 ): Promise<boolean> {
   try {
+    if (status === 'confirmed') {
+      const response = await api.post('/api/mobile/teacher/bookings/confirm', {
+        booking_id: bookingId,
+      });
+      return !!response?.data?.success;
+    }
+
     const updates: Record<string, unknown> = { status };
     if (meetLink) updates.meet_link = meetLink;
-    // Auto-generate a room_id when confirming a booking (used for Jitsi + tldraw)
-    if (status === 'confirmed') {
-      const shortId = bookingId.slice(0, 8);
-      const rand = Math.random().toString(36).slice(2, 8);
-      updates.room_id = `nerdx-${shortId}-${rand}`;
-    }
     const { error } = await supabase
       .from('lesson_bookings')
       .update(updates)

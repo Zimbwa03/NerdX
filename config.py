@@ -202,7 +202,7 @@ class Config:
     
     # Registration and Referral Credits (units)
     REGISTRATION_BONUS = 1500             # 150 credits
-    REFERRAL_BONUS = 50                   # 5 credits
+    REFERRAL_BONUS = 100                  # 10 credits
     
     # Low Credit Threshold (units)
     LOW_CREDIT_THRESHOLD = 200            # 20 credits

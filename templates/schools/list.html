@@ -29,13 +29,14 @@
                             <th>School Name</th>
                             <th>School ID</th>
                             <th>Subscription</th>
+                            <th>Status</th>
                             <th>Expiry Date</th>
                             <th>Students</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody id="schoolsBody">
-                        <tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -126,17 +127,21 @@
                 const tbody = document.getElementById('schoolsBody');
                 const schools = data.schools || [];
                 if (schools.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No schools yet. Click Add School to create one.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No schools yet. Click Add School to create one.</td></tr>';
                     return;
                 }
                 tbody.innerHTML = schools.map(s => {
                     const expiry = s.subscription_expires_at ? new Date(s.subscription_expires_at).toLocaleDateString() : '—';
                     const subLabel = s.subscription_type === 'term' ? 'Term' : (s.subscription_type === 'custom_months' ? s.subscription_months + ' mo' : 'Monthly');
-                    return '<tr><td>' + escapeHtml(s.name) + '</td><td><code>' + escapeHtml(s.school_id) + '</code></td><td>' + escapeHtml(subLabel) + '</td><td>' + escapeHtml(expiry) + '</td><td>' + (s.student_count || 0) + '</td><td><a href="' + baseUrl + '/' + s.id + '" class="btn btn-sm btn-outline-primary">View</a></td></tr>';
+                    const isActive = !!s.is_active;
+                    const statusBadge = isActive
+                        ? '<span class="badge bg-success">Paid</span>'
+                        : '<span class="badge bg-danger">Expired</span>';
+                    return '<tr><td>' + escapeHtml(s.name) + '</td><td><code>' + escapeHtml(s.school_id) + '</code></td><td>' + escapeHtml(subLabel) + '</td><td>' + statusBadge + '</td><td>' + escapeHtml(expiry) + '</td><td>' + (s.student_count || 0) + '</td><td><a href="' + baseUrl + '/' + s.id + '" class="btn btn-sm btn-outline-primary">View</a></td></tr>';
                 }).join('');
             })
             .catch(err => {
-                document.getElementById('schoolsBody').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Failed to load schools.</td></tr>';
+                document.getElementById('schoolsBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Failed to load schools.</td></tr>';
             });
     }
 

@@ -12,6 +12,7 @@ export const form1MathNotes: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Types of Numbers',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Form_1_Maths__Number_Concepts.mp4',
                 content: "## Number Classifications\n\nIn mathematics, numbers are grouped into different sets based on their properties.\n\n**Natural Numbers (ℕ)**: The counting numbers starting from 1.\n$$\\\\mathbb{N} = \\\\{1, 2, 3, 4, 5, ...\\\\}$$\n\n**Whole Numbers (W)**: Natural numbers together with zero.\n$$W = \\\\{0, 1, 2, 3, 4, 5, ...\\\\}$$\n\n**Integers (ℤ)**: Whole numbers and their negatives.\n$$\\\\mathbb{Z} = \\\\{..., -3, -2, -1, 0, 1, 2, 3, ...\\\\}$$\n\n**Rational Numbers (ℚ)**: Numbers that can be expressed as a fraction $\\\\frac{a}{b}$ where $a$ and $b$ are integers and $b \\\\neq 0$. This includes terminating and recurring decimals.\n\nExamples: $\\\\frac{3}{4}$, $-2$, $0.75$, $0.\\\\overline{3}$\n\n**Irrational Numbers**: Numbers that CANNOT be written as a simple fraction. Their decimal forms are non-terminating and non-recurring.\n\nExamples: $\\\\sqrt{2} \\\\approx 1.41421356...$, $\\\\pi \\\\approx 3.14159265...$\n\n## Relationship Between Number Sets\n\n$$\\\\mathbb{N} \\\\subset W \\\\subset \\\\mathbb{Z} \\\\subset \\\\mathbb{Q} \\\\subset \\\\mathbb{R}$$\n\nEvery natural number is a whole number, every whole number is an integer, and every integer is a rational number. The real numbers ($\\\\mathbb{R}$) include both rational and irrational numbers.",
                 worked_examples: [
                     {
@@ -185,6 +186,7 @@ export const form1MathNotes: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Rounding to Place Value',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Approximation_%26_Estimation.mp4',
                 content: "## What is Rounding?\n\nRounding means replacing a number with a simpler number that is close to the original value.\n\n## Rules for Rounding\n\n1. Identify the digit in the required place value\n2. Look at the digit immediately to the **right**\n3. If it is **5 or more**, round **up** (add 1 to the rounding digit)\n4. If it is **less than 5**, round **down** (keep the rounding digit the same)\n5. Replace all digits to the right with zeros (for whole numbers)\n\n## Place Values\n\n| Place | Example: 47,385 |\n|-------|------------------|\n| Ten thousands | 4 |\n| Thousands | 7 |\n| Hundreds | 3 |\n| Tens | 8 |\n| Units | 5 |\n\n## Examples\n\n- $47,385$ rounded to the nearest thousand = $47,000$\n- $47,385$ rounded to the nearest hundred = $47,400$\n- $47,385$ rounded to the nearest ten = $47,390$",
                 worked_examples: [
                     {
@@ -288,6 +290,7 @@ export const form1MathNotes: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Understanding Ratios',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Mastering_Ratios__ZIMSEC.mp4',
                 content: "## What Is a Ratio?\n\nA **ratio** compares two or more quantities of the same kind. It shows how much of one thing there is compared to another.\n\nThe ratio of $a$ to $b$ is written as $a : b$ and is read as \"$a$ to $b$\".\n\n## Key Properties\n\n- Ratios have **no units** (the quantities must be in the same units before forming the ratio)\n- The **order matters**: $3 : 5$ is not the same as $5 : 3$\n- Ratios can be scaled: $2 : 3 = 4 : 6 = 6 : 9$\n\n## Expressing Ratios\n\nBefore writing a ratio, ensure both quantities are in the **same unit**.\n\nExample: Ratio of 2 m to 50 cm\n$$2 \\\\text{ m} = 200 \\\\text{ cm}$$\n$$\\\\text{Ratio} = 200 : 50 = 4 : 1$$",
                 worked_examples: [
                     {
@@ -397,6 +400,7 @@ export const form1MathNotes: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Place Value System',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Form_1__Large_%26_Small_Numbers.mp4',
                 content: "## Understanding Place Value\n\nOur number system is a **base-10 (decimal) system** where each digit's value depends on its position.\n\n## Place Value Table\n\n| Billions | Hundred Millions | Ten Millions | Millions | Hundred Thousands | Ten Thousands | Thousands | Hundreds | Tens | Units |\n|----------|-----------------|-------------|----------|------------------|--------------|-----------|----------|------|-------|\n| $10^9$ | $10^8$ | $10^7$ | $10^6$ | $10^5$ | $10^4$ | $10^3$ | $10^2$ | $10^1$ | $10^0$ |\n\nEach place is **10 times** the value of the place to its right.\n\n## Reading Large Numbers\n\nGroup digits in threes from the right, separated by spaces or commas:\n- $45\\,300\\,000$ is read as \"forty-five million, three hundred thousand\"\n- $7\\,000\\,000\\,000$ is read as \"seven billion\"\n\n## Decimal Place Values\n\n| Tenths | Hundredths | Thousandths | Ten-thousandths |\n|--------|-----------|------------|----------------|\n| $10^{-1}$ | $10^{-2}$ | $10^{-3}$ | $10^{-4}$ |",
                 worked_examples: [
                     {
@@ -482,6 +486,7 @@ export const form1MathNotes: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Understanding Number Bases',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Number_Bases__Crack_the_Code.mp4',
                 content: "## What Is a Number Base?\n\nA number base (or radix) tells us how many different digits are used and the place values of positions.\n\n**Base 10 (Denary/Decimal)**: Uses digits 0–9. This is our everyday system.\n\n**Base 2 (Binary)**: Uses digits 0 and 1 only. Used by computers.\n\n**Base 5 (Quinary)**: Uses digits 0–4.\n\n**Base 8 (Octal)**: Uses digits 0–7. Used in computing.\n\n## Notation\n\nWe write the base as a subscript: $1011_2$ means 1011 in base 2.\n\n## Everyday Examples of Number Bases\n\n- **Binary (base 2)**: Computers, digital electronics (ON/OFF switches)\n- **Base 12 (duodecimal)**: 12 months in a year, 12 hours on a clock\n- **Base 60 (sexagesimal)**: 60 seconds in a minute, 60 minutes in an hour\n- **Base 7**: Days of the week",
                 worked_examples: [
                     {
@@ -591,6 +596,7 @@ export const form1MathNotes: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Understanding Scales',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/The_Explainer__Mastering_Scales.mp4',
                 content: "## What Is a Scale?\n\nA **scale** is a ratio that compares a length on a drawing or map to the actual length in real life.\n\n## Types of Scales\n\n### Ratio Scale (Statement Scale)\nWritten as a ratio: $1 : n$ or as a statement.\n- $1 : 50\\,000$ means 1 cm on the map represents 50,000 cm (or 500 m) in real life\n- \"1 cm represents 5 km\"\n\n### Representative Fraction (R.F.)\nA fraction with no units: $\\\\frac{1}{50000}$\n\nThis means every unit on the map equals 50,000 of the same units in real life.\n\n### Linear (Bar) Scale\nA line drawn on the map marked with actual distances. Useful because it stays correct even if the map is enlarged or reduced.\n\n## Converting Between Scale Types\n\nStatement → Ratio: \"1 cm represents 2 km\" → $1 : 200\\,000$ (since 2 km = 200,000 cm)\n\nR.F. → Statement: $\\\\frac{1}{25000}$ means 1 cm = 25,000 cm = 250 m",
                 worked_examples: [
                     {
@@ -693,6 +699,7 @@ export const form1MathNotes: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. What Is a Set?',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Cracking_the_Code__Sets.mp4',
                 content: "## Definition\n\nA **set** is a well-defined collection of distinct objects. \"Well-defined\" means there is a clear rule for deciding whether an object belongs to the set or not.\n\n## Examples of Sets\n\n- The set of vowels in the English alphabet: $\\\\{a, e, i, o, u\\\\}$\n- The set of even numbers between 1 and 10: $\\\\{2, 4, 6, 8, 10\\\\}$\n- The set of provinces in Zimbabwe\n\n## NOT a Set\n\n- \"The set of beautiful flowers\" — not well-defined (beauty is subjective)\n- \"The set of tall students\" — not well-defined (what height is 'tall'?)\n\n## Naming Sets\n\nSets are usually named with **capital letters**: $A$, $B$, $C$, $P$, $Q$, etc.\n\n$$A = \\\\{2, 4, 6, 8, 10\\\\}$$",
                 worked_examples: [
                     {
@@ -787,6 +794,7 @@ export const form1MathNotes: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Universal Set (ξ or U)',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Form_1_Maths__Types_of_Sets.mp4',
                 content: "## Definition\n\nThe **universal set** (denoted $\\\\xi$ or $\\\\mathcal{U}$) is the set that contains **all** elements under consideration in a particular problem.\n\nEvery other set in the problem is a **subset** of the universal set.\n\n## Examples\n\n- If discussing students in a class: $\\\\xi$ = the set of all students in the class\n- If discussing numbers: $\\\\xi = \\\\{1, 2, 3, 4, 5, 6, 7, 8, 9, 10\\\\}$\n\n## In Venn Diagrams\n\nThe universal set is represented by a **rectangle** that encloses all other sets (shown as circles or ovals).\n\n## Complement of a Set\n\nThe **complement** of set $A$, written $A'$ or $A^c$, is the set of all elements in $\\\\xi$ that are NOT in $A$.\n\n$$A' = \\\\{x : x \\\\in \\\\xi \\\\text{ and } x \\\\notin A\\\\}$$\n\nExample: If $\\\\xi = \\\\{1,2,3,4,5,6,7,8,9,10\\\\}$ and $A = \\\\{2,4,6,8,10\\\\}$, then $A' = \\\\{1,3,5,7,9\\\\}$",
                 worked_examples: [
                     {
@@ -907,6 +915,7 @@ export const form1MathNotes: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Understanding Household Bills',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Consumer_Arithmetic.mp4',
                 content: "## Types of Household Bills\n\nCommon bills in Zimbabwe include:\n- **Electricity bills** (ZESA/ZETDC): measured in kilowatt-hours (kWh)\n- **Water bills**: measured in kilolitres (kL) or cubic metres (m³)\n- **Rates/Council charges**: property-based municipal charges\n- **School fees**: termly or annual education costs\n\n## Reading a Bill\n\nA typical bill shows:\n- **Previous reading** and **current reading** (for metered services)\n- **Units consumed** = Current reading − Previous reading\n- **Rate per unit** (cost per kWh, per m³, etc.)\n- **Total charge** = Units × Rate per unit\n- **VAT** (Value Added Tax) where applicable\n- **Outstanding balance** from previous periods\n\n## Calculating Consumption\n\n$$\\\\text{Units used} = \\\\text{Current reading} - \\\\text{Previous reading}$$\n$$\\\\text{Cost} = \\\\text{Units used} \\\\times \\\\text{Rate per unit}$$",
                 worked_examples: [
                     {
@@ -1027,6 +1036,7 @@ export const form1MathNotes: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Time — 12-Hour and 24-Hour Clock',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Form_1_Maths__Measures.mp4',
                 content: "## 12-Hour Clock\n\nUses **a.m.** (ante meridiem — before noon) and **p.m.** (post meridiem — after noon).\n\n- 12:00 a.m. = midnight\n- 12:00 p.m. = noon\n- Hours run from 12:00 to 12:59, then 1:00 to 11:59 (twice daily)\n\n## 24-Hour Clock\n\nUses hours from **00:00** (midnight) to **23:59**.\n\n- No a.m. or p.m. needed\n- Hours are always written as 4 digits: 08:30, 14:45, 00:15\n\n## Conversion Table\n\n| 12-Hour | 24-Hour |\n|---------|----------|\n| 12:00 midnight | 00:00 |\n| 6:30 a.m. | 06:30 |\n| 12:00 noon | 12:00 |\n| 3:45 p.m. | 15:45 |\n| 9:15 p.m. | 21:15 |\n| 11:59 p.m. | 23:59 |\n\n## Converting p.m. to 24-Hour\n\nAdd 12 to the hour: $3\\text{:}45 \\\\text{ p.m.} = (3+12)\\text{:}45 = 15\\text{:}45$\n\n## Calculating Time Intervals\n\nSubtract the earlier time from the later time. If borrowing is needed, remember: 1 hour = 60 minutes.",
                 worked_examples: [
                     {
@@ -1139,6 +1149,7 @@ export const form1MathNotes: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Perimeter of Plane Shapes',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/ZIMSEC_Maths__Mensuration.mp4',
                 content: "## What Is Perimeter?\n\nThe **perimeter** is the total distance around the outside of a shape.\n\n## Formulae\n\n**Rectangle**: $P = 2(l + w)$ or $P = 2l + 2w$\n\n**Square**: $P = 4s$\n\n**Triangle**: $P = a + b + c$ (sum of all three sides)\n\n**Circle (Circumference)**: $C = 2\\\\pi r$ or $C = \\\\pi d$\n\nwhere $r$ = radius, $d$ = diameter, $\\\\pi \\\\approx 3.14159$ or $\\\\frac{22}{7}$\n\n## Semicircle Perimeter\n\n$$P = \\\\pi r + 2r = r(\\\\pi + 2)$$\n(curved part + diameter)",
                 worked_examples: [
                     {
@@ -1283,6 +1294,7 @@ export const form1MathNotes: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. The Cartesian Plane',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Mastering_Functional_Graphs.mp4',
                 content: "## What Is the Cartesian Plane?\n\nThe **Cartesian plane** (or coordinate plane) is a flat surface formed by two perpendicular number lines:\n\n- The **x-axis** (horizontal line)\n- The **y-axis** (vertical line)\n\nThey intersect at the **origin**, labelled $O$, which has coordinates $(0, 0)$.\n\n## Setting Up the Plane\n\n1. Draw two perpendicular lines crossing at the origin\n2. Mark equal intervals on both axes\n3. Label the x-axis and y-axis\n4. Add arrows to show the axes continue\n5. Choose an appropriate **scale** (e.g., 1 cm = 1 unit, or 1 cm = 2 units)\n\n## Choosing a Scale\n\n- The scale should allow all points to fit on the grid\n- Both axes can have different scales if needed\n- Common scales: 1 cm : 1 unit, 1 cm : 2 units, 2 cm : 1 unit",
                 worked_examples: [
                     {
@@ -1387,6 +1399,7 @@ export const form1MathNotes: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Understanding Distance-Time Graphs',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Mastering_Travel_Graphs.mp4',
                 content: "## What Is a Distance-Time Graph?\n\nA **distance-time graph** shows the distance travelled on the vertical axis (y-axis) and the time taken on the horizontal axis (x-axis).\n\n## Key Features\n\n- **Horizontal line (flat)**: The object is **stationary** (not moving) — distance stays the same\n- **Straight line going up**: The object is moving at a **constant speed** — distance increases steadily\n- **Steeper line**: **Faster** speed\n- **Line going down**: The object is **returning** towards the starting point\n\n## Axes\n\n- x-axis: Time (hours, minutes, or seconds)\n- y-axis: Distance from starting point (km, m, etc.)\n\n## Important Note\n\nA distance-time graph does NOT show the path of the journey — it only shows how far from the start the object is at each moment.",
                 worked_examples: [
                     {

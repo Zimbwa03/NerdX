@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { User, Mail, Phone, Calendar, Lock, Eye, EyeOff, ArrowRight, GraduationCap, BookOpen } from 'lucide-react';
+import { User, Mail, Phone, Calendar, Lock, Eye, EyeOff, ArrowRight, GraduationCap, BookOpen, Gift } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/api/authApi';
 import { supabase } from '../services/supabase';
+
+const REFERRAL_STORAGE_KEY = 'nerdx_referral_code';
 
 const formatDateOfBirth = (text: string) => {
   const cleaned = text.replace(/\D/g, '');
@@ -12,6 +14,19 @@ const formatDateOfBirth = (text: string) => {
   if (cleaned.length > 4) formatted += '/' + cleaned.substring(4, 8);
   return formatted;
 };
+
+function getReferralCode(searchParams: URLSearchParams): string {
+  const fromUrl = (searchParams.get('ref') || '').trim().toUpperCase();
+  if (fromUrl) {
+    try { localStorage.setItem(REFERRAL_STORAGE_KEY, fromUrl); } catch { /* noop */ }
+    return fromUrl;
+  }
+  try { return (localStorage.getItem(REFERRAL_STORAGE_KEY) || '').trim().toUpperCase(); } catch { return ''; }
+}
+
+function clearStoredReferral() {
+  try { localStorage.removeItem(REFERRAL_STORAGE_KEY); } catch { /* noop */ }
+}
 
 export function RegisterPage() {
   const [searchParams] = useSearchParams();
@@ -31,6 +46,8 @@ export function RegisterPage() {
   const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  const referralCode = getReferralCode(searchParams);
 
   useEffect(() => {
     if (searchParams.get('role') === 'teacher') setRole('teacher');
@@ -67,11 +84,13 @@ export function RegisterPage() {
         password,
         date_of_birth: dateOfBirth || undefined,
         role,
+        referred_by: referralCode || undefined,
       };
 
       const response = await authApi.register(registerData);
 
       if (response.success && response.token && response.user) {
+        clearStoredReferral();
         if (!response.message) {
           const supabaseCredentials = email.trim()
             ? { email: email.trim().toLowerCase(), password }
@@ -86,6 +105,7 @@ export function RegisterPage() {
           navigate('/verify-email', { replace: true });
         }
       } else if (response.success && response.message) {
+        clearStoredReferral();
         navigate('/verify-email', { replace: true });
       } else {
         setError(response.message || 'Failed to create account');
@@ -100,6 +120,9 @@ export function RegisterPage() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setError('');
+    if (referralCode) {
+      try { localStorage.setItem(REFERRAL_STORAGE_KEY, referralCode); } catch { /* noop */ }
+    }
     try {
       const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -148,6 +171,17 @@ export function RegisterPage() {
             <h2 className="auth-form__title">Create Account</h2>
             <p className="auth-form__subtitle">Fill in your details to get started</p>
           </div>
+
+          {referralCode && (
+            <div className="auth-referral-banner" style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px',
+              background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)',
+              borderRadius: 12, marginBottom: 16, color: '#6EE7B7', fontSize: 14,
+            }}>
+              <Gift size={18} style={{ flexShrink: 0 }} />
+              <span>You were invited by a friend! Referral code <strong>{referralCode}</strong> applied.</span>
+            </div>
+          )}
 
           <div className="auth-role-toggle">
             <button

@@ -11,7 +11,7 @@ import { FloatingParticles } from '../components/FloatingParticles';
 import { SubjectCard } from '../components/SubjectCard';
 import { getStudentBookings } from '../services/api/teacherMarketplaceApi';
 import type { LessonBooking } from '../types';
-import { LogOut, Calculator, FlaskConical, BookOpen, Monitor, Globe, Receipt, Briefcase, Clock, GraduationCap, MessageCircle, Beaker, TrendingUp, Coins, Wifi, Mic, Atom, Brain, Map, Sparkles, Bell, Sigma, FileText, Wallet, Search, Calendar, Video, ArrowRight, Rss, Heart, BarChart3, Target, Zap, Layers, BookCheck, Compass, MessagesSquare, Loader2 } from 'lucide-react';
+import { LogOut, Calculator, FlaskConical, BookOpen, Monitor, Globe, Receipt, Briefcase, Clock, GraduationCap, MessageCircle, Beaker, TrendingUp, Coins, Wifi, Mic, Atom, Brain, Map, Sparkles, Bell, Sigma, FileText, Wallet, Search, Calendar, Video, ArrowRight, Rss, Heart, BarChart3, Target, Zap, Layers, BookCheck, Compass, MessagesSquare, Loader2, Menu, X } from 'lucide-react';
 import { PostCard } from '../components/marketplace/PostCard';
 import { getAllPosts } from '../services/api/teacherMarketplaceApi';
 import type { TeacherPost, PostComment } from '../types';
@@ -81,6 +81,7 @@ export function DashboardPage() {
   const [feedLoading, setFeedLoading] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -114,12 +115,26 @@ export function DashboardPage() {
     loadDashboardData();
   }, [loadDashboardData]);
 
-  // Fetch student's confirmed bookings
+  // Fetch student's confirmed bookings (including those waiting for room setup)
   useEffect(() => {
     if (!userId || isTeacher) return;
     (async () => {
       const bookings = await getStudentBookings(userId);
-      const confirmed = bookings.filter((b) => b.status === 'confirmed' && b.room_id);
+      const now = Date.now();
+      const confirmed = bookings
+        .filter((b) => b.status === 'confirmed')
+        .filter((b) => {
+          const normalizedStartTime = b.start_time?.split(':').length === 2 ? `${b.start_time}:00` : b.start_time;
+          const lessonTime = new Date(`${b.date}T${normalizedStartTime || '00:00:00'}`).getTime();
+          // Keep upcoming lessons and any very recent lesson still in progress.
+          return Number.isNaN(lessonTime) || lessonTime >= now - (24 * 60 * 60 * 1000);
+        })
+        .sort((a, b) => {
+          const aTime = new Date(`${a.date}T${a.start_time?.split(':').length === 2 ? `${a.start_time}:00` : a.start_time || '00:00:00'}`).getTime();
+          const bTime = new Date(`${b.date}T${b.start_time?.split(':').length === 2 ? `${b.start_time}:00` : b.start_time || '00:00:00'}`).getTime();
+          if (Number.isNaN(aTime) || Number.isNaN(bTime)) return 0;
+          return aTime - bTime;
+        });
       setUpcomingLessons(confirmed);
     })();
   }, [userId, isTeacher]);
@@ -235,7 +250,7 @@ export function DashboardPage() {
       history: '/app/history',
       teacher: '/app/teacher',
       marketplace: '/app/marketplace',
-      my_lessons: '/app/marketplace',
+      my_lessons: '/app/my-lessons',
       teacher_dashboard: '/app/teacher-dashboard',
       virtual_labs: '/app/virtual-lab',
       formula_sheet: '/app/formula-sheet',
@@ -281,6 +296,46 @@ export function DashboardPage() {
         </div>
       )}
 
+      {/* Mobile header with hamburger menu */}
+      <div className="dash-mobile-header">
+        <div className="dash-mobile-header__left">
+          <div className="sidebar-avatar sidebar-avatar--sm">
+            <span>{(user?.name || 'S').slice(0, 1)}</span>
+          </div>
+          <span className="dash-mobile-header__name">{user?.name || 'Student'}</span>
+        </div>
+        <button className="dash-mobile-header__menu" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+      </div>
+
+      {/* Mobile slide-down menu */}
+      {mobileMenuOpen && (
+        <>
+          <div className="dash-mobile-overlay" onClick={() => setMobileMenuOpen(false)} />
+          <div className="dash-mobile-menu">
+            <Link to="/app/credits" className="credits-card-v2 sidebar-credits" onClick={() => setMobileMenuOpen(false)}>
+              <div className="credits-glow" />
+              <span className="credits-amount">{formatCreditBalance(user?.credits)}</span>
+              <span className="credits-label">Credits</span>
+              <span className="credits-add">+</span>
+            </Link>
+            <nav className="dash-mobile-menu__nav">
+              <a href="#learning-hub" className="sidebar-link" onClick={() => setMobileMenuOpen(false)}><BookCheck size={16} /> Learning Hub</a>
+              <a href="#overview" className="sidebar-link" onClick={() => setMobileMenuOpen(false)}><Layers size={16} /> Overview</a>
+              <a href="#core-modes" className="sidebar-link" onClick={() => setMobileMenuOpen(false)}><Compass size={16} /> Core Modes</a>
+              <a href="#ai-insights" className="sidebar-link" onClick={() => setMobileMenuOpen(false)}><Sparkles size={16} /> AI Insights</a>
+              <a href="#progress" className="sidebar-link" onClick={() => setMobileMenuOpen(false)}><TrendingUp size={16} /> My Progress</a>
+              <a href="#teacher-feed" className="sidebar-link" onClick={() => setMobileMenuOpen(false)}><MessagesSquare size={16} /> Teacher Feed</a>
+              <a href="#tools" className="sidebar-link" onClick={() => setMobileMenuOpen(false)}><Sigma size={16} /> Tools</a>
+            </nav>
+            <button className="dash-mobile-menu__signout" onClick={() => { setMobileMenuOpen(false); logout(); }}>
+              <LogOut size={16} /> Sign Out
+            </button>
+          </div>
+        </>
+      )}
+
       <div className="dashboard-shell">
         <aside className="dashboard-sidebar">
           <div className="sidebar-profile">
@@ -301,11 +356,11 @@ export function DashboardPage() {
           </Link>
 
           <nav className="sidebar-nav">
+            <a href="#learning-hub" className="sidebar-link"><BookCheck size={16} /> Learning Hub</a>
             <a href="#overview" className="sidebar-link"><Layers size={16} /> Overview</a>
+            <a href="#core-modes" className="sidebar-link"><Compass size={16} /> Core Modes</a>
             <a href="#ai-insights" className="sidebar-link"><Sparkles size={16} /> AI Insights</a>
             <a href="#progress" className="sidebar-link"><TrendingUp size={16} /> My Progress</a>
-            <a href="#learning-hub" className="sidebar-link"><BookCheck size={16} /> Learning Hub</a>
-            <a href="#core-modes" className="sidebar-link"><Compass size={16} /> Core Modes</a>
             <a href="#teacher-feed" className="sidebar-link"><MessagesSquare size={16} /> Teacher Feed</a>
             <a href="#tools" className="sidebar-link"><Sigma size={16} /> Tools</a>
           </nav>
@@ -338,6 +393,7 @@ export function DashboardPage() {
         </aside>
 
         <main className="dashboard-main">
+          {/* 1. Name / Hero */}
           <section className="dashboard-hero-v2" id="overview">
             <div className="hero-content">
               <span className="hero-greeting">Welcome back</span>
@@ -354,6 +410,74 @@ export function DashboardPage() {
               <button type="button" className="hero-action hero-action--ghost" onClick={() => navigate('/app/progress')}>
                 <TrendingUp size={18} /> View Progress
               </button>
+            </div>
+          </section>
+
+          {/* 2. Credits panel (mobile-visible inline card) */}
+          <Link to="/app/credits" className="credits-card-v2 dash-credits-inline">
+            <div className="credits-glow" />
+            <span className="credits-amount">{formatCreditBalance(user?.credits)}</span>
+            <span className="credits-label">Credits</span>
+            <span className="credits-add">+</span>
+          </Link>
+
+          {/* 3. Find a Teacher banner */}
+          <section className="find-teacher-banner" onClick={() => navigate('/app/marketplace')}>
+            <div className="find-teacher-banner__bg" />
+            <div className="find-teacher-banner__content">
+              <div className="find-teacher-banner__icon">
+                <GraduationCap size={36} />
+              </div>
+              <div className="find-teacher-banner__text">
+                <h2 className="find-teacher-banner__title">Find a Teacher</h2>
+                <p className="find-teacher-banner__subtitle">
+                  Book live lessons with verified ZIMSEC &amp; Cambridge teachers
+                </p>
+              </div>
+              <button
+                type="button"
+                className="find-teacher-banner__cta"
+                onClick={(e) => { e.stopPropagation(); navigate('/app/marketplace'); }}
+              >
+                Browse Teachers <ArrowRight size={16} />
+              </button>
+            </div>
+          </section>
+
+          {/* 4. Learning Hub — subjects */}
+          <section className="learning-hub-v2" id="learning-hub">
+            <div className="section-header-v2">
+              <h2>Learning Hub</h2>
+              <div className="level-toggle-v2">
+                <button
+                  type="button"
+                  className={`level-btn ${selectedLevel === 'O Level' ? 'active' : ''}`}
+                  onClick={() => setSelectedLevel('O Level')}
+                >
+                  O Level
+                </button>
+                <button
+                  type="button"
+                  className={`level-btn ${selectedLevel === 'A Level' ? 'active' : ''}`}
+                  onClick={() => setSelectedLevel('A Level')}
+                >
+                  A Level
+                </button>
+              </div>
+            </div>
+
+            <div className="subjects-grid-v2">
+              {subjects.map((subject) => (
+                <SubjectCard
+                  key={subject.id}
+                  title={subject.title}
+                  subtitle={subject.subtitle}
+                  icon={subject.icon}
+                  gradientFrom={subject.from}
+                  gradientTo={subject.to}
+                  onClick={() => selectedLevel === 'O Level' ? handleSubjectClick(subject.id) : handleALevelClick(subject.id)}
+                />
+              ))}
             </div>
           </section>
 
@@ -487,64 +611,6 @@ export function DashboardPage() {
             </div>
           </section>
 
-          <section className="find-teacher-banner" onClick={() => navigate('/app/marketplace')}>
-            <div className="find-teacher-banner__bg" />
-            <div className="find-teacher-banner__content">
-              <div className="find-teacher-banner__icon">
-                <GraduationCap size={36} />
-              </div>
-              <div className="find-teacher-banner__text">
-                <h2 className="find-teacher-banner__title">Find a Teacher</h2>
-                <p className="find-teacher-banner__subtitle">
-                  Book live lessons with verified ZIMSEC &amp; Cambridge teachers
-                </p>
-              </div>
-              <button
-                type="button"
-                className="find-teacher-banner__cta"
-                onClick={(e) => { e.stopPropagation(); navigate('/app/marketplace'); }}
-              >
-                Browse Teachers <ArrowRight size={16} />
-              </button>
-            </div>
-          </section>
-
-          <section className="learning-hub-v2" id="learning-hub">
-            <div className="section-header-v2">
-              <h2>Learning Hub</h2>
-              <div className="level-toggle-v2">
-                <button
-                  type="button"
-                  className={`level-btn ${selectedLevel === 'O Level' ? 'active' : ''}`}
-                  onClick={() => setSelectedLevel('O Level')}
-                >
-                  O Level
-                </button>
-                <button
-                  type="button"
-                  className={`level-btn ${selectedLevel === 'A Level' ? 'active' : ''}`}
-                  onClick={() => setSelectedLevel('A Level')}
-                >
-                  A Level
-                </button>
-              </div>
-            </div>
-
-            <div className="subjects-grid-v2">
-              {subjects.map((subject) => (
-                <SubjectCard
-                  key={subject.id}
-                  title={subject.title}
-                  subtitle={subject.subtitle}
-                  icon={subject.icon}
-                  gradientFrom={subject.from}
-                  gradientTo={subject.to}
-                  onClick={() => selectedLevel === 'O Level' ? handleSubjectClick(subject.id) : handleALevelClick(subject.id)}
-                />
-              ))}
-            </div>
-          </section>
-
           <section className="features-section-v2" id="core-modes">
             <div className="section-header-v2">
               <h2>Core Modes</h2>
@@ -565,9 +631,14 @@ export function DashboardPage() {
             </div>
           </section>
 
-          {upcomingLessons.length > 0 && (
-            <section className="upcoming-lessons-v2">
+          <section className="upcoming-lessons-v2">
+            <div className="upcoming-lessons-v2__header">
               <h3><Video size={18} /> Upcoming Lessons</h3>
+              <Link to="/app/my-lessons" className="upcoming-lessons-v2__view-all">
+                View All <ArrowRight size={14} />
+              </Link>
+            </div>
+            {upcomingLessons.length > 0 ? (
               <div className="upcoming-lessons-grid">
                 {upcomingLessons.slice(0, 4).map((lesson) => (
                   <div key={lesson.id} className="upcoming-lesson-card">
@@ -579,18 +650,39 @@ export function DashboardPage() {
                         <Calendar size={12} /> {lesson.date} &middot; {lesson.start_time} - {lesson.end_time}
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      className="vc-join-btn"
-                      onClick={() => navigate(`/app/classroom/${lesson.id}`)}
-                    >
-                      <Video size={14} /> Join Classroom
-                    </button>
+                    {lesson.room_id ? (
+                      <button
+                        type="button"
+                        className="vc-join-btn"
+                        onClick={() => navigate(`/app/classroom/${lesson.id}`)}
+                      >
+                        <Video size={14} /> Join Classroom
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="vc-join-btn vc-join-btn--disabled"
+                        onClick={() => navigate('/app/my-lessons')}
+                      >
+                        <Clock size={14} /> Room Not Ready
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
-            </section>
-          )}
+            ) : (
+              <div className="upcoming-lessons-v2__empty">
+                <p>No confirmed lessons yet. Book teachers and track all sessions in My Lessons.</p>
+                <button
+                  type="button"
+                  className="vc-join-btn"
+                  onClick={() => navigate('/app/my-lessons')}
+                >
+                  Open My Lessons
+                </button>
+              </div>
+            )}
+          </section>
 
           <section className="dashboard-feed-preview" id="teacher-feed">
             <div className="section-header-v2">

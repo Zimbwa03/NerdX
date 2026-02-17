@@ -4,6 +4,19 @@ import { supabase } from '../services/supabase';
 import { authApi } from '../services/api/authApi';
 import { useAuth } from '../context/AuthContext';
 
+const REFERRAL_STORAGE_KEY = 'nerdx_referral_code';
+
+function consumeStoredReferral(): string | undefined {
+  try {
+    const code = (localStorage.getItem(REFERRAL_STORAGE_KEY) || '').trim().toUpperCase();
+    if (code) {
+      localStorage.removeItem(REFERRAL_STORAGE_KEY);
+      return code;
+    }
+  } catch { /* noop */ }
+  return undefined;
+}
+
 export function AuthCallbackPage() {
   const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
@@ -45,7 +58,8 @@ export function AuthCallbackPage() {
           sub: user.id,
         };
 
-        const response = await authApi.socialLogin('google', googleUser);
+        const referralCode = consumeStoredReferral();
+        const response = await authApi.socialLogin('google', googleUser, referralCode);
 
         if (response.success && response.token && response.user) {
           await login(response.user, response.token);

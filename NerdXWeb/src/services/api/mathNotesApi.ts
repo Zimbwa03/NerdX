@@ -23,6 +23,8 @@ export const mathNotesApi = {
 
   getTopicNotes: async (topic: string, _gradeLevel: string = 'O-Level'): Promise<MathTopicNotes | null> => {
     const normalized = topic.replace(/-/g, ' ');
+    const directMatch = getOLevelMathNotes(normalized);
+    if (directMatch) return directMatch;
     const key = TOPIC_ALIASES[normalized] ?? normalized;
     return getOLevelMathNotes(key);
   },

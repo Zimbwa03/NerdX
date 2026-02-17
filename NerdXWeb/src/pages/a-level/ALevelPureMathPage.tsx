@@ -148,24 +148,15 @@ export function ALevelPureMathPage() {
     setError(null);
 
     try {
-      let question: Question | null = await quizApi.generateQuestionStream(
+      const question: Question | null = await quizApi.generateQuestion(
         SUBJECT_ID,
         pendingTopic.id,
         'medium',
-        {},
+        'topical',
+        'Pure Mathematics',
+        undefined,
+        questionFormat,
       );
-
-      if (!question) {
-        question = await quizApi.generateQuestion(
-          SUBJECT_ID,
-          pendingTopic.id,
-          'medium',
-          'topical',
-          'Pure Mathematics',
-          undefined,
-          questionFormat,
-        );
-      }
 
       if (!question) {
         throw new Error('Unable to generate a question for this topic right now.');
@@ -194,6 +185,7 @@ export function ALevelPureMathPage() {
           },
           topic: topicToPass,
           formLevel: selectedLevel,
+          questionFormat,
         },
       });
     } catch (err) {

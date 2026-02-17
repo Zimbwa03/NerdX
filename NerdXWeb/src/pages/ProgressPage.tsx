@@ -2,9 +2,10 @@
 // Premium glassmorphism design matching DashboardPage quality
 // Loads live data from dashboardDataService + gamificationService for consistency
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
+  ArrowLeft,
   Award,
   BarChart3,
   BookOpen,
@@ -497,6 +498,10 @@ export function ProgressPage() {
 
   return (
     <div className="progress-dashboard progress-dashboard--premium">
+      <Link to="/app" className="back-link progress-back-link">
+        <ArrowLeft size={20} /> Back to Dashboard
+      </Link>
+
       {/* === Hero Section with gradient backdrop === */}
       <section className="progress-hero progress-hero--glass">
         <div className="hero-gradient" />

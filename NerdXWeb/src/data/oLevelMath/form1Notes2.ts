@@ -12,6 +12,7 @@ export const form1MathNotes2: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Using Letters to Represent Unknowns',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Symbolic_Expressions.mp4',
                 content: "## Why Use Letters?\n\nIn arithmetic we work with known numbers. In algebra we use **letters** (also called **variables**) to stand for numbers we do not yet know or numbers that can change.\n\n## Conventions\n\n- Any letter may be used, but $x$, $y$, $n$, $a$, $b$ are the most common.\n- When a number is multiplied by a letter we write the number first: $3x$ not $x3$.\n- We write $x$ instead of $1x$, and $-x$ instead of $-1x$.\n- $x \\\\times x$ is written $x^2$ (read \"$x$ squared\").\n\n## Key Vocabulary\n\n| Word | Meaning | Example |\n|------|---------|--------|\n| Variable | A letter representing an unknown value | $x$ |\n| Constant | A fixed number that does not change | 5, $-3$ |\n| Term | A product of numbers and variables | $4x$, $-2y^2$, $7$ |\n| Coefficient | The numerical part of a term | In $4x$ the coefficient is 4 |\n| Expression | A collection of terms joined by $+$ or $-$ | $3x + 2y - 5$ |",
                 worked_examples: [
                     {
@@ -118,6 +119,7 @@ export const form1MathNotes2: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Collecting Like Terms',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Algebraic_Manipulation.mp4',
                 content: "## What Are Like Terms?\n\nTerms with **exactly the same variable part** (same letters raised to the same powers).\n\n| Like Terms | Unlike Terms |\n|-----------|-------------|\n| $3x$ and $-5x$ | $3x$ and $3x^2$ |\n| $2ab$ and $-ab$ | $2ab$ and $2a$ |\n| $4y^2$ and $y^2$ | $4y^2$ and $4y$ |\n\n## Rule\n\nAdd or subtract the **coefficients** of like terms; the variable part stays the same.\n\n$$3x + 5x = 8x$$\n$$7a - 2a + a = 6a$$\n$$4x + 3y - x + 2y = 3x + 5y$$\n\n## Order of Writing\n\nWrite terms in **descending powers**, numbers last:\n$$x^2 + 3x - 5 \\quad \\text{(standard form)}$$",
                 worked_examples: [
                     {
@@ -252,6 +254,7 @@ export const form1MathNotes2: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. What Is an Equation?',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Form_1__Mastering_Equations.mp4',
                 content: "## Definition\n\nAn **equation** is a statement that two expressions have the same value, connected by an equals sign ($=$).\n\n$$3x + 2 = 14$$\n\nThis tells us that when we find the correct value of $x$, the left side equals the right side.\n\n## Equation vs Expression\n\n| | Expression | Equation |\n|---|-----------|----------|\n| Has $=$ sign? | No | Yes |\n| Example | $3x + 2$ | $3x + 2 = 14$ |\n| Can be solved? | No — only simplified | Yes — find the value of $x$ |\n\n## The Solution (Root)\n\nThe value of the variable that makes the equation true is called the **solution** or **root**.\n\nFor $3x + 2 = 14$, the solution is $x = 4$ because $3(4) + 2 = 14$.\n\n## Linear Equation\n\nA linear equation has the unknown to the **first power** only (no $x^2$, $x^3$, etc.).\n\nExamples: $2x + 5 = 11$, $\\\\frac{x}{3} = 7$, $4 - x = 1$.",
                 worked_examples: [
                     {
@@ -374,6 +377,7 @@ export const form1MathNotes2: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Inequality Symbols and Language',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Form_1__Inequalities.mp4',
                 content: "## The Four Inequality Symbols\n\n| Symbol | Meaning | Example | Number Line |\n|--------|---------|---------|-------------|\n| $>$ | greater than | $x > 3$ | open circle at 3, arrow right |\n| $<$ | less than | $x < 5$ | open circle at 5, arrow left |\n| $\\\\geq$ | greater than or equal to (at least) | $x \\\\geq 2$ | filled circle at 2, arrow right |\n| $\\\\leq$ | less than or equal to (at most) | $x \\\\leq 7$ | filled circle at 7, arrow left |\n\n## Everyday Language\n\n| Phrase | Symbol |\n|--------|--------|\n| at least | $\\\\geq$ |\n| at most | $\\\\leq$ |\n| more than | $>$ |\n| fewer than / less than | $<$ |\n| no more than | $\\\\leq$ |\n| no less than | $\\\\geq$ |\n| between $a$ and $b$ (exclusive) | $a < x < b$ |\n| between $a$ and $b$ (inclusive) | $a \\\\leq x \\\\leq b$ |\n\n## Open vs Closed Circle\n\n- **Open circle** (○): the endpoint is **not** included ($<$ or $>$)\n- **Closed/filled circle** (●): the endpoint **is** included ($\\\\leq$ or $\\\\geq$)",
                 worked_examples: [
                     {
@@ -476,6 +480,7 @@ export const form1MathNotes2: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Writing Products in Index Form',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Algebra__Cracking_the_Index_Code.mp4',
                 content: "## Base and Index (Exponent)\n\nIn $a^n$:\n- $a$ is the **base**\n- $n$ is the **index** (or exponent or power)\n- $a^n$ means $a$ multiplied by itself $n$ times\n\n$$a^n = \\\\underbrace{a \\\\times a \\\\times a \\\\times \\\\cdots \\\\times a}_{n \\\\text{ times}}$$\n\n## Examples\n\n$$x \\\\times x \\\\times x = x^3$$\n$$2 \\\\times a \\\\times a \\\\times b \\\\times b \\\\times b = 2a^2b^3$$\n$$3 \\\\times 3 \\\\times 3 \\\\times 3 = 3^4 = 81$$\n\n## Special Values\n\n$$a^1 = a \\quad \\text{(any number to the power 1 is itself)}$$\n$$a^0 = 1 \\quad \\text{(any non-zero number to the power 0 is 1)}$$",
                 worked_examples: [
                     {
@@ -600,6 +605,7 @@ export const form1MathNotes2: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Types of Lines',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Form_1__Lines_%26_Angles.mp4',
                 content: "## Line, Ray, and Line Segment\n\n- **Line**: extends infinitely in both directions (← →)\n- **Ray**: starts at a point and extends infinitely in one direction (• →)\n- **Line segment**: has two endpoints (• — •)\n\n## Special Line Types\n\n| Type | Definition | Notation |\n|------|-----------|----------|\n| **Parallel lines** | Lines that never meet; always the same distance apart | $AB \\\\parallel CD$ |\n| **Perpendicular lines** | Lines that meet at 90° | $AB \\\\perp CD$ |\n| **Transversal** | A line that crosses two or more other lines | — |\n\n## Parallel Line Notation\n\nParallel lines are shown with matching arrows (→ →) on diagrams. If two pairs of parallel lines exist, use single arrows for one pair and double arrows for the other.",
                 worked_examples: [
                     {
@@ -739,6 +745,7 @@ export const form1MathNotes2: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Definition and Parts of a Circle',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Form_1_Maths__Circles.mp4',
                 content: "## What Is a Circle?\n\nA circle is the set of all points in a plane that are a fixed distance from a fixed point.\n\n- The fixed point is the **centre** (usually labelled O).\n- The fixed distance is the **radius**.\n\n## Key Parts\n\n| Part | Definition |\n|------|------------|\n| **Centre (O)** | The fixed point in the middle |\n| **Radius (r)** | Distance from centre to any point on the circle |\n| **Diameter (d)** | A straight line through the centre connecting two points on the circle; $d = 2r$ |\n| **Circumference** | The perimeter (distance around) the circle |\n| **Chord** | A straight line connecting any two points on the circle |\n| **Arc** | A part (curve) of the circumference |\n| **Semicircle** | Half the circle; formed by a diameter |\n\n## Diameter and Radius Relationship\n\n$$d = 2r \\quad \\text{or} \\quad r = \\\\frac{d}{2}$$\n\nThe diameter is the **longest chord** of a circle.",
                 worked_examples: [
                     {
@@ -839,6 +846,7 @@ export const form1MathNotes2: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. What Is a Polygon?',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Cracking_the_Polygon_Code.mp4',
                 content: "## Definition\n\nA **polygon** is a closed 2D shape with **straight sides**.\n\n## Properties\n\n- All sides are straight line segments\n- The figure is closed (no gaps)\n- Sides do not cross each other\n\n## NOT Polygons\n\n- Circles (curved, not straight sides)\n- Open shapes\n- Figures with crossing sides (these are called **complex** or **self-intersecting** figures)\n\n## Convex vs Concave\n\n- **Convex polygon**: all interior angles are less than 180°\n- **Concave polygon**: at least one interior angle is greater than 180° (reflex angle)",
                 worked_examples: []
             },
@@ -932,6 +940,7 @@ export const form1MathNotes2: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Geometric Instruments',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Mastering_Geo_Constructions.mp4',
                 content: "## Required Instruments\n\n| Instrument | Purpose |\n|------------|--------|\n| **Ruler** | Drawing straight lines and measuring lengths |\n| **Pair of compasses** | Drawing arcs and circles; transferring lengths |\n| **Protractor** | Measuring and drawing angles |\n| **Set square** | Drawing perpendicular and parallel lines |\n| **Sharp pencil** | Accuracy of construction |\n\n## ZIMSEC Rules for Construction\n\n1. Use a **sharp pencil** (HB or 2H).\n2. All **construction arcs** must be clearly visible — do NOT erase them.\n3. Lines should be drawn with a **ruler**.\n4. Accuracy is expected to within **1 mm** for lengths and **1°** for angles.\n5. Do NOT use a protractor to construct angles that should be built with compasses (e.g., 60°, 90°).",
                 worked_examples: []
             },
@@ -1053,6 +1062,7 @@ export const form1MathNotes2: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. What Is Symmetry?',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Symmetry__Balance_in_Shapes.mp4',
                 content: "## Reflective Symmetry (Line Symmetry)\n\nA shape has **reflective symmetry** if it can be folded along a line so that one half exactly covers the other half.\n\nThe fold line is called the **line of symmetry** (also called the **mirror line** or **axis of symmetry**).\n\n## How to Test for Symmetry\n\n1. Imagine folding the shape along the proposed line.\n2. If both halves match perfectly, it is a line of symmetry.\n3. Alternatively, place a mirror along the line — the reflection should complete the shape.\n\n## Key Idea\n\nEach point on one side of the line has a matching point on the other side, at the **same perpendicular distance** from the line.\n\n## Number of Lines of Symmetry\n\nA shape can have 0, 1, 2, 3, or more lines of symmetry. A circle has **infinite** lines of symmetry.",
                 worked_examples: [
                     {
@@ -1148,6 +1158,7 @@ export const form1MathNotes2: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. What Is Data?',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/The_Explainer__Data_Detectives.mp4',
                 content: "## Definition\n\n**Data** is a collection of facts, numbers, or measurements gathered for analysis.\n\n**Statistics** is the branch of mathematics that deals with collecting, organising, presenting, analysing, and interpreting data.\n\n## The Statistical Process\n\n1. **Collect** data (surveys, experiments, observations)\n2. **Organise** data (tables, lists)\n3. **Present** data (charts, graphs)\n4. **Analyse** data (averages, spread)\n5. **Interpret** data (draw conclusions)\n\n## Why Data Matters\n\nData helps us make informed decisions. Examples:\n- Schools use exam results to improve teaching\n- Hospitals track patient data for better healthcare\n- Businesses use sales data for planning",
                 worked_examples: []
             },
@@ -1233,6 +1244,7 @@ export const form1MathNotes2: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. Bar Charts',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Data_Representation.mp4',
                 content: "## What Is a Bar Chart?\n\nA bar chart uses **rectangular bars** to represent data. The height (or length) of each bar shows the frequency or value.\n\n## Rules for Drawing Bar Charts\n\n1. The **bars** must be of **equal width**.\n2. There must be **equal gaps** between bars.\n3. The **vertical axis** (y-axis) must have a **uniform scale** starting from 0.\n4. The **horizontal axis** (x-axis) shows the categories.\n5. Both axes must be **labelled**.\n6. The chart must have a **title**.\n\n## Types of Bar Charts\n\n- **Vertical bar chart**: bars stand upright (most common)\n- **Horizontal bar chart**: bars lie on their side\n- **Grouped bar chart**: bars for different groups side by side\n- **Stacked bar chart**: bars divided into sections\n\n## Reading a Bar Chart\n\n- Read the height of each bar against the scale\n- Compare heights to find the mode (tallest bar)\n- Add all heights to find the total frequency",
                 worked_examples: [
                     {
@@ -1364,6 +1376,7 @@ export const form1MathNotes2: Record<string, MathTopicNotes> = {
         sections: [
             {
                 title: '1. What Is a Transformation?',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%201/Form_1__Intro_to_Translation.mp4',
                 content: "## Definition\n\nA **transformation** changes the position, size, or orientation of a shape.\n\n## The Four Main Transformations\n\n| Transformation | What It Does |\n|---------------|---------------|\n| **Translation** | Slides the shape (no turning, no flipping) |\n| **Reflection** | Flips the shape over a mirror line |\n| **Rotation** | Turns the shape about a fixed point |\n| **Enlargement** | Changes the size of the shape |\n\n## Key Vocabulary\n\n- **Object**: the original shape\n- **Image**: the new shape after transformation\n- **Congruent**: same shape and size (translation, reflection, rotation preserve congruence)\n\n## Translation Properties\n\n- Every point moves the **same distance** in the **same direction**\n- The shape does **not** rotate or flip\n- The object and image are **congruent** (same shape and size)\n- The image has the same **orientation** as the object",
                 worked_examples: []
             },

@@ -13,6 +13,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: THE MECHANICS OF ROUNDING ───
             {
                 title: '1. The Mechanics of Rounding',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Approximation_%26_Estimation.mp4',
                 content: "## Rounding Rules\n\nRounding is a strategic tool used to simplify large datasets or decimal values without losing the core value of the number. By reducing the number of digits we handle, we make information more accessible for communication.\n\nAs explicitly defined in the syllabus:\n\n- **Digits 0, 1, 2, 3, 4**: These are rounded **down** (the target digit stays the same).\n- **Digits 5, 6, 7, 8, 9**: These are rounded **up** (the target digit increases by 1).\n\n## Rounding Decision Flowchart\n\n| Step | Action |\n|---|---|\n| **Step 1** | Identify the **target digit** (the place you are rounding to). |\n| **Step 2** | Look at the **deciding digit** (the digit immediately to the RIGHT of the target). |\n| **Step 3** | Is the deciding digit $\\\\geq 5$? |\n| If **YES** $\\\\rightarrow$ | **Round UP**: Increase the target digit by 1. |\n| If **NO** $\\\\rightarrow$ | **Round DOWN**: Keep the target digit the same. |\n| **Step 4** | Replace all digits to the right of the target with **zeros** (or drop them if after the decimal point). |\n\n## Diagram: Place Value Positions\n\nUnderstanding place values is key to rounding. Here is a map of digit positions:\n\n| ... | Thousands | Hundreds | Tens | Units | **.** | 1st d.p. | 2nd d.p. | 3rd d.p. | ... |\n|---|---|---|---|---|---|---|---|---|---|\n| ... | $10^3$ | $10^2$ | $10^1$ | $10^0$ | **.** | $10^{-1}$ | $10^{-2}$ | $10^{-3}$ | ... |\n\n**Example Illustration \u2014 Rounding 4,378 to the nearest 100:**\n\n| Digit | 4 | 3 | 7 | 8 |\n|---|---|---|---|---|\n| Place | Thousands | **Hundreds** (Target) | Tens (Deciding) | Units |\n| Action | Keep | $3 \\\\rightarrow 4$ (round up) | $\\\\rightarrow 0$ | $\\\\rightarrow 0$ |\n| Result | 4 | 4 | 0 | 0 |\n\n$$4{,}378 \\\\approx 4{,}400 \\\\text{ (to nearest 100)}$$\n\n## Common Error\n\n**Rounding too early**: In multi-step calculations, do not round intermediate results. Only round the **final answer**. Rounding too early causes errors to accumulate.\n\n## Quick Check Practice\n\n1. Round 5,612 to the nearest 100.\n2. Round 0.982 to 1 decimal place.\n3. Round 45.049 to 2 decimal places.\n4. Round 12,999 to the nearest 10.\n5. Round 0.0067 to 3 decimal places.",
                 worked_examples: [
                     {
@@ -471,6 +472,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: INTEGERS AND RATIONAL NUMBERS ───
             {
                 title: '1. Integers and Rational Numbers: Directed Operations',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Mastering_Form_2_Number_Concepts.mp4',
                 content: "## Why Directed Numbers Matter\n\nIncorrect sign handling is the most frequent area of error in algebraic foundations. A single mistake in applying negative signs often cascades through multi-step problems. Precision in directed numbers is essential for ZIMSEC Paper 1 and Paper 2.\n\n## Diagram: The Number Line\n\n| $\\\\longleftarrow$ | $-5$ | $-4$ | $-3$ | $-2$ | $-1$ | $0$ | $+1$ | $+2$ | $+3$ | $+4$ | $+5$ | $\\\\longrightarrow$ |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n| | Negative direction | | | | | **Origin** | | | | | Positive direction | |\n\n## Rules for Addition and Subtraction\n\nVisualise the number line:\n- **Adding a positive**: Move RIGHT $\\\\rightarrow$\n- **Adding a negative**: Move LEFT $\\\\leftarrow$ (same as subtraction)\n- **Subtracting a negative**: Move RIGHT $\\\\rightarrow$ (same as addition)\n\n| Expression | Rewrite | Direction | Result |\n|---|---|---|---|\n| $5 + 3$ | $5 + 3$ | Right | $8$ |\n| $5 + (-3)$ | $5 - 3$ | Left | $2$ |\n| $5 - (-3)$ | $5 + 3$ | Right | $8$ |\n| $-5 + (-3)$ | $-5 - 3$ | Left | $-8$ |\n\n## Rules for Multiplication and Division\n\n| Operation | Rule | Result | Example |\n|---|---|---|---|\n| $(+) \\\\times (+)$ | Like signs | **Positive** | $3 \\\\times 4 = 12$ |\n| $(-) \\\\times (-)$ | Like signs | **Positive** | $(-3) \\\\times (-4) = 12$ |\n| $(+) \\\\times (-)$ | Unlike signs | **Negative** | $3 \\\\times (-4) = -12$ |\n| $(-) \\\\times (+)$ | Unlike signs | **Negative** | $(-3) \\\\times 4 = -12$ |\n\nThe same rules apply for division. **Like signs $\\\\rightarrow$ Positive. Unlike signs $\\\\rightarrow$ Negative.**\n\n## Diagram: BODMAS Order of Operations\n\n| Priority | Letter | Meaning | Example |\n|---|---|---|---|\n| 1st | **B** | Brackets | $(3 + 2)$ first |\n| 2nd | **O** | Orders (powers, roots) | $2^3$, $\\\\sqrt{9}$ |\n| 3rd | **D** | Division | $12 \\\\div 3$ |\n| 3rd | **M** | Multiplication | $4 \\\\times 5$ |\n| 4th | **A** | Addition | $3 + 7$ |\n| 4th | **S** | Subtraction | $10 - 4$ |\n\n> **Memory Tip**: \"D and M\" share equal priority (left to right). Same for \"A and S\".\n\n## Watch Out!\n\n- **Sign Clashes**: Convert double signs immediately: $-(-3) = +3$\n- **Bracket Neglect**: Always resolve the bracket contents before applying the multiplier outside it.\n\n## Short Practice\n\n1. Evaluate: $-20 \\\\div (-4) \\\\times (-3)$\n2. Calculate: $15 + (-8) - (-25)$\n3. Evaluate: $\\\\dfrac{-3}{10} - \\\\dfrac{1}{2}$\n4. Calculate: $-3(2 - 8) + 5$\n5. Evaluate: $\\\\dfrac{2}{3} \\\\div \\\\left(-\\\\dfrac{8}{9}\\\\right)$",
                 worked_examples: [
                     {
@@ -1096,6 +1098,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: RATIO SIMPLIFICATION ───
             {
                 title: '1. Revision of Ratio: Foundational Mechanics',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Ratios_%26_Proportions.mp4',
                 content: "## Why Simplify?\n\nSimplifying ratios is a non-negotiable prerequisite for advanced proportionality. It reduces complex numerical data into its most basic form, ensuring that algebraic manipulations are accurate and manageable.\n\n## Diagram: Simplification Procedures\n\n| Type | Procedure | Example |\n|---|---|---|\n| **Whole numbers** | Divide all terms by the HCF | $15 : 25 \\\\xrightarrow{\\\\div 5} 3 : 5$ |\n| **Fractions** | Multiply all terms by the LCD | $\\\\dfrac{1}{2} : \\\\dfrac{3}{4} \\\\xrightarrow{\\\\times 4} 2 : 3$ |\n| **Decimals** | Multiply by powers of 10, then divide by HCF | $0.5 : 1.25 \\\\xrightarrow{\\\\times 100} 50 : 125 \\\\xrightarrow{\\\\div 25} 2 : 5$ |\n| **Form $1 : n$** | Divide both sides by the first term | $5 : 20 \\\\xrightarrow{\\\\div 5} 1 : 4$ |\n| **Different units** | Convert to the **same** unit first | $800\\\\text{g} : 2\\\\text{kg} \\\\rightarrow 800 : 2000 \\\\xrightarrow{\\\\div 400} 2 : 5$ |\n\n## Common Error\n\nStudents often fail to use the **same units** before simplifying.\n\n| | Working | Answer |\n|---|---|---|\n| **INCORRECT** | $0.5\\\\text{m} : 20\\\\text{cm} = 0.5 : 20$ | $1 : 40$ \u2718 |\n| **CORRECT** | $50\\\\text{cm} : 20\\\\text{cm} = 50 : 20$ | $5 : 2$ \u2714 |\n\n> **Rule**: Always match units first, then simplify.\n\n## Quick Check Practice\n\n1. Simplify $14 : 21$.\n2. Simplify $0.6 : 0.08$.\n3. Simplify $\\\\dfrac{1}{3} : \\\\dfrac{1}{5}$.\n4. Express $4 : 10$ in the form $1 : n$.\n5. Simplify 50c : \\$2.",
                 worked_examples: [
                     {
@@ -1626,6 +1629,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: LARGE NUMBERS ───
             {
                 title: '1. Converting Large Numbers to Standard Form',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Standard_Form.mp4',
                 content: "## Method\n\nPositive powers of 10 are used for large numbers. Move the decimal point **to the left** until only one non-zero digit remains to its left. The number of jumps = $n$.\n\n## Diagram: Conversion Process\n\n| Step | Action | Example: $4500$ |\n|---|---|---|\n| **Step 1** | Place the decimal after the first non-zero digit | $4.500$ |\n| **Step 2** | Count how many places you moved the decimal | $3$ places left |\n| **Step 3** | Write as $A \\\\times 10^n$ (positive $n$) | $4.5 \\\\times 10^3$ |\n\n## Diagram: Large Number Conversions at a Glance\n\n| Original Number | Decimal Moves | $A$ | Standard Form |\n|---|---|---|---|\n| $600$ | 2 left | $6$ | $6 \\\\times 10^2$ |\n| $4{,}500$ | 3 left | $4.5$ | $4.5 \\\\times 10^3$ |\n| $86{,}200$ | 4 left | $8.62$ | $8.62 \\\\times 10^4$ |\n| $120{,}000$ | 5 left | $1.2$ | $1.2 \\\\times 10^5$ |\n| $9{,}000{,}000$ | 6 left | $9$ | $9 \\\\times 10^6$ |\n| $34{,}500{,}000$ | 7 left | $3.45$ | $3.45 \\\\times 10^7$ |\n\n## Common Error\n\n| | Expression | Valid? | Why |\n|---|---|---|---|\n| \u2718 | $45 \\\\times 10^2$ | No | $45 > 10$, coefficient must be $< 10$ |\n| \u2714 | $4.5 \\\\times 10^3$ | Yes | $1 \\\\leq 4.5 < 10$ |\n\n## Practice Exercise\n\n1. Express 5,200 in standard form.\n2. Express 91,000 in standard form.\n3. Express 600,000 in standard form.\n4. Express 25,400,000 in standard form.\n5. Express 800,000,000 in standard form.",
                 worked_examples: [
                     {
@@ -2147,6 +2151,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: REVISION OF LINEAR EQUATIONS ───
             {
                 title: '1. Revision of Linear Equations (One-Step, Two-Step, and Brackets)',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Equations__Finding__x_.mp4',
                 content: "## Foundations\n\nBasic linear equations are the building blocks of all higher-level algebra. Success in physics formulas, economic modelling, and engineering depends on mastering these fundamental manipulations.\n\n## Diagram: Types of Linear Equations\n\n| Type | Example | Key Action |\n|---|---|---|\n| **One-step** | $x + 7 = 15$ | Inverse operation once |\n| **Two-step** | $3m + 5 = 20$ | Two inverse operations |\n| **With brackets** | $2(x - 3) = 10$ | Expand first, then solve |\n| **Nested brackets** | $12 - 3(p - 1) = 6$ | Distribute negative, then solve |\n\n## Diagram: Common Bracket Errors\n\n| Error Type | Incorrect | Correct | Rule |\n|---|---|---|---|\n| Dropping negatives | $-2(x - 4) = -2x - 8$ | $-2(x - 4) = -2x + 8$ | Multiply the sign into **every** term |\n| Partial distribution | $3(x + 5) = 3x + 5$ | $3(x + 5) = 3x + 15$ | Multiply **all** terms inside the bracket |\n\n## Verification Strategy\n\nAlways substitute your answer back into the **original** equation to check:\n\n$$\\\\text{If } x + 7 = 15 \\\\text{ and } x = 8: \\\\quad 8 + 7 = 15 \\\\; \\\\checkmark$$\n\n## Practice Exercise\n\n1. $x + 12 = 30$\n2. $y - 8 = -2$\n3. $6m = 42$\n4. $\\\\dfrac{x}{5} = 4$\n5. $2a + 7 = 19$\n6. $3(x + 4) = 21$\n7. $4(2y - 3) = 12$\n8. $10 - 2(m + 1) = 4$\n9. $5(3 - x) = 10$\n10. $0.5(x + 4) = 5$",
                 worked_examples: [
                     {
@@ -2697,6 +2702,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: SIMPLIFYING ───
             {
                 title: '1. Simplifying Algebraic Expressions',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Algebraic_Manipulation.mp4',
                 content: "## The Logic of Like Terms\n\nLike terms contain the **exact same variables** raised to the **exact same powers**. Think \u201cApples vs. Oranges\u201d: $3$ apples $+ 2$ oranges cannot be combined.\n\n## Diagram: Like Terms Identification\n\n| Term A | Term B | Like Terms? | Why |\n|---|---|---|---|\n| $x$ | $4x$ | \u2714 Yes | Same variable, same power |\n| $x$ | $x^2$ | \u2718 No | $x$ is linear, $x^2$ is area |\n| $3xy$ | $5yx$ | \u2714 Yes | $xy = yx$ (order doesn\u2019t matter) |\n| $2a$ | $2b$ | \u2718 No | Different variables |\n| $m^2$ | $3m^2$ | \u2714 Yes | Same variable, same power |\n\n## Diagram: Rules for Operations\n\n| Operation | Rule | Example |\n|---|---|---|\n| **Addition/Subtraction** | Only combine **like** terms; adjust coefficients | $5a - 3a = 2a$ |\n| **Multiplication** | Variables CAN be combined regardless | $x \\\\times y = xy$ |\n| **Division** | Cancel common factors using index laws | $\\\\dfrac{x^2}{x} = x$ |\n\n## Practice Exercise\n\n1. Simplify $7x + 4y - 3x + 2y$.\n2. Simplify $12m^2 - 5m + 3m^2$.\n3. Simplify $4ab \\\\times 3c$.\n4. Simplify $\\\\dfrac{20x^2y}{5x}$.\n5. Simplify $10k + 3h - 6k - 2h$.",
                 worked_examples: [
                     {
@@ -3425,6 +3431,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: FUNDAMENTALS ───
             {
                 title: '1. Meaning and Notation of Direct Variation',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Direct_Variation__The_Maths_of_More.mp4',
                 content: "## Converting Statements to Equations\n\nThe proportionality symbol $\\\\propto$ cannot be used for calculations. It must be converted to an equation using the constant $k$.\n\n## Diagram: Conversion Process\n\n| Step | Action | Example |\n|---|---|---|\n| **Step 1** | Write the statement | \u201cCost varies directly as mass\u201d |\n| **Step 2** | Use $\\\\propto$ notation | $C \\\\propto m$ |\n| **Step 3** | Replace $\\\\propto$ with $= k$ | $C = km$ |\n\n## Diagram: Common Direct Variation Relationships\n\n| Context | Statement | Equation | Meaning of $k$ |\n|---|---|---|---|\n| Cost of maize | $C \\\\propto m$ | $C = km$ | Price per kg |\n| Distance & time | $d \\\\propto t$ | $d = kt$ | Speed (km/h) |\n| Wages & hours | $W \\\\propto h$ | $W = kh$ | Hourly rate |\n| Interest & principal | $I \\\\propto P$ | $I = kP$ | Interest rate |\n| Weight & bags | $w \\\\propto b$ | $w = kb$ | Weight per bag |\n\n## Common Error\n\n| | Action | Result |\n|---|---|---|\n| \u2718 Wrong | Substitute into $y \\\\propto x$ directly | Cannot calculate |\n| \u2714 Correct | Convert to $y = kx$ first, then substitute | Valid calculation |\n\n## Quick Check Exercise\n\n1. Write the proportionality statement for: \u201c$P$ varies directly as $Q$.\u201d\n2. Convert $M \\\\propto N$ into an equation.\n3. If $y \\\\propto x$, what happens to $y$ if $x$ is halved?\n4. Identify the constant in $C = 12n$.\n5. Write an equation for: \u201cVolume varies directly as time.\u201d",
                 worked_examples: [
                     {
@@ -3885,6 +3892,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: DIRECT VARIATION GRAPHS ───
             {
                 title: '1. Graphs of Direct Variation ($y \\\\propto x$)',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Variation_Graphs.mp4',
                 content: "## The Significance of the Origin\n\nA direct variation graph is always a **straight line through $(0, 0)$**. Since $y = kx$, if $x = 0$, then $y = k(0) = 0$.\n\n> **ZIMSEC Warning**: Failing to start your line at $(0, 0)$ is a conceptual error that results in the loss of **all** plotting marks.\n\n## Diagram: The 4-Step Graphing Method\n\n| Step | Action | Detail |\n|---|---|---|\n| **Step 1** | Find $k$ | $k = \\\\dfrac{y}{x}$ from a known pair |\n| **Step 2** | Build a table | At least 5 values including $x = 0$ |\n| **Step 3** | Plot points | Mark coordinates on the Cartesian plane |\n| **Step 4** | Draw the line | Use a **ruler**; must pass through $(0, 0)$ |\n\n## Diagram: Choosing Scales (ZIMSEC Tip)\n\n| Principle | Good Practice | Bad Practice |\n|---|---|---|\n| Spread points out | 2 cm = 10 units (when range is large) | All points clumped in one corner |\n| Use graph paper blocks | 2 cm blocks on standard ZIMSEC paper | Irregular spacing |\n| Label axes | Include variable names **and** units | Unlabelled axes |\n\n## Diagram: Effect of $k$ on Steepness\n\n| Value of $k$ | Steepness | Example |\n|---|---|---|\n| $k = 10$ | Very steep | $y = 10x$ |\n| $k = 3$ | Moderate | $y = 3x$ |\n| $k = 1$ | 45\u00b0 line | $y = x$ |\n| $k = 0.25$ | Gentle | $y = 0.25x$ |\n\n## Practice Exercise\n\n1. $y \\\\propto x$. If $x = 5$, $y = 25$, find the equation and draw a table for $x = 0$ to $5$.\n2. 4 buckets of maize cost \\$20. Find the equation connecting cost ($C$) and buckets ($b$).\n3. If $y = kx$ and the graph passes through $(2, 10)$, what is $k$?\n4. For $y = 0.2x$, if $x = 10$, find $y$.\n5. Why must a direct variation graph always pass through $(0, 0)$?",
                 worked_examples: [
                     {
@@ -4276,6 +4284,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: FUNDAMENTALS ───
             {
                 title: '1. Fundamentals: Axes, Units, and Scale Selection',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Form_2__Travel_Graphs.mp4',
                 content: "## Axes Labelling Rules\n\n| Axis | Variable | Why |\n|---|---|---|\n| **Horizontal** ($x$) | Time | Time is **independent** \u2014 it \u201cmarches forward\u201d regardless |\n| **Vertical** ($y$) | Distance | Distance **depends** on time and speed |\n\n> **ZIMSEC Warning**: Putting distance on the horizontal axis is a fundamental error that can lose you **all** marks for the graph.\n\n## Best Practice: Scale Selection\n\n| Principle | Good Practice | Bad Practice |\n|---|---|---|\n| Use standard multiples | 1 cm = 2, 5, 10, 20, 50 units | 1 cm = 3 or 7 units |\n| Fill the grid | Graph uses at least half the space | All points in one small corner |\n| Match data range | Max value fits on axis | Data exceeds axis length |\n| Label clearly | Include variable **and** units | Unlabelled or missing units |\n\n## Practice Exercise\n\n1. On which axis do we plot the independent variable (Time)?\n2. Suggest a suitable scale for $y$ if max distance is 100 km and you have 10 cm.\n3. If 1 cm = 10 minutes, how many cm represent 1 hour?\n4. A cyclist travels 2000 m. Convert to km for a graph scaled in km.\n5. Identify the error: A student labels the horizontal axis as \u201cDistance (km).\u201d",
                 worked_examples: [
                     {
@@ -4752,6 +4761,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: COORDINATE GEOMETRY REVISION ───
             {
                 title: '1. Foundations of Coordinate Geometry',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Functional_Graphs.mp4',
                 content: "## Plotting Points: Step-by-Step\n\n| Step | Action |\n|---|---|\n| **1. Identify $x$** | Start at origin, move along horizontal axis |\n| **2. Identify $y$** | From that $x$-position, move up (+) or down (\u2212) |\n| **3. Mark the point** | Use a small neat $\\\\times$ or circled dot |\n| **4. Label** | Write coordinates or point name with sharp pencil |\n\n## Choosing a Suitable Scale\n\n| Rule | Detail |\n|---|---|\n| Standard ZIMSEC paper | 2 cm grid |\n| State scale clearly | e.g., \u201c2 cm to represent 1 unit on both axes\u201d |\n| Fill the grid | Graph should use at least 75% of the space |\n| Easy intervals | Use 1s, 2s, 5s, or 10s \u2014 avoid 3s or 7s |\n\n> **ZIMSEC Mantra**: Walk ($x$) before you Climb ($y$).\n\n## Practice Exercise\n\nPlot these 10 points on a Cartesian plane (scale: 2 cm to 1 unit):\n\n$(2, 5)$, $(-3, 4)$, $(0, -2)$, $(5, 0)$, $(-4, -4)$, $(1, -3)$, $(-2, 1)$, $(4, 4)$, $(-1, -5)$, $(3, -2)$",
                 worked_examples: [
                     {
@@ -5262,6 +5272,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: AREA OF PLANE FIGURES ───
             {
                 title: '1. Area of Plane Figures',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Form_2_Maths__Mensuration.mp4',
                 content: "## Formulae and Reasoning\n\n| Shape | Formula | Conceptual Reasoning |\n|---|---|---|\n| **Rectangle** | $A = l \\\\times w$ | Grid of $l$ rows and $w$ columns of unit squares |\n| **Square** | $A = s^2$ | A rectangle where all sides are equal |\n| **Triangle** | $A = \\\\dfrac{1}{2} \\\\times b \\\\times h$ | Exactly half of a parallelogram |\n| **Parallelogram** | $A = b \\\\times h$ | Can be rearranged into a rectangle |\n| **Trapezium** | $A = \\\\dfrac{1}{2}(a + b)h$ | Average of the two parallel sides $\\\\times$ height |\n\n> **Common Error \u2014 The Slant Height Trap**: In triangles and parallelograms, always use the **perpendicular height** ($h$) that makes a $90^\\\\circ$ angle with the base \u2014 **not** the slanted side.\n\n> **Common Error \u2014 Trapezium Sides**: Add the two **parallel** sides ($a$ and $b$), not the non-parallel legs.\n\n## Practice Exercise\n\n1. Rectangle $18 \\\\times 5$ cm.\n2. Square with side 1.1 m.\n3. Triangle: $b = 12$ cm, $h = 7$ cm.\n4. Parallelogram: $b = 20$ m, $h = 11$ m.\n5. Trapezium: $a = 12$ cm, $b = 8$ cm, $h = 6$ cm.",
                 worked_examples: [
                     {
@@ -5734,6 +5745,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: PROFIT AND LOSS ───
             {
                 title: '1. Foundations of Trade: Profit and Loss',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Consumer_Arithmetic_Journey.mp4',
                 content: "## Key Definitions\n\n| Term | Definition |\n|---|---|\n| **Cost Price (C.P.)** | Total price paid to purchase or produce goods |\n| **Selling Price (S.P.)** | Price at which goods are sold to the consumer |\n| **Profit** | $\\\\text{S.P.} > \\\\text{C.P.}$: $\\\\text{Profit} = \\\\text{S.P.} - \\\\text{C.P.}$ |\n| **Loss** | $\\\\text{C.P.} > \\\\text{S.P.}$: $\\\\text{Loss} = \\\\text{C.P.} - \\\\text{S.P.}$ |\n\n## Percentage Formulae\n\n$$\\\\text{\\\\% Profit} = \\\\frac{\\\\text{Profit}}{\\\\text{C.P.}} \\\\times 100$$\n\n$$\\\\text{\\\\% Loss} = \\\\frac{\\\\text{Loss}}{\\\\text{C.P.}} \\\\times 100$$\n\n> **The Denominator Trap**: Always use **C.P.** as the denominator \u2014 never S.P.\n\n## Practice Exercise\n\n1. Refrigerator: C.P. = \\$450, S.P. = \\$520. Calculate profit.\n2. % loss: C.P. = \\$200, S.P. = \\$160.\n3. 15% profit on a \\$120 suit. Find S.P.\n4. Bicycle sold for \\$90 at a loss of \\$15. Find C.P.\n5. 50 kg sugar for \\$60, sold at \\$1.50/kg. % profit?",
                 worked_examples: [
                     {
@@ -6184,6 +6196,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: CALCULATING TOTAL COST ───
             {
                 title: '1. Calculating Total Cost and Vertical Working',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Form_2_Maths__Mastering_Bills.mp4',
                 content: "## Mathematical Process\n\n| Step | Action |\n|---|---|\n| **1** | Multiply Quantity by Unit Price |\n| **2** | Sum all line totals vertically |\n| **3** | Align decimal points in every column |\n\n> **Common Error \u2014 Rounding**: Writing \\$5.5 instead of \\$5.50 loses the Accuracy (A1) mark.\n\n> **Common Error \u2014 Column Alignment**: Always align the decimal points when adding vertically.\n\n## Practice Exercise\n\n1. 5 kg rice (\\$1.40/kg) + 2 units jam (\\$2.30). Total?\n2. 3 units salt (\\$0.65) + 1 unit flour (\\$2.10). Total?\n3. 10 notebooks (\\$1.20) + 5 pencils (\\$0.15). Total?\n4. 4 kg chicken (\\$5.50/kg) + 1 kg onions (\\$1.10). Total?\n5. 6 units juice (\\$0.95) + 12 units water (\\$0.45). Total?",
                 worked_examples: [
                     {
@@ -6652,6 +6665,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: SET NOTATION REVISION ───
             {
                 title: '1. Set Notation and Symbols',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Venn_Diagrams__Visualizing_Logic.mp4',
                 content: "## Key Symbols\n\n| Symbol | Name | Strategic Role |\n|---|---|---|\n| $\\\\varepsilon$ | Universal set | Defines the boundary rectangle |\n| $\\\\cup$ | Union | \u201cEither/or\u201d \u2014 covers the entire area within circles |\n| $\\\\cap$ | Intersection | The \u201cbridge\u201d where sets meet |\n| $A'$ | Complement | Everything in $\\\\varepsilon$ that is **not** in $A$ |\n| $A - B$ | Difference | Elements in $A$ that are not in $B$ (\u201c$A$ only\u201d) |\n| $\\\\emptyset$ or $\\\\{\\\\}$ | Empty set | No common elements |\n\n> **Pro-Tip**: $\\\\cup$ = **U**nion (joining everything); $\\\\cap$ = i**n**tersection (the bridge where they meet).\n\n## Practice Exercise\n\n1. $X = \\\\{p, q, r, s\\\\}$, $Y = \\\\{r, s, t\\\\}$. Find $n(X \\\\cup Y)$.\n2. $\\\\varepsilon = \\\\{1, 2, 3, 4, 5\\\\}$, $A = \\\\{2, 4\\\\}$. List $A'$.\n3. $A = \\\\{m, a, t, h\\\\}$, $B = \\\\{s, t, e, m\\\\}$. Find $n(A \\\\cap B)$.\n4. True or False: If $A = \\\\{1, 2\\\\}$ and $B = \\\\{3, 4\\\\}$, then $A \\\\cap B = \\\\{0\\\\}$.\n5. $\\\\varepsilon = \\\\{1, 2, \\\\ldots, 10\\\\}$. Find $n(\\\\text{Even numbers})'$.",
                 worked_examples: [
                     {
@@ -7015,6 +7029,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: SET NOTATION REVISION ───
             {
                 title: '1. Set Notation and Symbols (Revision)',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/The_Codebreaker_s_Guide_to_Sets.mp4',
                 content: "## Revision of Foundations\n\n| Concept | Meaning |\n|---|---|\n| **Set** | A well-defined collection of distinct objects |\n| **Elements** | Individual members, denoted by lowercase letters or numbers |\n| **Notation** | Capital letters ($A, B, C$); elements in braces $\\\\{\\\\;\\\\}$ |\n\n## Essential Symbols\n\n| Symbol | Name | Role |\n|---|---|---|\n| $\\\\in$ | Element of | Confirms membership |\n| $\\\\notin$ | Not an element of | Defines exclusion |\n| $\\\\subseteq$ | Subset of | Containment hierarchy |\n| $\\\\subset$ | Proper subset | Strictly smaller nested group |\n| $\\\\emptyset$ | Empty / Null set | Zero elements |\n| $\\\\varepsilon$ | Universal set | Total scope of the problem |\n| $n(A)$ | Cardinality | Number of elements |\n\n> **Common Error**: $\\\\emptyset$ vs $\\\\{0\\\\}$. The empty set $\\\\emptyset$ (or $\\\\{\\\\;\\\\}$) contains **nothing**. $\\\\{0\\\\}$ is a finite set containing one element: the number zero. They are **logically distinct**.\n\n## Practice\n\n1. List elements of $B = \\\\{\\\\text{Letters in MATHEMATICS}\\\\}$.\n2. Complete: $3\\\\ \\\\_\\\\_\\\\_\\\\ \\\\{1, 3, 5, 7\\\\}$. (Use $\\\\in$ or $\\\\notin$)\n3. Express $C = \\\\{10, 20, 30, 40, 50\\\\}$ in set-builder notation.\n4. Find $n(D)$ where $D = \\\\{\\\\text{Months beginning with J}\\\\}$.\n5. True or False: $\\\\{\\\\;\\\\} = \\\\{0\\\\}$.",
                 worked_examples: [
                     {
@@ -7347,6 +7362,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: DEFINITIONS AND CLASSIFICATIONS ───
             {
                 title: '1. Definitions and Classifications',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Mastering_ZIMSEC_Scales.mp4',
                 content: "## The Three Scale Types\n\n| Type | Form | Key Feature |\n|---|---|---|\n| **Representative Fraction (RF)** | $1 : n$ or $\\\\dfrac{1}{n}$ | Unitless ratio |\n| **Statement Scale** | \u201c1 cm represents 5 km\u201d | Verbal, includes units |\n| **Linear (Bar) Scale** | Drawn line with labelled segments | Visual, no calculation needed |\n\n## Reading a Scale\n\n| Part | Meaning |\n|---|---|\n| The \u201c1\u201d | Map Distance (smaller value) |\n| The \u201c$n$\u201d | Actual Distance (larger value) |\n\n> **Common Error**: Swapping Map and Actual distance. The map value is always the **smaller** number (usually 1).",
                 worked_examples: [
                     {
@@ -7888,6 +7904,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: INTRODUCTION AND PLACE VALUE ───
             {
                 title: '1. Introduction to Number Bases',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Cracking_the_Code__Number_Bases.mp4',
                 content: "## The Base Rule\n\nA number system of base $n$ uses only the digits $0, 1, 2, \\\\ldots, n - 1$.\n\n## Valid Digits Reference\n\n| Base | Name | Valid Digits |\n|---|---|---|\n| 2 | Binary | 0, 1 |\n| 3 | Ternary | 0, 1, 2 |\n| 4 | Quaternary | 0, 1, 2, 3 |\n| 5 | Quinary | 0, 1, 2, 3, 4 |\n| 6 | Senary | 0, 1, 2, 3, 4, 5 |\n| 7 | Septenary | 0, 1, 2, 3, 4, 5, 6 |\n| 8 | Octal | 0, 1, 2, 3, 4, 5, 6, 7 |\n| 9 | Nonary | 0, 1, 2, 3, 4, 5, 6, 7, 8 |\n| 10 | Denary | 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 |\n\n## Place Value\n\nPlace value is determined by **powers of the base**:\n\n| Position (right to left) | Power | Base 10 value | Base 2 value |\n|---|---|---|---|\n| 1st (units) | $b^0$ | 1 | 1 |\n| 2nd | $b^1$ | 10 | 2 |\n| 3rd | $b^2$ | 100 | 4 |\n| 4th | $b^3$ | 1000 | 8 |\n\n> **Common Error**: Including the base value itself as a digit. For example, $25_5$ is **invalid** because digit \u201c5\u201d cannot exist in base 5 (max digit is 4)."
             },
 
@@ -8316,6 +8333,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: SYMBOLS AND NOTATION ───
             {
                 title: '1. Inequality Symbols and Notation',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Form_2_Math__Inequalities.mp4',
                 content: "## The Four Primary Symbols\n\n| Symbol | Meaning | Keywords |\n|---|---|---|\n| $<$ | Is less than | \u201cbelow\u201d, \u201cunder\u201d, \u201cfewer than\u201d |\n| $>$ | Is greater than | \u201cabove\u201d, \u201cover\u201d, \u201cmore than\u201d |\n| $\\\\le$ | Is less than or equal to | \u201cat most\u201d, \u201cmaximum\u201d, \u201cno more than\u201d, \u201cdoes not exceed\u201d |\n| $\\\\ge$ | Is greater than or equal to | \u201cat least\u201d, \u201cminimum\u201d, \u201cno less than\u201d |\n\n## Practice\n\n1. $k$ is no more than 15.\n2. $p$ is strictly greater than 0.\n3. Capacity $V$ is at least 500 ml.\n4. $w$ is less than or equal to $-2$.\n5. $z$ is more than 100.",
                 worked_examples: [
                     {
@@ -8717,18 +8735,19 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
     },
 
     // ============================================
-    // FORM 2: INDICES (LAWS OF INDICES)
+    // FORM 2: INDICES (LAWS OF INDICES) — Comprehensive
     // ============================================
     'F2 Indices': {
         topic: 'Indices (Laws of Indices)',
         subject: 'Mathematics',
         grade_level: 'O-Level Form 2',
-        summary: "Index notation is a mathematical shorthand for repeated multiplication. In the expression $a^n$, the **base** ($a$) is the number being multiplied and the **index/exponent** ($n$) tells us how many times.\n\n## The Six Laws of Indices\n\n| Law | Name | Formula |\n|---|---|---|\n| **1** | Multiplication | $a^x \\\\times a^y = a^{x+y}$ |\n| **2** | Division | $a^x \\\\div a^y = a^{x-y}$ |\n| **3** | Power of a Power | $(a^x)^y = a^{xy}$ |\n| **4** | Power of a Product | $(ab)^n = a^n b^n$ |\n| **5** | Zero Index | $a^0 = 1$ (any non-zero base) |\n| **6** | Negative Index | $a^{-x} = \\\\dfrac{1}{a^x}$ |\n\n## Key Constraint\n\nAll multiplication/division laws require the **same base**. If bases differ (e.g. $2^3 \\\\times 3^2$), the law **cannot** be applied.",
+        summary: "Index notation is a strategic mathematical shorthand for repeated multiplication. In the expression $a^n$, the **base** ($a$) is the number being multiplied and the **index/exponent** ($n$) tells us how many times.\n\n## The Six Laws of Indices\n\n| Law | Name | Formula |\n|---|---|---|\n| **1** | Multiplication | $a^x \\\\times a^y = a^{x+y}$ |\n| **2** | Division | $a^x \\\\div a^y = a^{x-y}$ |\n| **3** | Power of a Power | $(a^x)^y = a^{xy}$ |\n| **4** | Power of a Product | $(ab)^n = a^n b^n$ |\n| **5** | Zero Index | $a^0 = 1$ (any non-zero base) |\n| **6** | Negative Index | $a^{-x} = \\\\dfrac{1}{a^x}$ |\n\n## Key Constraint\n\nAll multiplication/division laws require the **same base**. If bases differ (e.g., $2^3 \\\\times 3^2$), the law **cannot** be applied — the expression must be evaluated numerically.\n\n## Standard Form Connection\n\nIndex laws are the \\\"engine\\\" behind Standard Form ($A \\\\times 10^n$, where $1 \\\\leq A < 10$). Multiplication and division of powers of 10 follow Laws 1 and 2 directly.",
         sections: [
             // ─── SECTION 1: INDEX NOTATION ───
             {
                 title: '1. Introduction to Index Notation',
-                content: "## Components\n\n| Part | Name | Role |\n|---|---|---|\n| $a$ | **Base** | The number being repeatedly multiplied |\n| $n$ | **Index / Exponent / Power** | How many times the base appears |\n\n## Converting Between Forms\n\n| Direction | Example |\n|---|---|\n| Expanded $\\\\to$ Index | $2 \\\\times 2 \\\\times 2 = 2^3$ |\n| Index $\\\\to$ Expanded | $5^4 = 5 \\\\times 5 \\\\times 5 \\\\times 5$ |\n\n## Practice\n\n1. Write $8 \\\\times 8 \\\\times 8 \\\\times 8$ in index form.\n2. Expand $m^4$.\n3. Write $z \\\\times z \\\\times z \\\\times z \\\\times z \\\\times z \\\\times z$ in index form.\n4. Expand $12^2$.\n5. Write $p \\\\times p$ in index form.",
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Mastering_Indices.mp4',
+                content: "In mathematics, efficiency is as vital as accuracy. Index notation serves as a strategic mathematical \\\"shorthand,\\\" allowing us to simplify the representation of very large numbers or repeated operations. This system is essential for maintaining clarity in algebra.\n\n## Defining the Components\n\nIn the expression $a^n$:\n\n| Part | Name | Role | Example ($3^4$) |\n|---|---|---|---|\n| $a$ | **Base** | The number being repeatedly multiplied | $3$ |\n| $n$ | **Index / Exponent / Power** | How many times the base appears in the product | $4$ |\n\nSo $3^4$ means $3$ is multiplied by itself $4$ times.\n\n## The Process of Repeated Multiplication\n\nTo master index notation, you must convert between expanded form and index form fluently.\n\n| Direction | Process | Example |\n|---|---|---|\n| **To Index Form** | Count how many times the base appears | $2 \\\\times 2 \\\\times 2 = 2^3$ |\n| **To Expanded Form** | Write out the base multiplied by itself $n$ times | $5^4 = 5 \\\\times 5 \\\\times 5 \\\\times 5$ |\n\n## Practice Exercise 1.1\n\n1. Write $8 \\\\times 8 \\\\times 8 \\\\times 8$ in index form.\n2. Expand $m^4$.\n3. Write $z \\\\times z \\\\times z \\\\times z \\\\times z \\\\times z \\\\times z$ in index form.\n4. Expand $12^2$.\n5. Write $p \\\\times p$ in index form.\n6. Expand $10^5$.\n7. Write $6 \\\\times 6 \\\\times 6$ in index form.\n8. Expand $n^3$.\n9. Write $k \\\\times k \\\\times k \\\\times k \\\\times k$ in index form.\n10. Expand $2^6$.",
                 worked_examples: [
                     {
                         question: "Write in index form: $3 \\\\times 3 \\\\times 3 \\\\times 3 \\\\times 3$.",
@@ -8776,46 +8795,70 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 2: MULTIPLICATION AND DIVISION LAWS ───
             {
                 title: '2. The Multiplication and Division Laws',
-                content: "## Law 1: Multiplication\n\n$$a^x \\\\times a^y = a^{x+y}$$\n\n**Why?** $2^3 \\\\times 2^2 = (2 \\\\times 2 \\\\times 2) \\\\times (2 \\\\times 2) = 2^5$. The indices **add**.\n\n## Law 2: Division\n\n$$a^x \\\\div a^y = a^{x-y}$$\n\n**Why?** $5^5 \\\\div 5^2 = \\\\dfrac{5 \\\\times 5 \\\\times 5 \\\\times 5 \\\\times 5}{5 \\\\times 5} = 5^3$. The indices **subtract**.\n\n> **Critical**: Both laws require the **same base**. $2^3 \\\\times 3^4$ is **NOT** $6^7$.\n\n> **Common Error**: Adding indices during division. Division means **subtract**.\n\n## Practice\n\n1. $3^2 \\\\times 3^4$ | 2. $x^9 \\\\div x^3$ | 3. $10^2 \\\\times 10^5$\n4. $a^6 \\\\div a^5$ | 5. $2^4 \\\\times 2^4$ | 6. $y^{12} \\\\div y^{10}$",
+                content: "These two foundational laws allow a mathematician to combine terms with the same base quickly — a required skill for solving equations and simplifying complex expressions.\n\n## Law 1: The Multiplication Law\n\n$$a^x \\\\times a^y = a^{x+y}$$\n\n**The \\\"Why\\\" Analysis:** Consider $2^3 \\\\times 2^2$. By expansion:\n\n$(2 \\\\times 2 \\\\times 2) \\\\times (2 \\\\times 2) = 2 \\\\times 2 \\\\times 2 \\\\times 2 \\\\times 2 = 2^5$\n\nThe resulting index $5$ is the **sum** of $3$ and $2$.\n\n**Analytical Mandate:** This law requires the **same base**. If the bases are different, such as $2^3 \\\\times 3^2$, the law **cannot** be applied. The expression must remain in expanded form ($8 \\\\times 9$) or be evaluated numerically ($72$).\n\n## Law 2: The Division Law\n\n$$a^x \\\\div a^y = a^{x-y}$$\n\n**The \\\"Why\\\" Analysis:** Consider $5^5 \\\\div 5^2$. Using fraction cancellation:\n\n$$\\\\dfrac{5 \\\\times 5 \\\\times 5 \\\\times 5 \\\\times 5}{5 \\\\times 5} = 5 \\\\times 5 \\\\times 5 = 5^3$$\n\nThe resulting index $3$ is the **difference** of $5$ and $2$.\n\n> **Caution — Common Errors:**\n> - Adding indices when bases are different: $2^3 \\\\times 3^4$ is **NOT** $6^7$.\n> - Adding indices during division: remember, division requires **subtraction**.\n\n## Practice Exercise 2.1\n\n1. $3^2 \\\\times 3^4$\n2. $x^9 \\\\div x^3$\n3. $10^2 \\\\times 10^5$\n4. $a^6 \\\\div a^5$\n5. $2^4 \\\\times 2^4$\n6. $y^{12} \\\\div y^{10}$\n7. $5^1 \\\\times 5^2$\n8. $b^3 \\\\div b^1$\n9. $4^7 \\\\times 4^2$\n10. $m^8 \\\\div m^8$\n11. $10^{15} \\\\div 10^{10}$\n12. $z^3 \\\\times z^5$",
                 worked_examples: [
                     {
                         question: "Simplify $2^3 \\\\times 2^4$.",
-                        steps: ["Same base (2). Add indices: $3 + 4 = 7$."],
+                        steps: [
+                            "Expanded reasoning: $(2 \\\\times 2 \\\\times 2) \\\\times (2 \\\\times 2 \\\\times 2 \\\\times 2) = 2^7$",
+                            "Law 1: $2^{3+4} = 2^7$"
+                        ],
                         final_answer: "$2^7$"
                     },
                     {
                         question: "Simplify $5^2 \\\\times 5^3$.",
-                        steps: ["$5^{2+3} = 5^5$"],
+                        steps: [
+                            "Expanded: $(5 \\\\times 5) \\\\times (5 \\\\times 5 \\\\times 5) = 5^5$",
+                            "Law 1: $5^{2+3} = 5^5$"
+                        ],
                         final_answer: "$5^5$"
                     },
                     {
                         question: "Simplify $x^5 \\\\times x^2$.",
-                        steps: ["$x^{5+2} = x^7$"],
+                        steps: [
+                            "$(x \\\\cdot x \\\\cdot x \\\\cdot x \\\\cdot x) \\\\times (x \\\\cdot x) = x^7$",
+                            "Law 1: $x^{5+2} = x^7$"
+                        ],
                         final_answer: "$x^7$"
                     },
                     {
                         question: "Simplify $a^1 \\\\times a^6$.",
-                        steps: ["$a^{1+6} = a^7$"],
+                        steps: [
+                            "$(a) \\\\times (a \\\\cdot a \\\\cdot a \\\\cdot a \\\\cdot a \\\\cdot a) = a^7$",
+                            "Law 1: $a^{1+6} = a^7$"
+                        ],
                         final_answer: "$a^7$"
                     },
                     {
                         question: "Simplify $5^6 \\\\div 5^2$.",
-                        steps: ["Same base (5). Subtract indices: $6 - 2 = 4$."],
+                        steps: [
+                            "Cancel 2 factors of 5 from numerator and denominator",
+                            "Law 2: $5^{6-2} = 5^4$"
+                        ],
                         final_answer: "$5^4$"
                     },
                     {
                         question: "Simplify $2^8 \\\\div 2^3$.",
-                        steps: ["$2^{8-3} = 2^5$"],
+                        steps: [
+                            "Cancel 3 factors of 2",
+                            "Law 2: $2^{8-3} = 2^5$"
+                        ],
                         final_answer: "$2^5$"
                     },
                     {
                         question: "Simplify $x^{10} \\\\div x^4$.",
-                        steps: ["$x^{10-4} = x^6$"],
+                        steps: [
+                            "Cancel 4 factors of $x$",
+                            "Law 2: $x^{10-4} = x^6$"
+                        ],
                         final_answer: "$x^6$"
                     },
                     {
                         question: "Simplify $10^5 \\\\div 10^1$.",
-                        steps: ["$10^{5-1} = 10^4$"],
+                        steps: [
+                            "Cancel 1 factor of 10",
+                            "Law 2: $10^{5-1} = 10^4$"
+                        ],
                         final_answer: "$10^4$"
                     }
                 ]
@@ -8824,7 +8867,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 3: POWER OF A POWER / PRODUCT ───
             {
                 title: '3. Power of a Power and Power of a Product',
-                content: "## Law 3: Power of a Power\n\n$$(a^x)^y = a^{xy}$$\n\n**Why?** $(3^2)^3 = 3^2 \\\\times 3^2 \\\\times 3^2 = 3^6$. The indices **multiply**.\n\n## Law 4: Power of a Product\n\n$$(ab)^n = a^n b^n$$\n\nThe index applies to **every factor** inside the bracket.\n\n## Practice\n\n1. $(2^3)^2$ | 2. $(x^4)^5$ | 3. $(ab)^3$\n4. $(y^2)^6$ | 5. $(m^3 n^2)^3$",
+                content: "These laws facilitate the distribution of exponents across terms — a vital skill for simplifying algebraic expressions and preparing for higher-order equations.\n\n## Law 3: Power of a Power\n\n$$(a^x)^y = a^{xy}$$\n\n**The \\\"Why\\\" Analysis:** Consider $(3^2)^3$. This means multiply the inner bracket $(3^2)$ by itself three times:\n\n$(3 \\\\times 3) \\\\times (3 \\\\times 3) \\\\times (3 \\\\times 3) = 3^6$\n\nThe resulting index $6$ is the **product** of $2$ and $3$.\n\n## Law 4: Power of a Product\n\n$$(ab)^n = a^n b^n$$\n\nWhen a product is inside a bracket raised to a power, the index applies to **every factor** inside the bracket.\n\n**Example:** $(xy)^3 = (xy) \\\\times (xy) \\\\times (xy) = x^3 y^3$\n\n## Practice Exercise 3.1\n\n1. $(2^3)^2$\n2. $(x^4)^5$\n3. $(ab)^3$\n4. $(y^2)^6$\n5. $(m^3 n^2)^3$\n6. $(10^4)^2$\n7. $(a^2 b^5)^2$\n8. $(z^5)^4$\n9. $(xy^2)^4$\n10. $(3^3)^3$",
                 worked_examples: [
                     {
                         question: "Simplify $(3^2)^3$.",
@@ -8872,7 +8915,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 4: ZERO AND NEGATIVE INDICES ───
             {
                 title: '4. Zero and Negative Indices',
-                content: "## The Zero Index\n\n$$a^0 = 1 \\\\quad (a \\\\neq 0)$$\n\n**Derivation**: $a^x \\\\div a^x = 1$. By Law 2: $a^{x-x} = a^0$. Therefore $a^0 = 1$.\n\n## Negative Indices\n\n$$a^{-x} = \\\\dfrac{1}{a^x}$$\n\nA negative index means **reciprocal**.\n\n**Derivation**: $a^0 \\\\div a^x = \\\\dfrac{1}{a^x}$. By Law 2: $a^{0-x} = a^{-x}$.\n\n> **Common Errors**:\n> - $a^0 = 0$ is **WRONG**. It is always **1**.\n> - $a^{-x}$ is **not** a negative number. It is a **fraction**.",
+                content: "The Zero and Negative index laws are logical extensions of the Division Law ($a^x \\\\div a^y = a^{x-y}$).\n\n## The Zero Index\n\n$$a^0 = 1 \\\\quad (a \\\\neq 0)$$\n\n**Logical Derivation:** Consider $a^x \\\\div a^x$:\n\n1. Anything divided by itself is $1$.\n2. Using Law 2: $a^{x-x} = a^0$.\n3. Therefore, $a^0 = 1$.\n\n## Negative Indices\n\n$$a^{-x} = \\\\dfrac{1}{a^x}$$\n\nA negative index represents the **reciprocal** of the base raised to the positive power.\n\n**Logical Derivation:** Consider $a^0 \\\\div a^x$:\n\n1. $a^{0-x} = a^{-x}$\n2. Since $a^0 = 1$, we can write this as $1 \\\\div a^x = \\\\dfrac{1}{a^x}$.\n\n> **Caution — Common Errors:**\n> - Thinking $a^0 = 0$ — it is always **1** (for any non-zero base).\n> - Thinking $a^{-x}$ results in a negative number — it results in a **fraction/reciprocal**.",
                 worked_examples: [
                     {
                         question: "Evaluate $3^0$.",
@@ -8920,65 +8963,74 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 5: COMPLEX ALGEBRAIC EXPRESSIONS ───
             {
                 title: '5. Simplifying Complex Algebraic Expressions',
-                content: "## Strategy\n\nWhen coefficients (numbers) and variables (letters) are mixed:\n\n| Part | Method |\n|---|---|\n| **Coefficients** | Normal arithmetic ($\\\\times$ or $\\\\div$) |\n| **Variables** | Apply Index Laws (add/subtract indices) |\n\n## Practice\n\n1. $5x^3 \\\\times 2x^4$ | 2. $16y^{10} \\\\div 2y^4$ | 3. $3a^2 \\\\times 3a^2$\n4. $(2m^4)^2$ | 5. $10x^5 \\\\div 5x^2$ | 6. $\\\\dfrac{24x^9}{6x^3}$",
+                content: "Success in ZIMSEC exams requires \\\"grouping like terms\\\" when coefficients (numbers) and variables (letters) are mixed.\n\n## Handling Coefficients\n\nCoefficients are treated with normal arithmetic (multiplication or division), while variable indices follow the Index Laws.\n\n| Part | Method | Example |\n|---|---|---|\n| **Coefficients** | Normal arithmetic ($\\\\times$ or $\\\\div$) | $4 \\\\times 3 = 12$ |\n| **Variables** | Apply Index Laws (add/subtract indices) | $x^{2+5} = x^7$ |\n\n## Practice Exercise 5.1\n\n1. $5x^3 \\\\times 2x^4$\n2. $16y^{10} \\\\div 2y^4$\n3. $3a^2 \\\\times 3a^2$\n4. $(2m^4)^2$\n5. $10x^5 \\\\div 5x^2$\n6. $4b^6 \\\\times 0.5b^2$\n7. $\\\\dfrac{24x^9}{6x^3}$\n8. $(5y^2)^3$\n9. $2a^3 \\\\times 3a^5 \\\\times a^2$\n10. $100n^{10} \\\\div 10n^{10}$\n11. $2x^2 \\\\times 3x^{-1}$\n12. $(4p^3)^2 \\\\div 2p^2$\n13. $7x^0 \\\\times 3x^4$\n14. $\\\\dfrac{18y^4}{9y^6}$\n15. $2(a^2)^3 \\\\times 3a^4$",
                 worked_examples: [
                     {
                         question: "Simplify $4x^2 \\\\times 3x^5$.",
                         steps: [
-                            "Coefficients: $4 \\\\times 3 = 12$.",
-                            "Variables: $x^{2+5} = x^7$."
+                            "Step 1 — Coefficients: $4 \\\\times 3 = 12$",
+                            "Step 2 — Variables: $x^2 \\\\times x^5 = x^{2+5} = x^7$",
+                            "Combine: $12 \\\\times x^7 = 12x^7$"
                         ],
                         final_answer: "$12x^7$"
                     },
                     {
                         question: "Simplify $20y^8 \\\\div 5y^3$.",
                         steps: [
-                            "Coefficients: $20 \\\\div 5 = 4$.",
-                            "Variables: $y^{8-3} = y^5$."
+                            "Step 1 — Coefficients: $20 \\\\div 5 = 4$",
+                            "Step 2 — Variables: $y^8 \\\\div y^3 = y^{8-3} = y^5$",
+                            "Combine: $4 \\\\times y^5 = 4y^5$"
                         ],
                         final_answer: "$4y^5$"
                     },
                     {
                         question: "Simplify $(2a^3)^3$.",
                         steps: [
-                            "$2^3 \\\\times (a^3)^3 = 8 \\\\times a^9$"
+                            "Apply Law 4 then Law 3:",
+                            "$2^3 \\\\times (a^3)^3 = 8 \\\\times a^{3 \\\\times 3} = 8a^9$"
                         ],
                         final_answer: "$8a^9$"
                     },
                     {
                         question: "Simplify $10m^4 \\\\times 2m^{-2}$.",
                         steps: [
-                            "Coefficients: $10 \\\\times 2 = 20$.",
-                            "Variables: $m^{4+(-2)} = m^2$."
+                            "Step 1 — Coefficients: $10 \\\\times 2 = 20$",
+                            "Step 2 — Variables: $m^4 \\\\times m^{-2} = m^{4+(-2)} = m^2$",
+                            "Combine: $20m^2$"
                         ],
                         final_answer: "$20m^2$"
                     },
                     {
                         question: "Simplify $\\\\dfrac{15x^6}{3x^2}$.",
                         steps: [
-                            "$\\\\dfrac{15}{3} \\\\times x^{6-2} = 5x^4$"
+                            "Step 1 — Coefficients: $\\\\dfrac{15}{3} = 5$",
+                            "Step 2 — Variables: $\\\\dfrac{x^6}{x^2} = x^{6-2} = x^4$",
+                            "Combine: $5x^4$"
                         ],
                         final_answer: "$5x^4$"
                     },
                     {
                         question: "Simplify $2x^3 \\\\times 4x^0$.",
                         steps: [
-                            "$x^0 = 1$. So $2 \\\\times 4 \\\\times x^3 = 8x^3$."
+                            "Note: $x^0 = 1$ (Zero Index Law)",
+                            "$(2 \\\\times 4) \\\\times (x^3 \\\\times 1) = 8 \\\\times x^3 = 8x^3$"
                         ],
                         final_answer: "$8x^3$"
                     },
                     {
                         question: "Simplify $(3b^2)^2 \\\\times b^3$.",
                         steps: [
-                            "$(3b^2)^2 = 9b^4$.",
-                            "$9b^4 \\\\times b^3 = 9b^7$."
+                            "First: $(3b^2)^2 = 3^2 \\\\times b^{2 \\\\times 2} = 9b^4$",
+                            "Then: $9b^4 \\\\times b^3 = 9b^{4+3} = 9b^7$"
                         ],
                         final_answer: "$9b^7$"
                     },
                     {
                         question: "Simplify $12a^5 \\\\div 4a^5$.",
                         steps: [
-                            "$\\\\dfrac{12}{4} \\\\times a^{5-5} = 3 \\\\times a^0 = 3 \\\\times 1 = 3$"
+                            "Coefficients: $12 \\\\div 4 = 3$",
+                            "Variables: $a^{5-5} = a^0 = 1$",
+                            "$3 \\\\times 1 = 3$"
                         ],
                         final_answer: "$3$"
                     }
@@ -8988,7 +9040,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 6: INDICES IN STANDARD FORM ───
             {
                 title: '6. Indices in Standard Form',
-                content: "## Connection\n\nIndex laws are the \u201cengine\u201d behind Standard Form ($A \\\\times 10^n$). We apply multiplication and division laws to the base of 10.\n\n## Adjustment Rule\n\nIf the coefficient $A \\\\ge 10$: write $A = A' \\\\times 10^1$ and add 1 to the index.\nIf $A < 1$: write $A = A' \\\\times 10^{-1}$ and subtract 1 from the index.",
+                content: "Index laws are the \\\"engine\\\" behind Standard Form ($A \\\\times 10^n$). We apply multiplication and division laws specifically to the base of 10.\n\n## Standard Form Rules\n\n$A \\\\times 10^n$ where $1 \\\\leq A < 10$.\n\n## Adjustment Rule\n\n| Situation | Action | Example |\n|---|---|---|\n| $A \\\\geq 10$ | Write $A = A' \\\\times 10^1$ and add 1 to index | $20 \\\\times 10^6 = 2 \\\\times 10^7$ |\n| $A < 1$ | Write $A = A' \\\\times 10^{-1}$ and subtract 1 from index | $0.5 \\\\times 10^{-3} = 5 \\\\times 10^{-4}$ |",
                 worked_examples: [
                     {
                         question: "$(2 \\\\times 10^3) \\\\times (3 \\\\times 10^4)$",
@@ -9009,8 +9061,9 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
                     {
                         question: "$(5 \\\\times 10^4) \\\\times (4 \\\\times 10^2)$",
                         steps: [
-                            "$20 \\\\times 10^6$. But $20 \\\\ge 10$.",
-                            "Adjust: $20 = 2 \\\\times 10^1$. So $2 \\\\times 10^{1+6} = 2 \\\\times 10^7$."
+                            "Coefficients: $5 \\\\times 4 = 20$. Indices: $10^{4+2} = 10^6$.",
+                            "Result: $20 \\\\times 10^6$. But $20$ is not between 1 and 10.",
+                            "Adjustment: $20 = 2 \\\\times 10^1$. So $(2 \\\\times 10^1) \\\\times 10^6 = 2 \\\\times 10^7$."
                         ],
                         final_answer: "$2 \\\\times 10^7$"
                     },
@@ -9029,8 +9082,9 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
                     {
                         question: "$(4 \\\\times 10^2) \\\\div (8 \\\\times 10^5)$",
                         steps: [
-                            "$0.5 \\\\times 10^{-3}$. But $0.5 < 1$.",
-                            "Adjust: $0.5 = 5 \\\\times 10^{-1}$. So $5 \\\\times 10^{-4}$."
+                            "Coefficients: $4 \\\\div 8 = 0.5$. Indices: $10^{2-5} = 10^{-3}$.",
+                            "Result: $0.5 \\\\times 10^{-3}$. But $0.5$ is not $\\\\geq 1$.",
+                            "Adjustment: $0.5 = 5 \\\\times 10^{-1}$. So $(5 \\\\times 10^{-1}) \\\\times 10^{-3} = 5 \\\\times 10^{-4}$."
                         ],
                         final_answer: "$5 \\\\times 10^{-4}$"
                     }
@@ -9154,6 +9208,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: THREE-FIGURE NOTATION ───
             {
                 title: '1. Introduction \u2013 Three-Figure Bearing Notation',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Mastering_Bearings.mp4',
                 content: "## The Rule\n\nEvery bearing is written with **exactly three digits**. If the angle has fewer than three digits, add **leading zeros**.\n\n| Original Angle | Three-Figure Bearing |\n|---|---|\n| $8^\\\\circ$ | $008^\\\\circ$ |\n| $42^\\\\circ$ | $042^\\\\circ$ |\n| $125^\\\\circ$ | $125^\\\\circ$ (already 3 digits) |\n| $0^\\\\circ$ (North) | $000^\\\\circ$ |\n\n> **ZIMSEC Exam Tip**: Writing $56^\\\\circ$ instead of $056^\\\\circ$ loses the accuracy mark (A-mark). Always check your final answer has three digits!\n\n## Practice\n\nConvert to three-figure bearings:\n1. $2^\\\\circ$ | 2. $15^\\\\circ$ | 3. $89^\\\\circ$ | 4. $110^\\\\circ$ | 5. $7^\\\\circ$\n6. $35^\\\\circ$ | 7. $205^\\\\circ$ | 8. $12^\\\\circ$ | 9. $90^\\\\circ$ | 10. $300^\\\\circ$",
                 worked_examples: [
                     {
@@ -9482,6 +9537,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: CONGRUENT FIGURES ───
             {
                 title: '1. Introduction to Congruent Figures',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Similarity_and_Congruence.mp4',
                 content: "## Definition\n\nTwo geometric figures are **congruent** ($\\\\equiv$) if they are exactly the **same size** and the **same shape**. If placed on top of each other, they fit perfectly.\n\n## Requirements for Congruence\n\n| Requirement | Meaning |\n|---|---|\n| All corresponding **angles** equal | Same shape |\n| All corresponding **sides** equal | Same size |\n\nFor **triangles**, we do not need all 6 measurements. We use **four specific conditions** (SSS, SAS, ASA, RHS) \u2014 each requiring only **3 facts**.",
                 worked_examples: [
                     {
@@ -9841,6 +9897,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: DEFINITIONS AND CLASSIFICATIONS ───
             {
                 title: '1. Definitions and Classifications',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Unlocking_Polygons.mp4',
                 content: "## What is a Polygon?\n\nA polygon must satisfy two conditions:\n1. **Closure** \u2014 continuous boundary with no gaps.\n2. **Linearity** \u2014 every side is a straight line segment.\n\n> Shapes with curved edges (e.g. semicircles) are **not** polygons.\n\n## Regular vs Irregular\n\n| Type | Sides | Angles |\n|---|---|---|\n| **Regular** | All equal (equilateral) | All equal (equiangular) |\n| **Irregular** | Not all equal | Not all equal |\n\n## Convex vs Concave\n\n| Type | Interior Angles | Appearance |\n|---|---|---|\n| **Convex** | All $< 180^\\\\circ$ | All vertices point outward |\n| **Concave** | At least one $> 180^\\\\circ$ | \"Caves in\" at one or more vertices |\n\n## Standard Nomenclature\n\n| $n$ | Name | $n$ | Name |\n|---|---|---|---|\n| 3 | Triangle | 8 | Octagon |\n| 4 | Quadrilateral | 9 | Nonagon |\n| 5 | Pentagon | 10 | Decagon |\n| 6 | Hexagon | 11 | Undecagon |\n| 7 | Heptagon | 12 | Dodecagon |",
                 worked_examples: [
                     {
@@ -10243,6 +10300,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: INTRODUCTION ───
             {
                 title: '1. Introduction to Matrices and Their Structure',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Matrices__Order_%26_Dimension.mp4',
                 content: "## Definition\n\nA **matrix** is a rectangular array of numbers, symbols, or expressions arranged in **rows** and **columns**.\n\n| Component | Direction | Description |\n|---|---|---|\n| **Row** | Horizontal ($\\\\rightarrow$) | Elements from left to right |\n| **Column** | Vertical ($\\\\downarrow$) | Elements from top to bottom |\n\nThe individual numbers within a matrix are called **elements**. An element is identified by its row and column position.\n\n## Notation\n\n- Matrices are denoted by **bold capital letters**: $\\\\mathbf{A}$, $\\\\mathbf{B}$, $\\\\mathbf{M}$.\n- A column vector $\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$ is a $2 \\\\times 1$ matrix.",
                 worked_examples: [
                     {
@@ -10559,6 +10617,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: FOUNDATIONAL CONCEPTS ───
             {
                 title: '1. Foundational Concepts',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Experimental_Probability.mp4',
                 content: "## Definition\n\n**Probability** = a numerical measure of how likely an event is to occur.\n\n**Experimental Probability (Relative Frequency)** = probability determined from actual trials.\n\n## The Likelihood Scale\n\n| Degree | Value | Example |\n|---|---|---|\n| Impossibility | $0$ | Meeting a person with three eyes |\n| Low Chances | Close to $0$ | Winning the lottery with one ticket |\n| Equal Chances | $0.5$ | Tossing a fair coin |\n| High Chances | Close to $1$ | A pregnant woman giving birth |\n| Certainty | $1$ | Death |\n\n## Why Experimental?\n\nTheoretical probability assumes perfect conditions (e.g. a perfectly balanced dice). In the real world, a dice may be **biased** or conditions may be non-uniform. Experimental probability identifies these realities through **evidence-based** data.\n\n## The Core Formula\n\n$$\\\\text{Relative Frequency} = \\\\dfrac{\\\\text{Number of successes}}{\\\\text{Total trials}}$$\n\nThe answer can be expressed as a **fraction**, **decimal**, or **percentage**.",
                 worked_examples: [
                     {
@@ -10888,6 +10947,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: MEANING AND RANGE ───
             {
                 title: '1. The Meaning and Range of Probability',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Introduction_to_Probability.mp4',
                 content: "## Definition\n\nProbability is a **numerical measure** of the likelihood of an event occurring.\n\n## The Range\n\n$$0 \\\\le P(A) \\\\le 1$$\n\n| Value | Meaning |\n|---|---|\n| $P(A) = 0$ | **Impossible** \u2014 event cannot occur |\n| $P(A) = 1$ | **Certain** \u2014 event must occur |\n| $P(A) = 0.5$ | **Equal chance** \u2014 as likely as not |\n\n> **Common Error**: Writing a probability as negative or greater than 1 (e.g. $1.2$ or $120\\\\%$). If your answer is outside $[0, 1]$, you have made an error!\n\n## Practice\n\nCategorize as Certain, Impossible, or Likely:\n1. A fair coin landing on Heads.\n2. A cow flying over the moon.\n3. Tuesday following Monday.\n4. Rain in Bulawayo in January.\n5. Passing Form 2 without attending lessons.",
                 worked_examples: [
                     {
@@ -11285,6 +11345,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: CONCEPT OF TRANSLATION ───
             {
                 title: '1. The Concept and Meaning of Translation',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Translation_with_Vectors.mp4',
                 content: "## Definition\n\nA **translation** slides every point of a figure the **same distance** in the **same direction**. There is no rotation, reflection, or resizing.\n\n## Properties Preserved\n\n| Property | Preserved? |\n|---|---|\n| Side lengths | Yes |\n| Angles | Yes |\n| Area | Yes |\n| Orientation | Yes (no flip/turn) |\n\nTranslation only changes the **location** (coordinates), not the spatial relationships between vertices.\n\n> **Common Error**: If the image looks like a mirror version or has been tilted, it is **not** a translation. It must be a direct slide.",
                 worked_examples: [
                     {
@@ -11642,6 +11703,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: FUNDAMENTALS & REVISION ───
             {
                 title: '1. Fundamentals and Revision of Matrix Notation',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Cracking_the_Matrix_Code.mp4',
                 content: "## Matrix Definition\n\nA **matrix** is a rectangular array of numbers arranged in **rows** and **columns**. The **order** is always stated as **Rows $\\\\times$ Columns** (R before C).\n\n| Matrix Type | Structure | Example Order |\n|---|---|---|\n| **Row Matrix** | One horizontal row | $1 \\\\times n$ |\n| **Column Matrix** | One vertical column | $m \\\\times 1$ |\n| **Square Matrix** | Rows = Columns | $n \\\\times n$ |\n\n> **Common Error**: Writing $3 \\\\times 2$ for a matrix with 2 rows and 3 columns. Always count **rows first**, then **columns**.",
                 worked_examples: [
                     {
@@ -11992,6 +12054,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: INTRODUCTION ───
             {
                 title: '1. Introduction to Column Vectors and Position Vectors',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Operations_of_Vectors.mp4',
                 content: "## Column Vector\n\nA **column vector** is a vertical representation of displacement:\n\n$$\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$$\n\n- $x$ = horizontal shift ($+$ right, $-$ left)\n- $y$ = vertical shift ($+$ up, $-$ down)\n\n## Position Vector\n\nThe **position vector** of point $P(x, y)$ is the vector from the origin to $P$:\n\n$$\\\\vec{OP} = \\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$$\n\n> **ZIMSEC Tip**: Always use the $\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$ notation for vectors in examinations. Writing $(x, y)$ for a vector loses accuracy marks.",
                 worked_examples: [
                     {
@@ -12347,6 +12410,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: CONCEPT OF VECTORS ───
             {
                 title: '1. Introduction to the Concept of Vectors',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/The_Explainer__Vectors.mp4',
                 content: "## Core Definitions\n\n- A **vector** is a quantity possessing both **magnitude** (size) and **direction**.\n- A **scalar** quantity possesses **magnitude only**.\n\n| Scalar Quantities | Vector Quantities |\n|---|---|\n| Mass (e.g., 50 kg) | Displacement (e.g., 10 km North) |\n| Time (e.g., 2 hours) | Velocity (e.g., 80 km/h East) |\n| Temperature (e.g., 30\u00b0C) | Force (e.g., 10 N downwards) |\n| Distance (e.g., 5 km) | Weight (e.g., 500 N towards Earth) |\n\n> **Common Error**: Students confuse **speed** (scalar) with **velocity** (vector). If a direction is mentioned (e.g., \"moving South\"), it is velocity.\n\n## Practice\n\n1. Pressure gauge reading of 100 Pa.\n2. Displacement of 15 m to the right.\n3. Volume of a fuel tank (500 cm\u00b3).\n4. Wind blowing at 20 km/h from the North.\n5. Time interval of 60 seconds.",
                 worked_examples: [
                     {
@@ -12674,6 +12738,7 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             // ─── SECTION 1: INTRODUCTION TO VECTOR ANALYSIS ───
             {
                 title: '1. Introduction to Vector Analysis and Representation',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/The_Explainer__Types_of_Vectors.mp4',
                 content: "## Core Concept\n\nIn the ZIMSEC Form 2 Mathematics syllabus, vectors serve as a fundamental tool for describing movements in space. While **scalar** quantities\u2014such as temperature or mass\u2014are defined only by their size, **vectors** are essential for describing quantities that possess both **magnitude** (size) and **direction**.\n\n## The Column Vector Notation\n\nThe key step in vector analysis is the transition from coordinate geometry to vector algebra. When we describe a point in a Cartesian plane, we use coordinates $(x, y)$. To represent the **movement** or **displacement** to that point, we rearrange these values into a vertical form known as a **Column Vector**:\n\n$$\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$$\n\nIn this notation:\n- $x$ represents the **horizontal displacement** ($+$ right, $-$ left)\n- $y$ represents the **vertical displacement** ($+$ up, $-$ down)\n\n## Diagram: Column Vector Components\n\n| Component | Direction | Sign Convention |\n|---|---|---|\n| $x$ (top) | Horizontal | $+$ = Right/East, $-$ = Left/West |\n| $y$ (bottom) | Vertical | $+$ = Up/North, $-$ = Down/South |\n\n## Diagram: Interpreting Column Vectors on a Grid\n\n| Vector | $x$-shift | $y$-shift | Movement Description |\n|---|---|---|---|\n| $\\\\begin{pmatrix} 3 \\\\\\\\ 4 \\\\end{pmatrix}$ | 3 right | 4 up | Move 3 units right and 4 units up |\n| $\\\\begin{pmatrix} -2 \\\\\\\\ 5 \\\\end{pmatrix}$ | 2 left | 5 up | Move 2 units left and 5 units up |\n| $\\\\begin{pmatrix} 0 \\\\\\\\ -6 \\\\end{pmatrix}$ | No shift | 6 down | Move 6 units straight down |\n| $\\\\begin{pmatrix} 7 \\\\\\\\ 0 \\\\end{pmatrix}$ | 7 right | No shift | Move 7 units straight right |\n\n## Why Column Notation?\n\nBy stacking components vertically, we clearly **separate horizontal and vertical influences**, allowing for systematic addition and subtraction that horizontal coordinates $(x, y)$ often obscure. Once this notation is mastered, we can begin to categorise vectors by their specific properties.\n\n> **Key Insight**: The point $(x, y)$ and the column vector $\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}$ have the same numerical values but different meanings: the point is a **location**; the vector is the **movement** required to reach that location.",
                 worked_examples: [
                     {
@@ -13092,6 +13157,2301 @@ export const form2MathNotes: Record<string, MathTopicNotes> = {
             "Collinear Vectors diagram: Three points A, B, C on the same straight line. Arrow from A to B labelled (2,2); arrow from B to C labelled (4,4). A dashed line extends through all three points showing they are on one line. The label '2 x (2,2) = (4,4)' shows the scalar relationship.",
             "Vector Types Classification Tree: A tree diagram branching from 'Vectors' into seven types: Equal (same components), Opposite (negated components), Parallel (scalar multiple), Zero (0,0), Unit (magnitude 1), Position (from origin), Collinear (parallel + common point).",
             "Comparison Table diagram: A large table showing how the same pair of vectors can be classified. For example, (3,4) and (3,4) are Equal AND Parallel; (3,4) and (-3,-4) are Opposite AND Parallel; (3,4) and (6,8) are Parallel only."
+        ]
+    },
+
+    // ============================================
+    // FORM 2: DATA REPRESENTATION (Comprehensive)
+    // ============================================
+    'F2 Data Representation': {
+        topic: 'Data Representation',
+        subject: 'Mathematics',
+        grade_level: 'O-Level Form 2',
+        summary: "In the ZIMSEC Form 2 syllabus, **Data Representation** refers to the collection, organisation, and display of statistical information to make it more intelligible. Data representation serves as the strategic bridge between raw, chaotic observations and actionable intelligence. Through systematic representation, hidden patterns become visible.\n\n## Key Concepts\n\n| Concept | Description |\n|---|---|\n| **Discrete Data** | Distinct, separate values that are counted (e.g., number of students) |\n| **Continuous Data** | Values that can take any value in a range, typically measured (e.g., weight, time) |\n| **Frequency Table** | A table showing values/classes and how often they occur |\n| **Bar Graph** | Uses rectangular bars for discrete categories; bars do NOT touch |\n| **Histogram** | Uses bars for grouped continuous data; bars MUST touch |\n| **Pie Chart** | Circular display showing proportions as sectors |\n| **Line Graph** | Points connected by lines to show trends over time |\n| **Pictogram** | Uses symbols to represent data; requires a Key |\n| **Mean** | Sum of all values divided by number of values |\n| **Median** | Middle value when data is sorted |\n| **Mode** | Most frequently occurring value |\n\n## Core Formulae\n\n| Formula | Purpose |\n|---|---|\n| $\\\\text{FD} = \\\\frac{\\\\text{Frequency}}{\\\\text{Class Width}}$ | Frequency Density for Histograms |\n| $\\\\text{Angle} = \\\\frac{f}{\\\\sum f} \\\\times 360^\\\\circ$ | Sector angle for Pie Charts |\n| $\\\\bar{x} = \\\\frac{\\\\sum x}{n}$ | Mean (Arithmetic Average) |\n| $\\\\bar{x} = A + \\\\frac{\\\\sum d}{n}$ | Mean using Assumed Mean method |",
+        sections: [
+            // ─── SECTION 1: INTRODUCTION TO DATA REPRESENTATION ───
+            {
+                title: '1. Introduction to Data Representation',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Data_Representation.mp4',
+                content: "## Why Data Representation Matters\n\nThe ability to transform a disorganised list of figures into structured visual formats — such as graphs, charts, and tables — is essential for clarity. Raw data often obscures underlying patterns; however, through systematic representation, these patterns become visible to non-specialist audiences.\n\nThis allows for effective communication of findings, where complex trends and distributions are grasped immediately without the audience needing to perform the underlying statistical calculations.\n\n## Types of Data\n\n| Type | Definition | Examples |\n|---|---|---|\n| **Discrete Data** | Distinct, separate values that are typically **counted** | Number of students, number of subjects registered, goals scored |\n| **Continuous Data** | Values that can take **any value** within a range, typically **measured** | Time, weight, volume, gas pressure, height |\n\n## The Statistical Process\n\n1. **Collect** data (surveys, experiments, observations)\n2. **Organise** data (tally charts, frequency tables)\n3. **Present** data (graphs, charts, pictograms)\n4. **Analyse** data (mean, median, mode)\n5. **Interpret** data (draw conclusions, identify trends)\n\n> **Key Insight**: Successful statistical analysis begins with the transition from collecting raw numbers to organising them into a coherent structure.",
+                worked_examples: [
+                    {
+                        question: "Classify the following as discrete or continuous data: (a) Number of books in a bag, (b) Weight of a school bag, (c) Number of provinces in Zimbabwe, (d) Temperature during the day.",
+                        steps: [
+                            "(a) Number of books: Counted → Discrete",
+                            "(b) Weight of a bag: Measured → Continuous",
+                            "(c) Number of provinces: Counted → Discrete",
+                            "(d) Temperature: Measured → Continuous"
+                        ],
+                        final_answer: "(a) Discrete, (b) Continuous, (c) Discrete, (d) Continuous"
+                    }
+                ]
+            },
+            // ─── SECTION 2: ORGANIZING RAW DATA ───
+            {
+                title: '2. Organizing Raw Data: Tallying and Frequency Tables',
+                content: "## From Raw Data to Information\n\nThe strategic shift from \"raw data\" to \"information\" occurs when we begin to categorise observations. **Raw data** is simply a list of values; **information** is data that has been processed to reveal frequency and distribution.\n\nTo minimise error during this transition, the **Tally method** is employed: marking each occurrence with a stroke (/), grouping them in fives ($$\\\\cancel{////}$$) to ensure no data point is missed or counted twice.\n\n## Step-by-Step Guide to Constructing Frequency Tables\n\n| Step | Action |\n|---|---|\n| **Step 1** | Analyse the data set: identify the range (smallest to largest values) |\n| **Step 2** | Define columns: \"Value (or Class)\", \"Tally\", \"Frequency\" |\n| **Step 3** | Tallying: go through raw data sequentially, placing marks |\n| **Step 4** | Count tallies into numerical frequencies |\n| **Step 5** | Verify: $\\\\sum f = n$ (total frequency must equal number of items) |\n\n## Grouped Frequency Tables\n\nWhen dealing with a large range or continuous data, **Grouped Frequency Tables** are used. Choosing suitable **class intervals** (e.g., $10 \\\\leq x < 20$) is critical:\n- If intervals are **too wide**, specific details disappear\n- If intervals are **too narrow**, the table remains as disorganised as the raw data\n\n## Common Errors\n\n- **Overlapping Class Intervals**: Using ranges like $0$–$10$ and $10$–$20$. ZIMSEC requires clear boundaries (e.g., $0 \\\\leq x < 10$)\n- **Total Frequency Mismatch**: Failing to verify $\\\\sum f = n$\n- **Poor Tallying**: Not crossing the fifth tally mark which leads to counting errors",
+                worked_examples: [
+                    {
+                        question: "Construct a frequency table for the test marks: 3, 1, 3, 0, 5, 3, 4, 3.",
+                        steps: [
+                            "Identify the range: 0 to 5",
+                            "Tally each value as it appears in the raw data",
+                            "Mark 0: / (1 time), Mark 1: / (1 time), Mark 2: (0 times)",
+                            "Mark 3: //// (4 times), Mark 4: / (1 time), Mark 5: / (1 time)",
+                            "Verify: $1 + 1 + 0 + 4 + 1 + 1 = 8$ items ✓"
+                        ],
+                        final_answer: "Frequency table: 0(1), 1(1), 2(0), 3(4), 4(1), 5(1). Total $n = 8$."
+                    },
+                    {
+                        question: "Construct a frequency table for: Car, Bus, Car, Walking, Walking, Car, Bus, Car, Walking, Car.",
+                        steps: [
+                            "Identify categories: Car, Bus, Walking",
+                            "Tally: Car appears 5 times, Bus appears 2 times, Walking appears 3 times",
+                            "Verify: $5 + 2 + 3 = 10$ ✓"
+                        ],
+                        final_answer: "Car(5), Bus(2), Walking(3). Total = 10. Mode = Car."
+                    },
+                    {
+                        question: "Construct a frequency table for subjects registered: 6, 8, 10, 6, 7, 8, 6, 6, 10, 6.",
+                        steps: [
+                            "Range: 6 to 10",
+                            "6 appears 5 times, 7 appears 1 time, 8 appears 2 times",
+                            "9 appears 0 times, 10 appears 2 times",
+                            "Verify: $5 + 1 + 2 + 0 + 2 = 10$ ✓"
+                        ],
+                        final_answer: "6(5), 7(1), 8(2), 9(0), 10(2). Total = 10. $f(6) = 5$."
+                    },
+                    {
+                        question: "Construct a grouped frequency table for bags produced: 12, 45, 156, 185, 200, 12, 45, 156, 45, 185.",
+                        steps: [
+                            "Range: 12 to 200. Use class width of 50.",
+                            "$0 \\\\leq x < 50$: values 12, 45, 12, 45, 45 → Frequency = 5",
+                            "$50 \\\\leq x < 100$: no values → Frequency = 0",
+                            "$100 \\\\leq x < 150$: no values → Frequency = 0",
+                            "$150 \\\\leq x < 200$: values 156, 185, 156, 185 → Frequency = 4",
+                            "$200 \\\\leq x < 250$: value 200 → Frequency = 1",
+                            "Verify: $5 + 0 + 0 + 4 + 1 = 10$ ✓"
+                        ],
+                        final_answer: "0–50(5), 50–100(0), 100–150(0), 150–200(4), 200–250(1). $f(<50) = 5$."
+                    },
+                    {
+                        question: "Construct a grouped frequency table for gas pressure readings (Pa): 2, 4, 6, 8, 10, 12, 2, 4, 6, 2.",
+                        steps: [
+                            "Range: 2 to 12. Use class width of 4.",
+                            "$2 \\\\leq P < 6$: values 2, 4, 2, 4, 2 → Frequency = 5",
+                            "$6 \\\\leq P < 10$: values 6, 8, 6 → Frequency = 3",
+                            "$10 \\\\leq P < 14$: values 10, 12 → Frequency = 2",
+                            "Verify: $5 + 3 + 2 = 10$ ✓"
+                        ],
+                        final_answer: "2–6(5), 6–10(3), 10–14(2). Modal Class = $2 \\\\leq P < 6$."
+                    },
+                    {
+                        question: "Construct a grouped frequency table for weights (kg): 45, 52, 58, 61, 72, 85, 48, 55, 63, 68.",
+                        steps: [
+                            "Range: 45 to 85. Use class width of 10.",
+                            "$40 \\\\leq w < 50$: values 45, 48 → Frequency = 2",
+                            "$50 \\\\leq w < 60$: values 52, 58, 55 → Frequency = 3",
+                            "$60 \\\\leq w < 70$: values 61, 63, 68 → Frequency = 3",
+                            "$70 \\\\leq w < 80$: value 72 → Frequency = 1",
+                            "$80 \\\\leq w < 90$: value 85 → Frequency = 1",
+                            "Verify: $2 + 3 + 3 + 1 + 1 = 10$ ✓"
+                        ],
+                        final_answer: "40–50(2), 50–60(3), 60–70(3), 70–80(1), 80–90(1). 6 students weigh between 50 kg and 70 kg."
+                    }
+                ]
+            },
+            // ─── SECTION 3: BAR GRAPHS AND HISTOGRAMS ───
+            {
+                title: '3. Bar Graphs and Histograms',
+                content: "## Selecting the Correct Visual Representation\n\nSelecting the correct visual representation is a strategic decision based on the data type.\n\n## Comparative Analysis: Bar Charts vs Histograms\n\n| Criterion | Bar Chart | Histogram |\n|---|---|---|\n| **Data Type** | Simple ungrouped (discrete) data | Grouped (continuous) data |\n| **Scaling** | One axis is scaled (frequency axis) | Both axes must be scaled |\n| **Proportionality** | Height of bar $\\\\propto$ frequency | Area of bar $\\\\propto$ frequency |\n| **Y-Axis** | Frequency | Frequency Density |\n| **Gaps** | Gaps between bars | No gaps between bars |\n\n## Construction Tips\n\n- **Scale Selection**: Choose a scale that is easy to read (e.g., 1 cm = 2 units) and ensures the graph covers more than half the page\n- **Labelling**: Every axis must have a title and units\n- **Neatness**: Use a sharp pencil and a ruler\n- **Bar graphs**: bars must **not** touch\n- **Histograms**: bars **must** touch\n\n## Frequency Density Formula\n\nFor Histograms, calculate the y-axis values using:\n$$\\\\text{Frequency Density (FD)} = \\\\frac{\\\\text{Frequency}}{\\\\text{Class Width}}$$\n\n## Common Errors\n\n- **Gaps in Histograms**: Drawing gaps between bars of continuous data\n- **Scale Inconsistency**: Using a non-linear scale (e.g., jumping from 5 to 15 to 20)\n- **Missing Units**: Not labelling axes with (kg), (Pa), or ($)",
+                worked_examples: [
+                    {
+                        question: "Bar Graph: 5 students scored 10 marks, 3 students scored 20 marks. Draw and identify the modal mark.",
+                        steps: [
+                            "Scale: 1 cm = 1 student on the y-axis",
+                            "Draw a bar of height 5 for mark 10",
+                            "Draw a bar of height 3 for mark 20",
+                            "Leave a gap between the bars (discrete data)",
+                            "The tallest bar corresponds to mark 10"
+                        ],
+                        final_answer: "The modal mark is 10 (highest frequency of 5)."
+                    },
+                    {
+                        question: "Bar Graph: Transport data — Walking (18), Car (15), Bus (9). What is the most common mode?",
+                        steps: [
+                            "Scale: 1 cm = 3 people on the y-axis",
+                            "Walking bar height: $18 \\\\div 3 = 6$ cm",
+                            "Car bar height: $15 \\\\div 3 = 5$ cm",
+                            "Bus bar height: $9 \\\\div 3 = 3$ cm",
+                            "The tallest bar is Walking"
+                        ],
+                        final_answer: "Walking is the most common mode of transport."
+                    },
+                    {
+                        question: "Histogram: Grouped weights — $40 \\\\leq w < 50$ (Freq 4), $50 \\\\leq w < 60$ (Freq 6). Calculate frequency densities.",
+                        steps: [
+                            "Class width for both classes = $50 - 40 = 10$",
+                            "FD for $40 \\\\leq w < 50$: $\\\\frac{4}{10} = 0.4$",
+                            "FD for $50 \\\\leq w < 60$: $\\\\frac{6}{10} = 0.6$",
+                            "Bars must touch at $w = 50$ (no gap for continuous data)"
+                        ],
+                        final_answer: "Frequency densities: 0.4 and 0.6. Bars touch at $w = 50$."
+                    },
+                    {
+                        question: "Histogram: Volume of gas — $0 < v \\\\leq 5$ (Freq 10), $5 < v \\\\leq 10$ (Freq 15). Find the frequency densities.",
+                        steps: [
+                            "Class width = $5 - 0 = 5$",
+                            "FD for $0 < v \\\\leq 5$: $\\\\frac{10}{5} = 2$",
+                            "FD for $5 < v \\\\leq 10$: $\\\\frac{15}{5} = 3$",
+                            "Y-axis is labelled 'Frequency Density'"
+                        ],
+                        final_answer: "Frequency densities: 2 and 3."
+                    },
+                    {
+                        question: "Histogram: Marks — $0$–$10$ (Freq 5), $10$–$20$ (Freq 10). Compare the bars.",
+                        steps: [
+                            "Class width = 10 for both",
+                            "FD for $0$–$10$: $\\\\frac{5}{10} = 0.5$",
+                            "FD for $10$–$20$: $\\\\frac{10}{10} = 1.0$",
+                            "The second bar is twice as high as the first"
+                        ],
+                        final_answer: "FD = 0.5 and 1.0. The second bar is twice the height of the first."
+                    }
+                ]
+            },
+            // ─── SECTION 4: LINE GRAPHS AND PICTOGRAMS ───
+            {
+                title: '4. Line Graphs and Pictograms',
+                content: "## Line Graphs\n\nLine graphs are strategically used to track **continuous trends**, such as velocity against time or gas volume against pressure.\n\n### Construction Steps\n1. Plot points as coordinates $(x, y)$\n2. Connect with straight lines to show trends\n3. Label both axes with titles and units\n4. Choose an appropriate scale\n\n### Interpreting Line Graphs\n- **Upward slope**: Value is increasing\n- **Downward slope**: Value is decreasing\n- **Horizontal line**: Value remains constant\n- **Steeper line**: Faster rate of change\n\n## Pictograms\n\nPictograms use **symbols** to simplify visual communication for general audiences.\n\n### Rules for Pictograms\n- A **Key is mandatory**: it defines what one symbol represents\n- Example: Key: $\\\\smiley = 2$ people\n- Half a symbol = half the value\n- Symbols must be the same size and evenly spaced",
+                worked_examples: [
+                    {
+                        question: "Line Graph: Plot Pressure (2, 4, 6) vs Volume (30, 25, 20). Describe the trend.",
+                        steps: [
+                            "Plot points: $(2, 30)$, $(4, 25)$, $(6, 20)$",
+                            "Connect with straight lines",
+                            "As pressure increases from 2 to 6, volume decreases from 30 to 20",
+                            "The line slopes downward from left to right"
+                        ],
+                        final_answer: "Volume decreases as pressure increases (inverse relationship)."
+                    },
+                    {
+                        question: "Line Graph: Displacement against time — (0,0), (1,10), (2,20). What does the straight line indicate?",
+                        steps: [
+                            "Plot: $(0, 0)$, $(1, 10)$, $(2, 20)$",
+                            "The line passes through the origin",
+                            "The gradient is constant: $\\\\frac{10-0}{1-0} = 10$ units per second",
+                            "A straight line through the origin = constant velocity"
+                        ],
+                        final_answer: "The straight line indicates constant velocity of 10 units per second."
+                    },
+                    {
+                        question: "Pictogram: Transport data. Key: 1 stickman = 2 people. Walking shows 9 symbols. How many people walk?",
+                        steps: [
+                            "Each symbol represents 2 people",
+                            "Walking has 9 symbols",
+                            "Total = $9 \\\\times 2 = 18$ people"
+                        ],
+                        final_answer: "18 people walk."
+                    },
+                    {
+                        question: "Pictogram: Farmer production. Key: 1 bag symbol = 10 bags. A farmer shows 3.5 symbols. How many bags?",
+                        steps: [
+                            "Each symbol = 10 bags",
+                            "Half a symbol = 5 bags",
+                            "Total = $3.5 \\\\times 10 = 35$ bags"
+                        ],
+                        final_answer: "The farmer produced 35 bags."
+                    }
+                ]
+            },
+            // ─── SECTION 5: PIE CHARTS ───
+            {
+                title: '5. Pie Charts: Calculating and Drawing Sectors',
+                content: "## Purpose\n\nPie charts represent **proportions**. The circular format allows for an immediate \"part-to-whole\" evaluation of data.\n\n## The Mandatory Formula\n\n$$\\\\text{Angle} = \\\\left( \\\\frac{\\\\text{Frequency}}{\\\\text{Total Frequency}} \\\\right) \\\\times 360^\\\\circ$$\n\n## Construction Steps\n\n| Step | Action |\n|---|---|\n| **Step 1** | Sum the total frequency: $n = \\\\sum f$ |\n| **Step 2** | Show full substitution for every category |\n| **Step 3** | Verify: $\\\\sum \\\\text{Angles} = 360^\\\\circ$ |\n| **Step 4** | Draw a circle with a radius, then use a protractor to mark angles from the starting radius |\n\n## Common Errors\n\n- **Rounding Inconsistency**: Rounding angles so they sum to $359^\\\\circ$ or $361^\\\\circ$. Keep decimal places until the end.\n- **Radius Measurement**: Measuring the second angle from the $0^\\\\circ$ line instead of the new radius.\n- **Formula Reversal**: Dividing $360$ by frequency instead of total.",
+                worked_examples: [
+                    {
+                        question: "Calculate pie chart angles for transport data: Walking (18), Car (15), Bus (9).",
+                        steps: [
+                            "Total frequency = $18 + 15 + 9 = 42$",
+                            "Walking: $\\\\frac{18}{42} \\\\times 360 = 154.3^\\\\circ$",
+                            "Car: $\\\\frac{15}{42} \\\\times 360 = 128.6^\\\\circ$",
+                            "Bus: $\\\\frac{9}{42} \\\\times 360 = 77.1^\\\\circ$",
+                            "Verify: $154.3 + 128.6 + 77.1 = 360^\\\\circ$ ✓"
+                        ],
+                        final_answer: "Walking = $154.3^\\\\circ$, Car = $128.6^\\\\circ$, Bus = $77.1^\\\\circ$."
+                    },
+                    {
+                        question: "Calculate pie chart angles for favourite subjects: Maths (10), English (10), Science (20).",
+                        steps: [
+                            "Total frequency = $10 + 10 + 20 = 40$",
+                            "Maths: $\\\\frac{10}{40} \\\\times 360 = 90^\\\\circ$",
+                            "English: $\\\\frac{10}{40} \\\\times 360 = 90^\\\\circ$",
+                            "Science: $\\\\frac{20}{40} \\\\times 360 = 180^\\\\circ$",
+                            "Verify: $90 + 90 + 180 = 360^\\\\circ$ ✓"
+                        ],
+                        final_answer: "Maths = $90^\\\\circ$, English = $90^\\\\circ$, Science = $180^\\\\circ$."
+                    },
+                    {
+                        question: "Calculate pie chart angles for trolley items: Salt (2), Soap (4), Oil (2).",
+                        steps: [
+                            "Total frequency = $2 + 4 + 2 = 8$",
+                            "Salt: $\\\\frac{2}{8} \\\\times 360 = 90^\\\\circ$",
+                            "Soap: $\\\\frac{4}{8} \\\\times 360 = 180^\\\\circ$",
+                            "Oil: $\\\\frac{2}{8} \\\\times 360 = 90^\\\\circ$",
+                            "Verify: $90 + 180 + 90 = 360^\\\\circ$ ✓"
+                        ],
+                        final_answer: "Salt = $90^\\\\circ$, Soap = $180^\\\\circ$, Oil = $90^\\\\circ$."
+                    },
+                    {
+                        question: "If a sector angle is $120^\\\\circ$, what fraction and percentage of the whole does it represent?",
+                        steps: [
+                            "Fraction = $\\\\frac{120}{360} = \\\\frac{1}{3}$",
+                            "Percentage = $\\\\frac{1}{3} \\\\times 100 = 33.3\\\\%$"
+                        ],
+                        final_answer: "The sector represents $\\\\frac{1}{3}$ or $33.3\\\\%$ of the whole."
+                    }
+                ]
+            },
+            // ─── SECTION 6: MEASURES OF CENTRAL TENDENCY ───
+            {
+                title: '6. Measures of Central Tendency',
+                content: "## The Three Averages\n\nMean, Median, and Mode are single values that represent an entire data set. They answer the \"So What?\" by providing a typical value for comparison.\n\n## 1. Mean (Arithmetic Average)\n\n$$\\\\bar{x} = \\\\frac{\\\\sum x}{n}$$\n\nAdd all values and divide by the number of values.\n\n## 2. Median\n\nThe **middle term** when data is arranged in ascending order.\n- **Odd** number of values: the median is the middle value\n- **Even** number of values: the median is the average of the two middle values\n\n$$\\\\text{Median position} = \\\\frac{n + 1}{2}$$\n\n## 3. Mode\n\nThe **most frequent** term. A data set can have no mode, one mode, or multiple modes.\n\n## The Assumed Mean (Working Mean) Method\n\nA shortcut for calculating the mean:\n1. Guess (assume) a mean $A$\n2. Calculate deviations: $d = \\\\text{Term} - A$\n3. Sum all deviations: $\\\\sum d$\n4. Actual Mean = $A + \\\\frac{\\\\sum d}{n}$\n\n## Common Errors\n\n- **Median Ordering**: Finding the middle of a raw (unsorted) list. Always **sort first!**\n- **Mean Calculation**: Not counting repeated values (e.g., counting '3' only once in the sum)\n- **Mode Confusion**: Giving the **frequency** (4) instead of the **value** (3) as the mode",
+                worked_examples: [
+                    {
+                        question: "Find the mean of: 3, 1, 3, 0, 5, 3, 4, 3.",
+                        steps: [
+                            "Sum = $3 + 1 + 3 + 0 + 5 + 3 + 4 + 3 = 22$",
+                            "Number of values $n = 8$",
+                            "Mean = $\\\\frac{22}{8} = 2.75$"
+                        ],
+                        final_answer: "Mean = $2.75$"
+                    },
+                    {
+                        question: "Find the median of: 3, 1, 2, 5, 3 (odd number of values).",
+                        steps: [
+                            "Sort in ascending order: 1, 2, 3, 3, 5",
+                            "Number of values $n = 5$",
+                            "Middle position = $\\\\frac{5 + 1}{2} = 3$rd value",
+                            "3rd value = 3"
+                        ],
+                        final_answer: "Median = $3$"
+                    },
+                    {
+                        question: "Find the median of: 10, 15, 18, 18, 18, 20 (even number of values).",
+                        steps: [
+                            "Already sorted: 10, 15, 18, 18, 18, 20",
+                            "Number of values $n = 6$",
+                            "Middle positions: 3rd and 4th values",
+                            "3rd value = 18, 4th value = 18",
+                            "Median = $\\\\frac{18 + 18}{2} = 18$"
+                        ],
+                        final_answer: "Median = $18$"
+                    },
+                    {
+                        question: "Find the mode of: 3, 1, 3, 0, 5, 3, 4, 3.",
+                        steps: [
+                            "Count frequencies: 0(1), 1(1), 3(4), 4(1), 5(1)",
+                            "The value 3 appears 4 times — the most frequent"
+                        ],
+                        final_answer: "Mode = $3$"
+                    },
+                    {
+                        question: "Use the Assumed Mean method to find the mean of: 3, 1, 3, 0, 5, 3, 4, 3. Let $A = 2$.",
+                        steps: [
+                            "Assume $A = 2$",
+                            "Deviations $(d = \\\\text{Term} - A)$: $3-2=1$, $1-2=-1$, $3-2=1$, $0-2=-2$, $5-2=3$, $3-2=1$, $4-2=2$, $3-2=1$",
+                            "$\\\\sum d = 1 + (-1) + 1 + (-2) + 3 + 1 + 2 + 1 = 6$",
+                            "Mean = $A + \\\\frac{\\\\sum d}{n} = 2 + \\\\frac{6}{8} = 2 + 0.75 = 2.75$"
+                        ],
+                        final_answer: "Mean = $2.75$"
+                    },
+                    {
+                        question: "Use the Assumed Mean method with $A = 10$: Data — 10, 12, 8, 10.",
+                        steps: [
+                            "Assume $A = 10$",
+                            "Deviations: $10-10=0$, $12-10=2$, $8-10=-2$, $10-10=0$",
+                            "$\\\\sum d = 0 + 2 + (-2) + 0 = 0$",
+                            "Mean = $10 + \\\\frac{0}{4} = 10$"
+                        ],
+                        final_answer: "Mean = $10$"
+                    },
+                    {
+                        question: "Find the mean of: 5, 5, 10, 10.",
+                        steps: [
+                            "Sum = $5 + 5 + 10 + 10 = 30$",
+                            "$n = 4$",
+                            "Mean = $\\\\frac{30}{4} = 7.5$"
+                        ],
+                        final_answer: "Mean = $7.5$"
+                    }
+                ]
+            },
+            // ─── SECTION 7: INTERPRETING GRAPHS AND TABLES ───
+            {
+                title: '7. Interpreting Graphs and Tables',
+                content: "## The Critical Skill\n\nInterpretation is the critical skill of drawing conclusions from visual displays. Identifying extremes (highest/lowest) and trends allows a mathematician to answer ZIMSEC \"Hence\" questions.\n\n## Key Interpretation Strategies\n\n| Graph Type | What to Look For |\n|---|---|\n| **Bar Chart** | Compare heights; tallest bar = mode; equal heights = same frequency |\n| **Histogram** | Area represents frequency; tallest bar ≠ always highest frequency (check class width) |\n| **Pie Chart** | Largest sector = most common; angle as fraction of $360^\\\\circ$ gives proportion |\n| **Line Graph** | Upward slope = increase; downward slope = decrease; flat = constant |\n| **Pictogram** | Count symbols × key value; half symbols = half value |\n| **Frequency Table** | Highest frequency = mode; sum column for total |\n\n## Useful Calculations from Graphs\n\n- From a pie chart: $\\\\text{Frequency} = \\\\frac{\\\\text{Angle}}{360} \\\\times \\\\text{Total}$\n- From a bar chart: Total = sum of all bar heights\n- From a pictogram: Total = number of symbols × key value",
+                worked_examples: [
+                    {
+                        question: "From a bar chart, marks 1 and 2 have bars of equal height. What does this mean?",
+                        steps: [
+                            "Equal bar heights indicate equal frequencies",
+                            "The same number of students scored mark 1 as scored mark 2"
+                        ],
+                        final_answer: "Marks 1 and 2 were attained by the same number of students."
+                    },
+                    {
+                        question: "From a pictogram where Key: 1 stickman = 2 people. Walking shows 9 symbols. Which mode has 18 users?",
+                        steps: [
+                            "Walking: $9 \\\\times 2 = 18$ people",
+                            "This matches the 18 users"
+                        ],
+                        final_answer: "Walking is used by 18 people."
+                    },
+                    {
+                        question: "If the Science sector in a pie chart is $180^\\\\circ$, what proportion of students like Science?",
+                        steps: [
+                            "Proportion = $\\\\frac{180}{360} = \\\\frac{1}{2}$",
+                            "Percentage = $\\\\frac{1}{2} \\\\times 100 = 50\\\\%$"
+                        ],
+                        final_answer: "$50\\\\%$ of students like Science."
+                    },
+                    {
+                        question: "A line graph slopes upward from left to right. What happens to the quantity over time?",
+                        steps: [
+                            "An upward slope indicates the quantity is increasing",
+                            "The steeper the slope, the faster the rate of increase"
+                        ],
+                        final_answer: "The quantity increases over time."
+                    },
+                    {
+                        question: "From a frequency table: 6 subjects has frequency 5 and 10 subjects has frequency 2. Which is more common?",
+                        steps: [
+                            "Compare frequencies: $f(6) = 5$ and $f(10) = 2$",
+                            "$5 > 2$, so 6 subjects is more common"
+                        ],
+                        final_answer: "6 subjects is more common (Mode = 6)."
+                    }
+                ]
+            },
+            // ─── SECTION 8: MIXED REVISION EXERCISE ───
+            {
+                title: '8. Mixed Revision Exercise',
+                content: "## Practice Questions\n\n1. Distinguish between discrete and continuous data.\n2. Construct a tally table for: 1, 2, 1, 3, 1, 4, 2.\n3. State the formula for frequency density.\n4. Find the mean of: 5, 10, 15, 20.\n5. Calculate the median of: 8, 2, 5, 1, 9.\n6. If 1 symbol = 10 units, interpret 3.5 symbols.\n7. State Table 25.19's difference regarding \"scaling\" between Bar Charts and Histograms.\n8. Calculate the angle for frequency 10 when total is 60.\n9. Find the mode of: 7, 8, 7, 9, 7.\n10. Show the tally for 9 items.\n11. Why is a Key mandatory for a Pictogram?\n12. Use Assumed Mean 5 to find the mean of: 3, 7, 4, 6.\n13. If total frequency is 120, what angle represents frequency 40?\n14. How many degrees are in a full circle?\n15. Define \"Modal Class.\"\n16. Find the median of: 10, 20, 30, 40, 50, 60.\n17. From Table 19.2, identify the relationship between $P$ and $V$.\n18. True/False: In a histogram, the height always represents frequency.\n19. Calculate: $(3+1+3+0+5+3+4+3) \\\\div 8$.\n20. Construct a frequency table for: Car, Bus, Bus, Car, Car.\n21. Find the angle for $25\\\\%$ of a pie chart.\n22. What does FD stand for in statistics?\n23. If a bar graph has heights 5, 10, 15, find the total number of items.\n24. Find the mean: 0, 0, 5, 5.\n25. Find the median of: 1, 3, 3, 5, 7.\n26. If a pie chart angle is $120^\\\\circ$ and total frequency is 36, find the frequency.\n27. Define \"Deviation\" in the context of the Assumed Mean.\n28. Draw a line graph for $(1,2)$ and $(2,4)$.\n29. Why use grouped frequency tables for continuous data?\n30. Find the sum of tallies: $$\\\\cancel{////}$$, $$\\\\cancel{////}$$, //.\n\n## Answers\n\n1. Discrete: Counted (e.g. books). Continuous: Measured (e.g. time).\n2. 1(3), 2(2), 3(1), 4(1). Total = 7.\n3. $\\\\text{FD} = \\\\frac{\\\\text{Frequency}}{\\\\text{Class Width}}$\n4. $\\\\frac{50}{4} = 12.5$\n5. Sorted: 1, 2, 5, 8, 9. Median = 5.\n6. $3.5 \\\\times 10 = 35$\n7. Bar Charts: 1 axis scaled. Histograms: 2 axes scaled.\n8. $\\\\frac{10}{60} \\\\times 360 = 60^\\\\circ$\n9. 7 (appears 3 times).\n10. $$\\\\cancel{////}$$ ////\n11. To define the value of symbols.\n12. Deviations: $-2, 2, -1, 1$. Sum = 0. Mean = $5 + 0 = 5$.\n13. $\\\\frac{40}{120} \\\\times 360 = 120^\\\\circ$\n14. $360^\\\\circ$\n15. The class interval with the highest frequency.\n16. Middle of 30 and 40 is 35.\n17. Inverse proportion ($PV = k$).\n18. False (Area represents frequency).\n19. $\\\\frac{22}{8} = 2.75$\n20. Car(3), Bus(2).\n21. $0.25 \\\\times 360 = 90^\\\\circ$\n22. Frequency Density.\n23. $5 + 10 + 15 = 30$.\n24. $\\\\frac{10}{4} = 2.5$\n25. 3\n26. $\\\\frac{120}{360} \\\\times 36 = 12$\n27. $d = \\\\text{Term} - \\\\text{Assumed Mean}$\n28. [Straight line through $(1,2)$ and $(2,4)$]\n29. To manage large ranges without losing the general distribution.\n30. $5 + 5 + 2 = 12$",
+                worked_examples: []
+            },
+            // ─── SECTION 9: EXAM-STYLE STRUCTURED TEST ───
+            {
+                title: '9. Exam-Style Structured Test',
+                content: "## Section A\n\n**1.** (a) Construct a frequency table for marks: 2, 3, 3, 4, 5, 5, 5. (b) Identify the mode.\n\n**2.** For a survey of 60 people: (a) Calculate angles for categories with frequencies 10, 20, 30. (b) Verify they sum to $360^\\\\circ$.\n\n**3.** (a) Find the mean of 3, 7, 8, 10, 12. (b) Find the median.\n\n**4.** Using Table 19.2: (a) State the volume when pressure is 6. (b) Describe the variation type.\n\n**5.** (a) Group the following production bags into intervals of 50: 12, 45, 156, 185, 200, 45. (b) State the modal class.\n\n**6.** (a) State two differences between a bar chart and a histogram. (b) Explain why Histograms use Frequency Density.\n\n**7.** (a) Using Assumed Mean 15, calculate the mean of 13, 17, 14, 16. (b) Show all deviations.\n\n**8.** A pie chart sector is $90^\\\\circ$. (a) If the total frequency is 40, find the sector's frequency. (b) What percentage is this?\n\n**9.** (a) Draw a line graph for gas pressure: $(2,30)$, $(4,25)$, $(6,20)$. (b) Hence, estimate volume at pressure 5.\n\n## Section B\n\n**10.** (a) Find the median of 2, 5, 8, 12, 15, 20. (b) Calculate the mean.\n\n**11.** (a) Create a pictogram for: Salt (2), Soap (4). Key: 1 symbol = 2 items. (b) Why use a key?\n\n**12.** (a) From a bar chart: How many students scored at least 3 marks? (b) Find the total student count.\n\n**13.** (a) Calculate the frequency density for class $0$–$20$ with frequency 40. (b) If the next class is $20$–$30$ with frequency 60, find its FD.\n\n**14.** (a) Construct a frequency table for: 0, 1, 0, 1, 2, 2, 2. (b) Find the mode.\n\n**15.** Calculate angles for frequencies: 5, 15, 20 (Total 40).\n\n**16.** (a) Calculate the mean: 1, 2, 3, 4, 5. (b) Find the median.\n\n**17.** For transport data — Walking (18), Car (15), Bus (9): (a) Calculate total users. (b) Calculate the angle for 'Car'.\n\n**18.** (a) From Table 19.2, find the volume when pressure is 12. (b) Determine the product $P \\\\times V$ for any two columns.",
+                worked_examples: []
+            },
+            // ─── SECTION 10: MEMO AND WORKED SOLUTIONS ───
+            {
+                title: '10. Memo and Worked Solutions',
+                content: "## Exam-Style Solutions\n\n**1.** (a) 2(1), 3(2), 4(1), 5(3). (b) Mode = **5**.\n\n**2.** (a) $\\\\frac{10}{60} \\\\times 360 = 60^\\\\circ$; $\\\\frac{20}{60} \\\\times 360 = 120^\\\\circ$; $\\\\frac{30}{60} \\\\times 360 = 180^\\\\circ$. (b) $60 + 120 + 180 = 360^\\\\circ$ ✓\n\n**3.** (a) Sum = 40. Mean = $\\\\frac{40}{5} = 8$. (b) Sorted: 3, 7, 8, 10, 12. Median = **8**.\n\n**4.** (a) Volume = 20. (b) Inverse variation.\n\n**5.** (a) $0$–$50$(3), $50$–$100$(0), $100$–$150$(0), $150$–$200$(2), $200$–$250$(1). (b) Modal class = $0 \\\\leq x < 50$.\n\n**6.** (a) Histograms: bars touch, both axes scaled. Bar charts: bars separated, one axis scaled. (b) To ensure **area** represents frequency, especially when class widths differ.\n\n**7.** (a) Deviations: $-2, 2, -1, 1$. Sum = 0. Mean = $15 + \\\\frac{0}{4} = 15$. (b) $d$: $13-15=-2$, $17-15=2$, $14-15=-1$, $16-15=1$.\n\n**8.** (a) $\\\\frac{90}{360} \\\\times 40 = 10$. (b) $\\\\frac{10}{40} \\\\times 100 = 25\\\\%$.\n\n**9.** (b) At $P=5$: $V \\\\approx 22.5$ (average of 25 and 20).\n\n**10.** (a) Middle of 8 and 12 = **10**. (b) $\\\\frac{62}{6} = 10.33$.\n\n**11.** (a) Salt: 1 symbol; Soap: 2 symbols. (b) Interpretation is impossible without a key.\n\n**12.** (a) Sum of bar heights for marks $\\\\geq 3$. (b) Sum of all bar heights.\n\n**13.** (a) $\\\\frac{40}{20} = 2$. (b) $\\\\frac{60}{10} = 6$.\n\n**14.** (a) 0(2), 1(2), 2(3). (b) Mode = **2**.\n\n**15.** $\\\\frac{5}{40} \\\\times 360 = 45^\\\\circ$; $\\\\frac{15}{40} \\\\times 360 = 135^\\\\circ$; $\\\\frac{20}{40} \\\\times 360 = 180^\\\\circ$. Sum = $360^\\\\circ$ ✓.\n\n**16.** (a) $\\\\frac{15}{5} = 3$. (b) Sorted: 1, 2, 3, 4, 5. Median = **3**.\n\n**17.** (a) $18 + 15 + 9 = 42$. (b) $\\\\frac{15}{42} \\\\times 360 = 128.6^\\\\circ$.\n\n**18.** (a) Volume = 12. (b) $P \\\\times V$: $2 \\\\times 30 = 60$; $6 \\\\times 20 = 120$. (Note: values from Table 19.2.)",
+                worked_examples: []
+            }
+        ],
+        key_points: [
+            "**Discrete data** involves distinct, countable values; **Continuous data** involves measurable values within a range.",
+            "The tally method groups marks in fives ($$\\\\cancel{////}$$) to prevent counting errors. Always verify $\\\\sum f = n$.",
+            "**Bar Charts** are for discrete data with gaps between bars; **Histograms** are for continuous grouped data with no gaps.",
+            "Histogram y-axis uses **Frequency Density**: $\\\\text{FD} = \\\\frac{\\\\text{Frequency}}{\\\\text{Class Width}}$, where **area** (not height) represents frequency.",
+            "**Pie chart angle formula**: $\\\\text{Angle} = \\\\frac{f}{\\\\sum f} \\\\times 360^\\\\circ$. Always verify angles sum to $360^\\\\circ$.",
+            "**Mean** = $\\\\frac{\\\\sum x}{n}$. The Assumed Mean shortcut: $\\\\bar{x} = A + \\\\frac{\\\\sum d}{n}$.",
+            "**Median**: Sort data first! Middle value (odd $n$) or average of two middle values (even $n$).",
+            "**Mode**: The most frequent **value** (not the frequency itself).",
+            "**Line graphs** show continuous trends; **Pictograms** simplify communication using symbols with a mandatory Key.",
+            "Class intervals must not overlap: use $0 \\\\leq x < 10$, not $0$–$10$ and $10$–$20$."
+        ],
+        exam_tips: [
+            "ZIMSEC requires full substitution when calculating pie chart angles — show the formula, substitute, and compute for every category.",
+            "Always verify $\\\\sum \\\\text{Angles} = 360^\\\\circ$ after computing pie chart sectors.",
+            "For histograms, label the y-axis as 'Frequency Density', not 'Frequency'. Use $\\\\text{FD} = \\\\frac{f}{\\\\text{class width}}$.",
+            "When finding the median, sort the data in ascending order FIRST. Finding the middle of unsorted data is a common mark-losing error.",
+            "The mode is the most frequent VALUE, not the frequency count. If asked for the mode and the answer is 3 appearing 4 times, write Mode = 3, not Mode = 4.",
+            "In grouped frequency tables, use proper inequality notation: $0 \\\\leq x < 10$ (not $0$–$10$).",
+            "For the Assumed Mean method, show all deviations and their sum. ZIMSEC awards method marks for each step.",
+            "Pictograms must always include a Key. Without it, the examiner cannot interpret your diagram.",
+            "Bar chart bars must have gaps; histogram bars must touch. Mixing these up loses presentation marks.",
+            "Check your total frequency: $\\\\sum f$ must equal the number of data points $n$. This is a common verification question."
+        ],
+        visual_descriptions: [
+            "Frequency Table diagram: Three columns labelled 'Value', 'Tally', 'Frequency'. Tally marks grouped in fives with a diagonal cross on every fifth mark.",
+            "Bar Chart diagram: Vertical bars of different heights with equal gaps between them. X-axis shows categories (e.g., Car, Bus, Walking), Y-axis shows Frequency with a uniform scale starting from 0.",
+            "Histogram diagram: Rectangular bars touching each other with no gaps. X-axis shows continuous class intervals (e.g., 40-50, 50-60 kg), Y-axis shows Frequency Density.",
+            "Pie Chart diagram: A circle divided into sectors. Each sector is labelled with its category name and angle (e.g., Walking 154.3°, Car 128.6°, Bus 77.1°). A starting radius is drawn and angles measured clockwise with a protractor.",
+            "Line Graph diagram: Points plotted on a coordinate grid and connected with straight lines. X-axis shows Pressure (Pa), Y-axis shows Volume. The line slopes downward showing an inverse relationship.",
+            "Pictogram diagram: Rows of identical symbols (e.g., stickmen) representing data. A Key box states '1 stickman = 2 people'. Half symbols represent half values.",
+            "Comparison Table: Side-by-side columns for Bar Chart vs Histogram showing differences in data type, scaling, proportionality, axis data, and gap rules.",
+            "Measures of Central Tendency diagram: A number line with data points marked, showing Mean (balance point), Median (middle value), and Mode (most frequent value) as separate indicators."
+        ]
+    },
+
+    // ============================================
+    // FORM 2: MEASURES OF CENTRAL TENDENCY (Comprehensive)
+    // ============================================
+    'F2 Measures of Central Tendency': {
+        topic: 'Measures of Central Tendency',
+        subject: 'Mathematics',
+        grade_level: 'O-Level Form 2',
+        summary: "When faced with large sets of information — such as the marks of one hundred students or the daily temperatures over a year — it becomes strategically necessary to identify a **single value** that represents the entire group. This single value is known as a **measure of central tendency**.\n\n## The Three Measures\n\n| Measure | Definition | Formula |\n|---|---|---|\n| **Mean** | Sum of all values divided by the count | $\\\\bar{x} = \\\\frac{\\\\sum x}{n}$ |\n| **Median** | Middle value when data is arranged in order | Position: $\\\\frac{n+1}{2}$ |\n| **Mode** | Most frequent value in the data set | Highest frequency |\n\n## Mean from Frequency Tables\n\n$$\\\\text{Mean} = \\\\frac{\\\\sum fx}{\\\\sum f}$$\n\n## The Assumed Mean Method\n\n$$\\\\bar{x} = A + \\\\frac{\\\\sum d}{n}$$\n\nwhere $A$ = assumed mean, $d = x - A$\n\n## Choosing the Right Measure\n\n| Measure | Best When |\n|---|---|\n| **Mean** | All data points are needed; no extreme outliers |\n| **Median** | Outliers are present; need a \"typical\" value |\n| **Mode** | Categorical data; need the most popular item |",
+        sections: [
+            // ─── SECTION 1: INTRODUCTION TO CENTRAL TENDENCY ───
+            {
+                title: '1. Introduction to Central Tendency',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Measures_of_Central_Tendency.mp4',
+                content: "## Why Central Tendency?\n\nIn the ZIMSEC Mathematics curriculum, the study of statistics focuses on making sense of data. The \"average\" acts as a representative. For instance, knowing the \"average\" mark allows a teacher to evaluate the performance of a whole class without looking at every individual script.\n\nWe use three primary tools to find this center:\n- **Mean** — focuses on the total value\n- **Median** — focuses on the middle position\n- **Mode** — focuses on the most frequent occurrence\n\n## Definitions\n\n| Term | Definition |\n|---|---|\n| **Arithmetic Mean** | The value obtained by adding all terms together and dividing by the total number of terms |\n| **Median** | The middle value in a set of data when terms are arranged in order of size |\n| **Mode** | The most frequent term in a data set; the value with the highest frequency |\n\n> **Key Insight**: Each measure provides a different perspective on the \"center\" of data. By mastering all three, we can determine which provides the most truthful representation for any given scenario.",
+                worked_examples: [
+                    {
+                        question: "For the data set {3, 1, 3, 0, 5, 3, 4, 3}, identify which measure(s) of central tendency would be most useful.",
+                        steps: [
+                            "Mean = $\\\\frac{22}{8} = 2.75$ — gives the calculated average",
+                            "Median: Ordered = 0, 1, 3, 3, 3, 3, 4, 5. Middle pair: 3 and 3. Median = 3",
+                            "Mode = 3 (appears 4 times, highest frequency)",
+                            "The median and mode agree at 3, while the mean is pulled down by the 0 and 1"
+                        ],
+                        final_answer: "Mean = 2.75, Median = 3, Mode = 3. The median or mode best represents this data."
+                    }
+                ]
+            },
+            // ─── SECTION 2: THE ARITHMETIC MEAN — UNGROUPED DATA ───
+            {
+                title: '2. The Arithmetic Mean (Average) — Ungrouped Data',
+                content: "## The Mean: Fair Share Value\n\nThe Mean is the most common measure of central tendency. It treats all data points as equal contributors to a whole. It represents the \"fair share\" — the amount each person would receive if the total were redistributed equally.\n\n## Formula\n\n$$\\\\text{Mean} = \\\\frac{\\\\text{Sum of all values}}{\\\\text{Number of values}(n)} = \\\\frac{\\\\sum x}{n}$$\n\n## Common Error\n\nWhen calculating the mean, **repeated numbers must be counted as separate items**. For example, in the set $\\\\{3, 3, 3\\\\}$, the number 3 must be added three times, and $n$ must be 3, not 1.\n\n## Practice Exercise 2.1\n\n1. Find the mean of 5, 10, 15.\n2. Calculate the average of 0, 4, 8, 12.\n3. What is the mean of 1.5 kg, 2.5 kg, 5.0 kg?\n4. Find the mean mark: 20, 20, 30.\n5. Calculate the mean of 7, 7, 7, 7, 7.",
+                worked_examples: [
+                    {
+                        question: "Calculate the mean of: 3, 1, 3, 0, 5, 3, 4, 3.",
+                        steps: [
+                            "Sum = $3 + 1 + 3 + 0 + 5 + 3 + 4 + 3 = 22$",
+                            "Number of values: $n = 8$",
+                            "Mean = $\\\\frac{22}{8} = 2.75$"
+                        ],
+                        final_answer: "Mean = $2.75$ units"
+                    },
+                    {
+                        question: "Find the mean weight of three bags: 2 kg, 5 kg, 8 kg.",
+                        steps: [
+                            "Sum = $2 + 5 + 8 = 15$",
+                            "$n = 3$",
+                            "Mean = $\\\\frac{15}{3} = 5$"
+                        ],
+                        final_answer: "Mean = $5$ kg"
+                    },
+                    {
+                        question: "Calculate the mean mark for a student: 10, 15, 18, 18, 18.",
+                        steps: [
+                            "Sum = $10 + 15 + 18 + 18 + 18 = 79$",
+                            "$n = 5$",
+                            "Mean = $\\\\frac{79}{5} = 15.8$"
+                        ],
+                        final_answer: "Mean = $15.8$ marks"
+                    },
+                    {
+                        question: "Calculate the mean price of items: $12.20, $15.25, $12.20.",
+                        steps: [
+                            "Sum = $12.20 + 15.25 + 12.20 = 39.65$",
+                            "$n = 3$",
+                            "Mean = $\\\\frac{39.65}{3} = 13.2166...$",
+                            "Round to 2 d.p. for currency"
+                        ],
+                        final_answer: "Mean = $\\\\$13.22$"
+                    },
+                    {
+                        question: "Find the mean of: 0, 0, 1, 2, 2.",
+                        steps: [
+                            "Sum = $0 + 0 + 1 + 2 + 2 = 5$",
+                            "$n = 5$",
+                            "Mean = $\\\\frac{5}{5} = 1$"
+                        ],
+                        final_answer: "Mean = $1$ unit"
+                    },
+                    {
+                        question: "Calculate the mean of lengths: 12 cm, 15 cm, 20 cm, 25 cm, 18 cm.",
+                        steps: [
+                            "Sum = $12 + 15 + 20 + 25 + 18 = 90$",
+                            "$n = 5$",
+                            "Mean = $\\\\frac{90}{5} = 18$"
+                        ],
+                        final_answer: "Mean = $18$ cm"
+                    },
+                    {
+                        question: "Find the mean score: 1, 2, 3, 4, 5, 6.",
+                        steps: [
+                            "Sum = $1 + 2 + 3 + 4 + 5 + 6 = 21$",
+                            "$n = 6$",
+                            "Mean = $\\\\frac{21}{6} = 3.5$"
+                        ],
+                        final_answer: "Mean = $3.5$"
+                    },
+                    {
+                        question: "Calculate the mean of: 100, 200, 300, 400.",
+                        steps: [
+                            "Sum = $100 + 200 + 300 + 400 = 1000$",
+                            "$n = 4$",
+                            "Mean = $\\\\frac{1000}{4} = 250$"
+                        ],
+                        final_answer: "Mean = $250$ units"
+                    }
+                ]
+            },
+            // ─── SECTION 3: MEAN FROM FREQUENCY TABLES ───
+            {
+                title: '3. Mean from Frequency Tables',
+                content: "## Why Use Frequency Tables?\n\nWhen data sets involve many repeated values, Frequency Tables are more efficient than listing every number individually. The formula incorporates the \"weight\" of each value by multiplying the value ($x$) by its frequency ($f$).\n\n## Formula\n\n$$\\\\text{Mean} = \\\\frac{\\\\sum fx}{\\\\sum f}$$\n\nWhere $\\\\sum f$ is the total number of items and $\\\\sum fx$ is the total sum of all values.\n\n## The \"So What?\" Layer\n\nWe multiply $f \\\\times x$ because it is a shortcut for repeated addition. For example, if the mark '2' appears 7 times, $2 \\\\times 7 = 14$ gives the same total as $2+2+2+2+2+2+2$.\n\n## Step-by-Step Method\n\n| Step | Action |\n|---|---|\n| **1** | Create a table with columns: $x$, $f$, $fx$ |\n| **2** | Multiply each $x$ by its $f$ to get $fx$ |\n| **3** | Sum the $f$ column: $\\\\sum f$ |\n| **4** | Sum the $fx$ column: $\\\\sum fx$ |\n| **5** | Divide: Mean = $\\\\frac{\\\\sum fx}{\\\\sum f}$ |\n\n## Practice Exercise 3.1\n\n1. Construct a table and find the mean: Values $\\\\{5, 10, 15\\\\}$ with frequencies $\\\\{2, 3, 1\\\\}$.\n2. Given $\\\\sum fx = 150$ and $\\\\sum f = 10$, calculate the mean.\n3. Calculate the mean from a table where $x = \\\\{1, 2, 3\\\\}$ and $f = \\\\{4, 4, 2\\\\}$.\n4. If a value of 0 has a frequency of 10, explain how this affects $\\\\sum f$ and $\\\\sum fx$.\n5. Find the mean: $x = \\\\{10, 20\\\\}$, $f = \\\\{5, 5\\\\}$.",
+                worked_examples: [
+                    {
+                        question: "Mark Distribution: Mark (x) = 0, 1, 2, 3, 4 with Frequency (f) = 9, 6, 7, 5, 3. Find the mean.",
+                        steps: [
+                            "$fx$: $0 \\\\times 9 = 0$, $1 \\\\times 6 = 6$, $2 \\\\times 7 = 14$, $3 \\\\times 5 = 15$, $4 \\\\times 3 = 12$",
+                            "$\\\\sum f = 9 + 6 + 7 + 5 + 3 = 30$",
+                            "$\\\\sum fx = 0 + 6 + 14 + 15 + 12 = 47$",
+                            "Mean = $\\\\frac{47}{30} = 1.566...$"
+                        ],
+                        final_answer: "Mean = $1.57$ marks"
+                    },
+                    {
+                        question: "Daily Goals: Goals (x) = 0, 1, 2, 3 with Frequency (f) = 2, 3, 4, 1. Find the mean.",
+                        steps: [
+                            "$fx$: $0 \\\\times 2 = 0$, $1 \\\\times 3 = 3$, $2 \\\\times 4 = 8$, $3 \\\\times 1 = 3$",
+                            "$\\\\sum f = 2 + 3 + 4 + 1 = 10$",
+                            "$\\\\sum fx = 0 + 3 + 8 + 3 = 14$",
+                            "Mean = $\\\\frac{14}{10} = 1.4$"
+                        ],
+                        final_answer: "Mean = $1.4$ goals"
+                    },
+                    {
+                        question: "Family Size: People (x) = 2, 3, 4 with Frequency (f) = 5, 10, 5. Find the mean.",
+                        steps: [
+                            "$fx$: $2 \\\\times 5 = 10$, $3 \\\\times 10 = 30$, $4 \\\\times 5 = 20$",
+                            "$\\\\sum f = 5 + 10 + 5 = 20$",
+                            "$\\\\sum fx = 10 + 30 + 20 = 60$",
+                            "Mean = $\\\\frac{60}{20} = 3$"
+                        ],
+                        final_answer: "Mean = $3$ people"
+                    },
+                    {
+                        question: "Shoe Sizes: Size (x) = 5, 6, 7 with Frequency (f) = 2, 8, 10. Find the mean.",
+                        steps: [
+                            "$fx$: $5 \\\\times 2 = 10$, $6 \\\\times 8 = 48$, $7 \\\\times 10 = 70$",
+                            "$\\\\sum f = 2 + 8 + 10 = 20$",
+                            "$\\\\sum fx = 10 + 48 + 70 = 128$",
+                            "Mean = $\\\\frac{128}{20} = 6.4$"
+                        ],
+                        final_answer: "Mean = $6.4$"
+                    },
+                    {
+                        question: "Errors per Page: Errors (x) = 0, 1, 2 with Frequency (f) = 12, 5, 3. Find the mean.",
+                        steps: [
+                            "$fx$: $0 \\\\times 12 = 0$, $1 \\\\times 5 = 5$, $2 \\\\times 3 = 6$",
+                            "$\\\\sum f = 12 + 5 + 3 = 20$",
+                            "$\\\\sum fx = 0 + 5 + 6 = 11$",
+                            "Mean = $\\\\frac{11}{20} = 0.55$"
+                        ],
+                        final_answer: "Mean = $0.55$ errors"
+                    },
+                    {
+                        question: "Points per Game: Points (x) = 10, 15, 20 with Frequency (f) = 4, 2, 4. Find the mean.",
+                        steps: [
+                            "$fx$: $10 \\\\times 4 = 40$, $15 \\\\times 2 = 30$, $20 \\\\times 4 = 80$",
+                            "$\\\\sum f = 4 + 2 + 4 = 10$",
+                            "$\\\\sum fx = 40 + 30 + 80 = 150$",
+                            "Mean = $\\\\frac{150}{10} = 15$"
+                        ],
+                        final_answer: "Mean = $15$ points"
+                    },
+                    {
+                        question: "Weights of Parcels: Weight (x) = 1 kg, 2 kg, 5 kg with Frequency (f) = 10, 5, 5. Find the mean.",
+                        steps: [
+                            "$fx$: $1 \\\\times 10 = 10$, $2 \\\\times 5 = 10$, $5 \\\\times 5 = 25$",
+                            "$\\\\sum f = 10 + 5 + 5 = 20$",
+                            "$\\\\sum fx = 10 + 10 + 25 = 45$",
+                            "Mean = $\\\\frac{45}{20} = 2.25$"
+                        ],
+                        final_answer: "Mean = $2.25$ kg"
+                    }
+                ]
+            },
+            // ─── SECTION 4: THE MEDIAN ───
+            {
+                title: '4. The Median: Finding the Middle Value',
+                content: "## The Positional Center\n\nThe Median is a strategic measure used to represent the typical value of a set. Its main strength is its **resistance to outliers** — extremely high or low values that would otherwise distort the mean.\n\n## Mandatory Rule: Order First!\n\nYou **must** arrange the data in order of size (usually ascending) before identifying the middle.\n\n## Finding the Median\n\n### Odd Number of Terms ($n$ is odd)\nThe median is the middle value.\n$$\\\\text{Median position} = \\\\frac{n + 1}{2}$$\n\n### Even Number of Terms ($n$ is even)\nThe median is the average of the two middle values.\n$$\\\\text{Median} = \\\\frac{\\\\text{value at position } \\\\frac{n}{2} + \\\\text{value at position } \\\\frac{n}{2}+1}{2}$$\n\n## Common Error\n\nStudents often try to find the middle of the **raw** list. In the set $\\\\{10, 2, 5\\\\}$, the raw middle is 2, but the actual median is **5** because the ordered list is $\\\\{2, 5, 10\\\\}$.\n\n## Practice Exercise 4.1\n\n1. Find the median of 7, 2, 5.\n2. Determine the median: 10, 5, 15, 20.\n3. What is the median of 0, 0, 1?\n4. Calculate the median price: $\\\\$12$, $\\\\$15$, $\\\\$10$, $\\\\$8$.\n5. Find the median mark: 18, 15, 18, 10, 18.\n6. Order and find the median: 4, 1, 9, 3, 6, 2.",
+                worked_examples: [
+                    {
+                        question: "Find the median of: 3, 1, 2, 5, 3 (odd number of terms).",
+                        steps: [
+                            "Order: 1, 2, 3, 3, 5",
+                            "$n = 5$ (odd)",
+                            "Middle position = $\\\\frac{5+1}{2} = 3$rd value",
+                            "3rd value = 3"
+                        ],
+                        final_answer: "Median = $3$ units"
+                    },
+                    {
+                        question: "Find the median of: 10 kg, 18 kg, 15 kg.",
+                        steps: [
+                            "Order: 10, 15, 18",
+                            "$n = 3$ (odd)",
+                            "Middle value is the 2nd: 15"
+                        ],
+                        final_answer: "Median = $15$ kg"
+                    },
+                    {
+                        question: "Find the median of: 22, 12, 15, 18, 18 marks.",
+                        steps: [
+                            "Order: 12, 15, 18, 18, 22",
+                            "$n = 5$ (odd)",
+                            "Middle = 3rd value = 18"
+                        ],
+                        final_answer: "Median = $18$ marks"
+                    },
+                    {
+                        question: "Find the median of: 3, 1, 3, 0, 5, 3, 4, 3 (even number of terms).",
+                        steps: [
+                            "Order: 0, 1, 3, 3, 3, 3, 4, 5",
+                            "$n = 8$ (even)",
+                            "Middle pair: 4th and 5th values = 3 and 3",
+                            "Median = $\\\\frac{3 + 3}{2} = 3$"
+                        ],
+                        final_answer: "Median = $3$ units"
+                    },
+                    {
+                        question: "Find the median of: 10, 20, 30, 40.",
+                        steps: [
+                            "Already ordered: 10, 20, 30, 40",
+                            "$n = 4$ (even)",
+                            "Middle pair: 2nd and 3rd = 20 and 30",
+                            "Median = $\\\\frac{20 + 30}{2} = 25$"
+                        ],
+                        final_answer: "Median = $25$ units"
+                    },
+                    {
+                        question: "Find the median of: 1 kg, 5 kg, 2 kg, 8 kg.",
+                        steps: [
+                            "Order: 1, 2, 5, 8",
+                            "$n = 4$ (even)",
+                            "Middle pair: 2nd and 3rd = 2 and 5",
+                            "Median = $\\\\frac{2 + 5}{2} = 3.5$"
+                        ],
+                        final_answer: "Median = $3.5$ kg"
+                    },
+                    {
+                        question: "Find the median of: $100, $50, $70, $80.",
+                        steps: [
+                            "Order: 50, 70, 80, 100",
+                            "$n = 4$ (even)",
+                            "Middle pair: 2nd and 3rd = 70 and 80",
+                            "Median = $\\\\frac{70 + 80}{2} = 75$"
+                        ],
+                        final_answer: "Median = $\\\\$75.00$"
+                    }
+                ]
+            },
+            // ─── SECTION 5: THE MODE ───
+            {
+                title: '5. The Mode: Identifying Frequency',
+                content: "## The Measure of Popularity\n\nThe Mode is the value that appears **most often**. It is critically important in business; for example, a shopkeeper needs to know the **modal dress size** to ensure they have the most popular stock available.\n\n## Identification\n\nIn ZIMSEC exams, you will see the instruction: **\"State the mode.\"**\n\nSimply find the value with the highest frequency.\n\n## The \"So What?\" Layer\n\nThe mode interprets \"popularity.\" While the mean might be 15.8 marks, if the mode is 18, it tells us that more students achieved an 18 than any other score.\n\n## Important Notes\n\n- A data set can have **no mode** (all values appear equally often)\n- A data set can have **one mode** (unimodal)\n- A data set can have **two or more modes** (bimodal/multimodal)\n\n## Practice Exercise 5.1\n\n1. State the mode for: 2, 4, 4, 6, 8.\n2. Find the mode from a table where $x = \\\\{0, 1, 2\\\\}$ and $f = \\\\{10, 5, 2\\\\}$.\n3. In a set of colours $\\\\{$Red, Blue, Red, Green$\\\\}$, what is the mode?\n4. State the mode: 100, 200, 100, 300, 100.\n5. If every number in a set appears only once, is there a mode?",
+                worked_examples: [
+                    {
+                        question: "Find the mode of: 3, 1, 3, 0, 5, 3, 4, 3.",
+                        steps: [
+                            "Count frequencies: 0(1), 1(1), 3(4), 4(1), 5(1)",
+                            "The value 3 appears 4 times — the highest frequency"
+                        ],
+                        final_answer: "Mode = $3$"
+                    },
+                    {
+                        question: "Find the mode of: 10, 15, 18, 18, 18.",
+                        steps: [
+                            "10 appears once, 15 appears once, 18 appears 3 times",
+                            "18 has the highest frequency"
+                        ],
+                        final_answer: "Mode = $18$ marks"
+                    },
+                    {
+                        question: "From a frequency table: Value 0 (f=9), Value 1 (f=6), Value 2 (f=7). State the mode.",
+                        steps: [
+                            "Compare frequencies: $f(0) = 9$, $f(1) = 6$, $f(2) = 7$",
+                            "Highest frequency is 9, corresponding to value 0"
+                        ],
+                        final_answer: "Mode = $0$"
+                    },
+                    {
+                        question: "Find the mode of: 5, 5, 2, 2, 2, 1.",
+                        steps: [
+                            "1 appears once, 2 appears 3 times, 5 appears 2 times",
+                            "2 has the highest frequency"
+                        ],
+                        final_answer: "Mode = $2$"
+                    },
+                    {
+                        question: "From a table: Marks 10(f=5), 20(f=15), 30(f=10). State the mode.",
+                        steps: [
+                            "Compare: $f(10)=5$, $f(20)=15$, $f(30)=10$",
+                            "Highest frequency is 15, corresponding to 20 marks"
+                        ],
+                        final_answer: "Mode = $20$ marks"
+                    },
+                    {
+                        question: "Find the mode of weights: 50 kg, 60 kg, 50 kg, 70 kg, 50 kg, 80 kg.",
+                        steps: [
+                            "50 appears 3 times, 60 appears once, 70 appears once, 80 appears once",
+                            "50 has the highest frequency"
+                        ],
+                        final_answer: "Mode = $50$ kg"
+                    }
+                ]
+            },
+            // ─── SECTION 6: COMPARISON AND INTERPRETATION ───
+            {
+                title: '6. Comparison and Interpretation of Measures',
+                content: "## Choosing the Right Measure\n\nChoosing the right measure depends on the \"truth\" we wish to convey.\n\n| Measure | Strength | Weakness |\n|---|---|---|\n| **Mean** | Uses every value; mathematically sensitive | Easily distorted by extreme values (outliers) |\n| **Median** | Not affected by outliers; gives the \"typical\" center | Ignores the actual values of most data points |\n| **Mode** | Easy to find; useful for categorical/popular data | A set may have no mode or multiple modes |\n\n## The Assumed Mean (Working Mean) Method\n\nIn the ZIMSEC curriculum, we also use the **Assumed Mean** to simplify calculations for large numbers.\n\n### Steps\n1. \"Guess\" a mean ($A$)\n2. Calculate deviations: $d = x - A$ for each term\n3. Sum all deviations: $\\\\sum d$\n4. Apply: $\\\\text{Actual Mean} = A + \\\\frac{\\\\sum d}{n}$\n\n## When to Use Which Measure\n\n| Scenario | Best Measure | Reason |\n|---|---|---|\n| Most popular shoe size | **Mode** | Need the most common size to stock |\n| Average height of a class | **Mean** | All values contribute equally |\n| Typical wage in a factory with one millionaire owner | **Median** | Outlier (millionaire) distorts the mean |",
+                worked_examples: [
+                    {
+                        question: "A company has salaries: $100, $100, $100, $100, $1000. Compare the mean and median.",
+                        steps: [
+                            "Mean = $\\\\frac{100+100+100+100+1000}{5} = \\\\frac{1400}{5} = 280$",
+                            "Ordered: 100, 100, 100, 100, 1000. Median = 3rd value = 100",
+                            "The mean ($280) makes the company look high-paying",
+                            "But it is distorted by the boss's $1000 salary",
+                            "The median ($100) is a more truthful representation of a typical worker's pay"
+                        ],
+                        final_answer: "Mean = $\\\\$280$, Median = $\\\\$100$. The median is the better representative here."
+                    },
+                    {
+                        question: "Use an Assumed Mean of $A = 20$ to find the actual mean of: 18, 22, 25.",
+                        steps: [
+                            "Deviations: $d_1 = 18 - 20 = -2$, $d_2 = 22 - 20 = +2$, $d_3 = 25 - 20 = +5$",
+                            "$\\\\sum d = -2 + 2 + 5 = 5$",
+                            "$n = 3$",
+                            "Mean = $A + \\\\frac{\\\\sum d}{n} = 20 + \\\\frac{5}{3} = 20 + 1.67 = 21.67$"
+                        ],
+                        final_answer: "Mean = $21.67$"
+                    },
+                    {
+                        question: "Use an Assumed Mean of $A = 10$ to find the mean of: 8, 12, 10, 14.",
+                        steps: [
+                            "Deviations: $8-10=-2$, $12-10=+2$, $10-10=0$, $14-10=+4$",
+                            "$\\\\sum d = -2 + 2 + 0 + 4 = 4$",
+                            "$n = 4$",
+                            "Mean = $10 + \\\\frac{4}{4} = 10 + 1 = 11$"
+                        ],
+                        final_answer: "Mean = $11$"
+                    }
+                ]
+            },
+            // ─── SECTION 7: MIXED REVISION EXERCISE ───
+            {
+                title: '7. Mixed Revision Exercise',
+                content: "## Easy (E)\n\n1. Calculate the mean of 2, 4, 6.\n2. State the mode of 1, 1, 2, 3.\n3. Order 9, 2, 5 and find the median.\n4. Find the mean of 0, 10, 20.\n5. Find the mode of 5, 10, 5, 15.\n6. Determine the median of 12, 10, 14.\n7. Calculate the mean: 1, 1, 1, 1, 1.\n8. State the mode for shoe sizes: 6, 7, 8, 6, 9.\n9. Find the median: 100, 50, 150.\n10. Calculate the mean: 2 kg, 4 kg, 6 kg, 8 kg.\n\n## Intermediate (I)\n\n11. A student has marks 10, 15, 18, 18, 18. Find the mean.\n12. Using the data in Q11, determine the median.\n13. Hence, state which is higher: the mean or the mode for Q11.\n14. Calculate the mean from a table: $x = \\\\{1, 2\\\\}$, $f = \\\\{3, 2\\\\}$.\n15. Find the median of: 1, 3, 5, 7, 9, 11.\n16. Calculate the mean weight: 40 kg, 50 kg, 60 kg, 70 kg.\n17. State the mode for: 0, 3, 0, 4, 0, 5, 6.\n18. Find the median of: 12, 15, 10, 18.\n19. If $\\\\sum f = 20$ and $\\\\sum fx = 100$, calculate the mean.\n20. Find the mean of: $\\\\$12.20$, $\\\\$15.25$, $\\\\$12.20$.\n\n## Complex (C)\n\n21. Given the mean of three numbers is 10, find their sum.\n22. A set of 4 numbers has a mean of 5. If a 5th number, 10, is added, find the new mean.\n23. Use an assumed mean of 20 to find the actual mean of 18, 22, 25.\n24. If the median of $x$, 5, 8 is 5 (when in order), and $x < 5$, find $x$.\n25. Find $y$ if the mean of 10, 20, $y$ is 20.\n26. In a frequency table, if the mean is 1.57 and $\\\\sum f = 30$, find $\\\\sum fx$.\n27. Determine the median of the first 10 even numbers.\n28. A list has a mode of 5 and a mean of 4. Create a possible set of 3 numbers.\n29. Calculate the mean using deviations from assumed mean of 10: $\\\\{8, 12, 10, 14\\\\}$.\n30. If the mean of $n$ numbers is $M$, what is the sum?\n\n## Answers\n\n1. $4$ | 2. $1$ | 3. $5$ | 4. $10$ | 5. $5$ | 6. $12$ | 7. $1$ | 8. $6$ | 9. $100$ | 10. $5$ kg\n\n11. $15.8$ | 12. $18$ | 13. Mode (18 > 15.8) | 14. $1.4$ | 15. $6$ | 16. $55$ kg | 17. $0$ | 18. $13.5$ | 19. $5$ | 20. $\\\\$13.22$\n\n21. $30$ | 22. $6$ | 23. $21.67$ | 24. Any $x < 5$ (e.g. $x = 4$) | 25. $y = 30$ | 26. $\\\\sum fx = 47.1 \\\\approx 47$ | 27. $11$ | 28. $\\\\{2, 5, 5\\\\}$ | 29. $11$ | 30. $nM$",
+                worked_examples: []
+            },
+            // ─── SECTION 8: EXAM-STYLE STRUCTURED TEST ───
+            {
+                title: '8. Exam-Style Structured Test',
+                content: "**1.** A survey of student weights (kg) recorded: 40, 50, 70, 60, 50, 80, 90.\n(a) State the modal weight. (b) Find the median weight. (c) Calculate the mean weight.\n\n**2.** A shop sells three items for $\\\\$12.20$, $\\\\$15.25$, and $\\\\$12.20$.\n(a) Determine the mean price. (b) State the mode. (c) Determine the median price.\n\n**3.** The marks for 5 students are: 10, 15, 18, 18, 18.\n(a) Calculate the mean mark. (b) Find the median mark. (c) State the modal mark.\n\n**4.** A frequency table shows the number of children in 20 families:\n\n| Children ($x$) | 1 | 2 | 3 | 4 |\n|---|---|---|---|---|\n| Frequency ($f$) | 5 | 8 | 5 | 2 |\n\n(a) Calculate $\\\\sum fx$. (b) Calculate the mean. (c) State the mode.\n\n**5.** Data: 3, 1, 3, 0, 5, 3, 4, 3.\n(a) Calculate the mean. (b) Arrange in order and find the median. (c) State the mode.\n\n**6.** A student scored 60%, 70%, and 80% in three tests.\n(a) Find the mean score. (b) What must they score in a 4th test to have a mean of 75%?\n\n**7.** (a) Define \"Central Tendency.\" (b) Explain why the median is used when outliers are present.\n\n**8.** Prices of bread at different tuckshops: $\\\\$0.90$, $\\\\$1.10$, $\\\\$1.00$, $\\\\$1.00$.\n(a) Find the mean price. (b) State the mode.\n\n**9.** Use an assumed mean of 50 to calculate the mean of: 48, 52, 55, 45.\n\n**10.** Temperatures ($^\\\\circ$C): 25, 28, 30, 25, 32.\n(a) Find the mean temperature. (b) Find the median.\n\n**11.** Find the median of the first five prime numbers.\n\n**12.** Goals frequency table:\n\n| Goals | 0 | 1 | 2 |\n|---|---|---|---|\n| Freq | 2 | 3 | 5 |\n\n(a) Calculate the mean goals. (b) State the mode.\n\n**13.** Explain the \"Common Error\" regarding repeated numbers in mean calculations.\n\n**14.** The mean of 5 numbers is 12. If four are 10, 10, 15, 15, find the fifth.\n\n**15.** State which average is best for: (a) Most popular shoe size. (b) Average height. (c) Typical wage with one millionaire.\n\n**16.** Arrange and find the median: 0.5, 0.2, 0.8, 0.1, 0.4.\n\n**17.** Calculate the mean using deviations from assumed mean 5: $\\\\{3, 7, 5\\\\}$.\n\n**18.** Marks ($x$) = 0, 1, 2, 3 with frequencies 9, 6, 7, 5.\n(a) Calculate $\\\\sum f$. (b) Calculate the mean mark.",
+                worked_examples: []
+            },
+            // ─── SECTION 9: FULL MEMO AND WORKED SOLUTIONS ───
+            {
+                title: '9. Full Memo and Worked Solutions',
+                content: "## Exam-Style Solutions\n\n**1.** (a) Mode = $50$ kg. (b) Ordered: 40, 50, 50, 60, 70, 80, 90. Median = $60$ kg. (c) $\\\\frac{440}{7} = 62.86$ kg.\n\n**2.** (a) $\\\\frac{39.65}{3} = \\\\$13.22$. (b) Mode = $\\\\$12.20$. (c) Ordered: 12.20, 12.20, 15.25. Median = $\\\\$12.20$.\n\n**3.** (a) $\\\\frac{79}{5} = 15.8$ marks. (b) Median = $18$ marks. (c) Mode = $18$ marks.\n\n**4.** (a) $\\\\sum fx = (1 \\\\times 5) + (2 \\\\times 8) + (3 \\\\times 5) + (4 \\\\times 2) = 5 + 16 + 15 + 8 = 44$. (b) $\\\\frac{44}{20} = 2.2$ children. (c) Mode = $2$ children.\n\n**5.** (a) $\\\\frac{22}{8} = 2.75$. (b) Ordered: 0, 1, 3, 3, 3, 3, 4, 5. Median = $\\\\frac{3+3}{2} = 3$. (c) Mode = $3$.\n\n**6.** (a) $\\\\frac{210}{3} = 70\\\\%$. (b) Sum for 4 tests must be $75 \\\\times 4 = 300$. Score needed: $300 - 210 = 90\\\\%$.\n\n**7.** (a) A single value representing the center of a data set. (b) The median is not affected by extremely high or low values, so it gives a more truthful \"typical\" value.\n\n**8.** (a) $\\\\frac{4.00}{4} = \\\\$1.00$. (b) Mode = $\\\\$1.00$.\n\n**9.** Deviations: $-2, +2, +5, -5$. $\\\\sum d = 0$. Mean = $50 + \\\\frac{0}{4} = 50$.\n\n**10.** (a) $\\\\frac{140}{5} = 28^\\\\circ$C. (b) Ordered: 25, 25, 28, 30, 32. Median = $28^\\\\circ$C.\n\n**11.** Primes: 2, 3, 5, 7, 11. Median = $5$.\n\n**12.** (a) $\\\\sum fx = 0 + 3 + 10 = 13$. $\\\\frac{13}{10} = 1.3$ goals. (b) Mode = $2$ goals.\n\n**13.** Repeated numbers must be counted as separate items in the sum and in $n$. e.g., $\\\\{3, 3, 3\\\\}$: sum = $3+3+3=9$, $n=3$, not sum $= 3$, $n=1$.\n\n**14.** Sum = $12 \\\\times 5 = 60$. Fifth number = $60 - (10+10+15+15) = 60 - 50 = 10$.\n\n**15.** (a) Mode. (b) Mean. (c) Median.\n\n**16.** Ordered: 0.1, 0.2, 0.4, 0.5, 0.8. Median = $0.4$.\n\n**17.** Deviations: $-2, +2, 0$. $\\\\sum d = 0$. Mean = $5 + \\\\frac{0}{3} = 5$. But let me recalculate: actually $\\\\frac{3+7+5}{3} = 5$. ✓\n\n**18.** (a) $\\\\sum f = 9 + 6 + 7 + 5 = 27$. (b) $\\\\sum fx = 0 + 6 + 14 + 15 = 35$. Mean = $\\\\frac{35}{27} = 1.30$ marks.\n\n## Summary of Common Errors\n\n- **Units**: Always state kg, $, or marks in final answers.\n- **Ordering**: Always \"Order first!\" for the median.\n- **Repeats**: Count every single occurrence of a number in the mean.",
+                worked_examples: []
+            }
+        ],
+        key_points: [
+            "**Mean** = $\\\\frac{\\\\sum x}{n}$. Add all values, divide by count. The most commonly used average.",
+            "**Mean from frequency table**: $\\\\frac{\\\\sum fx}{\\\\sum f}$. Multiply each value by its frequency, sum, then divide by total frequency.",
+            "**Median**: The middle value when data is **sorted**. For odd $n$: middle value. For even $n$: average of two middle values.",
+            "**Mode**: The most frequent value. A data set may have no mode, one mode, or multiple modes.",
+            "The **Assumed Mean method**: $\\\\bar{x} = A + \\\\frac{\\\\sum d}{n}$ where $d = x - A$. Useful for simplifying calculations with large numbers.",
+            "The Mean is distorted by **outliers** (extreme values). Use the **Median** when outliers are present.",
+            "The **Mode** is best for categorical data and identifying the most popular item (e.g., shoe sizes, transport modes).",
+            "**Common Error**: Always sort data before finding the median. The middle of unsorted data gives wrong answers.",
+            "**Common Error**: Repeated values must each be counted separately. In $\\\\{3, 3, 3\\\\}$, sum = $9$ and $n = 3$, not sum = $3$ and $n = 1$.",
+            "Always include **units** in your final answer (kg, marks, $, °C, etc.)."
+        ],
+        exam_tips: [
+            "ZIMSEC requires full working when calculating the mean. Show the sum and the division step clearly.",
+            "For frequency table questions, always set up the table with columns $x$, $f$, and $fx$. Show the totals row with $\\\\sum f$ and $\\\\sum fx$.",
+            "When finding the median, write 'Order:' and list the sorted values. This earns method marks even if the final answer is wrong.",
+            "The mode is stated, not calculated. Simply identify the value with the highest frequency.",
+            "For 'which measure is best?' questions: Mode for popularity, Mean for general average, Median when outliers exist.",
+            "When using the Assumed Mean method, show every deviation ($d = x - A$) and their sum. ZIMSEC awards marks for each step.",
+            "If asked to find a missing value given the mean, use: Sum = Mean $\\\\times n$. Then subtract known values.",
+            "For even $n$ median: clearly show both middle values and the averaging step: $\\\\frac{a + b}{2}$.",
+            "In currency questions, round the mean to **2 decimal places** (e.g., $\\\\$13.22$ not $\\\\$13.2166$).",
+            "Always verify: Does the answer make sense? The mean should be between the smallest and largest values."
+        ],
+        visual_descriptions: [
+            "Mean diagram: A balance beam (seesaw) with data points as weights placed at their values on a number line. The mean is the fulcrum point where the beam balances.",
+            "Median diagram: A sorted number line with data points marked. An arrow points to the middle value (odd n) or the gap between the two middle values (even n) with the average shown.",
+            "Mode diagram: A bar chart of frequencies where the tallest bar is highlighted and labelled 'Mode = value with highest bar'.",
+            "Frequency Table diagram: A three-column table (x, f, fx) with a totals row showing Σf and Σfx. An arrow indicates the division Σfx ÷ Σf = Mean.",
+            "Assumed Mean diagram: A number line showing the assumed mean A, with deviations (arrows) from each data point to A. Positive deviations go right, negative go left. The correction factor Σd/n shifts A to the actual mean.",
+            "Comparison diagram: Three scenarios side by side — (1) Symmetric data where Mean ≈ Median ≈ Mode, (2) Skewed data where Mean is pulled by outlier, (3) Categorical data where only Mode is meaningful.",
+            "Outlier Effect diagram: Two dot plots — one without outlier showing Mean and Median close together, one with an extreme outlier pulling the Mean far from the cluster while the Median stays stable.",
+            "Median Finding Flowchart: Decision tree — Is n odd? → Take middle value. Is n even? → Average the two middle values."
+        ]
+    },
+
+    // ============================================
+    // FORM 2: SYMMETRY (Comprehensive)
+    // ============================================
+    'F2 Symmetry': {
+        topic: 'Symmetry',
+        subject: 'Mathematics',
+        grade_level: 'O-Level Form 2',
+        summary: "Symmetry is a property where a geometric shape remains **invariant** (unchanged) under specific movements. Within the rigorous framework of transformations, symmetry is a specialised case where the shape's overall structure is preserved. Understanding this invariance is essential for mastering reflections and rotations.\n\n## Key Concepts\n\n| Concept | Definition |\n|---|---|\n| **Line Symmetry** | A line divides a shape into two identical mirror-image halves |\n| **Rotational Symmetry** | A shape fits onto itself more than once during a full $360^\\\\circ$ turn |\n| **Order of Rotational Symmetry** | Number of times a shape fits onto itself in $360^\\\\circ$ |\n\n## Regular Polygon Rule\n\nFor a regular $n$-sided polygon:\n- Lines of symmetry $= n$\n- Order of rotational symmetry $= n$\n- Angle of rotation $= \\\\frac{360^\\\\circ}{n}$\n\n## Coordinate Reflection Rules\n\n| Mirror Line | Rule | Example |\n|---|---|---|\n| $x$-axis ($y=0$) | $(x, y) \\\\to (x, -y)$ | $(3, 5) \\\\to (3, -5)$ |\n| $y$-axis ($x=0$) | $(x, y) \\\\to (-x, y)$ | $(3, 5) \\\\to (-3, 5)$ |\n| Line $y = x$ | $(x, y) \\\\to (y, x)$ | $(3, 5) \\\\to (5, 3)$ |\n\n## Coordinate Rotation Rules (about Origin)\n\n| Rotation | Rule | Example |\n|---|---|---|\n| $90^\\\\circ$ Clockwise | $(x, y) \\\\to (y, -x)$ | $(3, 5) \\\\to (5, -3)$ |\n| $90^\\\\circ$ Anticlockwise | $(x, y) \\\\to (-y, x)$ | $(3, 5) \\\\to (-5, 3)$ |\n| $180^\\\\circ$ | $(x, y) \\\\to (-x, -y)$ | $(3, 5) \\\\to (-3, -5)$ |",
+        sections: [
+            // ─── SECTION 1: INTRODUCTION TO GEOMETRIC SYMMETRY ───
+            {
+                title: '1. Introduction to Geometric Symmetry',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Form_2_Maths__Symmetry.mp4',
+                content: "## What Is Symmetry?\n\nSymmetry is defined as a property where a geometric shape remains **invariant** (unchanged) under specific movements. Within the framework of transformations, symmetry maps a figure onto itself.\n\n## Symmetry vs General Transformations\n\nWhile general transformations (like translations) move an object from one position to another, symmetry focuses on the **internal balance** of the shape:\n- **Translation**: Moves the shape to a new position using a column vector\n- **Reflection Symmetry**: The shape maps onto itself across a mirror line\n- **Rotational Symmetry**: The shape maps onto itself when turned about a centre\n\n## Two Types of Symmetry\n\n| Type | Description | Tool for Identification |\n|---|---|---|\n| **Line Symmetry** | Shape can be folded along a line so both halves match exactly | Fold test / mirror test |\n| **Rotational Symmetry** | Shape fits its own outline during a partial rotation | Tracing paper rotation test |\n\n> **Key Insight**: Understanding symmetry is essential for mastering the mechanics of reflections and rotations on the coordinate plane.",
+                worked_examples: [
+                    {
+                        question: "Explain the difference between line symmetry and rotational symmetry using a rectangle as an example.",
+                        steps: [
+                            "A rectangle has 2 lines of symmetry: one vertical bisector and one horizontal bisector",
+                            "A rectangle has rotational symmetry of order 2: it fits onto itself at $180^\\\\circ$ and $360^\\\\circ$",
+                            "Line symmetry uses a fold/mirror; rotational symmetry uses a turn about the centre"
+                        ],
+                        final_answer: "Line symmetry divides into mirror halves (2 lines); rotational symmetry counts how many times it fits during a turn (order 2)."
+                    }
+                ]
+            },
+            // ─── SECTION 2: LINE SYMMETRY (REFLECTION SYMMETRY) ───
+            {
+                title: '2. Line Symmetry (Reflection Symmetry)',
+                content: "## Definition\n\nA **line of symmetry** is an imaginary line that divides a shape into two identical halves that are mirror images of each other. This line is also called the **invariant line** — no point on this line moves during the reflection.\n\n## Types of Lines of Symmetry\n\n| Type | Direction | Example |\n|---|---|---|\n| **Vertical** | Top to bottom | Letter A |\n| **Horizontal** | Left to right | Letter H |\n| **Diagonal** | Usually $45^\\\\circ$ or $135^\\\\circ$ | Square |\n\n## Common Error\n\nStudents often mistakenly identify the **diagonals of a rectangle** as lines of symmetry. Unlike a square, folding a rectangle along its diagonal does **not** result in the edges matching perfectly. Diagonals are only lines of symmetry in shapes where **all sides are equal** (like squares and rhombuses).\n\n## Practice Exercise\n\n1. State the number of lines of symmetry in an irregular quadrilateral with sides 3 cm, 4 cm, 5 cm, 6 cm.\n2. Determine the number of lines of symmetry for a non-isosceles trapezium.\n3. Identify the lines of symmetry for an equilateral arrowhead shape.\n4. State the number of lines of symmetry in the letter \"S\".\n5. Determine the lines of symmetry for an isosceles trapezium.",
+                worked_examples: [
+                    {
+                        question: "State the line(s) of symmetry for an isosceles triangle.",
+                        steps: [
+                            "Identify the equal sides and the base",
+                            "An invariant line can be drawn from the apex (vertex between equal sides) to the midpoint of the base",
+                            "Folding along this line maps one half perfectly onto the other"
+                        ],
+                        final_answer: "1 line of symmetry (vertical from apex to base midpoint)."
+                    },
+                    {
+                        question: "State the line(s) of symmetry for a rectangle.",
+                        steps: [
+                            "Check the vertical bisector through the midpoints of the horizontal sides ✓",
+                            "Check the horizontal bisector through the midpoints of the vertical sides ✓",
+                            "Test diagonals: corners do not meet when folded ✗"
+                        ],
+                        final_answer: "2 lines of symmetry (1 vertical, 1 horizontal)."
+                    },
+                    {
+                        question: "State the line(s) of symmetry for a square.",
+                        steps: [
+                            "Check vertical and horizontal bisectors: both work (2 lines)",
+                            "Check the two diagonal lines connecting opposite vertices: both work (2 more lines)",
+                            "Total: $2 + 2 = 4$"
+                        ],
+                        final_answer: "4 lines of symmetry."
+                    },
+                    {
+                        question: "State the line(s) of symmetry for a scalene triangle.",
+                        steps: [
+                            "All three sides have different lengths",
+                            "No line can be drawn that results in a mirror image"
+                        ],
+                        final_answer: "0 lines of symmetry."
+                    },
+                    {
+                        question: "State the line(s) of symmetry for a regular pentagon.",
+                        steps: [
+                            "It is a regular polygon with 5 equal sides",
+                            "Lines can be drawn from each of the 5 vertices to the midpoint of the opposite side"
+                        ],
+                        final_answer: "5 lines of symmetry."
+                    },
+                    {
+                        question: "State the line(s) of symmetry for a rhombus.",
+                        steps: [
+                            "All sides are equal, but internal angles are not $90^\\\\circ$",
+                            "Only the two diagonals act as mirror lines"
+                        ],
+                        final_answer: "2 lines of symmetry (the diagonals)."
+                    },
+                    {
+                        question: "State the line(s) of symmetry for a kite.",
+                        steps: [
+                            "It has two pairs of equal adjacent sides",
+                            "Only the diagonal connecting the vertices where equal sides meet acts as a mirror line"
+                        ],
+                        final_answer: "1 line of symmetry."
+                    },
+                    {
+                        question: "State the line(s) of symmetry for a parallelogram (non-rhombus).",
+                        steps: [
+                            "Test vertical/horizontal lines: neither maps correctly ✗",
+                            "Test diagonals: opposite corners do not align when folded ✗"
+                        ],
+                        final_answer: "0 lines of symmetry."
+                    }
+                ]
+            },
+            // ─── SECTION 3: ROTATIONAL SYMMETRY ───
+            {
+                title: '3. Rotational Symmetry',
+                content: "## Definition\n\nRotational symmetry occurs when a shape fits exactly into its own outline (its \"footprint\") **more than once** during a full $360^\\\\circ$ turn about its centre.\n\n## Key Terms\n\n| Term | Meaning |\n|---|---|\n| **Order of Rotational Symmetry** | The number of times a shape fits onto itself during a full $360^\\\\circ$ rotation |\n| **Angle of Rotation** | The smallest angle that maps the shape onto itself |\n\n## Formula\n\n$$\\\\text{Angle of rotation} = \\\\frac{360^\\\\circ}{\\\\text{Order}}$$\n\n## Common Error\n\nShapes with no rotational symmetry are often incorrectly said to have an **\"Order of 0.\"** This is a fundamental error. Every shape fits into its own outline at least once (the full $360^\\\\circ$ turn), meaning the **minimum Order is 1**.\n\n## Practice Exercise\n\n1. Calculate the angle of rotation for a shape with order 5.\n2. If the angle of rotation is $45^\\\\circ$, determine the order of rotational symmetry.\n3. State the order of rotational symmetry for a Z-shape.\n4. Calculate the angle of rotation for a regular octagon.\n5. Determine the order of rotational symmetry for an H-shape.",
+                worked_examples: [
+                    {
+                        question: "Determine the order of rotational symmetry for an equilateral triangle. Hence determine the angle of rotation.",
+                        steps: [
+                            "The shape fits onto itself 3 times (at $120^\\\\circ$, $240^\\\\circ$, and $360^\\\\circ$)",
+                            "Order = 3",
+                            "Angle $= \\\\frac{360^\\\\circ}{3} = 120^\\\\circ$"
+                        ],
+                        final_answer: "Order: 3; Angle: $120^\\\\circ$"
+                    },
+                    {
+                        question: "Determine the order of rotational symmetry for a rectangle. Hence determine the angle of rotation.",
+                        steps: [
+                            "The shape fits twice (at $180^\\\\circ$ and $360^\\\\circ$)",
+                            "Order = 2",
+                            "Angle $= \\\\frac{360^\\\\circ}{2} = 180^\\\\circ$"
+                        ],
+                        final_answer: "Order: 2; Angle: $180^\\\\circ$"
+                    },
+                    {
+                        question: "Determine the order of rotational symmetry for a square. Hence determine the angle of rotation.",
+                        steps: [
+                            "The shape fits 4 times (at $90^\\\\circ$, $180^\\\\circ$, $270^\\\\circ$, $360^\\\\circ$)",
+                            "Order = 4",
+                            "Angle $= \\\\frac{360^\\\\circ}{4} = 90^\\\\circ$"
+                        ],
+                        final_answer: "Order: 4; Angle: $90^\\\\circ$"
+                    },
+                    {
+                        question: "Determine the order of rotational symmetry for a regular hexagon. Hence determine the angle of rotation.",
+                        steps: [
+                            "The shape fits 6 times",
+                            "Order = 6",
+                            "Angle $= \\\\frac{360^\\\\circ}{6} = 60^\\\\circ$"
+                        ],
+                        final_answer: "Order: 6; Angle: $60^\\\\circ$"
+                    },
+                    {
+                        question: "Determine the order of rotational symmetry for a parallelogram. Hence determine the angle of rotation.",
+                        steps: [
+                            "The shape fits onto itself twice during a full turn",
+                            "Order = 2",
+                            "Angle $= \\\\frac{360^\\\\circ}{2} = 180^\\\\circ$"
+                        ],
+                        final_answer: "Order: 2; Angle: $180^\\\\circ$"
+                    },
+                    {
+                        question: "Determine the order of rotational symmetry for an isosceles triangle.",
+                        steps: [
+                            "The shape only fits once after a full turn",
+                            "Order = 1",
+                            "Angle $= \\\\frac{360^\\\\circ}{1} = 360^\\\\circ$"
+                        ],
+                        final_answer: "Order: 1; Angle: $360^\\\\circ$"
+                    },
+                    {
+                        question: "Determine the order of rotational symmetry for a regular decagon. Hence determine the angle of rotation.",
+                        steps: [
+                            "A regular decagon has 10 equal sides",
+                            "Order = 10",
+                            "Angle $= \\\\frac{360^\\\\circ}{10} = 36^\\\\circ$"
+                        ],
+                        final_answer: "Order: 10; Angle: $36^\\\\circ$"
+                    },
+                    {
+                        question: "Determine the order of rotational symmetry for a circle.",
+                        steps: [
+                            "A circle has an infinite order of rotational symmetry",
+                            "Any rotation about the centre maps the circle onto itself"
+                        ],
+                        final_answer: "Order: Infinite"
+                    }
+                ]
+            },
+            // ─── SECTION 4: SYMMETRY OF REGULAR POLYGONS ───
+            {
+                title: '4. Symmetry of Regular Polygons',
+                content: "## The Elegant Rule\n\nRegular polygons are mathematically elegant because their symmetry is directly dictated by the number of sides ($n$). Because all sides and angles are equal, a regular polygon possesses:\n- **$n$ lines of symmetry**\n- **Rotational order of $n$**\n- **Angle of rotation $= \\\\frac{360^\\\\circ}{n}$**\n\n## Reference Table\n\n| Regular Polygon | Sides ($n$) | Lines of Symmetry | Rotational Order | Angle |\n|---|---|---|---|---|\n| Equilateral Triangle | 3 | 3 | 3 | $120^\\\\circ$ |\n| Square | 4 | 4 | 4 | $90^\\\\circ$ |\n| Regular Pentagon | 5 | 5 | 5 | $72^\\\\circ$ |\n| Regular Hexagon | 6 | 6 | 6 | $60^\\\\circ$ |\n| Regular Octagon | 8 | 8 | 8 | $45^\\\\circ$ |\n| Regular Decagon | 10 | 10 | 10 | $36^\\\\circ$ |\n| Regular Dodecagon | 12 | 12 | 12 | $30^\\\\circ$ |",
+                worked_examples: [
+                    {
+                        question: "Calculate the symmetry properties for a regular heptagon (7 sides).",
+                        steps: [
+                            "Number of sides $n = 7$",
+                            "Lines of symmetry $= n = 7$",
+                            "Rotational order $= n = 7$",
+                            "Angle $= \\\\frac{360^\\\\circ}{7} \\\\approx 51.4^\\\\circ$"
+                        ],
+                        final_answer: "Lines: 7, Order: 7, Angle: $51.4^\\\\circ$"
+                    },
+                    {
+                        question: "Calculate the symmetry properties for a regular nonagon (9 sides).",
+                        steps: [
+                            "$n = 9$",
+                            "Lines of symmetry = 9; Rotational order = 9",
+                            "Angle $= \\\\frac{360^\\\\circ}{9} = 40^\\\\circ$"
+                        ],
+                        final_answer: "Lines: 9, Order: 9, Angle: $40^\\\\circ$"
+                    },
+                    {
+                        question: "A regular polygon has an angle of rotation of $72^\\\\circ$. State its name and lines of symmetry.",
+                        steps: [
+                            "$n = \\\\frac{360^\\\\circ}{72^\\\\circ} = 5$",
+                            "A 5-sided regular polygon is a **pentagon**",
+                            "Lines of symmetry $= n = 5$"
+                        ],
+                        final_answer: "Name: Regular Pentagon; Lines: 5"
+                    },
+                    {
+                        question: "A regular polygon has 15 lines of symmetry. Calculate its angle of rotation.",
+                        steps: [
+                            "For regular polygons, Lines $= n$. So $n = 15$",
+                            "Angle $= \\\\frac{360^\\\\circ}{15} = 24^\\\\circ$"
+                        ],
+                        final_answer: "Angle: $24^\\\\circ$"
+                    },
+                    {
+                        question: "Calculate the symmetry properties for a regular icosagon (20 sides).",
+                        steps: [
+                            "$n = 20$",
+                            "Lines = 20; Order = 20",
+                            "Angle $= \\\\frac{360^\\\\circ}{20} = 18^\\\\circ$"
+                        ],
+                        final_answer: "Lines: 20, Order: 20, Angle: $18^\\\\circ$"
+                    },
+                    {
+                        question: "State the symmetry properties for a regular dodecagon (12 sides).",
+                        steps: [
+                            "$n = 12$",
+                            "Lines = 12; Order = 12",
+                            "Angle $= \\\\frac{360^\\\\circ}{12} = 30^\\\\circ$"
+                        ],
+                        final_answer: "Lines: 12, Order: 12, Angle: $30^\\\\circ$"
+                    }
+                ]
+            },
+            // ─── SECTION 5: REFLECTION ON THE COORDINATE PLANE ───
+            {
+                title: '5. Reflection on the Coordinate Plane',
+                content: "## Coordinate Reflection Rules\n\nThe Cartesian plane allows us to map reflections with numerical precision.\n\n### Reflecting across the $x$-axis ($y = 0$)\n$$\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix} \\\\rightarrow \\\\begin{pmatrix} x \\\\\\\\ -y \\\\end{pmatrix}$$\nKeep $x$, negate $y$.\n\n### Reflecting across the $y$-axis ($x = 0$)\n$$\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix} \\\\rightarrow \\\\begin{pmatrix} -x \\\\\\\\ y \\\\end{pmatrix}$$\nNegate $x$, keep $y$.\n\n### Reflecting across the line $y = x$\n$$\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix} \\\\rightarrow \\\\begin{pmatrix} y \\\\\\\\ x \\\\end{pmatrix}$$\nSwap $x$ and $y$.\n\n## Common Error\n\nMisplacing reflected points by **swapping coordinates for axis reflections**. Swapping $x$ and $y$ is **only** for the line $y = x$. For the $x$-axis, only change the sign of $y$.\n\n## Practice Exercise\n\n1. Reflect $A(2, 9)$ in the $x$-axis.\n2. Reflect $B(-4, -5)$ in the $y$-axis.\n3. Reflect $C(3, -1)$ in the line $y = x$.\n4. A point $P'(5, 2)$ is the image after reflection in the $x$-axis. State the original point $P$.\n5. Reflect a triangle with vertices $(0,0)$, $(2,0)$, $(0,3)$ in the $y$-axis.",
+                worked_examples: [
+                    {
+                        question: "Draw and label the image of point $A(4, 5)$ reflected in the $x$-axis.",
+                        steps: [
+                            "Original: $\\\\begin{pmatrix} 4 \\\\\\\\ 5 \\\\end{pmatrix}$",
+                            "Apply $x$-axis rule: $(x, -y)$",
+                            "Image: $\\\\begin{pmatrix} 4 \\\\\\\\ -5 \\\\end{pmatrix}$"
+                        ],
+                        final_answer: "$A'(4, -5)$"
+                    },
+                    {
+                        question: "Determine the image of $B(-3, 6)$ reflected in the $y$-axis.",
+                        steps: [
+                            "Original: $\\\\begin{pmatrix} -3 \\\\\\\\ 6 \\\\end{pmatrix}$",
+                            "Apply $y$-axis rule: $(-x, y)$",
+                            "$-(-3) = 3$"
+                        ],
+                        final_answer: "$B'(3, 6)$"
+                    },
+                    {
+                        question: "Reflect point $C(2, -7)$ in the line $y = x$.",
+                        steps: [
+                            "Original: $\\\\begin{pmatrix} 2 \\\\\\\\ -7 \\\\end{pmatrix}$",
+                            "Apply rule: swap $x$ and $y$"
+                        ],
+                        final_answer: "$C'(-7, 2)$"
+                    },
+                    {
+                        question: "A triangle has vertices $P(1, 1)$, $Q(4, 1)$, $R(1, 3)$. Reflect it in the $x$-axis.",
+                        steps: [
+                            "$P(1, 1) \\\\to P'(1, -1)$: keep $x$, negate $y$",
+                            "$Q(4, 1) \\\\to Q'(4, -1)$",
+                            "$R(1, 3) \\\\to R'(1, -3)$"
+                        ],
+                        final_answer: "$P'(1, -1)$, $Q'(4, -1)$, $R'(1, -3)$"
+                    },
+                    {
+                        question: "Reflect the point $D(-5, -2)$ in the $y$-axis.",
+                        steps: [
+                            "Original: $(-5, -2)$",
+                            "Apply $y$-axis rule: $(-x, y) = (-(-5), -2) = (5, -2)$"
+                        ],
+                        final_answer: "$D'(5, -2)$"
+                    },
+                    {
+                        question: "Determine the image of $E(0, 3)$ reflected in the line $y = x$.",
+                        steps: [
+                            "Original: $(0, 3)$",
+                            "Swap $x$ and $y$: $(3, 0)$"
+                        ],
+                        final_answer: "$E'(3, 0)$"
+                    }
+                ]
+            },
+            // ─── SECTION 6: ROTATIONAL TRANSFORMATIONS ON THE COORDINATE PLANE ───
+            {
+                title: '6. Rotational Transformations on the Coordinate Plane',
+                content: "## Rotation about the Origin\n\nRotation involves turning an object about a centre (usually the origin) through a specific **angle** and **direction**.\n\n### $90^\\\\circ$ Clockwise (CW)\n$$\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix} \\\\rightarrow \\\\begin{pmatrix} y \\\\\\\\ -x \\\\end{pmatrix}$$\n\n### $90^\\\\circ$ Anticlockwise (ACW)\n$$\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix} \\\\rightarrow \\\\begin{pmatrix} -y \\\\\\\\ x \\\\end{pmatrix}$$\n\n### $180^\\\\circ$ Rotation\n$$\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix} \\\\rightarrow \\\\begin{pmatrix} -x \\\\\\\\ -y \\\\end{pmatrix}$$\n\n## Common Error\n\nForgetting the **direction**. A $90^\\\\circ$ CW rotation is **not** the same as a $90^\\\\circ$ ACW rotation. Always verify the sign changes carefully.\n\n## Practice Exercise\n\n1. Rotate $(1, 5)$ through $180^\\\\circ$ about the origin.\n2. Rotate $(-2, 3)$ through $90^\\\\circ$ clockwise.\n3. Rotate $(4, -2)$ through $90^\\\\circ$ anticlockwise.\n4. If $A(2, 2)$ maps to $A'(2, -2)$, describe the rotation.\n5. Rotate a square with vertices $(1,1)$, $(2,1)$, $(2,2)$, $(1,2)$ through $180^\\\\circ$.",
+                worked_examples: [
+                    {
+                        question: "State the image of $M(3, 7)$ after a $90^\\\\circ$ clockwise rotation about the origin.",
+                        steps: [
+                            "Original: $\\\\begin{pmatrix} 3 \\\\\\\\ 7 \\\\end{pmatrix}$",
+                            "Rule for $90^\\\\circ$ CW: $(x, y) \\\\to (y, -x)$",
+                            "Image: $(7, -3)$"
+                        ],
+                        final_answer: "$M'(7, -3)$"
+                    },
+                    {
+                        question: "Determine the image of $N(-2, 5)$ after a $180^\\\\circ$ rotation.",
+                        steps: [
+                            "Original: $(-2, 5)$",
+                            "Rule for $180^\\\\circ$: $(x, y) \\\\to (-x, -y)$",
+                            "Image: $(2, -5)$"
+                        ],
+                        final_answer: "$N'(2, -5)$"
+                    },
+                    {
+                        question: "Point $L(4, 1)$ is rotated $90^\\\\circ$ anticlockwise. State its image.",
+                        steps: [
+                            "Original: $(4, 1)$",
+                            "Rule for $90^\\\\circ$ ACW: $(x, y) \\\\to (-y, x)$",
+                            "Image: $(-1, 4)$"
+                        ],
+                        final_answer: "$L'(-1, 4)$"
+                    },
+                    {
+                        question: "Describe the transformation that maps $P(5, 2)$ onto $P'(-2, 5)$.",
+                        steps: [
+                            "Observe: $x \\\\to -y$ and $y \\\\to x$",
+                            "This matches $(x, y) \\\\to (-y, x)$",
+                            "This is the $90^\\\\circ$ ACW rotation rule"
+                        ],
+                        final_answer: "$90^\\\\circ$ Anticlockwise Rotation about the Origin."
+                    },
+                    {
+                        question: "Rotate a line segment with endpoints $A(2, 2)$ and $B(4, 2)$ through $180^\\\\circ$.",
+                        steps: [
+                            "$A(2, 2) \\\\to A'(-2, -2)$: negate both coordinates",
+                            "$B(4, 2) \\\\to B'(-4, -2)$: negate both coordinates"
+                        ],
+                        final_answer: "$A'(-2, -2)$ and $B'(-4, -2)$"
+                    },
+                    {
+                        question: "State the image of $K(-3, -4)$ rotated $90^\\\\circ$ clockwise.",
+                        steps: [
+                            "Original: $(-3, -4)$",
+                            "Rule for $90^\\\\circ$ CW: $(x, y) \\\\to (y, -x)$",
+                            "$y = -4$ and $-x = -(-3) = 3$",
+                            "Image: $(-4, 3)$"
+                        ],
+                        final_answer: "$K'(-4, 3)$"
+                    }
+                ]
+            },
+            // ─── SECTION 7: REAL-LIFE APPLICATIONS AND MULTI-STEP REASONING ───
+            {
+                title: '7. Real-Life Applications and Multi-Step Reasoning',
+                content: "## Applications of Symmetry\n\nSymmetry governs:\n- **Architecture**: Structural stability through balanced design\n- **Textiles**: Repeating patterns in fabric and wallpaper\n- **Nature**: Butterfly wings, flower petals, snowflakes\n- **Art and Design**: Logos, flags, and decorative motifs\n\n## ZIMSEC Exam Strategy\n\nIn structured questions, you must **justify your reasoning**. This means:\n1. State the rule being applied\n2. Show the coordinate transformation\n3. Explain why a shape has a specific number of symmetry lines",
+                worked_examples: [
+                    {
+                        question: "A trapezium has vertices $A(2,2)$, $B(5,2)$, $C(4,4)$, $D(3,4)$. (a) Reflect in the $x$-axis. (b) State $B'$. (c) Justify why it has 1 line of symmetry.",
+                        steps: [
+                            "(a) Apply $(x, -y)$: $A'(2,-2)$, $B'(5,-2)$, $C'(4,-4)$, $D'(3,-4)$",
+                            "(b) $B' = (5, -2)$",
+                            "(c) It is an isosceles trapezium ($AD = BC$). Only the vertical bisector maps the parallel sides onto themselves."
+                        ],
+                        final_answer: "$B'(5, -2)$; 1 line of symmetry because it is isosceles."
+                    },
+                    {
+                        question: "Reflect point $(3, 1)$ in $y = x$ to get $S_1$, then rotate $S_1$ by $180^\\\\circ$. Find the final position.",
+                        steps: [
+                            "Reflection in $y = x$: $(3, 1) \\\\to (1, 3)$",
+                            "Rotation $180^\\\\circ$: $(1, 3) \\\\to (-1, -3)$"
+                        ],
+                        final_answer: "$(-1, -3)$"
+                    },
+                    {
+                        question: "State the order of rotational symmetry of a regular octagon and calculate the angle.",
+                        steps: [
+                            "Octagon: $n = 8$, so Order = 8",
+                            "Angle $= \\\\frac{360^\\\\circ}{8} = 45^\\\\circ$"
+                        ],
+                        final_answer: "Order 8, Angle $45^\\\\circ$"
+                    },
+                    {
+                        question: "A design has a square and an equilateral triangle joined at one side. How many lines of symmetry does the total shape have?",
+                        steps: [
+                            "The joined side becomes internal (not a boundary)",
+                            "Only the line passing through the triangle's apex and the square's base midpoint preserves the image"
+                        ],
+                        final_answer: "1 line of symmetry."
+                    }
+                ]
+            },
+            // ─── SECTION 8: FINAL ASSESSMENT AND MEMO ───
+            {
+                title: '8. Final Assessment and Memo',
+                content: "## Mixed Revision Exercise (30 Questions)\n\n### Lines of Symmetry (1–10)\nState the number of lines of symmetry for:\n1. Letter A | 2. Letter H | 3. Letter M | 4. Letter X | 5. Rhombus\n6. Parallelogram | 7. Equilateral Triangle | 8. Regular Hexagon | 9. Isosceles Trapezium | 10. Circle\n\n### Rotational Symmetry (11–20)\nDetermine the Order and Angle for:\n11. Square | 12. Regular Pentagon | 13. Letter Z | 14. Letter N | 15. Equilateral Triangle\n16. Regular Nonagon | 17. Rectangle | 18. Star of David | 19. Scalene Triangle | 20. Regular Dodecagon\n\n### Coordinates (21–30)\nState the image of $(6, 4)$ under:\n21. Reflection in $x$-axis | 22. Reflection in $y$-axis | 23. Reflection in $y = x$\n24. $90^\\\\circ$ CW Rotation | 25. $90^\\\\circ$ ACW Rotation | 26. $180^\\\\circ$ Rotation\n27. Reflection in $x$-axis followed by $y$-axis | 28. Reflection in $y = x$ followed by $180^\\\\circ$ rotation\n29. $90^\\\\circ$ CW rotation followed by $x$-axis reflection | 30. $360^\\\\circ$ Rotation\n\n---\n\n## Exam-Style Structured Test (20 Questions)\n\n**1.** Determine the order of rotational symmetry for a regular heptagon.\n**2.** Hence, calculate its angle of rotation.\n**3.** A point $P(x, y)$ is reflected in the $y$-axis. State its image.\n**4.** Describe the transformation mapping $(2, 3)$ to $(3, 2)$.\n**5.** State the number of lines of symmetry in a regular decagon.\n**6.** Determine the image of $(-5, -3)$ after $180^\\\\circ$ rotation.\n**7.** Hence, state the image if that result is reflected in the $x$-axis.\n**8.** Calculate the angle of rotation for a shape with order 12.\n**9.** A shape has an angle of rotation of $180^\\\\circ$. State its rotational order.\n**10.** Determine the coordinates of $A(0, 5)$ reflected in $y = x$.\n\n**11–15.** Triangle $XYZ$ with $X(1,1)$, $Y(3,1)$, $Z(1,4)$:\n**11.** State image $X'$ after $x$-axis reflection.\n**12.** State image $Y'$ after $x$-axis reflection.\n**13.** State image $Z'$ after $x$-axis reflection.\n**14.** Describe the symmetry of the combined shape $XYZ$ and $X'Y'Z'$.\n**15.** Calculate the area of the combined shape.\n\n**16–20.** Reasoning:\n**16.** Why does a circle have infinite order?\n**17.** Why does a scalene triangle have order 1?\n**18.** Explain why a rectangle has 2 lines of symmetry but a square has 4.\n**19.** Determine the order of a shape made of 4 identical circles at corners of a square.\n**20.** Calculate the angle for Question 19.\n\n---\n\n## Marking Memo\n\n### Mixed Revision Answers\n\n**Lines of Symmetry (1–10):**\n1. **1** | 2. **2** | 3. **1** | 4. **2** | 5. **2** | 6. **0** | 7. **3** | 8. **6** | 9. **1** | 10. **Infinite**\n\n**Rotational Symmetry (11–20):**\n11. Order 4, $90^\\\\circ$ | 12. Order 5, $72^\\\\circ$ | 13. Order 2, $180^\\\\circ$ | 14. Order 2, $180^\\\\circ$ | 15. Order 3, $120^\\\\circ$\n16. Order 9, $40^\\\\circ$ | 17. Order 2, $180^\\\\circ$ | 18. Order 6, $60^\\\\circ$ | 19. Order 1, $360^\\\\circ$ | 20. Order 12, $30^\\\\circ$\n\n**Coordinates (21–30):** Image of $(6, 4)$:\n21. $(6, -4)$ | 22. $(-6, 4)$ | 23. $(4, 6)$ | 24. $(4, -6)$ | 25. $(-4, 6)$ | 26. $(-6, -4)$\n27. $(-6, -4)$ | 28. $(-4, -6)$ | 29. $(4, 6)$ | 30. $(6, 4)$\n\n### Exam-Style Answers\n\n**1.** 7 | **2.** $\\\\frac{360}{7} = 51.4^\\\\circ$ | **3.** $(-x, y)$ | **4.** Reflection in $y = x$\n**5.** 10 | **6.** $(5, 3)$ | **7.** $(5, -3)$ | **8.** $30^\\\\circ$ | **9.** 2 | **10.** $(5, 0)$\n**11.** $(1, -1)$ | **12.** $(3, -1)$ | **13.** $(1, -4)$\n**14.** The combined shape has 1 line of symmetry (the $x$-axis). It has rotational order 1.\n**15.** Base = 2, Total Height = $4 + 4 = 8$... but each triangle: Area $= \\\\frac{1}{2} \\\\times 2 \\\\times 3 = 3$. Combined $= 3 + 3 = 6$ units$^2$.\n**16.** Any rotation about the centre maps a circle onto itself because every radius is equal.\n**17.** No internal balance — all sides and angles differ, so it only fits after a full $360^\\\\circ$ turn.\n**18.** A rectangle has unequal adjacent sides, so its diagonals are not mirror lines. A square has all equal sides, making both diagonals also lines of symmetry ($4 = 2 + 2$).\n**19.** Order 4 | **20.** $\\\\frac{360}{4} = 90^\\\\circ$",
+                worked_examples: []
+            }
+        ],
+        key_points: [
+            "A **line of symmetry** divides a shape into two identical mirror-image halves. Also called the **invariant line**.",
+            "The **order of rotational symmetry** is the number of times a shape fits onto itself during a full $360^\\\\circ$ rotation. The **minimum order is 1**, never 0.",
+            "**Angle of rotation** $= \\\\frac{360^\\\\circ}{\\\\text{Order}}$.",
+            "For a **regular $n$-sided polygon**: Lines of symmetry $= n$, Rotational order $= n$, Angle $= \\\\frac{360^\\\\circ}{n}$.",
+            "**Reflection in $x$-axis**: $(x, y) \\\\to (x, -y)$ — keep $x$, negate $y$.",
+            "**Reflection in $y$-axis**: $(x, y) \\\\to (-x, y)$ — negate $x$, keep $y$.",
+            "**Reflection in $y = x$**: $(x, y) \\\\to (y, x)$ — swap $x$ and $y$.",
+            "**$90^\\\\circ$ CW rotation**: $(x, y) \\\\to (y, -x)$. **$90^\\\\circ$ ACW rotation**: $(x, y) \\\\to (-y, x)$.",
+            "**$180^\\\\circ$ rotation**: $(x, y) \\\\to (-x, -y)$ — negate both coordinates.",
+            "Rectangle diagonals are **NOT** lines of symmetry. Only shapes with **all sides equal** (square, rhombus) have diagonal mirror lines."
+        ],
+        exam_tips: [
+            "Always state the **type** of symmetry (line or rotational) and give numerical values (number of lines, order, angle).",
+            "For \"describe the transformation\" questions, specify: (1) the type (reflection/rotation), (2) the mirror line or angle, (3) the direction (CW/ACW) and centre.",
+            "When reflecting in the $x$-axis, only the $y$-coordinate changes sign. Do NOT swap coordinates — swapping is only for $y = x$.",
+            "The minimum rotational order is **1** (not 0). Every shape fits onto itself at least once at $360^\\\\circ$.",
+            "For regular polygon questions, the answer is always: Lines $= n$, Order $= n$, Angle $= 360^\\\\circ \\\\div n$. State all three.",
+            "In multi-step transformations, apply each step sequentially. Show the intermediate coordinates.",
+            "A parallelogram has **0** lines of symmetry but **order 2** rotational symmetry. These are different concepts — don't confuse them.",
+            "Always verify rotation direction: CW means turn right (like a clock), ACW means turn left. The sign rules are different!",
+            "For combined shapes (e.g., square + triangle), count only the lines of symmetry that preserve the **entire combined** figure.",
+            "ZIMSEC structured questions often say \"hence\" — this means use your previous answer in the next calculation."
+        ],
+        visual_descriptions: [
+            "Line Symmetry diagram: An isosceles triangle with a dashed vertical line from the apex to the base midpoint. Left half is labelled 'Original', right half labelled 'Mirror Image'.",
+            "Rectangle vs Square symmetry: Rectangle showing only 2 lines (vertical and horizontal bisectors), with diagonals crossed out. Square showing all 4 lines (2 bisectors + 2 diagonals).",
+            "Rotational Symmetry diagram: An equilateral triangle shown in 3 positions during rotation — at 0°, 120°, and 240° — each fitting the same outline.",
+            "Regular Polygon table: Visual grid showing triangle (3 lines), square (4 lines), pentagon (5 lines), hexagon (6 lines) with symmetry lines drawn.",
+            "Coordinate Reflection diagram: A Cartesian plane with point A(4,5) and its reflections: A' on x-axis at (4,-5), A'' on y-axis at (-4,5), A''' on y=x at (5,4). Mirror lines shown as dashed.",
+            "Rotation Rules diagram: Point (3,7) shown with three rotated images: 90° CW at (7,-3), 90° ACW at (-7,3), 180° at (-3,-7). Curved arrows show rotation direction.",
+            "Parallelogram analysis: A parallelogram with all possible mirror lines tested and marked with ✗. Rotation shown fitting at 180° marked with ✓. Caption: '0 lines, order 2'.",
+            "Combined transformation diagram: Point (3,1) → reflect in y=x → (1,3) → rotate 180° → (-1,-3). Each step shown with arrows on a coordinate grid."
+        ]
+    },
+
+    // ============================================
+    // FORM 2: TRANSFORMATION GEOMETRY – REFLECTION (Comprehensive)
+    // ============================================
+    'F2 Reflection': {
+        topic: 'Transformation Geometry \u2013 Reflection',
+        subject: 'Mathematics',
+        grade_level: 'O-Level Form 2',
+        summary: "Reflection is a fundamental geometric transformation classified as an **isometry** \u2014 a distance-preserving, non-distortion mapping. While the position and orientation of a figure are altered, its intrinsic metrics (side lengths and interior angles) remain **invariant**. The mirror line acts as the perpendicular bisector for every segment connecting an object point to its corresponding image point.\n\n## Coordinate Reflection Rules\n\n| Mirror Line | Rule | Description |\n|---|---|---|\n| $x$-axis ($y = 0$) | $(x, y) \\\\to (x, -y)$ | Keep $x$, negate $y$ |\n| $y$-axis ($x = 0$) | $(x, y) \\\\to (-x, y)$ | Negate $x$, keep $y$ |\n| Line $y = x$ | $(x, y) \\\\to (y, x)$ | Swap $x$ and $y$ |\n| Vertical line $x = a$ | $(x, y) \\\\to (2a - x, y)$ | Double the line value minus $x$ |\n| Horizontal line $y = a$ | $(x, y) \\\\to (x, 2a - y)$ | Double the line value minus $y$ |\n\n## Properties of Reflection\n\n| Invariant (Preserved) | Variant (Changes) |\n|---|---|\n| Side lengths | Orientation (lateral inversion) |\n| Interior angles | Left\u2013right sense is reversed |\n| Perpendicular distance to mirror line | Clockwise \u2192 Counter-clockwise |\n\n## Finding the Mirror Line\n\nThe mirror line is the **perpendicular bisector** of the segment joining any point to its image:\n- Horizontal mirror: $y = \\\\frac{y_1 + y_2}{2}$\n- Vertical mirror: $x = \\\\frac{x_1 + x_2}{2}$\n- Diagonal mirror ($y = x$): coordinates are swapped",
+        sections: [
+            // \u2500\u2500\u2500 SECTION 1: THE CONCEPT AND MEANING OF REFLECTION \u2500\u2500\u2500
+            {
+                title: '1. The Concept and Meaning of Reflection',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Form_2_Maths__Reflection.mp4',
+                content: "## What Is Reflection?\n\nReflection is a transformation that maps every point of a figure to a corresponding point on the **opposite side** of a fixed line, creating a mirror image. The fixed line is called the **mirror line** (or line of reflection).\n\n## Key Definitions\n\n| Term | Definition |\n|---|---|\n| **Reflection** | A transformation that creates a mirror image across a fixed line |\n| **Mirror Line** | The fixed line that acts as the axis of symmetry for the transformation |\n| **Isometry** | A distance-preserving transformation (no stretching or shrinking) |\n| **Lateral Inversion** | The reversal of left\u2013right orientation in the image |\n\n## Properties of Reflection\n\n### Invariant Properties (Preserved)\n- **Size**: The length of each side remains identical\n- **Shape**: All interior angles are preserved\n- **Perpendicular Distance**: Every point and its image are equidistant from the mirror line\n\n### Variant Property (Changes)\n- **Orientation (Lateral Inversion)**: The figure is \"flipped.\" A clockwise sequence of vertices becomes counter-clockwise in the image\n\n## Why Reflected Shapes Are Congruent but Reversed\n\nReflected shapes are **congruent** because the transformation is distance-preserving; no stretching or shrinking occurs. However, because the figure is \"flipped\" across an axis, the left\u2013right orientation is reversed \u2014 similar to how a person's right hand appears as a left hand in a mirror.\n\n## Practice Exercise\n\n1. Reflect the point $A(5, 5)$ in the $x$-axis.\n2. Reflect the point $B(-2, 3)$ in the $y$-axis.\n3. Reflect the point $C(0, -4)$ in the line $y = -1$.\n4. Reflect the point $D(3, 1)$ in the line $x = 5$.\n5. List the properties of a shape that remain invariant under reflection.",
+                worked_examples: [
+                    {
+                        question: "Reflect the point $P(2, 3)$ in the line $x = 0$ (y-axis).",
+                        steps: [
+                            "Point $P$ is 2 units to the right of the $y$-axis",
+                            "The image $P'$ must be 2 units to the left",
+                            "Apply rule $(-x, y)$: $(-2, 3)$"
+                        ],
+                        final_answer: "$P'(-2, 3)$"
+                    },
+                    {
+                        question: "Reflect the point $Q(-4, 1)$ in the line $y = 0$ (x-axis).",
+                        steps: [
+                            "Point $Q$ is 1 unit above the $x$-axis",
+                            "The image $Q'$ must be 1 unit below",
+                            "Apply rule $(x, -y)$: $(-4, -1)$"
+                        ],
+                        final_answer: "$Q'(-4, -1)$"
+                    },
+                    {
+                        question: "Reflect the point $R(3, 5)$ in the line $x = 1$.",
+                        steps: [
+                            "$R$ is $3 - 1 = 2$ units to the right of $x = 1$",
+                            "Image $R'$ must be 2 units to the left: $1 - 2 = -1$",
+                            "Apply rule $(2a - x, y) = (2(1) - 3, 5) = (-1, 5)$"
+                        ],
+                        final_answer: "$R'(-1, 5)$"
+                    },
+                    {
+                        question: "Reflect the point $S(2, -2)$ in the line $y = 1$.",
+                        steps: [
+                            "$S$ is $|1 - (-2)| = 3$ units below $y = 1$",
+                            "Image $S'$ must be 3 units above: $1 + 3 = 4$",
+                            "Apply rule $(x, 2a - y) = (2, 2(1) - (-2)) = (2, 4)$"
+                        ],
+                        final_answer: "$S'(2, 4)$"
+                    },
+                    {
+                        question: "Reflect the point $T(0, 4)$ in the line $y = 2$.",
+                        steps: [
+                            "$T$ is $4 - 2 = 2$ units above $y = 2$",
+                            "Image $T'$ must be 2 units below: $2 - 2 = 0$",
+                            "Apply rule: $(0, 2(2) - 4) = (0, 0)$"
+                        ],
+                        final_answer: "$T'(0, 0)$"
+                    },
+                    {
+                        question: "Reflect the point $U(-3, -3)$ in the line $x = -1$.",
+                        steps: [
+                            "$U$ is $|-1 - (-3)| = 2$ units to the left of $x = -1$",
+                            "Image $U'$ is 2 units to the right: $-1 + 2 = 1$",
+                            "Apply rule: $(2(-1) - (-3), -3) = (1, -3)$"
+                        ],
+                        final_answer: "$U'(1, -3)$"
+                    },
+                    {
+                        question: "Reflect the point $V(5, 2)$ in the line $x = 2$.",
+                        steps: [
+                            "$V$ is $5 - 2 = 3$ units to the right of $x = 2$",
+                            "Image $V'$ is 3 units to the left: $2 - 3 = -1$",
+                            "Apply rule: $(2(2) - 5, 2) = (-1, 2)$"
+                        ],
+                        final_answer: "$V'(-1, 2)$"
+                    },
+                    {
+                        question: "Reflect the point $W(1, 6)$ in the line $y = 3$.",
+                        steps: [
+                            "$W$ is $6 - 3 = 3$ units above $y = 3$",
+                            "Image $W'$ is 3 units below: $3 - 3 = 0$",
+                            "Apply rule: $(1, 2(3) - 6) = (1, 0)$"
+                        ],
+                        final_answer: "$W'(1, 0)$"
+                    }
+                ]
+            },
+            // \u2500\u2500\u2500 SECTION 2: REFLECTION ON THE COORDINATE PLANE \u2500\u2500\u2500
+            {
+                title: '2. Reflection on the Coordinate Plane',
+                content: "## Coordinate Rules\n\nUsing coordinate rules provides a strategic advantage over manual plotting. By applying algebraic mapping, students achieve precise results without construction errors.\n\n| Reflection Line | Coordinate Rule | Description |\n|---|---|---|\n| $x$-axis ($y = 0$) | $(x, y) \\\\to (x, -y)$ | Negate $y$ |\n| $y$-axis ($x = 0$) | $(x, y) \\\\to (-x, y)$ | Negate $x$ |\n| Line $y = x$ | $(x, y) \\\\to (y, x)$ | Swap coordinates |\n| Vertical $x = a$ | $(x, y) \\\\to (2a - x, y)$ | Double line minus $x$ |\n| Horizontal $y = a$ | $(x, y) \\\\to (x, 2a - y)$ | Double line minus $y$ |\n\n## The General Vertical/Horizontal Line Rules\n\nFor the line $x = a$:\n$$x' = 2a - x, \\\\quad y' = y$$\n\nFor the line $y = a$:\n$$x' = x, \\\\quad y' = 2a - y$$\n\nThese general formulas work for **all** vertical and horizontal mirror lines, including the axes (where $a = 0$).\n\n## Practice Exercise\n\n1. Write the image of $(2, -3)$ after reflection in the $y$-axis.\n2. Write the image of $(5, 1)$ after reflection in $y = x$.\n3. Write the image of $(-4, 2)$ after reflection in $y = 0$.\n4. Point $P(3, 3)$ is reflected in $x = 1$. State the image.\n5. Write the image of $(-1, 5)$ using the rule $(x, y) \\\\to (y, x)$.",
+                worked_examples: [
+                    {
+                        question: "Complete the coordinate transformation table for various reflection lines.",
+                        steps: [
+                            "$(4, 7)$ in $x$-axis: $(x, -y) = (4, -7)$",
+                            "$(-3, 5)$ in $y$-axis: $(-x, y) = (3, 5)$",
+                            "$(2, 8)$ in $y = x$: swap $\\\\to (8, 2)$",
+                            "$(5, 2)$ in $x = 3$: $(2(3) - 5, 2) = (1, 2)$",
+                            "$(1, 4)$ in $y = 2$: $(1, 2(2) - 4) = (1, 0)$",
+                            "$(-2, -6)$ in $x$-axis: $(-2, -(-6)) = (-2, 6)$",
+                            "$(0, 3)$ in $y = x$: swap $\\\\to (3, 0)$",
+                            "$(6, 1)$ in $y = -1$: $(6, 2(-1) - 1) = (6, -3)$"
+                        ],
+                        final_answer: "$(4,-7)$, $(3,5)$, $(8,2)$, $(1,2)$, $(1,0)$, $(-2,6)$, $(3,0)$, $(6,-3)$"
+                    }
+                ]
+            },
+            // \u2500\u2500\u2500 SECTION 3: REFLECTING GEOMETRICAL SHAPES \u2500\u2500\u2500
+            {
+                title: '3. Reflecting Geometrical Shapes',
+                content: "## Vertex Mapping\n\n\"Vertex Mapping\" is the systematic process of transforming each corner of a shape. In ZIMSEC exams, labelling the image correctly (e.g., $A \\\\to A'$) is a **critical marking requirement**.\n\n## Step-by-Step Process\n\n1. **Identify Vertices**: List the coordinates of all vertices\n2. **Apply Rule**: Transform each vertex using the appropriate reflection rule\n3. **Check Perpendicularity**: Verify equal perpendicular distances from the mirror line\n4. **Connect Vertices**: Join the image points to complete the reflected shape\n\n## Practice Exercise\n\n1. Reflect Triangle $JKL$ with $J(2,2)$, $K(5,2)$, $L(2,5)$ in the line $x = 0$.\n2. Reflect a rectangle with vertices $(1,1)$, $(4,1)$, $(4,3)$, $(1,3)$ in the $x$-axis.\n3. Reflect Triangle $ABC$ with $A(2,1)$, $B(4,1)$, $C(4,4)$ in the line $y = x$.\n4. Reflect Triangle $PQR$ with $P(1,2)$, $Q(1,5)$, $R(3,2)$ in the line $y = 6$.",
+                worked_examples: [
+                    {
+                        question: "Reflect Triangle $ABC$ with $A(1, 2)$, $B(4, 2)$, $C(1, 5)$ in the $x$-axis.",
+                        steps: [
+                            "Rule: $(x, -y)$",
+                            "$A(1, 2) \\\\to A'(1, -2)$",
+                            "$B(4, 2) \\\\to B'(4, -2)$",
+                            "$C(1, 5) \\\\to C'(1, -5)$"
+                        ],
+                        final_answer: "$A'(1, -2)$, $B'(4, -2)$, $C'(1, -5)$"
+                    },
+                    {
+                        question: "Reflect Triangle $PQR$ with $P(-2, 1)$, $Q(-2, 4)$, $R(-5, 1)$ in the $y$-axis.",
+                        steps: [
+                            "Rule: $(-x, y)$",
+                            "$P(-2, 1) \\\\to P'(2, 1)$",
+                            "$Q(-2, 4) \\\\to Q'(2, 4)$",
+                            "$R(-5, 1) \\\\to R'(5, 1)$"
+                        ],
+                        final_answer: "$P'(2, 1)$, $Q'(2, 4)$, $R'(5, 1)$"
+                    },
+                    {
+                        question: "Reflect Quadrilateral $DEFG$ with $D(1,1)$, $E(3,1)$, $F(3,2)$, $G(1,2)$ in the line $y = x$.",
+                        steps: [
+                            "Rule: $(y, x)$ \u2014 swap coordinates",
+                            "$D(1, 1) \\\\to D'(1, 1)$ \u2014 point lies on $y = x$, so it is invariant",
+                            "$E(3, 1) \\\\to E'(1, 3)$",
+                            "$F(3, 2) \\\\to F'(2, 3)$",
+                            "$G(1, 2) \\\\to G'(2, 1)$"
+                        ],
+                        final_answer: "$D'(1, 1)$, $E'(1, 3)$, $F'(2, 3)$, $G'(2, 1)$"
+                    },
+                    {
+                        question: "Reflect Triangle $XYZ$ with $X(2, 3)$, $Y(4, 3)$, $Z(2, 6)$ in the line $x = 5$.",
+                        steps: [
+                            "Rule: $(2(5) - x, y) = (10 - x, y)$",
+                            "$X(2, 3) \\\\to X'(8, 3)$",
+                            "$Y(4, 3) \\\\to Y'(6, 3)$",
+                            "$Z(2, 6) \\\\to Z'(8, 6)$"
+                        ],
+                        final_answer: "$X'(8, 3)$, $Y'(6, 3)$, $Z'(8, 6)$"
+                    },
+                    {
+                        question: "Reflect Square $ABCD$ with $A(0,0)$, $B(2,0)$, $C(2,2)$, $D(0,2)$ in the line $y = -1$.",
+                        steps: [
+                            "Rule: $(x, 2(-1) - y) = (x, -2 - y)$",
+                            "$A(0, 0) \\\\to A'(0, -2)$",
+                            "$B(2, 0) \\\\to B'(2, -2)$",
+                            "$C(2, 2) \\\\to C'(2, -4)$",
+                            "$D(0, 2) \\\\to D'(0, -4)$"
+                        ],
+                        final_answer: "$A'(0, -2)$, $B'(2, -2)$, $C'(2, -4)$, $D'(0, -4)$"
+                    },
+                    {
+                        question: "Reflect Triangle $KLM$ with $K(-1, -1)$, $L(-3, -1)$, $M(-1, -4)$ in the line $y = 0$ (x-axis).",
+                        steps: [
+                            "Rule: $(x, -y)$",
+                            "$K(-1, -1) \\\\to K'(-1, 1)$",
+                            "$L(-3, -1) \\\\to L'(-3, 1)$",
+                            "$M(-1, -4) \\\\to M'(-1, 4)$"
+                        ],
+                        final_answer: "$K'(-1, 1)$, $L'(-3, 1)$, $M'(-1, 4)$"
+                    }
+                ]
+            },
+            // \u2500\u2500\u2500 SECTION 4: DESCRIBING A REFLECTION FULLY \u2500\u2500\u2500
+            {
+                title: '4. Describing a Reflection Fully',
+                content: "## Reverse-Engineering the Mirror Line\n\nIdentifying a mirror line requires the \"reverse-engineering\" of a transformation \u2014 a critical diagnostic skill.\n\n## ZIMSEC Criteria for Full Marks\n\nTo earn full marks on Paper 2, you **must** state:\n1. **The name of the transformation**: Reflection\n2. **The equation of the mirror line**: e.g., \"in the line $x = 2$\"\n\n## How to Find the Mirror Line\n\nThe mirror line is the **perpendicular bisector** of the segment joining any point to its image.\n\n| Mirror Type | Method |\n|---|---|\n| **Horizontal** ($y = a$) | $a = \\\\frac{y_1 + y_2}{2}$ (midpoint of $y$-coordinates) |\n| **Vertical** ($x = a$) | $a = \\\\frac{x_1 + x_2}{2}$ (midpoint of $x$-coordinates) |\n| **Diagonal** ($y = x$) | Coordinates are swapped: $(x, y) \\\\to (y, x)$ |\n\n## Practice Exercise\n\n1. $A(3, 4) \\\\to A'(3, -4)$. Describe fully.\n2. $B(1, 2) \\\\to B'(2, 1)$. Describe fully.\n3. $C(-1, 5) \\\\to C'(5, 5)$. Describe fully.\n4. $D(0, 2) \\\\to D'(0, -6)$. Describe fully.\n5. $E(7, 3) \\\\to E'(-1, 3)$. Describe fully.",
+                worked_examples: [
+                    {
+                        question: "Describe fully the transformation that maps $A(2, 3)$ onto $A'(-2, 3)$.",
+                        steps: [
+                            "Midpoint of $x = \\\\frac{2 + (-2)}{2} = 0$",
+                            "Since $y$ is unchanged, the mirror line is vertical: $x = 0$"
+                        ],
+                        final_answer: "Reflection in the $y$-axis (line $x = 0$)."
+                    },
+                    {
+                        question: "Describe fully the transformation mapping $B(5, 1)$ onto $B'(5, 5)$.",
+                        steps: [
+                            "Midpoint of $y = \\\\frac{1 + 5}{2} = 3$",
+                            "Since $x$ is unchanged, the mirror line is horizontal: $y = 3$"
+                        ],
+                        final_answer: "Reflection in the line $y = 3$."
+                    },
+                    {
+                        question: "Describe fully the transformation mapping $C(1, 4)$ onto $C'(4, 1)$.",
+                        steps: [
+                            "Observe that $x$ and $y$ values have swapped",
+                            "$(1, 4) \\\\to (4, 1)$: this is the mapping $(x, y) \\\\to (y, x)$"
+                        ],
+                        final_answer: "Reflection in the line $y = x$."
+                    },
+                    {
+                        question: "Shape $P$ has vertices $(1,1)$, $(2,1)$, $(1,3)$. Shape $Q$ has vertices $(1,-1)$, $(2,-1)$, $(1,-3)$. Describe the mapping.",
+                        steps: [
+                            "Midpoint of $y$: $\\\\frac{1 + (-1)}{2} = 0$",
+                            "The rule is $(x, y) \\\\to (x, -y)$ \u2014 reflection in $y = 0$"
+                        ],
+                        final_answer: "Reflection in the $x$-axis (line $y = 0$)."
+                    },
+                    {
+                        question: "Describe the mapping from $D(6, 2)$ onto $D'(0, 2)$.",
+                        steps: [
+                            "Midpoint of $x = \\\\frac{6 + 0}{2} = 3$",
+                            "$y$ is unchanged, so the mirror line is $x = 3$"
+                        ],
+                        final_answer: "Reflection in the line $x = 3$."
+                    },
+                    {
+                        question: "Describe the mapping from $E(-2, -2)$ onto $E'(-2, 4)$.",
+                        steps: [
+                            "Midpoint of $y = \\\\frac{-2 + 4}{2} = 1$",
+                            "$x$ is unchanged, so the mirror line is $y = 1$"
+                        ],
+                        final_answer: "Reflection in the line $y = 1$."
+                    }
+                ]
+            },
+            // \u2500\u2500\u2500 SECTION 5: COMMON ERRORS IN REFLECTION \u2500\u2500\u2500
+            {
+                title: '5. Common Errors in Reflection',
+                content: "## Error Prevention Guide\n\n| Correct Method | Common Error |\n|---|---|\n| Flip the shape across the axis so orientation reverses | **Confusing with Translation**: Sliding the shape without flipping |\n| $y$-axis reflection: change the sign of $x$ only: $(-x, y)$ | **Incorrect Sign Change**: Changing $y$ when reflecting in the $y$-axis |\n| Vertical line ($x = a$): the mirror line is vertical | **Misidentifying Lines**: Confusing $x = 2$ (vertical) with $y = 2$ (horizontal) |\n| Use prime notation: $A \\\\to A'$ for image vertices | **Incorrect Labelling**: Missing primes or using different letters |\n| Object and image join at $90^\\\\circ$ to the mirror line | **Slanted Reflection**: Drawing the image at a non-perpendicular angle |\n\n## Quick Checks\n\n1. **Distance Check**: Measure the perpendicular distance from the object point to the mirror line, then the same from the image point. They must be equal.\n2. **Orientation Check**: If you trace the vertices of the original in order (clockwise), the image vertices must be in the reverse order (counter-clockwise).\n3. **Mirror Line Check**: The mirror line must pass through the midpoint of every object\u2013image pair.\n\n> **Key Insight**: The most common ZIMSEC error is confusing which coordinate changes sign. Remember: reflecting in the **$x$-axis** changes $y$; reflecting in the **$y$-axis** changes $x$. The axis name tells you which coordinate stays the **same**.",
+                worked_examples: []
+            },
+            // \u2500\u2500\u2500 SECTION 6: WORD PROBLEMS AND STRUCTURED REASONING \u2500\u2500\u2500
+            {
+                title: '6. Word Problems and Structured Reasoning',
+                content: "## Multi-Step Reflection Problems\n\nIn advanced coordinate geometry, reflection is often the **first step** in a multi-stage problem. Students may be required to reflect a shape and then calculate area, perimeter, or apply a second transformation.\n\n## Critical Shortcut\n\nBecause reflection is an **isometry** (distance-preserving):\n- **Area of image = Area of object**\n- **Perimeter of image = Perimeter of object**\n\nYou do **not** need to recalculate these for reflected shapes.\n\n## Practice Tip\n\nFor combined transformations, apply each step **sequentially** and show intermediate coordinates.",
+                worked_examples: [
+                    {
+                        question: "Plot Triangle $ABC$ with $A(2,1)$, $B(5,1)$, $C(2,5)$. Reflect in the $x$-axis to get $A'B'C'$. State $B'$. Find the area of $A'B'C'$.",
+                        steps: [
+                            "Apply $(x, -y)$: $A'(2, -1)$, $B'(5, -1)$, $C'(2, -5)$",
+                            "$B' = (5, -1)$",
+                            "Base $A'B' = 5 - 2 = 3$ units",
+                            "Height $A'C' = |-5 - (-1)| = 4$ units",
+                            "Area $= \\\\frac{1}{2} \\\\times 3 \\\\times 4 = 6$"
+                        ],
+                        final_answer: "$B'(5, -1)$; Area $= 6$ square units."
+                    },
+                    {
+                        question: "Reflect $P(2, 3)$ in the $y$-axis, then apply a translation of $\\\\binom{0}{2}$.",
+                        steps: [
+                            "Step 1: Reflection in $y$-axis: $(2, 3) \\\\to (-2, 3)$",
+                            "Step 2: Translation: $(-2, 3 + 2) = (-2, 5)$"
+                        ],
+                        final_answer: "$(-2, 5)$"
+                    },
+                    {
+                        question: "Reflect $P(4, 1)$ in $y = x$, then reflect the result in the $x$-axis.",
+                        steps: [
+                            "Step 1: Reflection in $y = x$: $(4, 1) \\\\to (1, 4)$",
+                            "Step 2: Reflection in $x$-axis: $(1, 4) \\\\to (1, -4)$"
+                        ],
+                        final_answer: "$(1, -4)$"
+                    },
+                    {
+                        question: "Find the perimeter of the image of a square with side 4 units after reflection.",
+                        steps: [
+                            "Reflection is an isometry \u2014 perimeter is invariant",
+                            "Perimeter $= 4 \\\\times 4 = 16$"
+                        ],
+                        final_answer: "16 units."
+                    },
+                    {
+                        question: "Line segment $AB$ with $A(1,1)$ and $B(1,4)$ is reflected in $x = 3$. Find the length of $A'B'$.",
+                        steps: [
+                            "Length of $AB = |4 - 1| = 3$ units",
+                            "Reflection preserves distances, so $A'B' = AB = 3$"
+                        ],
+                        final_answer: "3 units."
+                    },
+                    {
+                        question: "Reflect $(2, 2)$ in $y = 3$, then calculate its distance from the origin.",
+                        steps: [
+                            "Step 1: $(2, 2(3) - 2) = (2, 4)$",
+                            "Step 2: Distance $= \\\\sqrt{2^2 + 4^2} = \\\\sqrt{4 + 16} = \\\\sqrt{20}$",
+                            "$\\\\sqrt{20} = 2\\\\sqrt{5} \\\\approx 4.47$"
+                        ],
+                        final_answer: "$\\\\sqrt{20}$ (or $\\\\approx 4.47$)."
+                    }
+                ]
+            },
+            // \u2500\u2500\u2500 SECTION 7: COMPREHENSIVE ASSESSMENT AND MEMO \u2500\u2500\u2500
+            {
+                title: '7. Comprehensive Assessment and Memo',
+                content: "## Mixed Revision Exercise (30 Questions)\n\n**1\u20135.** Reflect $(3,2)$, $(-1,4)$, $(0,-3)$, $(5,0)$, $(-2,-2)$ in the $x$-axis.\n**6\u201310.** Reflect the same points in the $y$-axis.\n**11\u201315.** Reflect the same points in $y = x$.\n**16\u201320.** Reflect $(2, 5)$ in: $x = 1$, $x = 4$, $y = 2$, $y = 6$, $x = -1$.\n**21\u201325.** Describe the mapping:\n- $(1,1) \\\\to (1,-1)$\n- $(2,3) \\\\to (-2,3)$\n- $(4,5) \\\\to (5,4)$\n- $(0,0) \\\\to (4,0)$\n- $(3,3) \\\\to (3,1)$\n\n**26.** If a triangle with area $12$ cm$^2$ is reflected, what is the area of its image?\n**27.** Define \"isometry\" in the context of reflection.\n**28.** What is the image of a point lying directly on the mirror line?\n**29.** A point $P(x, y)$ is reflected in the $x$-axis. Which coordinate changes sign?\n**30.** Reflect a circle with radius 5 units. What is the radius of the image?\n\n---\n\n## Exam-Style Structured Test (10 Marks)\n\nTriangle $T$ has vertices $X(1,1)$, $Y(3,1)$, $Z(1,4)$.\n\n**(a)** Plot $T$ on a Cartesian plane. [2]\n**(b)** Reflect $T$ in the line $y = x$ to form $T'$. State the coordinates of $T'$. [3]\n**(c)** Reflect $T'$ in the line $x = 0$ to form $T''$. State the coordinates of $T''$. [3]\n**(d)** Describe fully the single transformation that maps Triangle $T$ onto Triangle $T'$. [2]\n\n---\n\n## Marking Memo\n\n### Revision Exercise Answers\n\n**$x$-axis reflections (1\u20135):**\n1. $(3, -2)$ | 2. $(-1, -4)$ | 3. $(0, 3)$ | 4. $(5, 0)$ | 5. $(-2, 2)$\n\n**$y$-axis reflections (6\u201310):**\n6. $(-3, 2)$ | 7. $(1, 4)$ | 8. $(0, -3)$ | 9. $(-5, 0)$ | 10. $(2, -2)$\n\n**$y = x$ reflections (11\u201315):**\n11. $(2, 3)$ | 12. $(4, -1)$ | 13. $(-3, 0)$ | 14. $(0, 5)$ | 15. $(-2, -2)$\n\n**Reflect $(2, 5)$ in various lines (16\u201320):**\n16. $(0, 5)$ | 17. $(6, 5)$ | 18. $(2, -1)$ | 19. $(2, 7)$ | 20. $(-4, 5)$\n\n**Describe mappings (21\u201325):**\n21. Reflection in $y = 0$ ($x$-axis)\n22. Reflection in $x = 0$ ($y$-axis)\n23. Reflection in $y = x$\n24. Reflection in $x = 2$\n25. Reflection in $y = 2$\n\n**Theory (26\u201330):**\n26. $12$ cm$^2$ (area is invariant)\n27. A distance-preserving transformation (no stretching or shrinking)\n28. The point remains at the same position (it is invariant)\n29. The $y$-coordinate changes sign\n30. 5 units (radius is invariant)\n\n### Structured Test Answers\n\n**(a)** Points $X$, $Y$, $Z$ correctly plotted.\n\n**(b)** Rule $(y, x)$:\n$X(1,1) \\\\to X'(1,1)$, $Y(3,1) \\\\to Y'(1,3)$, $Z(1,4) \\\\to Z'(4,1)$\n\n**(c)** Rule $(-x, y)$:\n$X'(1,1) \\\\to X''(-1,1)$, $Y'(1,3) \\\\to Y''(-1,3)$, $Z'(4,1) \\\\to Z''(-4,1)$\n\n**(d)** Reflection in the line $y = x$.",
+                worked_examples: []
+            }
+        ],
+        key_points: [
+            "Reflection is an **isometry**: side lengths, angles, area, and perimeter are all preserved.",
+            "The mirror line is the **perpendicular bisector** of the segment joining any point to its image.",
+            "**Lateral inversion**: the image has reversed orientation (clockwise \u2192 counter-clockwise).",
+            "$x$-axis reflection: $(x, y) \\\\to (x, -y)$ \u2014 the $y$-coordinate changes sign.",
+            "$y$-axis reflection: $(x, y) \\\\to (-x, y)$ \u2014 the $x$-coordinate changes sign.",
+            "Line $y = x$ reflection: $(x, y) \\\\to (y, x)$ \u2014 swap the coordinates.",
+            "Vertical line $x = a$: $(x, y) \\\\to (2a - x, y)$. Horizontal line $y = a$: $(x, y) \\\\to (x, 2a - y)$.",
+            "To **describe** a reflection fully, state: (1) the transformation name, (2) the equation of the mirror line.",
+            "A point lying **on** the mirror line is invariant \u2014 it maps to itself.",
+            "The axis name tells you which coordinate stays the **same**: reflect in $x$-axis means $x$ stays, $y$ changes."
+        ],
+        exam_tips: [
+            "For ZIMSEC Paper 2, always state **two things**: (1) 'Reflection' and (2) the mirror line equation. Missing either loses marks.",
+            "Use the general rule $x = a \\\\Rightarrow (2a - x, y)$ and $y = a \\\\Rightarrow (x, 2a - y)$ for any vertical/horizontal mirror line.",
+            "Don't recalculate area or perimeter for reflected shapes \u2014 they are **invariant** under reflection (isometry shortcut).",
+            "When describing a mapping, find the midpoint of object\u2013image pairs. If $x$-values differ but $y$ stays same, it's a vertical mirror. If $y$-values differ but $x$ stays same, it's a horizontal mirror.",
+            "If coordinates are swapped, the mirror line is $y = x$. Look for this pattern first.",
+            "Always use **prime notation** ($A'$, $B'$, $C'$) for image vertices \u2014 it's a ZIMSEC marking requirement.",
+            "In combined transformation questions, apply each step sequentially and show all intermediate coordinates.",
+            "Remember: reflecting in the $y$-axis changes $x$ (not $y$). The axis name = the coordinate that stays the same.",
+            "For shapes, transform **every** vertex individually, then connect the image points. Don't try to \"eyeball\" the result.",
+            "Common trap: rectangle diagonals are not mirror lines. Always verify using the perpendicular distance check."
+        ],
+        visual_descriptions: [
+            "Point reflection diagram: Point $P(2, 3)$ on a coordinate grid with dashed mirror line along the $y$-axis. $P'(-2, 3)$ shown equidistant on the opposite side. A horizontal arrow connects $P$ to $P'$, bisected by the mirror line.",
+            "Coordinate rules table: Five rows showing mirror lines ($x$-axis, $y$-axis, $y = x$, $x = a$, $y = a$) with arrows mapping $(x, y)$ to each image. Colour-coded: red for negated coordinates, blue for swapped.",
+            "Triangle reflection: Triangle $ABC$ with vertices labelled in the first quadrant, mirror line along $x$-axis, and reflected image $A'B'C'$ in the fourth quadrant. Dashed perpendicular lines connect each vertex pair.",
+            "Shape reflection in $x = 5$: A triangle in the first quadrant to the left of $x = 5$, with its mirror image to the right. Vertical dashed line at $x = 5$ with perpendicular distance markers.",
+            "Describing reflections: Two congruent shapes on opposite sides of a dashed line $y = 3$. Midpoint markers shown between corresponding vertex pairs, all landing on $y = 3$.",
+            "Common errors comparison: Side-by-side diagrams. Left (correct): shape properly flipped with reversed orientation. Right (incorrect): shape slid without flipping (translation error).",
+            "Combined transformation: Step-by-step diagram showing $P(4, 1)$ reflected in $y = x$ to get $(1, 4)$, then reflected in $x$-axis to get $(1, -4)$. Curved arrows show each transformation with labelled mirror lines.",
+            "Lateral inversion: A letter 'R' and its reflection showing left\u2013right reversal. Vertices labelled clockwise on the original become counter-clockwise on the image."
+        ]
+    },
+
+    // ============================================
+    // FORM 2: MEASURES OF DISPERSION (Comprehensive)
+    // ============================================
+    'F2 Measures of Dispersion': {
+        topic: 'Measures of Dispersion',
+        subject: 'Mathematics',
+        grade_level: 'O-Level Form 2',
+        summary: "Measures of central tendency (mean, median, mode) give a single value representing the \"centre\" of a data set, but relying solely on the average can be misleading. Two data sets can have the **identical mean** yet look completely different. **Dispersion** measures the spread or variation of data values around the centre.\n\n## Key Measures\n\n| Measure | Formula | What It Tells Us |\n|---|---|---|\n| **Range** | Highest $-$ Lowest | Total spread of data |\n| **Interquartile Range (IQR)** | $Q_3 - Q_1$ | Spread of the middle 50% |\n\n## Quartiles\n\n| Quartile | Position | Meaning |\n|---|---|---|\n| $Q_1$ (Lower) | 25% mark | Value below which 25% of data falls |\n| $Q_2$ (Median) | 50% mark | Middle value |\n| $Q_3$ (Upper) | 75% mark | Value below which 75% of data falls |\n\n## Quartile Positions from Frequency Tables\n\n$$Q_1 \\\\text{ position} = \\\\frac{n}{4}, \\\\qquad Q_3 \\\\text{ position} = \\\\frac{3n}{4}$$\n\nIf the position is not a whole number, round **up** to the next whole number.\n\n## Interpretation\n\n| Observation | Meaning |\n|---|---|\n| Small Range / IQR | Data is consistent, tightly clustered |\n| Large Range / IQR | Data is spread out, volatile |\n| IQR preferred over Range | IQR ignores extreme outliers |",
+        sections: [
+            // ─── SECTION 1: INTRODUCTION TO THE CONCEPT OF DISPERSION ───
+            {
+                title: '1. Introduction to the Concept of Dispersion',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Measures_of_Dispersion.mp4',
+                content: "## Why Dispersion Matters\n\nMeasures of central tendency provide a single value for the \"centre\" of a data set. However, relying solely on the average can be **misleading**. Consider:\n\n| Student | Marks | Mean |\n|---|---|---|\n| **Spiwe** | 48%, 50%, 52% | 50% |\n| **Farai** | 10%, 50%, 90% | 50% |\n\nBoth students have the **same mean** (50%), but Spiwe's marks are tightly clustered while Farai's are widely spread. The mean alone does not reveal this difference.\n\n## What Is Dispersion?\n\n**Dispersion** is the measure of the spread or variation of data values around the centre.\n\n## Why It Matters\n\n| Low Dispersion | High Dispersion |\n|---|---|\n| Data is consistent | Data is volatile |\n| Mean is a good representative | Mean may be misleading |\n| Values tightly clustered | Values widely scattered |\n\n> **Key Insight**: Understanding dispersion indicates the **reliability** and **consistency** of data. A low dispersion suggests the mean is a trustworthy summary; high dispersion suggests the data needs closer examination.",
+                worked_examples: [
+                    {
+                        question: "Spiwe scored 48%, 50%, 52% and Farai scored 10%, 50%, 90%. Both have a mean of 50%. Explain why the mean alone is insufficient to compare their performance.",
+                        steps: [
+                            "Spiwe's marks are within 2% of the mean — very consistent",
+                            "Farai's marks range from 10% to 90% — extremely spread out",
+                            "The mean of 50% is a good representative for Spiwe but misleading for Farai",
+                            "We need a measure of spread (dispersion) to distinguish them"
+                        ],
+                        final_answer: "The mean alone is insufficient because it does not reveal how spread out the data is. Spiwe is consistent (low dispersion) while Farai is volatile (high dispersion)."
+                    }
+                ]
+            },
+            // ─── SECTION 2: THE RANGE ───
+            {
+                title: '2. The Range: Measuring the Total Spread',
+                content: "## Definition\n\nThe **Range** is the simplest measure of dispersion. It calculates the total distance between the two extreme values.\n\n## Formula\n\n$$\\\\text{Range} = \\\\text{Highest value} - \\\\text{Lowest value}$$\n\n## Procedure\n\n1. **Identify the Extremes**: Scan the data set to find the maximum and minimum values\n2. **Substitute and Solve**: Place the values into the formula\n3. **Apply Units**: Always include units (e.g., kg, \\$, cm³) for full ZIMSEC marks\n\n## Interpreting Range\n\n| Large Range | Small Range |\n|---|---|\n| Data widely scattered | Values tightly clustered |\n| Low consistency | High consistency |\n\n## Common Errors\n\n| Error | Correction |\n|---|---|\n| Incorrect subtraction order | Always subtract minimum **from** maximum |\n| Ignoring units | ZIMSEC marks are lost by failing to state \"\\$\", \"kg\", or \"cm³\" |\n| Missing extremes | In long lists, scan the data **twice** to find the actual highest/lowest |\n\n## Practice Exercise\n\n1. Calculate the range: \\$15.25, \\$12.20, \\$18.50, \\$10.00.\n2. Calculate the range: 5 pa, 15 pa, 2 pa, 20 pa, 12 pa.\n3. Group A: 10, 12, 15. Group B: 2, 12, 22. Calculate and compare the ranges.\n4. Range of subjects registered: 5, 8, 12, 6, 9, 11.\n5. Range of temperatures: 22°C, 31°C, 19°C, 25°C, 28°C.",
+                worked_examples: [
+                    {
+                        question: "Calculate the range of Mental Maths test marks: 3, 1, 3, 0, 5, 3, 4, 3.",
+                        steps: [
+                            "Highest value: 5",
+                            "Lowest value: 0",
+                            "Range $= 5 - 0 = 5$"
+                        ],
+                        final_answer: "The range of the test marks is 5."
+                    },
+                    {
+                        question: "Calculate the range of gas pressure data (pa): 2, 4, 6, 8, 10, 12.",
+                        steps: [
+                            "Highest value: 12",
+                            "Lowest value: 2",
+                            "Range $= 12 - 2 = 10$"
+                        ],
+                        final_answer: "The range of gas pressure is 10 pa."
+                    },
+                    {
+                        question: "Calculate the range of gas volume data (cm³): 30, 25, 20, 18, 15, 12.",
+                        steps: [
+                            "Highest value: 30",
+                            "Lowest value: 12",
+                            "Range $= 30 - 12 = 18$"
+                        ],
+                        final_answer: "The range of gas volume is 18 cm³."
+                    },
+                    {
+                        question: "A centre charges \\$80 for 6 subjects and \\$100 for 10 subjects. Find the range of registration costs.",
+                        steps: [
+                            "Highest value: \\$100",
+                            "Lowest value: \\$80",
+                            "Range $= \\$100 - \\$80 = \\$20$"
+                        ],
+                        final_answer: "The range of registration costs is \\$20."
+                    },
+                    {
+                        question: "Calculate the range of seedling heights (cm): 15.2, 10.5, 18.9, 14.3, 11.0.",
+                        steps: [
+                            "Highest value: 18.9",
+                            "Lowest value: 10.5",
+                            "Range $= 18.9 - 10.5 = 8.4$"
+                        ],
+                        final_answer: "The range of heights is 8.4 cm."
+                    },
+                    {
+                        question: "Calculate the range of harvested bag weights (kg): 45, 156, 185, 200, 60.",
+                        steps: [
+                            "Highest value: 200",
+                            "Lowest value: 45",
+                            "Range $= 200 - 45 = 155$"
+                        ],
+                        final_answer: "The range of weights is 155 kg."
+                    }
+                ]
+            },
+            // ─── SECTION 3: INTRODUCTION TO QUARTILES ───
+            {
+                title: '3. Introduction to Quartiles ($Q_1$, $Q_2$, $Q_3$)',
+                content: "## What Are Quartiles?\n\nQuartiles divide an **ordered** data set into four equal parts, providing a clearer picture of distribution than the range alone.\n\n> **Mandatory Step**: Data must be arranged in **ascending order** before any quartile calculation.\n\n## The Three Quartiles\n\n| Quartile | Symbol | Position | Meaning |\n|---|---|---|---|\n| Lower Quartile | $Q_1$ | 25% mark | 25% of data falls below this value |\n| Median | $Q_2$ | 50% mark | The middle value |\n| Upper Quartile | $Q_3$ | 75% mark | 75% of data falls below this value |\n\n## Method: Odd vs Even Data Sets\n\n| Data Set Type | Method |\n|---|---|\n| **Odd** ($n$ values) | $Q_2$ is the middle term. Split data into two halves **excluding** the median. $Q_1$ = median of lower half, $Q_3$ = median of upper half |\n| **Even** ($n$ values) | Split into two equal halves. $Q_2$ = average of the two middle terms. $Q_1$ = median of first half, $Q_3$ = median of second half |\n\n## Common Errors\n\n| Error | Correction |\n|---|---|\n| **Failure to order** | Always arrange data in ascending order first |\n| **Position vs Value** | State the **value** at that position, not the position number itself |\n\n## Practice Exercise\n\nFind $Q_1$, $Q_2$, and $Q_3$ for:\n1. 12, 10, 15, 8, 14\n2. 1, 5, 2, 8, 9, 4\n3. \\$100, \\$200, \\$150, \\$300\n4. 22, 19, 30, 18, 21, 25, 28\n5. 6, 10, 8, 5, 9, 7\n6. 0.5, 1.2, 0.8, 2.5, 1.1, 3.0",
+                worked_examples: [
+                    {
+                        question: "Find $Q_1$, $Q_2$, $Q_3$ for the data: 3, 1, 2, 5, 3 (odd, $n = 5$).",
+                        steps: [
+                            "Order: 1, 2, **3**, 3, 5",
+                            "$Q_2$ = middle term = 3",
+                            "Lower half: 1, 2 → $Q_1 = \\\\frac{1 + 2}{2} = 1.5$",
+                            "Upper half: 3, 5 → $Q_3 = \\\\frac{3 + 5}{2} = 4$"
+                        ],
+                        final_answer: "$Q_1 = 1.5$, $Q_2 = 3$, $Q_3 = 4$"
+                    },
+                    {
+                        question: "Find $Q_1$, $Q_2$, $Q_3$ for: 10, 15, 18, 18, 18 (odd, $n = 5$).",
+                        steps: [
+                            "Already ordered: 10, 15, **18**, 18, 18",
+                            "$Q_2 = 18$",
+                            "Lower half: 10, 15 → $Q_1 = \\\\frac{10 + 15}{2} = 12.5$",
+                            "Upper half: 18, 18 → $Q_3 = \\\\frac{18 + 18}{2} = 18$"
+                        ],
+                        final_answer: "$Q_1 = 12.5$, $Q_2 = 18$, $Q_3 = 18$"
+                    },
+                    {
+                        question: "Find $Q_1$, $Q_2$, $Q_3$ for: 7, 9, 3, 5, 1, 12, 15 (odd, $n = 7$).",
+                        steps: [
+                            "Order: 1, 3, 5, **7**, 9, 12, 15",
+                            "$Q_2 = 7$",
+                            "Lower half: 1, 3, 5 → $Q_1 = 3$",
+                            "Upper half: 9, 12, 15 → $Q_3 = 12$"
+                        ],
+                        final_answer: "$Q_1 = 3$, $Q_2 = 7$, $Q_3 = 12$"
+                    },
+                    {
+                        question: "Find $Q_1$, $Q_2$, $Q_3$ for: 100, 50, 80, 20, 110 (odd, $n = 5$).",
+                        steps: [
+                            "Order: 20, 50, **80**, 100, 110",
+                            "$Q_2 = 80$",
+                            "Lower half: 20, 50 → $Q_1 = \\\\frac{20 + 50}{2} = 35$",
+                            "Upper half: 100, 110 → $Q_3 = \\\\frac{100 + 110}{2} = 105$"
+                        ],
+                        final_answer: "$Q_1 = 35$, $Q_2 = 80$, $Q_3 = 105$"
+                    },
+                    {
+                        question: "Find $Q_1$, $Q_2$, $Q_3$ for: 0, 1, 3, 3, 3, 3, 4, 5 (even, $n = 8$).",
+                        steps: [
+                            "Already ordered. Split: 0, 1, 3, 3 | 3, 3, 4, 5",
+                            "$Q_2 = \\\\frac{3 + 3}{2} = 3$",
+                            "First half: 0, 1, 3, 3 → $Q_1 = \\\\frac{1 + 3}{2} = 2$",
+                            "Second half: 3, 3, 4, 5 → $Q_3 = \\\\frac{3 + 4}{2} = 3.5$"
+                        ],
+                        final_answer: "$Q_1 = 2$, $Q_2 = 3$, $Q_3 = 3.5$"
+                    },
+                    {
+                        question: "Find $Q_1$, $Q_2$, $Q_3$ for: 2, 4, 6, 8, 10, 12 (even, $n = 6$).",
+                        steps: [
+                            "Already ordered. Split: 2, 4, 6 | 8, 10, 12",
+                            "$Q_2 = \\\\frac{6 + 8}{2} = 7$",
+                            "First half: 2, 4, 6 → $Q_1 = 4$",
+                            "Second half: 8, 10, 12 → $Q_3 = 10$"
+                        ],
+                        final_answer: "$Q_1 = 4$, $Q_2 = 7$, $Q_3 = 10$"
+                    },
+                    {
+                        question: "Find $Q_1$, $Q_2$, $Q_3$ for: 15, 18, 12, 20 (even, $n = 4$).",
+                        steps: [
+                            "Order: 12, 15 | 18, 20",
+                            "$Q_2 = \\\\frac{15 + 18}{2} = 16.5$",
+                            "$Q_1 = \\\\frac{12 + 15}{2} = 13.5$",
+                            "$Q_3 = \\\\frac{18 + 20}{2} = 19$"
+                        ],
+                        final_answer: "$Q_1 = 13.5$, $Q_2 = 16.5$, $Q_3 = 19$"
+                    },
+                    {
+                        question: "Find $Q_1$, $Q_2$, $Q_3$ for: 1, 2, 4, 5, 8, 9, 10, 12 (even, $n = 8$).",
+                        steps: [
+                            "Already ordered. Split: 1, 2, 4, 5 | 8, 9, 10, 12",
+                            "$Q_2 = \\\\frac{5 + 8}{2} = 6.5$",
+                            "$Q_1 = \\\\frac{2 + 4}{2} = 3$",
+                            "$Q_3 = \\\\frac{9 + 10}{2} = 9.5$"
+                        ],
+                        final_answer: "$Q_1 = 3$, $Q_2 = 6.5$, $Q_3 = 9.5$"
+                    }
+                ]
+            },
+            // ─── SECTION 4: THE INTERQUARTILE RANGE (IQR) ───
+            {
+                title: '4. The Interquartile Range (IQR)',
+                content: "## Why the IQR?\n\nThe IQR is often a **superior** measure to the Range because it describes the spread of the **middle 50%** of the data. By ignoring the lowest 25% and highest 25%, we eliminate the influence of **outliers**.\n\n## Formula\n\n$$\\\\text{IQR} = Q_3 - Q_1$$\n\n## Step-by-Step Calculation\n\n1. **Order** the data\n2. **Find** $Q_1$ and $Q_3$\n3. **Subtract** $Q_1$ from $Q_3$\n\n## Interpretation\n\n| Small IQR | Large IQR |\n|---|---|\n| Middle 50% is consistent and close to the median | Middle 50% is widely varied |\n| Data is reliable | Data may need further investigation |\n\n## Practice Exercise\n\n1. Find the IQR for: 5, 10, 15, 20, 25.\n2. Find the IQR for: 2, 4, 6, 8, 10, 12, 14, 16.\n3. Determine the IQR for: \\$80, \\$85, \\$90, \\$100.\n4. Calculate the IQR for gas volumes: 12, 15, 18, 20, 25, 30.\n5. Determine the IQR for test marks: 10, 12, 14, 16, 18, 20.",
+                worked_examples: [
+                    {
+                        question: "Determine the IQR for marks: 0, 1, 3, 3, 3, 3, 4, 5.",
+                        steps: [
+                            "From previous: $Q_1 = 2$, $Q_3 = 3.5$",
+                            "IQR $= Q_3 - Q_1 = 3.5 - 2 = 1.5$"
+                        ],
+                        final_answer: "IQR $= 1.5$"
+                    },
+                    {
+                        question: "Determine the IQR for temperatures: 18, 19, 21, 22, 25, 28, 30, 31.",
+                        steps: [
+                            "Split: 18, 19, 21, 22 | 25, 28, 30, 31",
+                            "$Q_1 = \\\\frac{19 + 21}{2} = 20$",
+                            "$Q_3 = \\\\frac{28 + 30}{2} = 29$",
+                            "IQR $= 29 - 20 = 9$"
+                        ],
+                        final_answer: "IQR $= 9$"
+                    },
+                    {
+                        question: "Determine the IQR for: 10, 15, 18, 18, 18.",
+                        steps: [
+                            "$Q_1 = 12.5$, $Q_3 = 18$",
+                            "IQR $= 18 - 12.5 = 5.5$"
+                        ],
+                        final_answer: "IQR $= 5.5$"
+                    },
+                    {
+                        question: "Determine the IQR for: 2, 4, 6, 8, 10, 12.",
+                        steps: [
+                            "$Q_1 = 4$, $Q_3 = 10$",
+                            "IQR $= 10 - 4 = 6$"
+                        ],
+                        final_answer: "IQR $= 6$"
+                    },
+                    {
+                        question: "Determine the IQR for: 1, 3, 5, 7, 9.",
+                        steps: [
+                            "Ordered: 1, 3, **5**, 7, 9",
+                            "Lower half: 1, 3 → $Q_1 = \\\\frac{1+3}{2} = 2$",
+                            "Upper half: 7, 9 → $Q_3 = \\\\frac{7+9}{2} = 8$",
+                            "IQR $= 8 - 2 = 6$"
+                        ],
+                        final_answer: "IQR $= 6$"
+                    },
+                    {
+                        question: "Determine the IQR for prices: \\$12.20, \\$15.25, \\$10.00, \\$18.50.",
+                        steps: [
+                            "Ordered: 10.00, 12.20 | 15.25, 18.50",
+                            "$Q_1 = \\\\frac{10.00 + 12.20}{2} = 11.10$",
+                            "$Q_3 = \\\\frac{15.25 + 18.50}{2} = 16.875$",
+                            "IQR $= 16.875 - 11.10 = 5.775$"
+                        ],
+                        final_answer: "IQR $= 5.775$ (or \\$5.78)"
+                    }
+                ]
+            },
+            // ─── SECTION 5: RANGE AND IQR FROM FREQUENCY TABLES ───
+            {
+                title: '5. Range and IQR from Frequency Tables',
+                content: "## Working with Frequency Tables\n\nFor large data sets organised into frequency tables, we use **cumulative frequency** to locate quartile positions.\n\n## Quartile Position Formulas\n\n$$Q_1 \\\\text{ position} = \\\\frac{n}{4}, \\\\qquad Q_3 \\\\text{ position} = \\\\frac{3n}{4}$$\n\nIf the position is **not a whole number** (e.g., 3.25), round **up** to the next whole number (take the 4th value).\n\n## Step-by-Step Process\n\n1. **Calculate** $n$ (total frequency: $\\\\sum f$)\n2. **Build** a cumulative frequency column\n3. **Find** $Q_1$ position $= \\\\frac{n}{4}$ and $Q_3$ position $= \\\\frac{3n}{4}$\n4. **Read off** the corresponding values from the cumulative frequency column\n5. **Calculate**: Range $=$ Highest $-$ Lowest; IQR $= Q_3 - Q_1$",
+                worked_examples: [
+                    {
+                        question: "Find the Range and IQR from the frequency table:\n\n| Mark ($x$) | 10 | 11 | 12 | 13 |\n|---|---|---|---|---|\n| Frequency ($f$) | 2 | 4 | 5 | 3 |",
+                        steps: [
+                            "Cumulative frequency: 2, 6, 11, 14. So $n = 14$",
+                            "Range $= 13 - 10 = 3$",
+                            "$Q_1$ position $= \\\\frac{14}{4} = 3.5 \\\\to$ 4th value. From cf: 4th value falls in mark 11. $Q_1 = 11$",
+                            "$Q_3$ position $= \\\\frac{3 \\\\times 14}{4} = 10.5 \\\\to$ 11th value. From cf: 11th value falls in mark 12. $Q_3 = 12$",
+                            "IQR $= 12 - 11 = 1$"
+                        ],
+                        final_answer: "Range $= 3$; IQR $= 1$"
+                    },
+                    {
+                        question: "Find the Range and IQR from the frequency table:\n\n| Bags | 0 | 10 | 20 | 30 | 40 |\n|---|---|---|---|---|---|\n| Frequency | 5 | 10 | 15 | 10 | 5 |",
+                        steps: [
+                            "Cumulative frequency: 5, 15, 30, 40, 45. So $n = 45$",
+                            "Range $= 40 - 0 = 40$ bags",
+                            "$Q_1$ position $= \\\\frac{45}{4} = 11.25 \\\\to$ 12th value. From cf: 12th value falls in 10. $Q_1 = 10$",
+                            "$Q_3$ position $= \\\\frac{3 \\\\times 45}{4} = 33.75 \\\\to$ 34th value. From cf: 34th value falls in 30. $Q_3 = 30$",
+                            "IQR $= 30 - 10 = 20$ bags"
+                        ],
+                        final_answer: "Range $= 40$ bags; IQR $= 20$ bags"
+                    }
+                ]
+            },
+            // ─── SECTION 6: COMPARING DATA SETS FOR CONSISTENCY ───
+            {
+                title: '6. Comparing Data Sets for Consistency',
+                content: "## Using Spread to Judge Consistency\n\nSpread is the primary indicator of **consistency**. In ZIMSEC papers, you are often asked to \"Comment on the results.\"\n\n## Template for Interpretation\n\n> \"Although both sets have a similar average, **[Set A]** is more consistent because its **[Range/IQR]** of **[Value]** is lower than **[Set B's]** spread of **[Value]**.\"\n\n## Key Principle\n\n- **Lower spread** = **More consistent** (more reliable data)\n- **Higher spread** = **Less consistent** (more variable data)\n- The **IQR** is generally preferred over Range for comparison because it ignores outliers",
+                worked_examples: [
+                    {
+                        question: "Athlete A has an IQR of 0.5s. Athlete B has an IQR of 1.2s. Compare their consistency.",
+                        steps: [
+                            "Athlete A: IQR $= 0.5$s (smaller spread)",
+                            "Athlete B: IQR $= 1.2$s (larger spread)",
+                            "Smaller IQR means more consistent performance"
+                        ],
+                        final_answer: "Athlete A is more consistent because their IQR of 0.5s is smaller than Athlete B's IQR of 1.2s."
+                    },
+                    {
+                        question: "Class X has a range of 40 marks. Class Y has a range of 15 marks. Compare consistency.",
+                        steps: [
+                            "Class X: Range $= 40$ (larger spread)",
+                            "Class Y: Range $= 15$ (smaller spread)",
+                            "Smaller range means marks are closer together"
+                        ],
+                        final_answer: "Class Y is more consistent because its range of 15 is smaller than Class X's range of 40."
+                    },
+                    {
+                        question: "Group A marks: 10, 12, 15 (Range = 5). Group B marks: 2, 12, 22 (Range = 20). Both have a mean of 12.33. Compare.",
+                        steps: [
+                            "Both groups have similar means",
+                            "Group A: Range $= 15 - 10 = 5$",
+                            "Group B: Range $= 22 - 2 = 20$",
+                            "Group A's marks are much more tightly clustered"
+                        ],
+                        final_answer: "Group A is more consistent because its range of 5 is much smaller than Group B's range of 20."
+                    }
+                ]
+            },
+            // ─── SECTION 7: MIXED REVISION EXERCISE ───
+            {
+                title: '7. Mixed Revision Exercise',
+                content: "## 30 Questions\n\n**1.** Define dispersion.\n**2.** Identify the highest and lowest values in: 15, 2, 18, 24, 7.\n**3.** Calculate the range of the set in Q2.\n**4.** Arrange in ascending order: 10, 5, 20, 15, 0, 25.\n**5.** Find the Median ($Q_2$) of the set in Q4.\n**6.** Find $Q_1$ and $Q_3$ for the set in Q4.\n**7.** Calculate the IQR for the set in Q4.\n**8.** A gas pressure set ranges from 2 pa to 12 pa. Find the range.\n**9.** If $Q_1 = 15$ and $Q_3 = 45$, find the IQR.\n**10.** Why is IQR better than Range?\n**11\u201315.** Calculate the range and IQR for various PAYE tax spread data sets.\n**16\u201320.** Calculate quartiles for Bata shoe size data.\n**21\u201325.** Compare consistency using range and IQR for paired data sets.\n**26\u201330.** Contextual TelOne bill consistency calculations.",
+                worked_examples: []
+            },
+            // ─── SECTION 8: EXAM-STYLE STRUCTURED TEST ───
+            {
+                title: '8. Exam-Style Structured Test',
+                content: "## Question 1\n\nSpiwe recorded the following prices for a pair of shoes at 8 different shops:\n\\$12, \\$15, \\$10, \\$25, \\$12, \\$14, \\$13, \\$12.\n\n**(a)** Order the data. [1]\n**(b)** Determine the Range. [2]\n**(c)** Find $Q_1$ and $Q_3$. [4]\n**(d)** Calculate the IQR. [2]\n**(e)** Mai Farai finds another shop where the IQR of prices is \\$1.50. Compare the consistency. [2]\n\n## Question 2\n\nFarmers' harvest (bags):\n\n| Bags | 0 | 10 | 20 | 30 |\n|---|---|---|---|---|\n| Frequency | 5 | 12 | 8 | 5 |\n\n**(a)** Find $n$. [1]\n**(b)** Find the Range. [2]\n**(c)** Find the IQR. [4]",
+                worked_examples: []
+            },
+            // ─── SECTION 9: FULL MEMO AND SOLUTIONS ───
+            {
+                title: '9. Full Memo and Solutions',
+                content: "## Practice Exercise 2A Answers\n\n1. Range $= \\$18.50 - \\$10.00 = \\$8.50$\n2. Range $= 20 - 2 = 18$ pa\n3. Group A: $15 - 10 = 5$. Group B: $22 - 2 = 20$. Group A is more consistent.\n4. Range $= 12 - 5 = 7$ subjects\n5. Range $= 31 - 19 = 12$°C\n\n## Mixed Revision (Selected)\n\n| Q | Answer |\n|---|---|\n| 1 | Dispersion is the measure of the spread of data values around the centre |\n| 2 | Highest: 24, Lowest: 2 |\n| 3 | Range $= 24 - 2 = 22$ |\n| 4 | 0, 5, 10, 15, 20, 25 |\n| 5 | $Q_2 = \\\\frac{10 + 15}{2} = 12.5$ |\n| 6 | $Q_1 = 5$, $Q_3 = 20$ |\n| 7 | IQR $= 20 - 5 = 15$ |\n| 8 | Range $= 12 - 2 = 10$ pa |\n| 9 | IQR $= 45 - 15 = 30$ |\n| 10 | IQR ignores extreme values (outliers), making it a more reliable measure of spread |\n\n## Exam-Style Test Answers\n\n### Question 1\n\n**(a)** Ordered: 10, 12, 12, 12, 13, 14, 15, 25\n\n**(b)** Range $= 25 - 10 = 15$\n\n**(c)** Split: 10, 12, 12, 12 | 13, 14, 15, 25\n$Q_1 = \\\\frac{12 + 12}{2} = 12$\n$Q_3 = \\\\frac{14 + 15}{2} = 14.5$\n\n**(d)** IQR $= 14.5 - 12 = 2.5$\n\n**(e)** Mai Farai's prices are more consistent because her IQR of \\$1.50 is less than Spiwe's IQR of \\$2.50.\n\n### Question 2\n\n**(a)** $n = 5 + 12 + 8 + 5 = 30$\n\n**(b)** Range $= 30 - 0 = 30$ bags\n\n**(c)** $Q_1$ position $= \\\\frac{30}{4} = 7.5 \\\\to$ 8th value.\nCumulative frequency: 5, 17, 25, 30. The 8th value falls in 10. $Q_1 = 10$.\n$Q_3$ position $= \\\\frac{3 \\\\times 30}{4} = 22.5 \\\\to$ 23rd value.\nThe 23rd value falls in 20. $Q_3 = 20$.\nIQR $= 20 - 10 = 10$ bags.",
+                worked_examples: []
+            }
+        ],
+        key_points: [
+            "**Dispersion** measures the spread or variation of data values around the centre.",
+            "**Range** $=$ Highest value $-$ Lowest value. It is the simplest measure but is sensitive to outliers.",
+            "**Quartiles** divide ordered data into four equal parts: $Q_1$ (25%), $Q_2$ (50%), $Q_3$ (75%).",
+            "**IQR** $= Q_3 - Q_1$. It measures the spread of the **middle 50%** and ignores outliers.",
+            "Data **must** be arranged in ascending order before finding quartiles.",
+            "For odd $n$: exclude the median when finding $Q_1$ and $Q_3$. For even $n$: split into two equal halves.",
+            "From frequency tables: $Q_1$ position $= \\\\frac{n}{4}$, $Q_3$ position $= \\\\frac{3n}{4}$. Round up if not a whole number.",
+            "**Small** Range/IQR = consistent data. **Large** Range/IQR = spread-out data.",
+            "IQR is generally preferred over Range for comparing consistency because it is not affected by extreme values.",
+            "Always include **units** when stating Range or IQR values in ZIMSEC examinations."
+        ],
+        exam_tips: [
+            "Always **order** the data first. This is the single most common source of errors in quartile questions.",
+            "State the **Range formula** before substituting: Range $=$ Highest $-$ Lowest. Show working for full marks.",
+            "When finding quartiles, clearly show which values form the lower and upper halves.",
+            "For frequency table questions, build a **cumulative frequency** column — it makes quartile positions easy to read off.",
+            "If a quartile position is not a whole number (e.g., 3.25), always round **up** to the next position.",
+            "When asked to \"comment\" or \"compare\", use the template: state both values, then say which is more/less consistent and why.",
+            "IQR questions often follow quartile questions — use your $Q_1$ and $Q_3$ from the previous part.",
+            "Don't forget **units**! Writing \"Range = 22\" instead of \"Range = 22 marks\" can cost you a mark.",
+            "A point on the mirror line is invariant — similarly, if all data values are the same, Range = 0 and IQR = 0.",
+            "In multi-part structured questions, the word **\"hence\"** means use your previous answer in the next calculation."
+        ],
+        visual_descriptions: [
+            "Dispersion comparison: Two dot plots with the same mean (50%). Top plot (Spiwe): three dots clustered tightly at 48, 50, 52. Bottom plot (Farai): three dots widely spread at 10, 50, 90. Arrow labelled 'Same Mean, Different Spread'.",
+            "Range diagram: A number line with data points plotted. The leftmost point labelled 'Lowest' and rightmost labelled 'Highest'. A double-headed arrow spans the full distance, labelled 'Range'.",
+            "Quartile diagram: An ordered number line divided into four equal sections by three vertical markers: $Q_1$ at 25%, $Q_2$ at 50%, $Q_3$ at 75%. The section between $Q_1$ and $Q_3$ is shaded and labelled 'IQR — Middle 50%'.",
+            "Odd vs Even method: Two examples side by side. Left: 5 data points with the middle one circled ($Q_2$), lower pair bracketed for $Q_1$, upper pair for $Q_3$. Right: 6 data points split into two groups of 3, with medians of each group marked.",
+            "Frequency table cumulative frequency: A table showing marks, frequency, and cumulative frequency columns. Arrows from $Q_1$ position and $Q_3$ position pointing to the corresponding rows in the cumulative frequency column.",
+            "Consistency comparison: Two box-and-whisker-style diagrams. Top: short box (small IQR, labelled 'Consistent'). Bottom: long box (large IQR, labelled 'Variable'). Both centred on the same median line."
+        ]
+    },
+
+    // ============================================
+    // FORM 2: GEOMETRICAL CONSTRUCTIONS (Comprehensive)
+    // ============================================
+    'F2 Geometrical Constructions': {
+        topic: 'Geometrical Constructions',
+        subject: 'Mathematics',
+        grade_level: 'O-Level Form 2',
+        summary: "Geometrical construction is a rigorous mathematical discipline where technical precision determines the validity of the result. It serves as a strategic bridge between theoretical geometric properties and practical spatial visualisation. All constructions must be produced using **ruler and compasses only** \u2014 protractors are strictly prohibited for drawing.\n\n## The Absolute Ground Rules\n\n| Rule | Requirement |\n|---|---|\n| **Instruments** | Ruler and compasses only. Protractor only when told to \"measure and state\" |\n| **Evidence** | All construction arcs and lines must be visible. Never erase them |\n| **Accuracy** | $\\\\pm 1$ mm for lengths, $\\\\pm 1^\\\\circ$ for angles |\n| **Pencil** | Sharp 4H or 2H grade for thin, precise lines |\n\n## Key Constructions Summary\n\n| Construction | Method |\n|---|---|\n| **Perpendicular Bisector** | Equal arcs from both endpoints; join intersections |\n| **Angle Bisector** | Arc from vertex, then equal arcs from both intersection points; join vertex to new intersection |\n| **$60^\\\\circ$ Angle** | Arc from vertex; same radius arc from line intersection; join |\n| **$90^\\\\circ$ Angle** | Perpendicular bisector of a straight line (bisect $180^\\\\circ$) |\n| **$45^\\\\circ$ Angle** | Bisect a $90^\\\\circ$ angle |\n| **$30^\\\\circ$ Angle** | Bisect a $60^\\\\circ$ angle |\n\n## Triangle Construction Methods\n\n| Method | Given | Procedure |\n|---|---|---|\n| **SSS** | 3 sides | Draw base; swing arcs of other two sides from endpoints |\n| **SAS** | 2 sides + included angle | Draw first side; construct angle; mark second side |\n| **ASA** | 2 angles + included side | Draw base; construct angles at both ends; lines intersect at vertex |",
+        sections: [
+            // \u2500\u2500\u2500 SECTION 1: INTRODUCTION TO GEOMETRICAL FUNDAMENTALS \u2500\u2500\u2500
+            {
+                title: '1. Introduction to Geometrical Fundamentals',
+                videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Video/Maths/Form%202/Geometrical_Constructions.mp4',
+                content: "## Why Geometrical Construction Matters\n\nIn the ZIMSEC curriculum, geometrical construction bridges theoretical properties and practical spatial visualisation. Technical precision determines the validity of every result.\n\n## The Absolute Ground Rules\n\n1. **Instruments**: All drawings must use a **ruler and compasses only**. Protractors are **strictly prohibited** for drawing; they may only be used when the question explicitly asks you to \"measure and state\" an angle.\n2. **Evidence of Work**: You **must** show all construction lines and arcs. These arcs are the \"footprints\" of your mathematical logic. Erasing them results in **loss of marks**.\n\n## Warning System: Common Errors\n\n| Level | Error | Explanation |\n|---|---|---|\n| **Danger** | Arcs barely touching | Arcs must **clearly cross** (intersect) to define a point |\n| **Caution** | Blunt pencil | Thick lines violate the $\\\\pm 1$ mm tolerance. Use sharp 4H/2H pencils |\n| **Good Practice** | Extension Rule | Always extend a line **through** a point to ensure direction and precision are visible |\n\n> **Key Insight**: Construction marks are worth marks. The arcs and lines you draw are proof of your method \u2014 the examiner awards marks for seeing them.",
+                worked_examples: [
+                    {
+                        question: "Explain why a protractor is not permitted in geometrical constructions, and when it may be used.",
+                        steps: [
+                            "Geometrical constructions require ruler and compasses only \u2014 this tests the student's understanding of geometric principles",
+                            "A protractor measures angles but does not construct them from first principles",
+                            "It may only be used when the question says \"measure and state\" to verify a constructed angle"
+                        ],
+                        final_answer: "A protractor is prohibited for drawing because constructions must use ruler and compasses only. It is permitted only for verification when the question says \"measure and state.\""
+                    }
+                ]
+            },
+            // \u2500\u2500\u2500 SECTION 2: BASIC CONSTRUCTIONS \u2500\u2500\u2500
+            {
+                title: '2. Revision of Basic Constructions (Line Segments and Bisectors)',
+                content: "## Concept 1: Constructing a Line of Given Length\n\nUse a ruler as a guide and compasses to mark exact endpoints.\n\n### Procedure\n1. Draw a straight line using a ruler\n2. Mark the starting point (e.g., O)\n3. Set compasses to the required length\n4. Place the compass point on O and draw an arc to cut the line\n5. Label the endpoint (e.g., B)\n\n## Concept 2: Perpendicular Bisector of a Line\n\nThe perpendicular bisector is the foundational unit of all complex constructions.\n\n### Procedure\n1. Place the compass point at end A\n2. Set width to **more than half** of AB\n3. Draw arcs **above and below** the line\n4. **Maintain the same width**, place compass at B, draw arcs to intersect the first pair\n5. Draw a straight line through both intersections, **extending through** the points\n\n### Why It Works\n\nThis relies on the principle of **equidistance**: every point on the perpendicular bisector is the same distance from endpoints A and B. The construction creates two congruent isosceles triangles sharing a base.\n\n## Practice Exercise\n\n1. Construct line $ST = 9.2$ cm and its perpendicular bisector.\n2. Construct a vertical line $UV = 6.6$ cm. Bisect it and label the midpoint $M$.\n3. Draw a line of 12 cm. Use repeated bisection to divide it into four segments of 3 cm.\n4. Construct the perpendicular bisector of a 5.5 cm slanted line.\n5. Verify by measuring the four angles created at the intersection (should all be $90^\\\\circ$).",
+                worked_examples: [
+                    {
+                        question: "Construct line $OB = 7.5$ cm.",
+                        steps: [
+                            "Draw a straight line using a ruler",
+                            "Mark point O at one end",
+                            "Set compasses to 7.5 cm",
+                            "Place compass at O and draw an arc cutting the line at B",
+                            "Label point B"
+                        ],
+                        final_answer: "$OB = 7.5$ cm (verified by measurement)."
+                    },
+                    {
+                        question: "Construct a horizontal line $AB = 6$ cm and its perpendicular bisector. Verify by measurement.",
+                        steps: [
+                            "Draw line $AB = 6$ cm",
+                            "Set compasses to more than 3 cm (more than half of AB)",
+                            "From A, draw arcs above and below the line",
+                            "Keeping the same width, from B draw arcs to intersect the first pair",
+                            "Draw a straight line through both intersection points",
+                            "Measure: each side of the bisector = 3.0 cm. All four angles at the intersection = $90^\\\\circ$"
+                        ],
+                        final_answer: "Perpendicular bisector constructed. Each half = 3.0 cm. Angles = $90^\\\\circ$."
+                    },
+                    {
+                        question: "Construct a vertical line $CD = 5.2$ cm and its perpendicular bisector.",
+                        steps: [
+                            "Draw vertical line $CD = 5.2$ cm",
+                            "Set compasses to more than 2.6 cm",
+                            "From C, draw arcs to the left and right",
+                            "From D (same width), draw arcs intersecting the first pair",
+                            "Join the intersections to form the bisector",
+                            "Measure: each side = 2.6 cm"
+                        ],
+                        final_answer: "Perpendicular bisector constructed. Each half = 2.6 cm."
+                    },
+                    {
+                        question: "Construct a horizontal line $GH = 8.4$ cm and bisect it.",
+                        steps: [
+                            "Draw $GH = 8.4$ cm",
+                            "Construct perpendicular bisector using arcs from both endpoints",
+                            "Measure: each half = 4.2 cm"
+                        ],
+                        final_answer: "Bisector constructed. Each half = 4.2 cm."
+                    }
+                ]
+            },
+            // \u2500\u2500\u2500 SECTION 3: ANGLE CONSTRUCTION AND BISECTORS \u2500\u2500\u2500
+            {
+                title: '3. Angle Construction and Bisectors Using Compasses Only',
+                content: "## The $60^\\\\circ$ Angle: The Base Unit\n\nThe $60^\\\\circ$ angle is the \"base unit\" of geometry because it represents the internal angle of an equilateral triangle, where the radius of the arc equals the chord length.\n\n### Procedure for $60^\\\\circ$\n1. Draw a baseline. Mark vertex A\n2. From A, swing a **large arc** that crosses the baseline\n3. **Without changing** the compass width, place the compass where the arc meets the line\n4. Swing a second arc to intersect the first\n5. Join vertex A to the intersection point\n\n### Procedure for $90^\\\\circ$\n- Construct a perpendicular bisector on a straight line (bisecting $180^\\\\circ$)\n- OR construct a $60^\\\\circ$ angle and bisect the region between $60^\\\\circ$ and $120^\\\\circ$\n\n### Procedure for $45^\\\\circ$\n- Construct a $90^\\\\circ$ angle and **bisect** it\n\n### Procedure for $30^\\\\circ$\n- Construct a $60^\\\\circ$ angle and **bisect** it\n\n### Procedure for $75^\\\\circ$\n- Construct $60^\\\\circ$ and $90^\\\\circ$. Bisect the $30^\\\\circ$ region between them: $60^\\\\circ + 15^\\\\circ = 75^\\\\circ$\n\n### Angle Bisector Procedure\n1. From the vertex, draw an arc crossing both arms of the angle\n2. From each intersection, draw equal arcs that cross each other\n3. Join the vertex to the new intersection \u2014 this is the bisector\n\n## Practice Exercise\n\n1. Construct a $60^\\\\circ$ angle. Bisect it to create $30^\\\\circ$.\n2. Construct a $90^\\\\circ$ angle. Bisect it twice to create $22.5^\\\\circ$.\n3. Construct an equilateral triangle of side 6 cm. Measure all angles to verify $60^\\\\circ$.\n4. Construct an angle of $75^\\\\circ$ (Construct $90^\\\\circ$, then bisect the $30^\\\\circ$ region between $60^\\\\circ$ and $90^\\\\circ$).",
+                worked_examples: [
+                    {
+                        question: "Construct $\\\\angle ABC = 60^\\\\circ$ at vertex B on a baseline of 8 cm.",
+                        steps: [
+                            "Draw baseline and mark vertex B",
+                            "From B, draw a large arc crossing the baseline at point P",
+                            "Without changing compass width, place compass at P",
+                            "Draw an arc intersecting the first arc at point Q",
+                            "Join B to Q and extend \u2014 $\\\\angle PBQ = 60^\\\\circ$"
+                        ],
+                        final_answer: "$\\\\angle ABC = 60^\\\\circ$ constructed. Verified by measurement: $60^\\\\circ \\\\pm 1^\\\\circ$."
+                    },
+                    {
+                        question: "Construct a $90^\\\\circ$ angle at the end of line $XY = 7$ cm.",
+                        steps: [
+                            "Draw line $XY = 7$ cm",
+                            "Extend the line slightly beyond Y",
+                            "Construct a perpendicular bisector at point Y (or use the $60^\\\\circ$ method to derive $90^\\\\circ$)",
+                            "The perpendicular line at Y forms a $90^\\\\circ$ angle"
+                        ],
+                        final_answer: "$90^\\\\circ$ angle constructed at Y. Verified: $90^\\\\circ \\\\pm 1^\\\\circ$."
+                    },
+                    {
+                        question: "Construct a $45^\\\\circ$ angle at point O.",
+                        steps: [
+                            "First construct a $90^\\\\circ$ angle at O",
+                            "Now bisect the $90^\\\\circ$ angle: from O, draw an arc crossing both arms",
+                            "From both intersection points, draw equal arcs that cross",
+                            "Join O to the new intersection \u2014 this gives $45^\\\\circ$",
+                            "The remaining angle is $90^\\\\circ - 45^\\\\circ = 45^\\\\circ$"
+                        ],
+                        final_answer: "$45^\\\\circ$ angle constructed. Remaining angle = $45^\\\\circ$."
+                    },
+                    {
+                        question: "Construct a $30^\\\\circ$ angle.",
+                        steps: [
+                            "First construct a $60^\\\\circ$ angle",
+                            "Bisect the $60^\\\\circ$ angle using the angle bisector method",
+                            "$60^\\\\circ \\\\div 2 = 30^\\\\circ$"
+                        ],
+                        final_answer: "$30^\\\\circ$ angle constructed by bisecting $60^\\\\circ$."
+                    }
+                ]
+            },
+            // \u2500\u2500\u2500 SECTION 4: CONSTRUCTING TRIANGLES \u2500\u2500\u2500
+            {
+                title: '4. Constructing Triangles (SSS, SAS, and ASA)',
+                content: "## Why Three Pieces of Information?\n\nTriangles are uniquely determined by constraints that form the basis for **Congruence Axioms**. Given the right combination of sides and angles, exactly one triangle can be drawn.\n\n## Construction Methods\n\n| Method | Given | Procedure |\n|---|---|---|\n| **SSS** | 3 sides | Draw the base. Swing arcs of the other two side lengths from the base endpoints. The vertex is their intersection |\n| **SAS** | 2 sides + included angle | Draw the first side. Construct the given angle at one end. Mark the second side's length on the new line |\n| **ASA** | 2 angles + included side | Draw the base. Construct the given angles at both endpoints. The vertex is where the two lines meet |\n\n## The Triangle Inequality\n\nIf arcs for the third vertex **do not intersect**, the side lengths may be mathematically impossible. The rule: **the sum of any two sides must be greater than the third side**.",
+                worked_examples: [
+                    {
+                        question: "Construct $\\\\triangle ABC$ with $AB = 7$ cm, $BC = 5$ cm, $AC = 6$ cm (SSS). Measure and state $\\\\angle B$.",
+                        steps: [
+                            "Draw base $AB = 7$ cm",
+                            "Set compasses to 5 cm. From B, draw an arc above AB",
+                            "Set compasses to 6 cm. From A, draw an arc to intersect the first arc",
+                            "Label the intersection C. Join AC and BC",
+                            "Measure $\\\\angle B$ with a protractor"
+                        ],
+                        final_answer: "$\\\\angle B \\\\approx 57^\\\\circ$"
+                    },
+                    {
+                        question: "Construct $\\\\triangle PQR$ with $PQ = 8$ cm, $\\\\angle P = 60^\\\\circ$, $PR = 5$ cm (SAS). Measure and state $QR$.",
+                        steps: [
+                            "Draw base $PQ = 8$ cm",
+                            "At P, construct a $60^\\\\circ$ angle using compasses",
+                            "On the $60^\\\\circ$ line from P, mark $PR = 5$ cm",
+                            "Join R to Q to complete the triangle",
+                            "Measure $QR$"
+                        ],
+                        final_answer: "$QR \\\\approx 7.0$ cm"
+                    },
+                    {
+                        question: "Construct $\\\\triangle XYZ$ with $XY = 9$ cm, $\\\\angle X = 45^\\\\circ$, $\\\\angle Y = 60^\\\\circ$ (ASA). Measure and state $YZ$.",
+                        steps: [
+                            "Draw base $XY = 9$ cm",
+                            "At X, construct a $45^\\\\circ$ angle (construct $90^\\\\circ$ then bisect)",
+                            "At Y, construct a $60^\\\\circ$ angle",
+                            "Extend both angle lines until they intersect at Z",
+                            "Measure $YZ$"
+                        ],
+                        final_answer: "$YZ \\\\approx 6.6$ cm"
+                    },
+                    {
+                        question: "Construct an equilateral triangle with side 6 cm. Verify all angles.",
+                        steps: [
+                            "Draw base $AB = 6$ cm",
+                            "Set compasses to 6 cm. From A, draw an arc above AB",
+                            "From B (same width), draw an arc to intersect the first",
+                            "Label intersection C. Join AC and BC",
+                            "All sides = 6 cm, all angles should measure $60^\\\\circ$"
+                        ],
+                        final_answer: "Equilateral triangle constructed. All angles $= 60^\\\\circ \\\\pm 1^\\\\circ$."
+                    }
+                ]
+            },
+            // \u2500\u2500\u2500 SECTION 5: PARALLELOGRAMS AND COMPLEX POLYGONS \u2500\u2500\u2500
+            {
+                title: '5. Parallelograms and Complex Polygons',
+                content: "## Constructing a Parallelogram\n\nA parallelogram has two pairs of parallel sides. Construction uses the fact that opposite sides are equal and parallel.\n\n### Method: Adjacent Sides and Included Angle\n\n1. Construct base $AB$ and the angle $\\\\angle A$\n2. Mark distance $AD$ on the angle line from A\n3. From D, swing an arc of length $AB$\n4. From B, swing an arc of length $AD$\n5. Label the intersection C. Join C to B and C to D\n\n### Special Cases\n\n| Shape | Properties | Construction Note |\n|---|---|---|\n| **Rectangle** | All angles $= 90^\\\\circ$ | Construct $90^\\\\circ$ at each corner |\n| **Rhombus** | All sides equal | Use same side length for all four sides |\n| **Square** | All sides equal + all angles $90^\\\\circ$ | Combine rhombus and rectangle rules |",
+                worked_examples: [
+                    {
+                        question: "Construct parallelogram $ABCD$ where $AB = 8$ cm, $AD = 5$ cm, $\\\\angle A = 60^\\\\circ$. Measure diagonal $AC$.",
+                        steps: [
+                            "Draw base $AB = 8$ cm",
+                            "At A, construct a $60^\\\\circ$ angle",
+                            "On the $60^\\\\circ$ line, mark $AD = 5$ cm",
+                            "From D, draw an arc of radius 8 cm (= $AB$)",
+                            "From B, draw an arc of radius 5 cm (= $AD$)",
+                            "Label intersection C. Join $BC$ and $DC$",
+                            "Draw and measure diagonal $AC$"
+                        ],
+                        final_answer: "Diagonal $AC \\\\approx 11.4$ cm."
+                    },
+                    {
+                        question: "Construct a rhombus $PQRS$ of side 6 cm and $\\\\angle P = 120^\\\\circ$. Measure diagonal $PR$.",
+                        steps: [
+                            "Draw base $PQ = 6$ cm",
+                            "At P, construct $120^\\\\circ$ (construct $60^\\\\circ$, then the supplement: $180^\\\\circ - 60^\\\\circ = 120^\\\\circ$)",
+                            "On the $120^\\\\circ$ line, mark $PS = 6$ cm",
+                            "From S, arc of radius 6 cm; from Q, arc of radius 6 cm; intersection is R",
+                            "Draw and measure diagonal $PR$"
+                        ],
+                        final_answer: "Diagonal $PR \\\\approx 6.0$ cm (equilateral triangle property)."
+                    },
+                    {
+                        question: "Construct a square of side 5.5 cm.",
+                        steps: [
+                            "Draw base $AB = 5.5$ cm",
+                            "At A, construct $90^\\\\circ$. Mark $AD = 5.5$ cm",
+                            "At B, construct $90^\\\\circ$. Mark $BC = 5.5$ cm",
+                            "Join $DC$ \u2014 it should measure 5.5 cm",
+                            "Verify all angles $= 90^\\\\circ$ and all sides $= 5.5$ cm"
+                        ],
+                        final_answer: "Square constructed with side 5.5 cm. All angles $= 90^\\\\circ$."
+                    }
+                ]
+            },
+            // \u2500\u2500\u2500 SECTION 6: THE GEOMETRY OF LOCUS \u2500\u2500\u2500
+            {
+                title: '6. The Geometry of Locus',
+                content: "## What Is a Locus?\n\nA **locus** is a set of points that all obey a specific rule or condition.\n\n## The Four Standard Loci\n\n| Locus Rule | Result | Construction |\n|---|---|---|\n| **Fixed distance from a point** | Circle | Draw a circle with the given radius |\n| **Equidistant from two points** | Perpendicular bisector | Bisect the segment joining the two points |\n| **Equidistant from two intersecting lines** | Angle bisector | Bisect the angle between the lines |\n| **Equidistant from two parallel lines** | Parallel line midway | Construct a perpendicular across both lines, find midpoint, draw parallel line |\n\n## Region Shading\n\nIn ZIMSEC exams, you may be asked to shade a region satisfying **multiple conditions** simultaneously. The shaded region is the **intersection** (overlap) of all individual loci.\n\n## Common Error\n\nShading the \"wrong side\" of a bisector. Always **test a point** in your shaded region against the given rule to verify it satisfies the condition.",
+                worked_examples: [
+                    {
+                        question: "Construct $\\\\triangle ABC$ ($AB = 8$ cm, $BC = 7$ cm, $AC = 6$ cm). Shade the region closer to $AB$ than $AC$, but less than 5 cm from vertex $C$.",
+                        steps: [
+                            "Construct $\\\\triangle ABC$ using SSS method",
+                            "Condition 1 (closer to $AB$ than $AC$): Construct the **angle bisector** of $\\\\angle A$ \u2014 the required region is on the $AB$ side",
+                            "Condition 2 (less than 5 cm from C): Draw a **circle arc** of radius 5 cm centred at C",
+                            "The required region is the **overlap**: on the $AB$ side of the bisector AND inside the 5 cm arc"
+                        ],
+                        final_answer: "Shade the region that is on the $AB$ side of the angle bisector of $\\\\angle A$ and within the 5 cm arc from C."
+                    },
+                    {
+                        question: "Two points A and B are 6 cm apart. Construct the locus of points equidistant from A and B.",
+                        steps: [
+                            "Draw segment $AB = 6$ cm",
+                            "Construct the perpendicular bisector of $AB$",
+                            "Every point on this bisector is equidistant from A and B"
+                        ],
+                        final_answer: "The locus is the perpendicular bisector of $AB$."
+                    },
+                    {
+                        question: "Find the point P which is 5 cm from point O and equidistant from lines $LM$ and $LN$ (which intersect at L).",
+                        steps: [
+                            "Locus 1: Draw a circle of radius 5 cm centred at O",
+                            "Locus 2: Construct the angle bisector of $\\\\angle MLN$",
+                            "Point P is where the angle bisector intersects the circle"
+                        ],
+                        final_answer: "P is the intersection of the angle bisector of $\\\\angle MLN$ and the 5 cm radius circle from O."
+                    }
+                ]
+            },
+            // \u2500\u2500\u2500 SECTION 7: PERPENDICULARS FROM POINTS TO LINES \u2500\u2500\u2500
+            {
+                title: '7. Perpendiculars from Points to Lines',
+                content: "## Two Cases\n\n### Case 1: Point ON the Line\n\n1. From the point, swing two **equal arcs** along the line in both directions to create a segment\n2. Construct the **perpendicular bisector** of that segment\n3. The bisector passes through the original point and is perpendicular to the line\n\n### Case 2: Point OUTSIDE the Line\n\n1. From the point, swing an arc that cuts the line at **two points**\n2. Construct the **perpendicular bisector** of the segment between those two points\n3. The bisector passes through the original point and meets the line at $90^\\\\circ$\n\n> **Key Insight**: Both cases reduce to constructing a perpendicular bisector. The difference is where you create the segment to bisect.",
+                worked_examples: [
+                    {
+                        question: "Construct a perpendicular from point P on line $AB$.",
+                        steps: [
+                            "From P, set a convenient compass width",
+                            "Draw arcs cutting line $AB$ at points X and Y (equal distance from P)",
+                            "Widen the compass. From X and Y, draw arcs above the line that intersect",
+                            "Join the intersection to P \u2014 this is perpendicular to $AB$"
+                        ],
+                        final_answer: "Perpendicular constructed through P at $90^\\\\circ$ to $AB$."
+                    },
+                    {
+                        question: "Construct a perpendicular from point Q, which is 4 cm above a horizontal line.",
+                        steps: [
+                            "From Q, draw an arc large enough to cut the line at two points X and Y",
+                            "From X, draw an arc below the line",
+                            "From Y (same width), draw an arc intersecting the first",
+                            "Join Q through the intersection below the line \u2014 this is perpendicular to the line"
+                        ],
+                        final_answer: "Perpendicular from Q to the line constructed. The foot of the perpendicular is where the line meets the horizontal."
+                    }
+                ]
+            },
+            // \u2500\u2500\u2500 SECTION 8: COMPREHENSIVE ASSESSMENT AND MEMO \u2500\u2500\u2500
+            {
+                title: '8. Comprehensive Assessment and Memo',
+                content: "## Mixed Construction Exercise (15 Questions)\n\n**1.** Construct a 10.5 cm line and divide it into 4 equal parts.\n**2.** Construct $\\\\triangle ABC$: $AB = 9$ cm, $BC = 7$ cm, $AC = 6$ cm.\n**3.** Construct the locus of points equidistant from $AB$ and $BC$ in Q2.\n**4.** Construct the locus of points 4 cm from vertex A in Q2.\n**5.** Construct $\\\\triangle PQR$: $PQ = 8.5$ cm, $\\\\angle P = 90^\\\\circ$, $PR = 6$ cm.\n**6.** Measure side $QR$ in Q5.\n**7.** Construct a square of side 5.5 cm.\n**8.** Construct a $75^\\\\circ$ angle at the end of a 6 cm line.\n**9.** Construct a rhombus with side 7 cm and diagonals 10 cm and 9.8 cm.\n**10.** Shade the region in Q2 closer to B than A.\n**11.** Construct a parallelogram: sides 6 cm, 4 cm, angle $45^\\\\circ$.\n**12.** Measure the long diagonal in Q11.\n**13.** Construct a perpendicular from a point 4 cm above a horizontal line.\n**14.** Construct an angle of $22.5^\\\\circ$.\n**15.** Construct the locus equidistant from two parallel lines 5 cm apart.\n\n---\n\n## Exam-Style Practical Test\n\n**Question 1** [12 marks]\nConstruct $\\\\triangle XYZ$ where $XY = 10.5$ cm, $YZ = 8$ cm, $\\\\angle Y = 90^\\\\circ$.\n(a) Measure $XZ$. [2]\n(b) Construct the perpendicular from Y to $XZ$. [4]\n(c) Measure the distance from Y to $XZ$. [2]\n\n**Question 2** [8 marks]\nConstruct a rhombus of side 6.4 cm and one angle of $60^\\\\circ$. Measure the shorter diagonal. [8]\n\n**Question 3** [10 marks]\nTwo lines $LM$ and $LN$ meet at L. Point O is given.\nFind point P which is 5 cm from O and equidistant from lines $LM$ and $LN$. [10]\n\n---\n\n## Full Memo (Key Measurements)\n\n### Mixed Exercise\n\n| Question | Key Answer |\n|---|---|\n| 2 | $\\\\angle B \\\\approx 41^\\\\circ$ |\n| 5\u20136 | $QR \\\\approx 10.4$ cm |\n| 11\u201312 | Long diagonal $\\\\approx 9.3$ cm |\n| 15 | Locus is 2.5 cm from either parallel line |\n\n### Exam-Style Answers\n\n| Question | Answer |\n|---|---|\n| Q1(a) | $XZ \\\\approx 13.2$ cm |\n| Q1(b)\u2013(c) | Distance from Y to $XZ \\\\approx 6.4$ cm |\n| Q2 | Shorter diagonal $\\\\approx 6.4$ cm (equilateral triangle property) |\n| Q3 | P is the intersection of the angle bisector of $\\\\angle MLN$ and the 5 cm radius arc from O |\n\n### Marking Scheme Tip\n\nMarks are awarded for:\n- **Visible arcs** and construction lines\n- Correct **labelling** of points\n- Accuracy within $\\\\pm 1$ mm and $\\\\pm 1^\\\\circ$\n- **Do not erase** construction marks",
+                worked_examples: []
+            }
+        ],
+        key_points: [
+            "All constructions must use **ruler and compasses only**. Protractors are prohibited for drawing.",
+            "**Never erase** construction arcs and lines \u2014 they are worth marks in ZIMSEC exams.",
+            "Accuracy tolerance: $\\\\pm 1$ mm for lengths, $\\\\pm 1^\\\\circ$ for angles.",
+            "The **perpendicular bisector** is the foundation of all constructions. It establishes symmetry and equidistance.",
+            "The **$60^\\\\circ$ angle** is the base unit \u2014 it comes from an equilateral triangle where radius = chord length.",
+            "Standard angle derivations: $90^\\\\circ$ (bisect $180^\\\\circ$), $45^\\\\circ$ (bisect $90^\\\\circ$), $30^\\\\circ$ (bisect $60^\\\\circ$), $75^\\\\circ$ (bisect between $60^\\\\circ$ and $90^\\\\circ$).",
+            "Triangle construction: **SSS** (3 sides), **SAS** (2 sides + included angle), **ASA** (2 angles + included side).",
+            "If SSS arcs don't intersect, the triangle is **impossible** (triangle inequality violated).",
+            "A **locus** is a set of points satisfying a rule: circle (fixed distance from point), perpendicular bisector (equidistant from two points), angle bisector (equidistant from two lines).",
+            "Always **test a point** in your shaded region to verify it satisfies the given conditions."
+        ],
+        exam_tips: [
+            "Use a **sharp 4H or 2H pencil** for thin, precise construction lines.",
+            "Set compass width to **more than half** the line when constructing a perpendicular bisector. Too small and the arcs won't intersect.",
+            "Arcs must **clearly cross** (intersect), not just touch. A clear intersection defines the point precisely.",
+            "Always **extend** construction lines through points to show direction and precision.",
+            "For parallelograms, use the rule: opposite sides are equal and parallel. Swing arcs from two vertices to find the fourth.",
+            "When constructing $90^\\\\circ$, the simplest method is the perpendicular bisector of a straight line (bisecting $180^\\\\circ$).",
+            "For locus questions with **multiple conditions**, construct each locus separately, then identify the intersection/overlap region.",
+            "\"Measure and state\" means use your protractor/ruler **after** construction to read and write down the value.",
+            "Label all points clearly with **capital letters**. Use prime notation ($A'$) only for image points in transformations.",
+            "In the exam, do construction questions **first** while your pencil is still sharp and your concentration is highest."
+        ],
+        visual_descriptions: [
+            "Perpendicular bisector: A horizontal line AB with two pairs of crossing arcs above and below. A vertical dashed line passes through both arc intersections and through the midpoint M of AB. Right-angle markers at M.",
+            "60-degree construction: A baseline with vertex A. A large arc from A crosses the line at P. A second arc of the same radius from P intersects the first arc at Q. Line AQ forms a $60^\\\\circ$ angle with the baseline.",
+            "SSS triangle: Base AB drawn. Two arc circles: one centred at A with radius AC, one centred at B with radius BC. Their intersection above AB is labelled C. Lines AC and BC drawn to complete the triangle.",
+            "Parallelogram construction: Base AB and angle at A drawn. Point D marked on the angle line. Two arcs: one from D (radius = AB) and one from B (radius = AD). Their intersection is C, completing ABCD.",
+            "Four standard loci diagram: (1) Circle around point P. (2) Perpendicular bisector between points A and B. (3) Angle bisector between two intersecting lines. (4) Parallel line midway between two parallel lines.",
+            "Region shading: Triangle ABC with angle bisector from A and a circular arc from C (radius 5 cm). The overlapping region (closer to AB than AC, and within 5 cm of C) is shaded with cross-hatching.",
+            "Perpendicular from external point: Point Q above line AB. Arc from Q cuts line at X and Y. Arcs from X and Y intersect below the line. Dashed perpendicular joins Q through the intersection to the line.",
+            "Angle derivation tree: Flowchart showing $60^\\\\circ$ at the top, with arrows: 'bisect' to $30^\\\\circ$, 'bisect' to $15^\\\\circ$. From $180^\\\\circ$: 'bisect' to $90^\\\\circ$, 'bisect' to $45^\\\\circ$, 'bisect' to $22.5^\\\\circ$. Also $60^\\\\circ + 15^\\\\circ = 75^\\\\circ$."
         ]
     },
 };

@@ -112,7 +112,11 @@ export function MathematicsTopicsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const formTopics = getMathTopicsByForm(selectedForm);
-  const displayTopics = formTopics.map((t) => ({ id: t.id, name: t.name, subject: 'mathematics' } as Topic));
+  const displayTopics = formTopics.map((t) => ({
+    id: selectedForm === 'Form 4' ? t.name : t.id,
+    name: t.name,
+    subject: 'mathematics',
+  } as Topic));
 
   const openStartQuiz = (topic: Topic) => {
     setPendingTopic(topic);

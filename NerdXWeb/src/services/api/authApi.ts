@@ -66,10 +66,11 @@ export const authApi = {
     }
   },
 
-  socialLogin: async (provider: string, userInfo: Record<string, unknown>): Promise<AuthResponse> => {
+  socialLogin: async (provider: string, userInfo: Record<string, unknown>, referredBy?: string): Promise<AuthResponse> => {
     try {
       const response = await api.post('/api/mobile/auth/social-login', {
         provider,
+        referred_by: referredBy || undefined,
         user: {
           id: userInfo.id || userInfo.sub,
           email: userInfo.email,

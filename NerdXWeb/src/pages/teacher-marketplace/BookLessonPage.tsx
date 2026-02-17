@@ -6,11 +6,12 @@ import {
   getTeacherProfile,
   createBooking,
 } from '../../services/api/teacherMarketplaceApi';
+import { walletApi, type WalletBalance } from '../../services/api/walletApi';
 import { DAYS_OF_WEEK } from '../../data/marketplaceConstants';
 import type { TeacherProfile, TeacherAvailability, DayOfWeek } from '../../types';
 import {
   ArrowLeft, Calendar, Clock, BookOpen, User, CheckCircle,
-  Loader2, ChevronRight
+  Loader2, ChevronRight, Wallet, AlertTriangle
 } from 'lucide-react';
 
 export function BookLessonPage() {
@@ -29,6 +30,10 @@ export function BookLessonPage() {
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [walletBalance, setWalletBalance] = useState<WalletBalance | null>(null);
+  const [walletLoading, setWalletLoading] = useState(false);
+
+  const LESSON_FEE = 0.50;
 
   useEffect(() => {
     async function load() {
@@ -41,6 +46,16 @@ export function BookLessonPage() {
     }
     load();
   }, [teacherId]);
+
+  useEffect(() => {
+    if (bookingStep === 'confirm') {
+      setWalletLoading(true);
+      walletApi.getBalance().then(bal => {
+        setWalletBalance(bal);
+        setWalletLoading(false);
+      }).catch(() => setWalletLoading(false));
+    }
+  }, [bookingStep]);
 
   // Get next dates for a given day of week
   const getNextDates = (day: string): string[] => {
@@ -306,7 +321,49 @@ export function BookLessonPage() {
                 <span className="booking-summary__label"><Clock size={14} /> Time</span>
                 <span className="booking-summary__value">{selectedSlot?.start_time} - {selectedSlot?.end_time}</span>
               </div>
+              <div className="booking-summary__row">
+                <span className="booking-summary__label"><Clock size={14} /> Duration</span>
+                <span className="booking-summary__value">45 minutes</span>
+              </div>
             </div>
+
+            {/* Lesson payment info */}
+            <div className="booking-payment-info" style={{
+              margin: '16px 0', padding: '16px', borderRadius: '12px',
+              background: 'rgba(124, 77, 255, 0.08)', border: '1px solid rgba(124, 77, 255, 0.15)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontWeight: 700 }}>
+                <Wallet size={18} /> Lesson Fee
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ opacity: 0.8 }}>Fee per lesson:</span>
+                <span style={{ fontWeight: 700, fontSize: '18px' }}>${LESSON_FEE.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ opacity: 0.8 }}>Your wallet balance:</span>
+                {walletLoading ? (
+                  <Loader2 size={16} className="to-spinner" />
+                ) : (
+                  <span style={{ fontWeight: 700, color: (walletBalance?.balance ?? 0) >= LESSON_FEE ? '#10B981' : '#EF4444' }}>
+                    ${(walletBalance?.balance ?? 0).toFixed(2)}
+                  </span>
+                )}
+              </div>
+              {!walletLoading && (walletBalance?.balance ?? 0) < LESSON_FEE && (
+                <div style={{
+                  marginTop: '12px', padding: '10px 14px', borderRadius: '8px',
+                  background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)',
+                  display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px'
+                }}>
+                  <AlertTriangle size={16} style={{ color: '#EF4444' }} />
+                  <span>Insufficient balance. <Link to="/app/credits" style={{ color: '#7C4DFF', fontWeight: 600 }}>Top up your wallet</Link> to book this lesson.</span>
+                </div>
+              )}
+              <p style={{ fontSize: '12px', opacity: 0.6, marginTop: '8px' }}>
+                $0.50 will be deducted from your wallet when the lesson starts.
+              </p>
+            </div>
+
             <div className="booking-notes">
               <label>Notes for the Teacher (optional)</label>
               <textarea
@@ -320,7 +377,7 @@ export function BookLessonPage() {
               type="button"
               className="to-btn to-btn--primary"
               onClick={handleSubmitBooking}
-              disabled={submitting}
+              disabled={submitting || (!walletLoading && (walletBalance?.balance ?? 0) < LESSON_FEE)}
             >
               {submitting ? (
                 <><Loader2 size={16} className="to-spinner" /> Booking...</>

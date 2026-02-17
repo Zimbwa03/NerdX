@@ -1,14 +1,14 @@
 // Science Notes Type Definitions
 // Shared types for all science notes
 
-export interface NotesSection {
+export type NotesSection = {
     title: string;
     content: string; // Markdown formatted
     diagrams: Array<string | number>;
     subsections?: NotesSection[];
-}
+};
 
-export interface TopicNotes {
+export type TopicNotes = {
     topic: string;
     subject: string;
     summary: string;
@@ -22,4 +22,7 @@ export interface TopicNotes {
         question: string;
         answer: string;
     }>;
-}
+};
+
+// Runtime export to prevent empty module in Vite ESM dev mode
+export const SCIENCE_NOTES_VERSION = 1;

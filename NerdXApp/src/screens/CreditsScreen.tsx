@@ -64,6 +64,7 @@ const CreditsScreen: React.FC = () => {
   const [successCredits, setSuccessCredits] = useState(0);
   const [activeTab, setActiveTab] = useState<'all' | 'purchase' | 'usage'>('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [creditStoreMessage, setCreditStoreMessage] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -78,8 +79,12 @@ const CreditsScreen: React.FC = () => {
       ]);
       setPackages(packagesData);
       setTransactions(transactionsData);
+      setCreditStoreMessage(null);
     } catch (error) {
-      Alert.alert('Error', 'Failed to load data. Please try again.');
+      const message = (error as { message?: string })?.message || 'Failed to load data. Please try again.';
+      setCreditStoreMessage(message);
+      setPackages([]);
+      Alert.alert('Credit Store', message);
     } finally {
       setLoading(false);
     }
@@ -455,21 +460,28 @@ const CreditsScreen: React.FC = () => {
             💎 Credit Packages
           </Text>
 
-          {packages.map((packageItem, index) => {
-            const isBestValue = packageItem.credits >= 500;
-            const isPopular = packageItem.credits >= 200 && packageItem.credits < 500;
+          {creditStoreMessage ? (
+            <View style={styles.blockedNotice}>
+              <Text style={styles.blockedTitle}>School Credit Store Disabled</Text>
+              <Text style={styles.blockedText}>{creditStoreMessage}</Text>
+            </View>
+          ) : (
+            packages.map((packageItem, index) => {
+              const isBestValue = packageItem.credits >= 500;
+              const isPopular = packageItem.credits >= 200 && packageItem.credits < 500;
 
-            return (
-              <PremiumPackageCard
-                key={packageItem.id}
-                package={packageItem}
-                onPress={() => handlePurchase(packageItem)}
-                isBestValue={isBestValue}
-                isPopular={isPopular}
-                index={index}
-              />
-            );
-          })}
+              return (
+                <PremiumPackageCard
+                  key={packageItem.id}
+                  package={packageItem}
+                  onPress={() => handlePurchase(packageItem)}
+                  isBestValue={isBestValue}
+                  isPopular={isPopular}
+                  index={index}
+                />
+              );
+            })
+          )}
         </View>
 
         {/* ✨ Transaction History */}
@@ -1249,6 +1261,25 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  blockedNotice: {
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+    backgroundColor: '#FFFBEB',
+  },
+  blockedTitle: {
+    color: '#92400E',
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  blockedText: {
+    color: '#92400E',
+    fontSize: 13,
+    lineHeight: 18,
   },
   noteText: {
     color: '#FCA5A5',

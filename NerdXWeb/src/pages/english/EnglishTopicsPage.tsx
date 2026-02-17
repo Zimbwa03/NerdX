@@ -113,6 +113,11 @@ export function EnglishTopicsPage() {
         },
       });
     } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 402) {
+        navigate('/app/credits');
+        return;
+      }
       const message = err instanceof Error ? err.message : 'Failed to generate question';
       setError(typeof message === 'string' ? message : 'Failed to generate question. Please try again.');
     } finally {

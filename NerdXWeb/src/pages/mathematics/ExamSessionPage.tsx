@@ -10,7 +10,7 @@ import {
 } from '../../services/api/examApi';
 import { MathRenderer } from '../../components/MathRenderer';
 import { isMathRenderSubject, hasLatex } from '../../utils/mathSubjects';
-import { Flag, Grid3X3, ChevronLeft, ChevronRight, Upload } from 'lucide-react';
+import { ArrowLeft, Clock3, Flag, Grid3X3, ChevronLeft, ChevronRight, Upload } from 'lucide-react';
 
 export function ExamSessionPage() {
   const { state } = useLocation() as {
@@ -40,6 +40,7 @@ export function ExamSessionPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showReviewGrid, setShowReviewGrid] = useState(false);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [lastAnswerSubmitted, setLastAnswerSubmitted] = useState(false);
   const questionStartTime = useRef(Date.now());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -271,8 +272,18 @@ export function ExamSessionPage() {
   return (
     <div className="exam-session-page">
       <header className="exam-session-header-bar">
-        <div className="exam-session-timer" style={{ color: timerColor }}>
-          <span>⏱</span> {formatTimer(remainingSeconds)}
+        <div className="exam-session-header-left">
+          <button
+            type="button"
+            className="exam-session-exit"
+            onClick={() => setShowExitConfirm(true)}
+          >
+            <ArrowLeft size={16} />
+            Exit
+          </button>
+          <div className="exam-session-timer" style={{ color: timerColor }}>
+            <Clock3 size={16} /> {formatTimer(remainingSeconds)}
+          </div>
         </div>
         <span className="exam-session-progress">
           {currentIndex + 1} / {totalQuestions}
@@ -460,6 +471,27 @@ export function ExamSessionPage() {
                 }}
               >
                 Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showExitConfirm && (
+        <div className="exam-review-overlay" onClick={() => setShowExitConfirm(false)}>
+          <div className="exam-confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Exit exam?</h3>
+            <p>Your progress in this session will be lost. You can start a new exam anytime.</p>
+            <div className="exam-confirm-actions">
+              <button type="button" onClick={() => setShowExitConfirm(false)}>
+                Continue Exam
+              </button>
+              <button
+                type="button"
+                className="danger"
+                onClick={() => navigate(backTo, { replace: true })}
+              >
+                Exit
               </button>
             </div>
           </div>

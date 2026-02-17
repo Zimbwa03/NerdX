@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Loader2, Mic, Send, Square, Upload, Camera,
   ChevronRight, Scroll, BookOpen, Award, ChevronDown, ChevronUp,
@@ -83,6 +83,7 @@ function getScoreClass(score: number, max: number) {
 
 export function HistoryEssayPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const state = (location.state ?? {}) as LocationState;
   const { updateUser } = useAuth();
 
@@ -143,7 +144,12 @@ export function HistoryEssayPage() {
       } else {
         setError(res.message ?? 'Failed to generate question.');
       }
-    } catch {
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 402) {
+        navigate('/app/credits');
+        return;
+      }
       setError('Failed to generate question. Please try again.');
     } finally {
       setGenerating(false);
@@ -180,7 +186,12 @@ export function HistoryEssayPage() {
       } else {
         setError(res.message ?? res.data?.error ?? 'Failed to submit.');
       }
-    } catch {
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 402) {
+        navigate('/app/credits');
+        return;
+      }
       setError('Failed to submit. Please try again.');
     } finally {
       setSubmitting(false);

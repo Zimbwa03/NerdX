@@ -2874,6 +2874,8 @@ historyNotes['Early Phase of the Armed Struggle'] = {
   topic: 'Early Phase of the Armed Struggle',
   subject: 'History',
   summary: 'Form 3 Topic 2 examines the early phase of the armed struggle (1966-1972), including formation of armed wings, early battles, operational challenges, and strategic re-assessment.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Form3/How_Failure_Forged_Zimbabwe_s_Liberation_Strategy.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9Gb3JtMy9Ib3dfRmFpbHVyZV9Gb3JnZWRfWmltYmFid2Vfc19MaWJlcmF0aW9uX1N0cmF0ZWd5Lm00YSIsImlhdCI6MTc3MTIzNDM4MCwiZXhwIjo0OTI0ODM0MzgwfQ.ZnQFrLre0wzGeirL1Kcd2IOwckODUa6-dd17SXSPyKg',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/The_Early_Phase_of_the_Armed_Struggle_in_Zimbabwe_.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL1RoZV9FYXJseV9QaGFzZV9vZl90aGVfQXJtZWRfU3RydWdnbGVfaW5fWmltYmFid2VfLm1wNCIsImlhdCI6MTc3MTIzNDM3OSwiZXhwIjo0OTI0ODM0Mzc5fQ.-jrAL6g7LTuVCfvqaKdOU4YSpzXesQrU_SbyHpP2H2s',
   sections: [
     {
       title: '1. Historical Context and Shift to Armed Confrontation',
@@ -3312,6 +3314,8 @@ historyNotes['Peace Settlements in the Armed Struggle'] = {
   topic: 'Peace Settlements in the Armed Struggle',
   subject: 'History',
   summary: 'Form 3 coverage of peace negotiations from 1964 to 1979, including early British mediation, Geneva and Lusaka efforts, the Internal Settlement, and the Lancaster House settlement.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Form3/From_Internal_Settlement_to_Lancaster_House.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9Gb3JtMy9Gcm9tX0ludGVybmFsX1NldHRsZW1lbnRfdG9fTGFuY2FzdGVyX0hvdXNlLm00YSIsImlhdCI6MTc3MTIzNDM4MCwiZXhwIjo0OTI0ODM0MzgwfQ.2hxebZFaSU012n7Pyhso9kcO2v4uwc5JZEJKfa-hrhQ',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/Zimbabwe_s_Liberation_Talks.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL1ppbWJhYndlX3NfTGliZXJhdGlvbl9UYWxrcy5tcDQiLCJpYXQiOjE3NzEyMzQzNzksImV4cCI6NDkyNDgzNDM3OX0.2Ufy-eycjK18lmfAZ2sgiIa1cgXzp4sSpnTjp-KlIhE',
   sections: [
     {
       title: '1.0 Strategic Context: Bullet and Ballot',
@@ -3399,6 +3403,8 @@ historyNotes['Social, Political, and Economic Policies in Zimbabwe Since 1990'] 
   topic: 'Social, Political, and Economic Policies in Zimbabwe Since 1990',
   subject: 'History',
   summary: 'Form 3 post-independence coverage of policy change since 1990: economic reform, political constitutional development, social policy outcomes, and major challenges.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Form3/How_1990_Reshaped_Zimbabwe.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9Gb3JtMy9Ib3dfMTk5MF9SZXNoYXBlZF9aaW1iYWJ3ZS5tNGEiLCJpYXQiOjE3NzEyMzQzODAsImV4cCI6NDkyNDgzNDM4MH0.6xmZh55BBrux0qUwop0qIbnICwEeT6XuTLA8cpGjWB4',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/Zimbabwe_Since_1990.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL1ppbWJhYndlX1NpbmNlXzE5OTAubXA0IiwiaWF0IjoxNzcxMjM0Mzc5LCJleHAiOjQ5MjQ4MzQzNzl9.CakWZQuC_yzP4aH1edOWdnMek_59qyG5kivG8ZOLDcY',
   sections: [
     {
       title: '2.0 Policy Shift after 1990',
@@ -3897,6 +3903,8 @@ historyNotes['Decisive Phase 1972-1979'] = {
   topic: 'Decisive Phase 1972-1979',
   subject: 'History',
   summary: 'Form 3 Topic 1 examines the decisive phase of the armed struggle (1972-1979), focusing on strategic expansion, mass mobilization, external support, Rhodesian counter-strategies, and the road to Lancaster House.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Form3/The_Decisive_Phase_of_the_Second_Chimurenga.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9Gb3JtMy9UaGVfRGVjaXNpdmVfUGhhc2Vfb2ZfdGhlX1NlY29uZF9DaGltdXJlbmdhLm00YSIsImlhdCI6MTc3MTIzNDM4MCwiZXhwIjo0OTI0ODM0MzgwfQ.81NRoisduIto1Lk690kxrL3GK-VxbPtulBDwBxj9a0k',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/The_Decisive_Phase__1972-79.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL1RoZV9EZWNpc2l2ZV9QaGFzZV9fMTk3Mi03OS5tcDQiLCJpYXQiOjE3NzEyMzQzNzksImV4cCI6NDkyNDgzNDM3OX0.J9kgSGhyGGWAwZUK4vmDB3dKKHA9xUdB5bNpP9G3Se8',
   sections: [
     {
       title: 'Key Terms and Strategic Context',
@@ -3980,6 +3988,8 @@ historyNotes['Second Phase of the Armed Struggle (Mobilisation)'] = {
   topic: 'Second Phase of the Armed Struggle (Mobilisation)',
   subject: 'History',
   summary: 'Form 3 Topic 2 analyses the mobilisation phase (1972-1979), showing how strategy shifted from isolated armed action to integrated mass-based guerrilla warfare.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Form3/Mass_Mobilization_in_Zimbabwe_s_Liberation_War.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9Gb3JtMy9NYXNzX01vYmlsaXphdGlvbl9pbl9aaW1iYWJ3ZV9zX0xpYmVyYXRpb25fV2FyLm00YSIsImlhdCI6MTc3MTIzNDM4MCwiZXhwIjo0OTI0ODM0MzgwfQ.AwLcMmGhul4OwbaSNBD2Gb8RCfLkkcY4PJsRih6D-2Q',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/The_Second_Phase_of_the_Armed_Struggle_(Mobilisation_Phase)_in_.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL1RoZV9TZWNvbmRfUGhhc2Vfb2ZfdGhlX0FybWVkX1N0cnVnZ2xlXyhNb2JpbGlzYXRpb25fUGhhc2UpX2luXy5tcDQiLCJpYXQiOjE3NzEyMzQzNzksImV4cCI6NDkyNDgzNDM3OX0.9hwhukjFm99oSctHucaOG6P1c0bvN4IBPFWsPrfM52c',
   sections: [
     {
       title: 'Historical Transition and Re-assessment',
@@ -4735,6 +4745,8 @@ historyNotes['Causes of the Second Chimurenga/Umvukela in Zimbabwe (1966-1979)']
   topic: 'Causes of the Second Chimurenga/Umvukela in Zimbabwe (1966-1979)',
   subject: 'History',
   summary: 'Form 3 Topic 1 explains why Zimbabwe moved from constitutional protest to armed liberation struggle, with full analysis of political, economic, social, and immediate trigger factors.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Form3/Why_the_Second_Chimurenga_Became_Inevitable.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9Gb3JtMy9XaHlfdGhlX1NlY29uZF9DaGltdXJlbmdhX0JlY2FtZV9JbmV2aXRhYmxlLm00YSIsImlhdCI6MTc3MTIzNDM4MCwiZXhwIjo0OTI0ODM0MzgwfQ.5rDeUNKTU9Qp-ACE7JNEPbCuJXwqrybSgB3fN1tsDBY',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/Causes_of_the_Second_Chimurenga.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL0NhdXNlc19vZl90aGVfU2Vjb25kX0NoaW11cmVuZ2EubXA0IiwiaWF0IjoxNzcxMjM0Mzc5LCJleHAiOjQ5MjQ4MzQzNzl9.BW3Jj_o1UCLhzbhx9kZqQyu7F5dO_QrYSH9zKui97q0',
   sections: [
     {
       title: '1.0 Historical Introduction and Context',
@@ -5078,7 +5090,9 @@ Recent policy direction has included engagement and re-engagement efforts, expor
 historyNotes['Zimbabwe and the Southern African Development Community (SADC)'] = {
   topic: 'Zimbabwe and the Southern African Development Community (SADC)',
   subject: 'History',
-  summary: 'Form 3 Topic 9 examines Zimbabwe?s role in SADC across trade, security, infrastructure, and regional cooperation.',
+  summary: 'Form 3 Topic 9 examines Zimbabwe\u2019s role in SADC across trade, security, infrastructure, and regional cooperation.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Form3/Zimbabwe_s_Foreign_Policy_Alliances_and_Sanctions.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9Gb3JtMy9aaW1iYWJ3ZV9zX0ZvcmVpZ25fUG9saWN5X0FsbGlhbmNlc19hbmRfU2FuY3Rpb25zLm00YSIsImlhdCI6MTc3MTIzNDM4MSwiZXhwIjo0OTI0ODM0MzgxfQ.104u-rX4DNj4NQwJu-0xPe6Tl-rnKQQL_lQfZr_jt9c',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/Zimbabwe_on_the_Global_Stage.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL1ppbWJhYndlX29uX3RoZV9HbG9iYWxfU3RhZ2UubXA0IiwiaWF0IjoxNzcxMjM0MzgwLCJleHAiOjQ5MjQ4MzQzODB9.RqDGb2uA6oikfsVWg4k_W8FJvmrU1f0hfKsy8xJDgIo',
   sections: [
     {
       title: '9.0 Historical Background to SADC Membership',
@@ -5303,6 +5317,7 @@ historyNotes['Provisions of the Constitution'] = {
   topic: 'Provisions of the Constitution',
   subject: 'History',
   summary: 'Form 3 Topic 12 provides detailed study of the Constitution as supreme law: governance structure, rights provisions, institutions, devolution, and enforcement.',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/Constitution.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL0NvbnN0aXR1dGlvbi5tcDQiLCJpYXQiOjE3NzEyMzQzNzksImV4cCI6NDkyNDgzNDM3OX0.K1yC5AgyVUqGBkHhaCmn8RLs4gCTeciD-_jxG0IUQfs',
   sections: [
     {
       title: '12.0 Meaning and Supremacy of the Constitution',
@@ -5386,6 +5401,7 @@ historyNotes['Child Rights and Responsibilities'] = {
   topic: 'Child Rights and Responsibilities',
   subject: 'History',
   summary: 'Form 3 Topic 13 gives full treatment of constitutional child rights, corresponding responsibilities, protection institutions, and implementation challenges in Zimbabwe.',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/Child_Rights_in_Zimbabwe.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL0NoaWxkX1JpZ2h0c19pbl9aaW1iYWJ3ZS5tcDQiLCJpYXQiOjE3NzEyMzQzNzksImV4cCI6NDkyNDgzNDM3OX0.zMnv6Gui9RGHtIT2zv8_Ms5n4-b2R3YNOQSaB-CZwko',
   sections: [
     {
       title: '13.0 Introduction: Why Child Rights Matter in National Development',
@@ -5469,6 +5485,8 @@ historyNotes['Principles of Good Governance'] = {
   topic: 'Principles of Good Governance',
   subject: 'History',
   summary: 'Form 3 Topic 14 studies governance principles, institutions, and practical challenges in Zimbabwe, with emphasis on accountability, rule of law, and development outcomes.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Form3/Master_Zimbabwe_Governance_for_ZIMSEC_History.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9Gb3JtMy9NYXN0ZXJfWmltYmFid2VfR292ZXJuYW5jZV9mb3JfWklNU0VDX0hpc3RvcnkubTRhIiwiaWF0IjoxNzcxMjM0MzgwLCJleHAiOjQ5MjQ4MzQzODB9.B1jGX0BG8kXfGzZMk1VuSmwWGq6nzH0SOYCY7R8rhu8',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/Good_Governance_in_Zimbabwe.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL0dvb2RfR292ZXJuYW5jZV9pbl9aaW1iYWJ3ZS5tcDQiLCJpYXQiOjE3NzEyMzQzODAsImV4cCI6NDkyNDgzNDM4MH0.UKzSaSOmwgHrBXazygdVXKKZ2FiXa7fKAce28kCbM5M',
   sections: [
     {
       title: '14.0 Governance and Government: Core Distinction',
@@ -5561,6 +5579,8 @@ historyNotes["Causes of the Struggle for Independence in Southern Africa"] = {
   "topic": "Causes of the Struggle for Independence in Southern Africa",
   "subject": "History",
   "summary": "Form 4 Topic 1 examines the structural causes of liberation struggles in Southern Africa, linking colonial domination, racial rule, land dispossession, labor exploitation, and global ideological change.",
+  "audioUrl": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Form3/How_Mozambique_and_Namibia_Won_Independence.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9Gb3JtMy9Ib3dfTW96YW1iaXF1ZV9hbmRfTmFtaWJpYV9Xb25fSW5kZXBlbmRlbmNlLm00YSIsImlhdCI6MTc3MTIzNDM4MSwiZXhwIjo0OTI0ODM0MzgxfQ.tYIgrVJS7IFmf3kU63Rk4KjjQ9NsguivnPEA3ivCc74",
+  "videoUrl": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/Struggles_for_Freedom.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL1N0cnVnZ2xlc19mb3JfRnJlZWRvbS5tcDQiLCJpYXQiOjE3NzEyMzQzODAsImV4cCI6NDkyNDgzNDM4MH0.7QEHAruqIR8yspDphNAiOetHF9iHGAnh05sRbDpaX2w",
   "sections": [
     {
       "title": "1.0 Regional Historical Context",
@@ -6025,6 +6045,8 @@ historyNotes["Causes of the First World War"] = {
   "topic": "Causes of the First World War",
   "subject": "History",
   "summary": "Form 4 Topic 9 explains long-term and immediate causes of World War I, using militarism, alliances, imperialism, nationalism, and the July Crisis framework.",
+  "audioUrl": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Form3/The_Great_War_Causes_Course_and_Results.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9Gb3JtMy9UaGVfR3JlYXRfV2FyX0NhdXNlc19Db3Vyc2VfYW5kX1Jlc3VsdHMubTRhIiwiaWF0IjoxNzcxMjM0MzgxLCJleHAiOjQ5MjQ4MzQzODF9.iUqaKbtDkeLEFPuMuq-D5GUZKfJFHJUvN3vG0_MxsIU",
+  "videoUrl": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/The_First_World_War.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL1RoZV9GaXJzdF9Xb3JsZF9XYXIubXA0IiwiaWF0IjoxNzcxMjM0MzgwLCJleHAiOjQ5MjQ4MzQzODB9.5X35jfg6jawcrj4pLiB_-jooI8oiNO8LB2wijBGxUvw",
   "sections": [
     {
       "title": "9.0 Europe Before 1914",
@@ -6199,6 +6221,7 @@ historyNotes["The Treaty of Versailles"] = {
   "topic": "The Treaty of Versailles",
   "subject": "History",
   "summary": "Form 4 Topic 12 provides deep analysis of the Treaty of Versailles, its clauses, aims, controversies, and long-term impact on European stability.",
+  "audioUrl": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Form3/The_Twenty_Year_Countdown_to_War.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9Gb3JtMy9UaGVfVHdlbnR5X1llYXJfQ291bnRkb3duX3RvX1dhci5tNGEiLCJpYXQiOjE3NzEyMzQzODEsImV4cCI6NDkyNDgzNDM4MX0.9qQ-LEf6SZiWlin0hd4Epse-aKURytZim5R3YbeHnkM",
   "sections": [
     {
       "title": "12.0 Paris Peace Context",
@@ -6489,6 +6512,7 @@ historyNotes["Rise of Dictatorships in Europe"] = {
   "topic": "Rise of Dictatorships in Europe",
   "subject": "History",
   "summary": "Form 4 Topic 17 explains why authoritarian regimes rose in inter-war Europe, focusing on institutional weakness, economic crisis, ideology, propaganda, and political violence.",
+  "videoUrl": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/Rise_of_European_Dictators.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL1Jpc2Vfb2ZfRXVyb3BlYW5fRGljdGF0b3JzLm1wNCIsImlhdCI6MTc3MTIzNDM4MCwiZXhwIjo0OTI0ODM0MzgwfQ.Rbgfl9xioH9DWyVdbrxckl0AZDKWgDXMeboIupKPMKQ",
   "sections": [
     {
       "title": "17.0 Inter-War Crisis Environment",
@@ -6547,6 +6571,7 @@ historyNotes["Causes of the Second World War"] = {
   "topic": "Causes of the Second World War",
   "subject": "History",
   "summary": "Form 4 Topic 18 examines long-term and immediate causes of WWII, including treaty grievances, League weakness, dictatorship expansionism, appeasement, and 1939 trigger events.",
+  "videoUrl": "https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/Causes_of_WWII__ZIMSEC.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL0NhdXNlc19vZl9XV0lJX19aSU1TRUMubXA0IiwiaWF0IjoxNzcxMjM0MzgwLCJleHAiOjQ5MjQ4MzQzODB9.ooZAIKOAGI3wgeDpAhMO1MTFIif3ARaMV7C468cw7AE",
   "sections": [
     {
       "title": "18.0 Long-Term Instability after WWI",
@@ -8024,4 +8049,62 @@ Explain why the Rhodesian Front declared U.D.I. in 1965 and evaluate effects on 
     "In evaluation questions, balance settler intent against actual outcomes.",
     "Conclude with a clear judgment on how U.D.I. affected the majority.",
   ],
+};
+
+// ========== Form 3 & Form 4 alias entries for topics.ts name matching ==========
+
+// Form 3: Zimbabwe as a Member of Regional and International Organisations
+historyNotes['Zimbabwe as a Member of Regional and International Organisations'] = {
+  ...historyNotes['Zimbabwe and the Southern African Development Community (SADC)'],
+  topic: 'Zimbabwe as a Member of Regional and International Organisations',
+  summary: 'Form 3 Topic 10 examines Zimbabwe\u2019s role in SADC, AU, and UN across trade, security, infrastructure, and regional cooperation.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Form3/Zimbabwe_s_Foreign_Policy_Alliances_and_Sanctions.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9Gb3JtMy9aaW1iYWJ3ZV9zX0ZvcmVpZ25fUG9saWN5X0FsbGlhbmNlc19hbmRfU2FuY3Rpb25zLm00YSIsImlhdCI6MTc3MTIzNDM4MSwiZXhwIjo0OTI0ODM0MzgxfQ.104u-rX4DNj4NQwJu-0xPe6Tl-rnKQQL_lQfZr_jt9c',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/Zimbabwe_on_the_Global_Stage.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL1ppbWJhYndlX29uX3RoZV9HbG9iYWxfU3RhZ2UubXA0IiwiaWF0IjoxNzcxMjM0MzgwLCJleHAiOjQ5MjQ4MzQzODB9.RqDGb2uA6oikfsVWg4k_W8FJvmrU1f0hfKsy8xJDgIo',
+};
+
+// Form 3: Social, Political and Economic Policies since 1990 (topics.ts name variant)
+historyNotes['Social, Political and Economic Policies since 1990'] = {
+  ...historyNotes['Social, Political, and Economic Policies in Zimbabwe Since 1990'],
+  topic: 'Social, Political and Economic Policies since 1990',
+};
+
+// Form 4: Resistance to Colonial Rule in Mozambique and Namibia
+historyNotes['Resistance to Colonial Rule in Mozambique and Namibia'] = {
+  ...historyNotes['Causes of the Struggle for Independence in Southern Africa'],
+  topic: 'Resistance to Colonial Rule in Mozambique and Namibia',
+  summary: 'Form 4 comprehensive coverage of resistance to colonial rule in Mozambique and Namibia, including causes, liberation movements (FRELIMO, SWAPO), forms of resistance, and contemporary lessons.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Form3/How_Mozambique_and_Namibia_Won_Independence.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9Gb3JtMy9Ib3dfTW96YW1iaXF1ZV9hbmRfTmFtaWJpYV9Xb25fSW5kZXBlbmRlbmNlLm00YSIsImlhdCI6MTc3MTIzNDM4MSwiZXhwIjo0OTI0ODM0MzgxfQ.tYIgrVJS7IFmf3kU63Rk4KjjQ9NsguivnPEA3ivCc74',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/Struggles_for_Freedom.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL1N0cnVnZ2xlc19mb3JfRnJlZWRvbS5tcDQiLCJpYXQiOjE3NzEyMzQzODAsImV4cCI6NDkyNDgzNDM4MH0.7QEHAruqIR8yspDphNAiOetHF9iHGAnh05sRbDpaX2w',
+};
+
+// Form 4: Causes, Course and Results of the First World War
+historyNotes['Causes, Course and Results of the First World War'] = {
+  ...historyNotes['Causes of the First World War'],
+  topic: 'Causes, Course and Results of the First World War',
+  summary: 'Form 4 comprehensive coverage of WWI causes (Militarism, Alliances, Imperialism, Nationalism), major events and timeline, political/social/economic outcomes.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Form3/The_Great_War_Causes_Course_and_Results.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9Gb3JtMy9UaGVfR3JlYXRfV2FyX0NhdXNlc19Db3Vyc2VfYW5kX1Jlc3VsdHMubTRhIiwiaWF0IjoxNzcxMjM0MzgxLCJleHAiOjQ5MjQ4MzQzODF9.iUqaKbtDkeLEFPuMuq-D5GUZKfJFHJUvN3vG0_MxsIU',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/The_First_World_War.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL1RoZV9GaXJzdF9Xb3JsZF9XYXIubXA0IiwiaWF0IjoxNzcxMjM0MzgwLCJleHAiOjQ5MjQ4MzQzODB9.5X35jfg6jawcrj4pLiB_-jooI8oiNO8LB2wijBGxUvw',
+};
+
+// Form 4: Paris Peace Conference and Post-War Peace Treaties
+historyNotes['Paris Peace Conference and Post-War Peace Treaties'] = {
+  ...historyNotes['The Treaty of Versailles'],
+  topic: 'Paris Peace Conference and Post-War Peace Treaties',
+  summary: 'Form 4 coverage of the Paris Peace Conference, views of the Big Three, terms of the five treaties (Versailles, St Germain, Trianon, Sevres/Lausanne, Neuilly), and analysis of fairness and impact.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Form3/The_Twenty_Year_Countdown_to_War.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9Gb3JtMy9UaGVfVHdlbnR5X1llYXJfQ291bnRkb3duX3RvX1dhci5tNGEiLCJpYXQiOjE3NzEyMzQzODEsImV4cCI6NDkyNDgzNDM4MX0.9qQ-LEf6SZiWlin0hd4Epse-aKURytZim5R3YbeHnkM',
+};
+
+// Form 4: The League of Nations
+historyNotes['The League of Nations'] = {
+  ...historyNotes['Political Developments during the Inter-War Period'],
+  topic: 'The League of Nations',
+  summary: 'Form 4 coverage of the League of Nations: aims, organs and functions (Assembly, Council, Secretariat), evaluation of work up to 1939, and reasons for collapse.',
+  audioUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Audio_Notes/History/Audios/Form3/The_League_of_Nations__Doomed_Experiment.m4a?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb19Ob3Rlcy9IaXN0b3J5L0F1ZGlvcy9Gb3JtMy9UaGVfTGVhZ3VlX29mX05hdGlvbnNfX0Rvb21lZF9FeHBlcmltZW50Lm00YSIsImlhdCI6MTc3MTIzNDM4MSwiZXhwIjo0OTI0ODM0MzgxfQ.2bkT56rjnru5Azwoe0S1Nip1XEM-2fexjvEFQNPwkk8',
+};
+
+// Form 4: Rise of European Dictators (topics.ts name variant)
+historyNotes['Rise of European Dictators'] = {
+  ...historyNotes['Rise of Dictatorships in Europe'],
+  topic: 'Rise of European Dictators',
+  videoUrl: 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/sign/Video/History/Form3/Rise_of_European_Dictators.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lNzUyNjcyMy1jNjY2LTRjMzQtOWFmYy1hZDBjMmI3ZGYyMGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJWaWRlby9IaXN0b3J5L0Zvcm0zL1Jpc2Vfb2ZfRXVyb3BlYW5fRGljdGF0b3JzLm1wNCIsImlhdCI6MTc3MTIzNDM4MCwiZXhwIjo0OTI0ODM0MzgwfQ.Rbgfl9xioH9DWyVdbrxckl0AZDKWgDXMeboIupKPMKQ',
 };

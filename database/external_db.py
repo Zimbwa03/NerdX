@@ -629,7 +629,7 @@ def _parse_utc(value):
 def get_user_credits(user_id: str, check_expiry: bool = True) -> int:
     """
     Get user's current credit balance in units from users_registration table (primary source).
-    School students: 100 credits per day, reset every 24h. Other users: normal credits/purchased.
+    School students: 100 credits per day, reset at 06:00 Africa/Harare. Other users: normal credits/purchased.
     """
     try:
         reg = get_user_registration(user_id)
@@ -1146,13 +1146,15 @@ def get_credit_breakdown(user_id: str) -> dict:
         if result and len(result) > 0:
             user_data = result[0]
             if (user_data.get("user_type") or "").strip() == "school_student":
-                # School package: 100 credits/day in units; get_user_credits applies reset logic
+                # School package is a paid school plan managed at school level.
+                # Credits refresh daily at 06:00; represent them as paid to unlock full platform access.
                 total_units = get_user_credits(user_id, check_expiry=True) or 0
                 return {
                     "total": total_units,
-                    "free_credits": total_units,
-                    "purchased_credits": 0,
+                    "free_credits": 0,
+                    "purchased_credits": total_units,
                     "welcome_bonus_claimed": True,
+                    "credit_status": "paid_school_plan",
                 }
             credits = user_data.get('credits', 0) or 0
             purchased_credits = user_data.get('purchased_credits', 0) or 0
@@ -1559,9 +1561,9 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
                 if referrer_registration:
                     referrer_chat_id = referrer_registration['chat_id']
 
-                    # Add 5 credits (units) to referrer
+                    # Add 10 credits (units) to referrer
                     current_referrer_credits = get_user_credits(referrer_chat_id)
-                    new_referrer_credits = current_referrer_credits + (5 * CREDIT_UNITS_PER_CREDIT)
+                    new_referrer_credits = current_referrer_credits + (10 * CREDIT_UNITS_PER_CREDIT)
 
                     # Update referrer's credits
                     update_user_stats(referrer_chat_id, {'credits': new_referrer_credits})
@@ -1570,7 +1572,7 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
                     referrer_transaction = {
                         'user_id': referrer_chat_id,
                         'action': 'referral_bonus',
-                        'credits_change': 5 * CREDIT_UNITS_PER_CREDIT,
+                        'credits_change': 10 * CREDIT_UNITS_PER_CREDIT,
                         'balance_before': current_referrer_credits,
                         'balance_after': new_referrer_credits,
                         'description': f'Referral bonus for {name} {surname}',
@@ -1578,7 +1580,7 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
                     }
 
                     make_supabase_request("POST", "credit_transactions", referrer_transaction, use_service_role=True)
-                    logger.info(f"✅ Awarded 5 referral credits to {referrer_chat_id} for referring {chat_id}")
+                    logger.info(f"✅ Awarded 10 referral credits to {referrer_chat_id} for referring {chat_id}")
 
                 else:
                     logger.warning(f"Referrer with NerdX ID {referred_by_nerdx_id} not found")
@@ -1612,7 +1614,7 @@ def get_user_by_nerdx_id(nerdx_id):
         return None
 
 def add_referral_credits(referred_by_nerdx_id, new_user_chat_id):
-    """Add 5 credits to referrer when someone they referred registers and send WhatsApp notification"""
+    """Add 10 credits to referrer when someone they referred registers and send WhatsApp notification"""
     try:
         # Get the referrer's information
         referrer = get_user_by_nerdx_id(referred_by_nerdx_id)
@@ -1629,8 +1631,8 @@ def add_referral_credits(referred_by_nerdx_id, new_user_chat_id):
         new_user_surname = new_user.get('surname', '') if new_user else ''
         full_new_user_name = f"{new_user_name} {new_user_surname}".strip()
 
-        # Add referral bonus credits (5 credits as requested)
-        referral_bonus = 5 * CREDIT_UNITS_PER_CREDIT
+        # Add referral bonus credits (10 credits per referral)
+        referral_bonus = 10 * CREDIT_UNITS_PER_CREDIT
         description = f'Referral bonus: {full_new_user_name} joined using your code'
         success = add_credits(referrer_chat_id, referral_bonus, 'referral_bonus', description)
 
@@ -1680,7 +1682,7 @@ def get_referral_stats(nerdx_id):
 
         referrals = result if result else []
         total_referrals = len(referrals)
-        total_credits_earned = total_referrals * 5  # 5 credits per referral
+        total_credits_earned = total_referrals * 10  # 10 credits per referral
 
         # Format recent referrals with names and dates
         recent_referrals = []
@@ -2650,3 +2652,471 @@ def register_supabase_auth_user(email, password, data=None):
     except Exception as e:
         logger.error(f"Error registering Supabase Auth user: {e}")
         return None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LESSON WALLET & TEACHER EARNINGS
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Tables required in Supabase (run in SQL Editor):
+#
+# CREATE TABLE IF NOT EXISTS lesson_wallets (
+#     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+#     user_id TEXT UNIQUE NOT NULL,
+#     balance DECIMAL(10,2) DEFAULT 0.00,
+#     total_deposited DECIMAL(10,2) DEFAULT 0.00,
+#     total_spent DECIMAL(10,2) DEFAULT 0.00,
+#     created_at TIMESTAMPTZ DEFAULT now(),
+#     updated_at TIMESTAMPTZ DEFAULT now()
+# );
+# CREATE INDEX IF NOT EXISTS idx_lesson_wallets_user_id ON lesson_wallets(user_id);
+# ALTER TABLE lesson_wallets ENABLE ROW LEVEL SECURITY;
+# DROP POLICY IF EXISTS "Allow all on lesson_wallets" ON lesson_wallets;
+# CREATE POLICY "Allow all on lesson_wallets" ON lesson_wallets FOR ALL USING (true) WITH CHECK (true);
+#
+# CREATE TABLE IF NOT EXISTS wallet_transactions (
+#     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+#     user_id TEXT NOT NULL,
+#     type TEXT NOT NULL,
+#     amount DECIMAL(10,2) NOT NULL,
+#     balance_before DECIMAL(10,2) NOT NULL,
+#     balance_after DECIMAL(10,2) NOT NULL,
+#     reference TEXT,
+#     description TEXT,
+#     created_at TIMESTAMPTZ DEFAULT now()
+# );
+# CREATE INDEX IF NOT EXISTS idx_wallet_transactions_user_id ON wallet_transactions(user_id);
+# ALTER TABLE wallet_transactions ENABLE ROW LEVEL SECURITY;
+# DROP POLICY IF EXISTS "Allow all on wallet_transactions" ON wallet_transactions;
+# CREATE POLICY "Allow all on wallet_transactions" ON wallet_transactions FOR ALL USING (true) WITH CHECK (true);
+#
+# CREATE TABLE IF NOT EXISTS teacher_earnings (
+#     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+#     teacher_id TEXT NOT NULL,
+#     booking_id UUID,
+#     lesson_fee DECIMAL(10,2) NOT NULL,
+#     commission DECIMAL(10,2) NOT NULL,
+#     teacher_amount DECIMAL(10,2) NOT NULL,
+#     num_students INTEGER DEFAULT 1,
+#     status TEXT DEFAULT 'pending',
+#     available_at TIMESTAMPTZ NOT NULL,
+#     paid_at TIMESTAMPTZ,
+#     payout_id UUID,
+#     created_at TIMESTAMPTZ DEFAULT now()
+# );
+# CREATE INDEX IF NOT EXISTS idx_teacher_earnings_teacher_id ON teacher_earnings(teacher_id);
+# CREATE INDEX IF NOT EXISTS idx_teacher_earnings_status ON teacher_earnings(status);
+# ALTER TABLE teacher_earnings ENABLE ROW LEVEL SECURITY;
+# DROP POLICY IF EXISTS "Allow all on teacher_earnings" ON teacher_earnings;
+# CREATE POLICY "Allow all on teacher_earnings" ON teacher_earnings FOR ALL USING (true) WITH CHECK (true);
+#
+# CREATE TABLE IF NOT EXISTS teacher_payouts (
+#     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+#     teacher_id TEXT NOT NULL,
+#     amount DECIMAL(10,2) NOT NULL,
+#     earnings_count INTEGER NOT NULL,
+#     payment_method TEXT DEFAULT 'ecocash',
+#     phone_number TEXT,
+#     status TEXT DEFAULT 'processing',
+#     reference TEXT,
+#     created_at TIMESTAMPTZ DEFAULT now(),
+#     completed_at TIMESTAMPTZ
+# );
+# CREATE INDEX IF NOT EXISTS idx_teacher_payouts_teacher_id ON teacher_payouts(teacher_id);
+# ALTER TABLE teacher_payouts ENABLE ROW LEVEL SECURITY;
+# DROP POLICY IF EXISTS "Allow all on teacher_payouts" ON teacher_payouts;
+# CREATE POLICY "Allow all on teacher_payouts" ON teacher_payouts FOR ALL USING (true) WITH CHECK (true);
+# ═══════════════════════════════════════════════════════════════════════════════
+
+LESSON_FEE = 0.50
+LESSON_COMMISSION_RATE = 0.20
+LESSON_COMMISSION = round(LESSON_FEE * LESSON_COMMISSION_RATE, 2)  # $0.10
+TEACHER_EARNING_PER_LESSON = round(LESSON_FEE - LESSON_COMMISSION, 2)  # $0.40
+PAYOUT_HOLD_DAYS = 14
+MINIMUM_PAYOUT = 5.00
+
+
+def get_lesson_wallet(user_id: str) -> Optional[Dict]:
+    """Get lesson wallet for a user; auto-creates one if it doesn't exist."""
+    try:
+        result = make_supabase_request(
+            "GET", "lesson_wallets",
+            filters={"user_id": f"eq.{user_id}"},
+            use_service_role=True
+        )
+        if result and len(result) > 0:
+            return result[0]
+
+        new_wallet = {
+            "user_id": user_id,
+            "balance": 0.00,
+            "total_deposited": 0.00,
+            "total_spent": 0.00,
+        }
+        created = make_supabase_request("POST", "lesson_wallets", data=new_wallet, use_service_role=True)
+        if created and len(created) > 0:
+            logger.info(f"Created lesson wallet for user {user_id}")
+            return created[0]
+
+        return new_wallet
+    except Exception as e:
+        logger.error(f"Error getting lesson wallet for {user_id}: {e}")
+        return None
+
+
+def topup_lesson_wallet(user_id: str, amount: float, reference: str, description: str = "Wallet top-up") -> Optional[Dict]:
+    """Add funds to a user's lesson wallet. Returns updated wallet or None on failure."""
+    try:
+        wallet = get_lesson_wallet(user_id)
+        if not wallet:
+            return None
+
+        balance_before = float(wallet.get("balance", 0))
+        balance_after = round(balance_before + amount, 2)
+        new_deposited = round(float(wallet.get("total_deposited", 0)) + amount, 2)
+
+        update = make_supabase_request(
+            "PATCH", "lesson_wallets",
+            data={
+                "balance": balance_after,
+                "total_deposited": new_deposited,
+                "updated_at": datetime.now().isoformat(),
+            },
+            filters={"user_id": f"eq.{user_id}"},
+            use_service_role=True
+        )
+
+        make_supabase_request("POST", "wallet_transactions", data={
+            "user_id": user_id,
+            "type": "top_up",
+            "amount": amount,
+            "balance_before": balance_before,
+            "balance_after": balance_after,
+            "reference": reference,
+            "description": description,
+        }, use_service_role=True)
+
+        logger.info(f"Wallet top-up: user={user_id}, amount=${amount}, new_balance=${balance_after}")
+        return {"balance": balance_after, "total_deposited": new_deposited}
+    except Exception as e:
+        logger.error(f"Error topping up wallet for {user_id}: {e}")
+        return None
+
+
+def deduct_lesson_wallet(user_id: str, amount: float, booking_id: str) -> Optional[Dict]:
+    """Deduct funds from lesson wallet for a lesson payment. Returns updated wallet or None."""
+    try:
+        wallet = get_lesson_wallet(user_id)
+        if not wallet:
+            return None
+
+        balance_before = float(wallet.get("balance", 0))
+        if balance_before < amount:
+            logger.warning(f"Insufficient wallet balance for {user_id}: ${balance_before} < ${amount}")
+            return None
+
+        balance_after = round(balance_before - amount, 2)
+        new_spent = round(float(wallet.get("total_spent", 0)) + amount, 2)
+
+        make_supabase_request(
+            "PATCH", "lesson_wallets",
+            data={
+                "balance": balance_after,
+                "total_spent": new_spent,
+                "updated_at": datetime.now().isoformat(),
+            },
+            filters={"user_id": f"eq.{user_id}"},
+            use_service_role=True
+        )
+
+        make_supabase_request("POST", "wallet_transactions", data={
+            "user_id": user_id,
+            "type": "lesson_payment",
+            "amount": -amount,
+            "balance_before": balance_before,
+            "balance_after": balance_after,
+            "reference": booking_id,
+            "description": f"Lesson payment (Booking: {booking_id})",
+        }, use_service_role=True)
+
+        logger.info(f"Wallet deduction: user={user_id}, amount=${amount}, booking={booking_id}")
+        return {"balance": balance_after, "total_spent": new_spent}
+    except Exception as e:
+        logger.error(f"Error deducting wallet for {user_id}: {e}")
+        return None
+
+
+def refund_lesson_wallet(user_id: str, amount: float, booking_id: str, description: str = "Lesson refund") -> Optional[Dict]:
+    """Refund funds to a user's lesson wallet."""
+    try:
+        wallet = get_lesson_wallet(user_id)
+        if not wallet:
+            return None
+
+        balance_before = float(wallet.get("balance", 0))
+        balance_after = round(balance_before + amount, 2)
+        new_spent = round(max(0, float(wallet.get("total_spent", 0)) - amount), 2)
+
+        make_supabase_request(
+            "PATCH", "lesson_wallets",
+            data={
+                "balance": balance_after,
+                "total_spent": new_spent,
+                "updated_at": datetime.now().isoformat(),
+            },
+            filters={"user_id": f"eq.{user_id}"},
+            use_service_role=True
+        )
+
+        make_supabase_request("POST", "wallet_transactions", data={
+            "user_id": user_id,
+            "type": "refund",
+            "amount": amount,
+            "balance_before": balance_before,
+            "balance_after": balance_after,
+            "reference": booking_id,
+            "description": description,
+        }, use_service_role=True)
+
+        logger.info(f"Wallet refund: user={user_id}, amount=${amount}, booking={booking_id}")
+        return {"balance": balance_after}
+    except Exception as e:
+        logger.error(f"Error refunding wallet for {user_id}: {e}")
+        return None
+
+
+def record_teacher_earning(teacher_id: str, booking_id: str, num_students: int = 1) -> Optional[Dict]:
+    """Record a teacher earning after a lesson payment. Creates a pending earning with 14-day hold."""
+    try:
+        total_fee = round(LESSON_FEE * num_students, 2)
+        total_commission = round(LESSON_COMMISSION * num_students, 2)
+        teacher_amount = round(TEACHER_EARNING_PER_LESSON * num_students, 2)
+        available_at = (datetime.now() + timedelta(days=PAYOUT_HOLD_DAYS)).isoformat()
+
+        earning_data = {
+            "teacher_id": teacher_id,
+            "booking_id": booking_id,
+            "lesson_fee": total_fee,
+            "commission": total_commission,
+            "teacher_amount": teacher_amount,
+            "num_students": num_students,
+            "status": "pending",
+            "available_at": available_at,
+        }
+
+        result = make_supabase_request("POST", "teacher_earnings", data=earning_data, use_service_role=True)
+        if result and len(result) > 0:
+            logger.info(f"Recorded earning: teacher={teacher_id}, booking={booking_id}, amount=${teacher_amount}")
+            return result[0]
+        return None
+    except Exception as e:
+        logger.error(f"Error recording teacher earning: {e}")
+        return None
+
+
+def cancel_teacher_earning(booking_id: str) -> bool:
+    """Cancel a teacher earning (e.g. when a lesson is refunded)."""
+    try:
+        result = make_supabase_request(
+            "PATCH", "teacher_earnings",
+            data={"status": "cancelled"},
+            filters={"booking_id": f"eq.{booking_id}", "status": "eq.pending"},
+            use_service_role=True
+        )
+        logger.info(f"Cancelled earning for booking {booking_id}")
+        return True
+    except Exception as e:
+        logger.error(f"Error cancelling earning for booking {booking_id}: {e}")
+        return False
+
+
+def get_teacher_earnings_summary(teacher_id: str) -> Dict:
+    """Get earnings summary for a teacher: pending, available, total_earned, paid."""
+    try:
+        now_iso = datetime.now().isoformat()
+
+        all_earnings = make_supabase_request(
+            "GET", "teacher_earnings",
+            filters={"teacher_id": f"eq.{teacher_id}"},
+            use_service_role=True
+        ) or []
+
+        pending = 0.0
+        available = 0.0
+        total_earned = 0.0
+        total_paid = 0.0
+
+        for e in all_earnings:
+            status = e.get("status", "")
+            amount = float(e.get("teacher_amount", 0))
+            available_at = e.get("available_at", "")
+
+            if status == "cancelled":
+                continue
+
+            total_earned += amount
+
+            if status == "paid":
+                total_paid += amount
+            elif status == "pending" and available_at and available_at <= now_iso:
+                available += amount
+            elif status == "pending":
+                pending += amount
+            elif status == "available":
+                available += amount
+
+        # Auto-upgrade pending -> available for earnings past hold period
+        for e in all_earnings:
+            if e.get("status") == "pending":
+                avail_at = e.get("available_at", "")
+                if avail_at and avail_at <= now_iso:
+                    make_supabase_request(
+                        "PATCH", "teacher_earnings",
+                        data={"status": "available"},
+                        filters={"id": f"eq.{e['id']}", "status": "eq.pending"},
+                        use_service_role=True
+                    )
+
+        return {
+            "pending": round(pending, 2),
+            "available": round(available, 2),
+            "total_earned": round(total_earned, 2),
+            "total_paid": round(total_paid, 2),
+        }
+    except Exception as e:
+        logger.error(f"Error getting earnings summary for {teacher_id}: {e}")
+        return {"pending": 0, "available": 0, "total_earned": 0, "total_paid": 0}
+
+
+def get_teacher_earnings_history(teacher_id: str, limit: int = 50) -> List[Dict]:
+    """Get detailed earnings history for a teacher."""
+    try:
+        result = make_supabase_request(
+            "GET", "teacher_earnings",
+            filters={"teacher_id": f"eq.{teacher_id}", "order": "created_at.desc"},
+            limit=limit,
+            use_service_role=True
+        ) or []
+        return result
+    except Exception as e:
+        logger.error(f"Error getting earnings history for {teacher_id}: {e}")
+        return []
+
+
+def get_available_earnings_for_payout(teacher_id: str) -> Tuple[float, List[Dict]]:
+    """Get total available amount and individual earnings ready for payout."""
+    try:
+        now_iso = datetime.now().isoformat()
+        earnings = make_supabase_request(
+            "GET", "teacher_earnings",
+            filters={
+                "teacher_id": f"eq.{teacher_id}",
+                "status": "eq.pending",
+                "available_at": f"lte.{now_iso}",
+            },
+            use_service_role=True
+        ) or []
+
+        also_available = make_supabase_request(
+            "GET", "teacher_earnings",
+            filters={
+                "teacher_id": f"eq.{teacher_id}",
+                "status": "eq.available",
+            },
+            use_service_role=True
+        ) or []
+
+        all_available = earnings + also_available
+        total = sum(float(e.get("teacher_amount", 0)) for e in all_available)
+        return round(total, 2), all_available
+    except Exception as e:
+        logger.error(f"Error getting available earnings for {teacher_id}: {e}")
+        return 0.0, []
+
+
+def create_teacher_payout(teacher_id: str, phone_number: str) -> Optional[Dict]:
+    """Create a payout batch for available earnings. Returns payout record or None."""
+    try:
+        total, earnings = get_available_earnings_for_payout(teacher_id)
+        if total < MINIMUM_PAYOUT:
+            logger.warning(f"Payout below minimum: ${total} < ${MINIMUM_PAYOUT}")
+            return None
+
+        if not earnings:
+            return None
+
+        payout_data = {
+            "teacher_id": teacher_id,
+            "amount": total,
+            "earnings_count": len(earnings),
+            "payment_method": "ecocash",
+            "phone_number": phone_number,
+            "status": "processing",
+        }
+
+        payout_result = make_supabase_request("POST", "teacher_payouts", data=payout_data, use_service_role=True)
+        if not payout_result or len(payout_result) == 0:
+            return None
+
+        payout = payout_result[0]
+        payout_id = payout.get("id")
+
+        for e in earnings:
+            make_supabase_request(
+                "PATCH", "teacher_earnings",
+                data={"status": "paid", "paid_at": datetime.now().isoformat(), "payout_id": payout_id},
+                filters={"id": f"eq.{e['id']}"},
+                use_service_role=True
+            )
+
+        logger.info(f"Created payout: teacher={teacher_id}, amount=${total}, earnings={len(earnings)}")
+        return payout
+    except Exception as e:
+        logger.error(f"Error creating payout for {teacher_id}: {e}")
+        return None
+
+
+def complete_teacher_payout(payout_id: str, reference: str) -> bool:
+    """Mark a payout as completed with the EcoCash reference."""
+    try:
+        make_supabase_request(
+            "PATCH", "teacher_payouts",
+            data={"status": "completed", "reference": reference, "completed_at": datetime.now().isoformat()},
+            filters={"id": f"eq.{payout_id}"},
+            use_service_role=True
+        )
+        logger.info(f"Payout {payout_id} completed with ref {reference}")
+        return True
+    except Exception as e:
+        logger.error(f"Error completing payout {payout_id}: {e}")
+        return False
+
+
+def get_teacher_payouts(teacher_id: str, limit: int = 20) -> List[Dict]:
+    """Get payout history for a teacher."""
+    try:
+        result = make_supabase_request(
+            "GET", "teacher_payouts",
+            filters={"teacher_id": f"eq.{teacher_id}", "order": "created_at.desc"},
+            limit=limit,
+            use_service_role=True
+        ) or []
+        return result
+    except Exception as e:
+        logger.error(f"Error getting payouts for {teacher_id}: {e}")
+        return []
+
+
+def get_wallet_transactions(user_id: str, limit: int = 20) -> List[Dict]:
+    """Get wallet transaction history for a user."""
+    try:
+        result = make_supabase_request(
+            "GET", "wallet_transactions",
+            filters={"user_id": f"eq.{user_id}", "order": "created_at.desc"},
+            limit=limit,
+            use_service_role=True
+        ) or []
+        return result
+    except Exception as e:
+        logger.error(f"Error getting wallet transactions for {user_id}: {e}")
+        return []

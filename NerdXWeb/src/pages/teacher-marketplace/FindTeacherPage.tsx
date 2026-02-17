@@ -11,7 +11,7 @@ import {
 import type { TeacherProfile, TeacherSearchFilters, AcademicLevel, DayOfWeek } from '../../types';
 import {
   Search, SlidersHorizontal, ArrowLeft, GraduationCap, Star,
-  Loader2, Users, X, RefreshCw, Rss
+  Loader2, Users, X, RefreshCw, Rss, Calendar
 } from 'lucide-react';
 
 export function FindTeacherPage() {
@@ -111,6 +111,11 @@ export function FindTeacherPage() {
         <Link to="/app/marketplace/feed" className="marketplace-feed-bar__link">
           <Rss size={16} />
           <span>Browse Teacher Feed</span>
+          <span className="marketplace-feed-bar__arrow">&rarr;</span>
+        </Link>
+        <Link to="/app/my-lessons" className="marketplace-feed-bar__link marketplace-feed-bar__link--secondary">
+          <Calendar size={16} />
+          <span>View My Booked Lessons</span>
           <span className="marketplace-feed-bar__arrow">&rarr;</span>
         </Link>
       </div>

@@ -13,7 +13,6 @@ export interface MathNotesSection {
   content: string;
   worked_examples?: MathWorkedExample[];
   videoUrl?: string; // URL for embedded video (e.g., YouTube)
-  audioUrl?: string; // URL for audio file
 }
 
 export interface MathTopicNotes {

@@ -28,6 +28,7 @@ export interface ReferralShareLink {
   whatsapp_link: string;
   share_message: string;
   bonus_per_referral: number;
+  web_link?: string;
 }
 
 export interface SubscriptionInfo {

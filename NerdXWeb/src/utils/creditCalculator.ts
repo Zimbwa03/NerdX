@@ -26,11 +26,26 @@ export function calculateQuizCreditCost(params: CreditCostParams): number {
   if (subjectKey === 'combined_science') return 1;
   if (subjectKey === 'english') return 1;
   if (subjectKey === 'a_level_pure_math' || subjectKey === 'a_level_pure_mathematics') return 1;
-  if (subjectKey === 'a_level_chemistry') return 1;
-  if (subjectKey === 'a_level_physics') return 1;
-  if (subjectKey === 'a_level_biology') return 1;
 
   const fmt = (questionFormat || bioQuestionType || 'mcq').toLowerCase();
+
+  // A-Level Biology - MCQ 0.5, Structured 0.5, Essay 1
+  if (subjectKey === 'a_level_biology') {
+    if (fmt === 'essay') return 1;
+    return 0.5;
+  }
+
+  // A-Level Chemistry - MCQ 0.5, Structured 0.5
+  if (subjectKey === 'a_level_chemistry') {
+    if (fmt === 'essay') return 1;
+    return 0.5;
+  }
+
+  // A-Level Physics - MCQ 0.5, Structured 0.5
+  if (subjectKey === 'a_level_physics') {
+    if (fmt === 'essay') return 1;
+    return 0.5;
+  }
 
   // Computer Science (O-Level) - MCQ 0.3, Structured 0.5, Essay 1
   if (subjectKey === 'computer_science') {
@@ -76,9 +91,9 @@ export function calculateQuizCreditCost(params: CreditCostParams): number {
     return 1;
   }
 
-  // Geography (O-Level) - MCQ pricing (mobile uses MCQ pricing as default)
+  // Geography (O-Level) - currently charged as 0.5 credit per question in backend
   if (subjectKey === 'geography') {
-    return 0.3;
+    return 0.5;
   }
 
   return 1;

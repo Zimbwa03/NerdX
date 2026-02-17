@@ -80,15 +80,19 @@ def get_dashboard_stats():
         if not db_status:
             return jsonify({**_default_stats(source), 'database_status': 'disconnected', 'error': 'Database unavailable'})
 
-        # Get total users filtered by source (use service role for admin dashboard reads)
-        filters = {"registration_source": f"eq.{source}"}
-        users_data = make_supabase_request(
+        # Get ALL users for headline total (includes whatsapp, mobile, and school students)
+        all_users_data = make_supabase_request(
             "GET", "users_registration",
-            select="id,chat_id",
-            filters=filters,
+            select="id,chat_id,registration_source",
             use_service_role=True
         )
-        total_users = len(users_data) if users_data else 0
+        total_users = len(all_users_data) if all_users_data else 0
+
+        # Also get source-filtered subset for breakdowns (active users, revenue, etc.)
+        if source == 'all':
+            users_data = all_users_data
+        else:
+            users_data = [u for u in (all_users_data or []) if u.get("registration_source") == source]
         user_ids_for_source = [u.get("chat_id") for u in (users_data or []) if u.get("chat_id")]
         
         # Get active users today filtered by source
@@ -131,12 +135,10 @@ def get_dashboard_stats():
         
         total_revenue = sum((p.get("amount") or 0) for p in payments_data)
         
-        # Get recent user registrations for growth trend filtered by source
-        filters_with_source = {"registration_source": f"eq.{source}"}
+        # Get recent user registrations for growth trend (count ALL sources)
         all_registrations = make_supabase_request(
             "GET", "users_registration",
             select="registration_date",
-            filters=filters_with_source,
             use_service_role=True
         )
         new_registrations_week = 0
@@ -179,11 +181,14 @@ def get_users():
     try:
         page = request.args.get('page', 1, type=int)
         limit = request.args.get('limit', 50, type=int)
-        source = request.args.get('source', 'whatsapp')  # Get source filter
+        source = request.args.get('source', 'all')  # Default to 'all' to include every student type
         
-        # Get user registrations with stats - use Supabase data properly filtered by source
-        user_filters = {"registration_source": f"eq.{source}"}
-        users_reg = make_supabase_request("GET", "users_registration", select="*", filters=user_filters)
+        # Get user registrations with stats - filter by source or get all
+        if source == 'all':
+            users_reg = make_supabase_request("GET", "users_registration", select="*", use_service_role=True)
+        else:
+            user_filters = {"registration_source": f"eq.{source}"}
+            users_reg = make_supabase_request("GET", "users_registration", select="*", filters=user_filters, use_service_role=True)
         
         # Get user IDs for this source
         user_ids = [user.get('chat_id') for user in users_reg] if users_reg else []
@@ -211,8 +216,11 @@ def get_users():
                     'name': user.get('name'),
                     'surname': user.get('surname'),
                     'nerdx_id': user.get('nerdx_id'),
-                    'registration_date': user.get('registration_date'),  # Fixed field name
-                    'credits': user.get('credits', 0),  # Get from registration table
+                    'registration_date': user.get('registration_date'),
+                    'credits': user.get('credits', 0),
+                    'registration_source': user.get('registration_source'),
+                    'user_type': user.get('user_type'),
+                    'role': user.get('role'),
                     'total_attempts': user_stat.get('total_attempts', 0),
                     'correct_answers': user_stat.get('correct_answers', 0),
                     'xp_points': user_stat.get('xp_points', 0),
