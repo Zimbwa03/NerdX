@@ -8,6 +8,8 @@ import {
     StyleSheet,
     Pressable,
     Animated,
+    ScrollView,
+    useWindowDimensions,
 } from 'react-native';
 import { useThemedColors } from '../theme/useThemedStyles';
 
@@ -21,6 +23,10 @@ interface ModalProps {
 export const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children }) => {
     const colors = useThemedColors();
     const fadeAnim = React.useRef(new Animated.Value(0)).current;
+    const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
+    const modalWidth = Math.min(viewportWidth - 24, 420);
+    const modalMaxHeight = Math.max(260, Math.min(viewportHeight * 0.82, 680));
+    const modalBodyMaxHeight = Math.max(180, modalMaxHeight - 96);
 
     React.useEffect(() => {
         if (visible) {
@@ -52,6 +58,10 @@ export const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children 
                     style={[
                         styles.modalContainer,
                         {
+                            width: modalWidth,
+                            maxHeight: modalMaxHeight,
+                        },
+                        {
                             opacity: fadeAnim,
                             transform: [
                                 {
@@ -67,12 +77,30 @@ export const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children 
                     <Pressable onPress={(e) => e.stopPropagation()}>
                         <View style={styles.modalContent}>
                             <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>{title}</Text>
+                                <View style={styles.modalTitleContainer}>
+                                    <Text
+                                        style={styles.modalTitle}
+                                        numberOfLines={2}
+                                        ellipsizeMode="tail"
+                                        maxFontSizeMultiplier={1.15}
+                                    >
+                                        {title}
+                                    </Text>
+                                </View>
                                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                                     <Text style={styles.closeButtonText}>✕</Text>
                                 </TouchableOpacity>
                             </View>
-                            <View style={styles.modalBody}>{children}</View>
+                            <View style={[styles.modalBody, { maxHeight: modalBodyMaxHeight }]}>
+                                <ScrollView
+                                    style={styles.modalScroll}
+                                    contentContainerStyle={styles.modalBodyContent}
+                                    showsVerticalScrollIndicator={false}
+                                    bounces={false}
+                                >
+                                    {children}
+                                </ScrollView>
+                            </View>
                         </View>
                     </Pressable>
                 </Animated.View>
@@ -110,8 +138,22 @@ export const ModalOptionCard: React.FC<ModalOptionCardProps> = ({
                 <Text style={styles.optionIcon}>{icon}</Text>
             </View>
             <View style={styles.optionContent}>
-                <Text style={styles.optionTitle}>{title}</Text>
-                <Text style={styles.optionDescription}>{description}</Text>
+                <Text
+                    style={styles.optionTitle}
+                    numberOfLines={2}
+                    ellipsizeMode="tail"
+                    maxFontSizeMultiplier={1.15}
+                >
+                    {title}
+                </Text>
+                <Text
+                    style={styles.optionDescription}
+                    numberOfLines={3}
+                    ellipsizeMode="tail"
+                    maxFontSizeMultiplier={1.15}
+                >
+                    {description}
+                </Text>
             </View>
             <Text style={styles.optionArrow}>→</Text>
         </TouchableOpacity>
@@ -126,12 +168,12 @@ const createStyles = (colors: ReturnType<typeof useThemedColors>) => StyleSheet.
         alignItems: 'center',
     },
     modalContainer: {
-        width: '85%',
-        maxWidth: 400,
+        width: '100%',
     },
     modalContent: {
         backgroundColor: colors.background.paper,
         borderRadius: 16,
+        overflow: 'hidden',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
@@ -146,10 +188,16 @@ const createStyles = (colors: ReturnType<typeof useThemedColors>) => StyleSheet.
         borderBottomWidth: 1,
         borderBottomColor: colors.border.light,
     },
+    modalTitleContainer: {
+        flex: 1,
+        minWidth: 0,
+        paddingRight: 12,
+    },
     modalTitle: {
         fontSize: 20,
         fontWeight: 'bold',
         color: colors.text.primary,
+        flexShrink: 1,
     },
     closeButton: {
         width: 32,
@@ -165,11 +213,18 @@ const createStyles = (colors: ReturnType<typeof useThemedColors>) => StyleSheet.
         fontWeight: '600',
     },
     modalBody: {
-        padding: 20,
+        paddingHorizontal: 20,
+        paddingBottom: 20,
+    },
+    modalScroll: {
+        width: '100%',
+    },
+    modalBodyContent: {
+        paddingTop: 16,
     },
     optionCard: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         backgroundColor: colors.background.paper,
         borderRadius: 12,
         padding: 16,
@@ -191,27 +246,34 @@ const createStyles = (colors: ReturnType<typeof useThemedColors>) => StyleSheet.
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
+        marginTop: 2,
+        flexShrink: 0,
     },
     optionIcon: {
         fontSize: 24,
     },
     optionContent: {
         flex: 1,
+        minWidth: 0,
     },
     optionTitle: {
         fontSize: 16,
         fontWeight: '600',
         color: colors.text.primary,
         marginBottom: 4,
+        flexShrink: 1,
     },
     optionDescription: {
         fontSize: 13,
         color: colors.text.secondary,
         lineHeight: 18,
+        flexShrink: 1,
     },
     optionArrow: {
         fontSize: 20,
         color: colors.text.secondary,
         marginLeft: 8,
+        marginTop: 2,
+        flexShrink: 0,
     },
 });

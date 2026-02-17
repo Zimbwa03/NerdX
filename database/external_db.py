@@ -1414,11 +1414,22 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
         # Convert date_of_birth from various formats to YYYY-MM-DD format for database
         try:
             if '/' in date_of_birth:
-                # Parse DD/MM/YYYY format (with slashes)
-                day, month, year = date_of_birth.split('/')
-                # Ensure proper formatting with zero padding
-                formatted_date = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
-                logger.info(f"Converted date from {date_of_birth} to {formatted_date}")
+                parts = date_of_birth.split('/')
+                if len(parts) == 3:
+                    day, month, year = parts
+                    # Handle 2-digit year (DD/MM/YY)
+                    if len(year) == 2:
+                        year_int = int(year)
+                        # If year <= current 2-digit year, assume 2000s; else 1900s
+                        if year_int <= 30:
+                            year = f"20{year.zfill(2)}"
+                        else:
+                            year = f"19{year.zfill(2)}"
+                        logger.info(f"Expanded 2-digit year to: {year}")
+                    formatted_date = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+                    logger.info(f"Converted date from {date_of_birth} to {formatted_date}")
+                else:
+                    raise ValueError(f"Expected 3 date parts (DD/MM/YYYY), got {len(parts)}")
             elif len(date_of_birth) == 8 and date_of_birth.isdigit():
                 # Parse DDMMYYYY format (no separators)
                 day = date_of_birth[0:2]
@@ -1426,6 +1437,14 @@ def create_user_registration(chat_id, name, surname, date_of_birth, referred_by_
                 year = date_of_birth[4:8]
                 formatted_date = f"{year}-{month}-{day}"
                 logger.info(f"📅 Converted date from {date_of_birth} (DDMMYYYY) to {formatted_date}")
+            elif len(date_of_birth) == 6 and date_of_birth.isdigit():
+                # Parse DDMMYY format (no separators, 2-digit year)
+                day = date_of_birth[0:2]
+                month = date_of_birth[2:4]
+                year_short = int(date_of_birth[4:6])
+                year = f"20{date_of_birth[4:6]}" if year_short <= 30 else f"19{date_of_birth[4:6]}"
+                formatted_date = f"{year}-{month}-{day}"
+                logger.info(f"📅 Converted date from {date_of_birth} (DDMMYY) to {formatted_date}")
             else:
                 # Assume it's already in YYYY-MM-DD format
                 formatted_date = date_of_birth

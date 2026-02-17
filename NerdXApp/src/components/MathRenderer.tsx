@@ -6,6 +6,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { useNetInfo } from '@react-native-community/netinfo';
 import { useTheme } from '../context/ThemeContext';
 import { normalizeLatexForRender } from '../utils/latexForMathRenderer';
 
@@ -22,6 +23,62 @@ const KATEX_CSS_HREF = 'https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.mi
 const KATEX_JS_SRC = 'https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js';
 const KATEX_AUTORENDER_SRC = 'https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js';
 
+const toOfflineReadableText = (source: string): string => {
+    if (!source) return '';
+
+    let text = normalizeLatexForRender(source);
+
+    text = text
+        .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '($1)/($2)')
+        .replace(/\\sqrt\{([^{}]+)\}/g, 'sqrt($1)')
+        .replace(/\\times/g, 'x')
+        .replace(/\\div/g, '÷')
+        .replace(/\\cdot/g, '·')
+        .replace(/\\leq/g, '≤')
+        .replace(/\\geq/g, '≥')
+        .replace(/\\neq/g, '≠')
+        .replace(/\\approx/g, '≈')
+        .replace(/\\pm/g, '±')
+        .replace(/\\infty/g, '∞')
+        .replace(/\\pi/g, 'π')
+        .replace(/\\theta/g, 'θ')
+        .replace(/\\alpha/g, 'α')
+        .replace(/\\beta/g, 'β')
+        .replace(/\\gamma/g, 'γ')
+        .replace(/\\lambda/g, 'λ')
+        .replace(/\\sum/g, 'Σ')
+        .replace(/\\int/g, '∫')
+        .replace(/\\rightarrow/g, '→')
+        .replace(/\\Rightarrow/g, '⇒')
+        .replace(/\\in(?![a-zA-Z])/g, '∈')
+        .replace(/\\notin/g, '∉')
+        .replace(/\\cup/g, '∪')
+        .replace(/\\cap/g, '∩');
+
+    text = text
+        .replace(/\$\$([\s\S]*?)\$\$/g, '$1')
+        .replace(/\\\[([\s\S]*?)\\\]/g, '$1')
+        .replace(/\\\(([\s\S]*?)\\\)/g, '$1')
+        .replace(/\$([^$\n]+)\$/g, '$1')
+        .replace(/\\left/g, '')
+        .replace(/\\right/g, '')
+        .replace(/\\text\{([^{}]*)\}/g, '$1')
+        .replace(/\\[a-zA-Z]+/g, '')
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/\r\n/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
+    return text;
+};
+
 /**
  * MathRenderer Component
  * Uses WebView with inline math rendering for offline LaTeX support
@@ -33,10 +90,14 @@ const MathRenderer: React.FC<MathRendererProps> = ({
     minHeight = 20
 }) => {
     const { isDarkMode } = useTheme();
+    const netInfo = useNetInfo();
+    const [webViewFailed, setWebViewFailed] = React.useState(false);
 
     const textColor = isDarkMode ? '#E0E0E0' : '#1A1A1A';
     const accentColor = isDarkMode ? '#00E5FF' : '#6200EE';
     const bgColor = 'transparent';
+    const hasInternet = netInfo.isConnected !== false && netInfo.isInternetReachable !== false;
+    const fallbackContent = useMemo(() => toOfflineReadableText(content), [content]);
 
     // Process content and generate HTML
     const htmlContent = useMemo(() => {
@@ -190,6 +251,10 @@ const MathRenderer: React.FC<MathRendererProps> = ({
 
     const [webViewHeight, setWebViewHeight] = React.useState(minHeight);
 
+    React.useEffect(() => {
+        setWebViewFailed(false);
+    }, [content, minHeight]);
+
     const handleMessage = (event: any) => {
         try {
             const data = JSON.parse(event.nativeEvent.data);
@@ -206,6 +271,25 @@ const MathRenderer: React.FC<MathRendererProps> = ({
 
     if (!content) return null;
 
+    if (!hasInternet || webViewFailed) {
+        return (
+            <View style={[styles.container, style]}>
+                <Text
+                    style={[
+                        styles.offlineText,
+                        {
+                            color: textColor,
+                            fontSize,
+                            lineHeight: fontSize * 1.6,
+                        },
+                    ]}
+                >
+                    {fallbackContent}
+                </Text>
+            </View>
+        );
+    }
+
     return (
         <View style={[styles.container, style]}>
             <WebView
@@ -220,6 +304,8 @@ const MathRenderer: React.FC<MathRendererProps> = ({
                 domStorageEnabled={true}
                 scalesPageToFit={false}
                 nestedScrollEnabled={false}
+                onError={() => setWebViewFailed(true)}
+                onHttpError={() => setWebViewFailed(true)}
             />
         </View>
     );
@@ -233,6 +319,9 @@ const styles = StyleSheet.create({
     webview: {
         flex: 1,
         backgroundColor: 'transparent',
+    },
+    offlineText: {
+        width: '100%',
     },
 });
 

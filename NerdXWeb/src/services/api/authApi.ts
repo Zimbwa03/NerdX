@@ -30,7 +30,10 @@ export interface AuthResponse {
 export const authApi = {
   login: async (data: LoginData): Promise<AuthResponse> => {
     try {
-      const response = await api.post('/api/mobile/auth/login', data);
+      const response = await api.post('/api/mobile/auth/login', {
+        ...data,
+        platform: 'web',
+      });
 
       if (response.data.success && response.data.token) {
         setAuthToken(response.data.token);
@@ -70,6 +73,7 @@ export const authApi = {
     try {
       const response = await api.post('/api/mobile/auth/social-login', {
         provider,
+        platform: 'web',
         referred_by: referredBy || undefined,
         user: {
           id: userInfo.id || userInfo.sub,

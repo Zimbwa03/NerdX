@@ -18,6 +18,7 @@ import { MathTopicNotes } from '../data/mathNotes/types';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../theme/colors';
 import MathRenderer from '../components/MathRenderer';
+import VideoStreamPlayer from '../components/VideoStreamPlayer';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 
@@ -129,6 +130,13 @@ const MathNotesDetailScreen: React.FC = () => {
 
                         {expandedSections.has(index) && (
                             <View style={styles.sectionBody}>
+                                {section.videoUrl ? (
+                                    <VideoStreamPlayer
+                                        videoUrl={section.videoUrl}
+                                        topicTitle={`${notes.topic} - ${section.title}`}
+                                        accentColor={Colors.subjects.mathematics}
+                                    />
+                                ) : null}
                                 <MathRenderer content={section.content} fontSize={16} />
 
                                 {section.worked_examples && section.worked_examples.map((ex, exIdx) => (

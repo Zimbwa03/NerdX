@@ -10,14 +10,12 @@ import {
     Animated,
     Image,
     ImageSourcePropType,
-    Dimensions,
+    useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { Colors } from '../theme/colors';
 import { useThemedColors } from '../theme/useThemedStyles';
-
-const { width } = Dimensions.get('window');
 
 interface AnimatedCardProps {
     title: string;
@@ -47,6 +45,7 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
     hideText = false,
 }) => {
     const themedColors = useThemedColors();
+    const { width: windowWidth } = useWindowDimensions();
 
     // Render icon component based on library
     const renderIcon = () => {
@@ -147,8 +146,10 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
     // Original card sizing: two large cards per row on dashboard,
     // with full-width variants for wide feature rows.
     const GAP = 12;
-    const CARD_WIDTH = fullWidth ? width - 48 : (width - 48 - GAP) / 2;
-    const CARD_HEIGHT = fullWidth ? 140 : CARD_WIDTH * 1.2;
+    const availableWidth = Math.max(windowWidth - 48, 240);
+    const twoColumnWidth = (availableWidth - GAP) / 2;
+    const CARD_WIDTH = fullWidth ? availableWidth : Math.max(148, twoColumnWidth);
+    const CARD_HEIGHT = fullWidth ? Math.max(132, Math.min(170, CARD_WIDTH * 0.5)) : CARD_WIDTH * 1.2;
 
     // Dynamic styles based on theme
     const styles = React.useMemo(() => StyleSheet.create({
@@ -220,6 +221,7 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
             left: 0,
             right: 0,
             padding: 16,
+            minWidth: 0,
         },
         fullWidthContent: {
             justifyContent: 'center',
@@ -232,6 +234,7 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
             textShadowColor: 'rgba(0, 0, 0, 0.8)',
             textShadowOffset: { width: 0, height: 1 },
             textShadowRadius: 4,
+            flexShrink: 1,
         },
         cardSubtitle: {
             fontSize: 12,
@@ -239,6 +242,7 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
             textShadowColor: 'rgba(0, 0, 0, 0.8)',
             textShadowOffset: { width: 0, height: 1 },
             textShadowRadius: 4,
+            flexShrink: 1,
         },
         borderGlow: {
             position: 'absolute',
@@ -325,8 +329,8 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
                 {/* Card content - hidden when hideText is true */}
                 {!hideText && (
                     <View style={[styles.cardContent, fullWidth && styles.fullWidthContent]}>
-                        <Text style={styles.cardTitle} numberOfLines={1}>{title}</Text>
-                        <Text style={styles.cardSubtitle} numberOfLines={2}>{subtitle}</Text>
+                        <Text style={styles.cardTitle} numberOfLines={2} ellipsizeMode="tail">{title}</Text>
+                        <Text style={styles.cardSubtitle} numberOfLines={2} ellipsizeMode="tail">{subtitle}</Text>
                     </View>
                 )}
 

@@ -1,4 +1,4 @@
-// Topics Screen Component - Professional UI/UX Design
+﻿// Topics Screen Component - Professional UI/UX Design
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -9,8 +9,8 @@ import {
   ActivityIndicator,
   Alert,
   StatusBar,
-  Dimensions,
   Switch,
+  useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -46,10 +46,6 @@ import {
   type MathFormLevel,
 } from '../data/mathematics';
 
-const { width } = Dimensions.get('window');
-const isCompactScreen = width <= 360;
-const isNarrowScreen = width <= 390;
-
 const CS_BOARD_STORAGE_KEY = '@nerdx_cs_board';
 const A_LEVEL_CS_BOARD_STORAGE_KEY = '@nerdx_alevel_cs_board';
 
@@ -61,6 +57,9 @@ const TopicsScreen: React.FC = () => {
   const themedColors = useThemedColors();
   const { showSuccess, showError, showWarning, showInfo } = useNotification();
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+  const isCompactScreen = screenWidth <= 360;
+  const isNarrowScreen = screenWidth <= 390;
   const { subject, parentSubject, historyForm, mathForm } = route.params as {
     subject: Subject;
     parentSubject?: string;
@@ -103,7 +102,7 @@ const TopicsScreen: React.FC = () => {
   const [selectedGeoTopic, setSelectedGeoTopic] = useState<Topic | null>(null);
   const [selectedGeoQuestionType, setSelectedGeoQuestionType] = useState<'mcq' | 'structured' | 'essay'>('mcq');
 
-  // Principles of Accounting Question Type Modal (Paper 1 MCQ only – modal kept for future Paper 2)
+  // Principles of Accounting Question Type Modal (Paper 1 MCQ only â€“ modal kept for future Paper 2)
   const [accountingQuestionTypeModalVisible, setAccountingQuestionTypeModalVisible] = useState(false);
   const [selectedAccountingTopic, setSelectedAccountingTopic] = useState<Topic | null>(null);
   const [selectedAccountingQuestionFormat, setSelectedAccountingQuestionFormat] = useState<'mcq' | 'essay'>('mcq');
@@ -118,7 +117,7 @@ const TopicsScreen: React.FC = () => {
   const [selectedCommerceTopic, setSelectedCommerceTopic] = useState<Topic | null>(null);
   const [selectedCommerceQuestionFormat, setSelectedCommerceQuestionFormat] = useState<'mcq' | 'essay'>('mcq');
 
-  // Computer Science board (ZimSec vs Cambridge) — O-Level
+  // Computer Science board (ZimSec vs Cambridge) â€” O-Level
   const [csBoard, setCsBoard] = useState<'zimsec' | 'cambridge'>('zimsec');
   // A-Level Computer Science board (ZIMSEC vs Cambridge 9618)
   const [aLevelCsBoard, setALevelCsBoard] = useState<'zimsec' | 'cambridge'>('zimsec');
@@ -269,20 +268,20 @@ const TopicsScreen: React.FC = () => {
       setMixImagesEnabled(false);
       setGeoQuestionTypeModalVisible(true);
     } else if (subject.id === 'accounting') {
-      // Principles of Accounting: Paper 1 MCQs only – no format modal
+      // Principles of Accounting: Paper 1 MCQs only â€“ no format modal
       openStartQuizModal(topic, undefined, 'mcq');
     } else if (subject.id === 'business_enterprise_skills') {
-      // BES: Paper 1 (MCQ) or Paper 2 (Essay) – show format modal
+      // BES: Paper 1 (MCQ) or Paper 2 (Essay) â€“ show format modal
       setSelectedBESTopic(topic);
       setSelectedBESQuestionFormat('mcq');
       setBESQuestionTypeModalVisible(true);
     } else if (subject.id === 'commerce') {
-      // Commerce: Paper 1 (MCQ) or Paper 2 (Essay) – show format modal
+      // Commerce: Paper 1 (MCQ) or Paper 2 (Essay) â€“ show format modal
       setSelectedCommerceTopic(topic);
       setSelectedCommerceQuestionFormat('mcq');
       setCommerceQuestionTypeModalVisible(true);
     } else if (subject.id === 'history') {
-      // History: Paper 1 Essays only (3-part ZIMSEC format) – go to History Essay screen
+      // History: Paper 1 Essays only (3-part ZIMSEC format) â€“ go to History Essay screen
       navigation.navigate('HistoryEssay' as never, { topic, subject, formLevel: selectedHistoryForm } as never);
     } else {
       // Start quiz modal with visual learning toggle
@@ -319,9 +318,21 @@ const TopicsScreen: React.FC = () => {
   };
 
   const handleTeacherMode = () => {
-    navigation.navigate('TeacherModeSetup' as never, {
+    const teacherModeParams: {
+      preselectedSubject: string;
+      preselectedForm?: HistoryFormLevel | MathFormLevel;
+    } = {
       preselectedSubject: subject.id === 'combined_science' ? activeTab : subjectDisplayName,
-    } as never);
+    };
+
+    if (subject.id === 'history') {
+      teacherModeParams.preselectedForm = selectedHistoryForm;
+    }
+    if (subject.id === 'mathematics') {
+      teacherModeParams.preselectedForm = selectedMathForm;
+    }
+
+    navigation.navigate('TeacherModeSetup' as never, teacherModeParams as never);
   };
 
   // Computer Science handlers
@@ -352,7 +363,7 @@ const TopicsScreen: React.FC = () => {
 
   const handleALevelCsTeacherMode = () => {
     navigation.navigate('TeacherModeSetup' as never, {
-      preselectedSubject: 'A Level Computer Science',
+      preselectedSubject: 'A-Level Computer Science',
     } as never);
   };
 
@@ -420,8 +431,9 @@ const TopicsScreen: React.FC = () => {
 
   const handleMathTutor = (topicName: string) => {
     navigation.navigate('TeacherModeSetup' as never, {
-      preselectedSubject: 'Mathematics',
-      preselectedTopic: topicName
+      preselectedSubject: 'O Level Mathematics',
+      preselectedTopic: topicName,
+      preselectedForm: selectedMathForm,
     } as never);
   };
 
@@ -471,12 +483,12 @@ const TopicsScreen: React.FC = () => {
 
       // Check for low credits warning
       if (currentCredits <= 5 && currentCredits > 0) {
-        showWarning(`⚠️ Low credits! You have ${currentCredits} credits remaining. Consider topping up soon.`, 5000);
+        showWarning(`âš ï¸ Low credits! You have ${currentCredits} credits remaining. Consider topping up soon.`, 5000);
       }
 
       if (currentCredits < minRequired) {
         const requiredText = formatCreditCost(minRequired);
-        showError(`❌ Insufficient credits! You need at least ${requiredText} to start a quiz. Please top up your credits.`, 6000);
+        showError(`âŒ Insufficient credits! You need at least ${requiredText} to start a quiz. Please top up your credits.`, 6000);
         Alert.alert(
           'Insufficient Credits',
           `You need at least ${requiredText} to start a quiz. Please buy credits first.`,
@@ -545,12 +557,12 @@ const TopicsScreen: React.FC = () => {
           updateUser({ credits: serverCredits });
           // Show success notification with actual remaining credits
           const costText = formatCreditCost(creditCost);
-          showSuccess(`✅ Question generated! (-${costText}) ${serverCredits} credits remaining.`, 3000);
+          showSuccess(`âœ… Question generated! (-${costText}) ${serverCredits} credits remaining.`, 3000);
 
           // Check if credits are getting low after deduction
           if (serverCredits <= 3 && serverCredits > 0) {
             setTimeout(() => {
-              showWarning(`⚠️ Running low on credits! Only ${serverCredits} credits left. Top up now to continue learning.`, 5000);
+              showWarning(`âš ï¸ Running low on credits! Only ${serverCredits} credits left. Top up now to continue learning.`, 5000);
             }, 3500);
           }
         }
@@ -566,14 +578,14 @@ const TopicsScreen: React.FC = () => {
           ...(subject.id === 'computer_science' ? { board: csBoard } : subject.id === 'a_level_computer_science' ? { board: aLevelCsBoard } : {}),
         } as never);
       } else {
-        showError('❌ Failed to generate question. Please try again.', 4000);
+        showError('âŒ Failed to generate question. Please try again.', 4000);
       }
     } catch (error: any) {
       setIsGeneratingQuestion(false);
       setStreamingStatus(null);
       setStreamingStage(null);
       const errorMessage = error.response?.data?.message || 'Failed to start quiz';
-      showError(`❌ ${errorMessage}`, 5000);
+      showError(`âŒ ${errorMessage}`, 5000);
       Alert.alert('Error', errorMessage);
     }
   };
@@ -635,18 +647,26 @@ const TopicsScreen: React.FC = () => {
     headerContent: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      alignItems: 'center',
+      alignItems: 'flex-start',
+      gap: 12,
+    },
+    headerTextContainer: {
+      flex: 1,
+      minWidth: 0,
     },
     title: {
-      fontSize: 28,
+      fontSize: isCompactScreen ? 24 : 28,
       fontWeight: 'bold',
       color: Colors.text.white,
       marginBottom: 8,
+      flexShrink: 1,
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: isCompactScreen ? 14 : 16,
       color: Colors.text.white,
       opacity: 0.9,
+      flexShrink: 1,
+      lineHeight: isCompactScreen ? 19 : 22,
     },
     tabContainer: {
       flexDirection: 'row',
@@ -668,10 +688,21 @@ const TopicsScreen: React.FC = () => {
       fontSize: 14,
       fontWeight: '600',
       color: themedColors.text.secondary,
+      textAlign: 'center',
+      flexShrink: 1,
     },
     activeTabText: {
       color: Colors.text.white,
       fontWeight: 'bold',
+    },
+    boardSwitchContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      flexWrap: 'wrap',
+      gap: 8,
+      maxWidth: isCompactScreen ? 170 : 230,
+      minWidth: 0,
     },
     featuresContainer: {
       padding: isCompactScreen ? 14 : 20,
@@ -758,20 +789,24 @@ const TopicsScreen: React.FC = () => {
       alignItems: 'center',
       padding: 4,
       gap: 16,
+      minWidth: 0,
     },
     featureInfo: {
       flex: 1,
+      minWidth: 0,
     },
     featureTitle: {
       fontSize: 18,
       fontWeight: '600',
       color: themedColors.text.primary,
       marginBottom: 4,
+      flexShrink: 1,
     },
     featureSubtitle: {
       fontSize: 14,
       color: themedColors.text.secondary,
       lineHeight: 20,
+      flexShrink: 1,
     },
     examCard: {
       marginBottom: 20,
@@ -819,19 +854,23 @@ const TopicsScreen: React.FC = () => {
       alignItems: 'center',
       padding: isCompactScreen ? 2 : 4,
       gap: isCompactScreen ? 12 : 16,
+      minWidth: 0,
     },
     topicInfo: {
       flex: 1,
+      minWidth: 0,
     },
     topicName: {
       fontSize: isCompactScreen ? 16 : 18,
       fontWeight: '600',
       color: themedColors.text.primary,
+      flexShrink: 1,
     },
     topicSubtitle: {
       fontSize: 12,
       color: themedColors.text.secondary,
       marginTop: 4,
+      flexShrink: 1,
     },
     noTopicsText: {
       fontSize: 14,
@@ -926,6 +965,7 @@ const TopicsScreen: React.FC = () => {
       fontSize: 16,
       color: Colors.text.white,
       opacity: 0.9,
+      flexShrink: 1,
     },
     modalDescription: {
       fontSize: 16,
@@ -997,6 +1037,7 @@ const TopicsScreen: React.FC = () => {
       paddingHorizontal: 20,
       alignItems: 'center',
       justifyContent: 'center',
+      minWidth: 0,
     },
     cancelButton: {
       backgroundColor: 'transparent',
@@ -1010,16 +1051,20 @@ const TopicsScreen: React.FC = () => {
       fontSize: 16,
       fontWeight: '600',
       color: Colors.primary.main,
+      textAlign: 'center',
+      flexShrink: 1,
     },
     startButtonText: {
       fontSize: 16,
       fontWeight: '600',
       color: '#FFFFFF',
+      textAlign: 'center',
+      flexShrink: 1,
     },
     modalButtonSpacer: {
       width: 12,
     },
-  }), [themedColors]);
+  }), [themedColors, isCompactScreen, isNarrowScreen]);
 
   const renderTabs = () => {
     if (subject.id !== 'combined_science') return null;
@@ -1043,10 +1088,14 @@ const TopicsScreen: React.FC = () => {
               ]}
               onPress={() => setActiveTab(tab)}
             >
-              <Text style={[
-                styles.tabText,
-                isActive && styles.activeTabText
-              ]}>
+              <Text
+                style={[
+                  styles.tabText,
+                  isActive && styles.activeTabText
+                ]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {tab}
               </Text>
             </TouchableOpacity>
@@ -1080,7 +1129,7 @@ const TopicsScreen: React.FC = () => {
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <View style={{ flex: 1 }}>
+          <View style={styles.headerTextContainer}>
             <TouchableOpacity
               onPress={() => {
                 if (currentParentSubject && subject.id !== 'combined_science') {
@@ -1092,19 +1141,19 @@ const TopicsScreen: React.FC = () => {
               }}
               style={{ marginBottom: 8 }}
             >
-              <Text style={styles.backButton}>← Back</Text>
+              <Text style={styles.backButton}>â† Back</Text>
             </TouchableOpacity>
-            <Text style={styles.title}>
+            <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
               {subject.id === 'combined_science' ? activeTab : (currentParentSubject || subject.name)}
             </Text>
-            <Text style={styles.subtitle}>
+            <Text style={styles.subtitle} numberOfLines={2} ellipsizeMode="tail">
               {subject.id === 'combined_science'
                 ? `Master ${activeTab} concepts`
                 : (currentParentSubject ? 'Choose a subtopic' : 'Choose a topic or start an exam')}
             </Text>
           </View>
           {(subject.id === 'computer_science' || subject.id === 'a_level_computer_science') ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={styles.boardSwitchContainer}>
               {(() => {
                 const isALevel = subject.id === 'a_level_computer_science';
                 const board = isALevel ? aLevelCsBoard : csBoard;
@@ -1124,7 +1173,11 @@ const TopicsScreen: React.FC = () => {
                         backgroundColor: board === 'zimsec' ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.3)',
                       }}
                     >
-                      <Text style={{ color: board === 'zimsec' ? '#1976d2' : '#fff', fontWeight: '600', fontSize: 13 }}>
+                      <Text
+                        style={{ color: board === 'zimsec' ? '#1976d2' : '#fff', fontWeight: '600', fontSize: 13 }}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
                         ZIMSEC
                       </Text>
                     </TouchableOpacity>
@@ -1140,7 +1193,11 @@ const TopicsScreen: React.FC = () => {
                         backgroundColor: board === 'cambridge' ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.3)',
                       }}
                     >
-                      <Text style={{ color: board === 'cambridge' ? '#1976d2' : '#fff', fontWeight: '600', fontSize: 13 }}>
+                      <Text
+                        style={{ color: board === 'cambridge' ? '#1976d2' : '#fff', fontWeight: '600', fontSize: 13 }}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
                         Cambridge
                       </Text>
                     </TouchableOpacity>
@@ -1713,7 +1770,7 @@ const TopicsScreen: React.FC = () => {
                 </View>
               </Card>
 
-              <Card variant="elevated" onPress={() => navigation.navigate('TeacherModeSetup' as never, { preselectedSubject: 'History' } as never)} style={styles.featureCard}>
+              <Card variant="elevated" onPress={() => navigation.navigate('TeacherModeSetup' as never, { preselectedSubject: 'History', preselectedForm: selectedHistoryForm } as never)} style={styles.featureCard}>
                 <View style={styles.featureContent}>
                   <IconCircle
                     icon={<Ionicons name="school-outline" size={28} color="#5D4037" />}
@@ -1875,9 +1932,9 @@ const TopicsScreen: React.FC = () => {
                         backgroundColor={getTopicIconBg(topic, subject.id)}
                       />
                       <View style={styles.topicInfo}>
-                        <Text style={styles.topicName}>{topic.name}</Text>
+                        <Text style={styles.topicName} numberOfLines={2} ellipsizeMode="tail">{topic.name}</Text>
                         {topic.is_parent && subject.id !== 'combined_science' && (
-                          <Text style={styles.topicSubtitle}>Tap to view subtopics</Text>
+                          <Text style={styles.topicSubtitle} numberOfLines={1} ellipsizeMode="tail">Tap to view subtopics</Text>
                         )}
                       </View>
                       {Icons.arrowRight(24, Colors.text.secondary)}
@@ -1943,7 +2000,7 @@ const TopicsScreen: React.FC = () => {
             style={[styles.modalButton, styles.cancelButton]}
             onPress={() => setPharmaModalVisible(false)}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText} numberOfLines={1} ellipsizeMode="tail">Cancel</Text>
           </TouchableOpacity>
           <View style={styles.modalButtonSpacer} />
           <TouchableOpacity
@@ -1955,7 +2012,7 @@ const TopicsScreen: React.FC = () => {
               }
             }}
           >
-            <Text style={styles.startButtonText}>Start Quiz</Text>
+            <Text style={styles.startButtonText} numberOfLines={1} ellipsizeMode="tail">Start Quiz</Text>
           </TouchableOpacity>
         </View>
       </Modal>
@@ -2014,7 +2071,7 @@ const TopicsScreen: React.FC = () => {
             style={[styles.modalButton, styles.cancelButton]}
             onPress={() => setScienceQuestionTypeModalVisible(false)}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText} numberOfLines={1} ellipsizeMode="tail">Cancel</Text>
           </TouchableOpacity>
           <View style={styles.modalButtonSpacer} />
           <TouchableOpacity
@@ -2026,7 +2083,7 @@ const TopicsScreen: React.FC = () => {
               }
             }}
           >
-            <Text style={styles.startButtonText}>Start Quiz</Text>
+            <Text style={styles.startButtonText} numberOfLines={1} ellipsizeMode="tail">Start Quiz</Text>
           </TouchableOpacity>
         </View>
       </Modal>
@@ -2087,7 +2144,7 @@ const TopicsScreen: React.FC = () => {
             style={[styles.modalButton, styles.cancelButton]}
             onPress={() => setCsQuestionTypeModalVisible(false)}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText} numberOfLines={1} ellipsizeMode="tail">Cancel</Text>
           </TouchableOpacity>
           <View style={styles.modalButtonSpacer} />
           <TouchableOpacity
@@ -2100,7 +2157,7 @@ const TopicsScreen: React.FC = () => {
               }
             }}
           >
-            <Text style={styles.startButtonText}>Start Quiz</Text>
+            <Text style={styles.startButtonText} numberOfLines={1} ellipsizeMode="tail">Start Quiz</Text>
           </TouchableOpacity>
         </View>
       </Modal>
@@ -2112,7 +2169,7 @@ const TopicsScreen: React.FC = () => {
           setAccountingQuestionTypeModalVisible(false);
           setMixImagesEnabled(false);
         }}
-        title={`Principles of Accounting – ${selectedAccountingTopic?.name || 'Topic'}`}
+        title={`Principles of Accounting â€“ ${selectedAccountingTopic?.name || 'Topic'}`}
       >
         <Text style={styles.modalDescription}>Choose Paper 1 (MCQ) or Paper 2 (Essay):</Text>
 
@@ -2149,7 +2206,7 @@ const TopicsScreen: React.FC = () => {
             style={[styles.modalButton, styles.cancelButton]}
             onPress={() => setAccountingQuestionTypeModalVisible(false)}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText} numberOfLines={1} ellipsizeMode="tail">Cancel</Text>
           </TouchableOpacity>
           <View style={styles.modalButtonSpacer} />
           <TouchableOpacity
@@ -2161,7 +2218,7 @@ const TopicsScreen: React.FC = () => {
               }
             }}
           >
-            <Text style={styles.startButtonText}>Start Quiz</Text>
+            <Text style={styles.startButtonText} numberOfLines={1} ellipsizeMode="tail">Start Quiz</Text>
           </TouchableOpacity>
         </View>
       </Modal>
@@ -2173,7 +2230,7 @@ const TopicsScreen: React.FC = () => {
           setCommerceQuestionTypeModalVisible(false);
           setMixImagesEnabled(false);
         }}
-        title={`Commerce – ${selectedCommerceTopic?.name || 'Topic'}`}
+        title={`Commerce â€“ ${selectedCommerceTopic?.name || 'Topic'}`}
       >
         <Text style={styles.modalDescription}>Choose Paper 1 (MCQ) or Paper 2 (Essay):</Text>
 
@@ -2210,7 +2267,7 @@ const TopicsScreen: React.FC = () => {
             style={[styles.modalButton, styles.cancelButton]}
             onPress={() => setCommerceQuestionTypeModalVisible(false)}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText} numberOfLines={1} ellipsizeMode="tail">Cancel</Text>
           </TouchableOpacity>
           <View style={styles.modalButtonSpacer} />
           <TouchableOpacity
@@ -2222,7 +2279,7 @@ const TopicsScreen: React.FC = () => {
               }
             }}
           >
-            <Text style={styles.startButtonText}>Start Quiz</Text>
+            <Text style={styles.startButtonText} numberOfLines={1} ellipsizeMode="tail">Start Quiz</Text>
           </TouchableOpacity>
         </View>
       </Modal>
@@ -2234,7 +2291,7 @@ const TopicsScreen: React.FC = () => {
           setBESQuestionTypeModalVisible(false);
           setMixImagesEnabled(false);
         }}
-        title={`Business Enterprise and Skills – ${selectedBESTopic?.name || 'Topic'}`}
+        title={`Business Enterprise and Skills â€“ ${selectedBESTopic?.name || 'Topic'}`}
       >
         <Text style={styles.modalDescription}>Choose Paper 1 (MCQ) or Paper 2 (Essay):</Text>
 
@@ -2271,7 +2328,7 @@ const TopicsScreen: React.FC = () => {
             style={[styles.modalButton, styles.cancelButton]}
             onPress={() => setBESQuestionTypeModalVisible(false)}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText} numberOfLines={1} ellipsizeMode="tail">Cancel</Text>
           </TouchableOpacity>
           <View style={styles.modalButtonSpacer} />
           <TouchableOpacity
@@ -2283,7 +2340,7 @@ const TopicsScreen: React.FC = () => {
               }
             }}
           >
-            <Text style={styles.startButtonText}>Start Quiz</Text>
+            <Text style={styles.startButtonText} numberOfLines={1} ellipsizeMode="tail">Start Quiz</Text>
           </TouchableOpacity>
         </View>
       </Modal>
@@ -2295,7 +2352,7 @@ const TopicsScreen: React.FC = () => {
           setGeoQuestionTypeModalVisible(false);
           setMixImagesEnabled(false);
         }}
-        title={`A-Level Geography – ${selectedGeoTopic?.name || 'Topic'}`}
+        title={`A-Level Geography â€“ ${selectedGeoTopic?.name || 'Topic'}`}
       >
         <Text style={styles.modalDescription}>Choose your question format:</Text>
 
@@ -2344,7 +2401,7 @@ const TopicsScreen: React.FC = () => {
             style={[styles.modalButton, styles.cancelButton]}
             onPress={() => setGeoQuestionTypeModalVisible(false)}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText} numberOfLines={1} ellipsizeMode="tail">Cancel</Text>
           </TouchableOpacity>
           <View style={styles.modalButtonSpacer} />
           <TouchableOpacity
@@ -2356,7 +2413,7 @@ const TopicsScreen: React.FC = () => {
               }
             }}
           >
-            <Text style={styles.startButtonText}>Start Quiz</Text>
+            <Text style={styles.startButtonText} numberOfLines={1} ellipsizeMode="tail">Start Quiz</Text>
           </TouchableOpacity>
         </View>
       </Modal>
@@ -2395,7 +2452,7 @@ const TopicsScreen: React.FC = () => {
             style={[styles.modalButton, styles.cancelButton]}
             onPress={() => setStartQuizModalVisible(false)}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText} numberOfLines={1} ellipsizeMode="tail">Cancel</Text>
           </TouchableOpacity>
           <View style={styles.modalButtonSpacer} />
           <TouchableOpacity
@@ -2405,7 +2462,7 @@ const TopicsScreen: React.FC = () => {
               handleStartQuiz(pendingTopic || undefined, pendingQuestionType, pendingQuestionFormat, mixImagesEnabled);
             }}
           >
-            <Text style={styles.startButtonText}>Start Quiz</Text>
+            <Text style={styles.startButtonText} numberOfLines={1} ellipsizeMode="tail">Start Quiz</Text>
           </TouchableOpacity>
         </View>
       </Modal>
@@ -2582,5 +2639,6 @@ const getTopicIconBg = (topic: Topic, subjectId: string): string => {
 };
 
 export default TopicsScreen;
+
 
 

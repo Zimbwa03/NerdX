@@ -184,29 +184,29 @@ def _build_school_levy_message(school_name: Optional[str], expiry_value, expired
 def _is_single_device_enforced(user_data: Optional[dict]) -> bool:
     """
     Single-device enforcement policy:
-    - school_student accounts: always enforced
-    - non-teacher accounts: enforced
-    - teacher accounts: not enforced
+    - school_student accounts: enforced (per-platform)
+    - all other accounts (individual, teacher): not enforced
     """
     if not isinstance(user_data, dict):
         return False
     user_type = (user_data.get('user_type') or '').strip().lower()
-    role = (user_data.get('role') or 'student').strip().lower()
-    return user_type == 'school_student' or role != 'teacher'
+    return user_type == 'school_student'
 
 
-def _has_active_session(user_data: Optional[dict]) -> bool:
-    """Return True when account already has an active session id."""
+def _has_active_session(user_data: Optional[dict], platform: str = 'mobile') -> bool:
+    """Return True when account already has an active session on the given platform."""
     if not isinstance(user_data, dict):
         return False
-    return bool((user_data.get('active_session_id') or '').strip())
+    col = f'active_session_id_{platform}'
+    return bool((user_data.get(col) or '').strip())
 
 
-def _single_device_block_message() -> str:
+def _single_device_block_message(platform: str = 'device') -> str:
     """User-facing message for blocked concurrent login."""
+    label = 'browser' if platform == 'web' else 'phone'
     return (
-        "This account is already logged in on another phone. "
-        "Please log out on that phone first, then sign in on this phone."
+        f"This account is already logged in on another {label}. "
+        f"Please log out there first, then sign in here."
     )
 
 
@@ -489,6 +489,9 @@ def login():
         user_identifier = (data.get('identifier', '').strip() or data.get('email', '').strip() or data.get('phone_number', '').strip()).lower()
         password = data.get('password', '')
         requested_role = data.get('role')  # Optional: 'student' or 'teacher'
+        platform = (data.get('platform') or 'mobile').strip().lower()
+        if platform not in ('web', 'mobile'):
+            platform = 'mobile'
         
         if not user_identifier or not password:
             return jsonify({'success': False, 'message': 'Identifier and password are required'}), 400
@@ -516,7 +519,7 @@ def login():
                             pass
                     students = make_supabase_request(
                         "GET", "users_registration",
-                        select="id,chat_id,name,surname,user_type,active_session_id,subscription_expires_at",
+                        select="id,chat_id,name,surname,user_type,active_session_id,active_session_id_web,active_session_id_mobile,subscription_expires_at",
                         filters={"school_id": f"eq.{school['id']}", "user_type": "eq.school_student"},
                         use_service_role=True
                     )
@@ -528,17 +531,18 @@ def login():
                             user_data = s
                             break
                     if user_data:
-                        # Strict single-device policy: block concurrent login until old device logs out.
-                        if _has_active_session(user_data):
+                        # Per-platform single-device policy: block only if same platform already has a session.
+                        if _has_active_session(user_data, platform):
                             return jsonify({
                                 'success': False,
-                                'message': _single_device_block_message()
+                                'message': _single_device_block_message(platform)
                             }), 409
 
                         session_id = str(uuid.uuid4())
-                        token = generate_token(user_data["chat_id"], jti=session_id)
+                        token = generate_token(user_data["chat_id"], jti=session_id, platform=platform)
+                        session_col = f"active_session_id_{platform}"
                         make_supabase_request(
-                            "PATCH", "users_registration", {"active_session_id": session_id},
+                            "PATCH", "users_registration", {session_col: session_id},
                             filters={"chat_id": f"eq.{user_data['chat_id']}"}, use_service_role=True
                         )
                         credit_units = get_user_credits(user_data["chat_id"]) or 0
@@ -698,19 +702,20 @@ def login():
                     'message': f'This account is registered as a {role_label}. Please select "{role_label.title()}" to sign in.'
                 }), 403
 
-        # Strict single-device policy for student accounts.
-        if _is_single_device_enforced(user_data) and _has_active_session(user_data):
+        # Per-platform single-device policy for school_student accounts only.
+        if _is_single_device_enforced(user_data) and _has_active_session(user_data, platform):
             return jsonify({
                 'success': False,
-                'message': _single_device_block_message()
+                'message': _single_device_block_message(platform)
             }), 409
 
         # Generate token (session-bound for enforced accounts)
         session_id = str(uuid.uuid4()) if _is_single_device_enforced(user_data) else None
-        token = generate_token(user_id, jti=session_id)
+        token = generate_token(user_id, jti=session_id, platform=platform)
         if session_id:
+            session_col = f"active_session_id_{platform}"
             make_supabase_request(
-                "PATCH", "users_registration", {"active_session_id": session_id},
+                "PATCH", "users_registration", {session_col: session_id},
                 filters={"chat_id": f"eq.{user_id}"}, use_service_role=True
             )
         
@@ -756,13 +761,14 @@ def login():
         return jsonify({'success': False, 'message': f'Login failed: {str(e)}'}), 500
 
 # Helper Functions
-def generate_token(user_id: str, jti: Optional[str] = None) -> str:
+def generate_token(user_id: str, jti: Optional[str] = None, platform: Optional[str] = None) -> str:
     """Generate JWT token for user. jti (session id) is used for single-device session enforcement."""
     payload = {
         'user_id': user_id,
         'exp': datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS),
         'iat': datetime.utcnow(),
-        'jti': jti or str(uuid.uuid4())
+        'jti': jti or str(uuid.uuid4()),
+        'platform': platform or 'mobile',
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
@@ -788,7 +794,7 @@ def verify_password(password: str, password_hash: str, salt: str) -> bool:
     return new_hash.hex() == password_hash
 
 def require_auth(f):
-    """Decorator to require authentication with single-device enforcement for student accounts."""
+    """Decorator to require authentication with per-platform single-device enforcement for school_student accounts."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         token = request.headers.get('Authorization', '').replace('Bearer ', '')
@@ -800,20 +806,23 @@ def require_auth(f):
             user_id = payload['user_id']
             g.current_user_id = user_id
             g.current_user_jti = payload.get('jti')
+            platform = payload.get('platform', 'mobile')
+            g.current_user_platform = platform
             user_data = get_user_registration(user_id)
             g.current_user_type = (user_data.get('user_type') or '').strip() if user_data else ''
             if user_data and _is_single_device_enforced(user_data):
                 session_jti = payload.get('jti')
-                active_sid = (user_data.get('active_session_id') or '').strip()
+                session_col = f"active_session_id_{platform}"
+                active_sid = (user_data.get(session_col) or '').strip()
                 if active_sid and session_jti != active_sid:
                     return jsonify({
                         'success': False,
-                        'message': _single_device_block_message()
+                        'message': _single_device_block_message(platform)
                     }), 401
-                # First authenticated request after rollout can bind legacy accounts with empty active_session_id.
+                # First authenticated request after rollout can bind legacy tokens with empty platform session.
                 if (not active_sid) and session_jti:
                     make_supabase_request(
-                        "PATCH", "users_registration", {"active_session_id": session_jti},
+                        "PATCH", "users_registration", {session_col: session_jti},
                         filters={"chat_id": f"eq.{user_id}"}, use_service_role=True
                     )
             if user_data and g.current_user_type == 'school_student':
@@ -1337,7 +1346,7 @@ def social_login():
             
         # Check if user is already registered in our system
         # For OAuth, check by email first (to prevent duplicates)
-        from database.external_db import is_user_registered_by_email, get_user_registration_by_email
+        from database.external_db import is_user_registered_by_email, get_user_registration_by_email, make_supabase_request
         
         # Check by email first (for OAuth users)
         user_data = None
@@ -1361,7 +1370,6 @@ def social_login():
             # Update name if provided by OAuth and different from stored
             if given_name and given_name != user_data.get('name'):
                 try:
-                    from database.external_db import make_supabase_request
                     make_supabase_request(
                         "PATCH",
                         "users_registration",
@@ -1383,17 +1391,22 @@ def social_login():
                 "purchased_credits": _credits_display(credit_info.get("purchased_credits", 0)),
             }
 
-            if _is_single_device_enforced(user_data) and _has_active_session(user_data):
+            social_platform = (data.get('platform') or 'mobile').strip().lower()
+            if social_platform not in ('web', 'mobile'):
+                social_platform = 'mobile'
+
+            if _is_single_device_enforced(user_data) and _has_active_session(user_data, social_platform):
                 return jsonify({
                     'success': False,
-                    'message': _single_device_block_message()
+                    'message': _single_device_block_message(social_platform)
                 }), 409
 
             session_id = str(uuid.uuid4()) if _is_single_device_enforced(user_data) else None
-            token = generate_token(email, jti=session_id)
+            token = generate_token(email, jti=session_id, platform=social_platform)
             if session_id:
+                session_col = f"active_session_id_{social_platform}"
                 make_supabase_request(
-                    "PATCH", "users_registration", {"active_session_id": session_id},
+                    "PATCH", "users_registration", {session_col: session_id},
                     filters={"chat_id": f"eq.{user_data.get('chat_id') or email}"},
                     use_service_role=True
                 )
@@ -1466,13 +1479,10 @@ def social_login():
                         "welcome_message": welcome_result.get("message", "")
                     }
                     
-                    session_id = str(uuid.uuid4())
-                    token = generate_token(email, jti=session_id)
-                    make_supabase_request(
-                        "PATCH", "users_registration", {"active_session_id": session_id},
-                        filters={"chat_id": f"eq.{email}"},
-                        use_service_role=True
-                    )
+                    new_social_platform = (data.get('platform') or 'mobile').strip().lower()
+                    if new_social_platform not in ('web', 'mobile'):
+                        new_social_platform = 'mobile'
+                    token = generate_token(email, platform=new_social_platform)
                     
                     return jsonify({
                         'success': True,
@@ -1572,12 +1582,14 @@ def refresh_token():
 @mobile_bp.route('/auth/logout', methods=['POST'])
 @require_auth
 def logout():
-    """Logout user and clear active_session_id for single-device enforced accounts."""
+    """Logout user and clear the platform-specific active session for school_student accounts."""
     try:
         user_data = get_user_registration(g.current_user_id)
         if user_data and _is_single_device_enforced(user_data):
+            platform = getattr(g, 'current_user_platform', 'mobile')
+            session_col = f"active_session_id_{platform}"
             make_supabase_request(
-                "PATCH", "users_registration", {"active_session_id": None},
+                "PATCH", "users_registration", {session_col: None},
                 filters={"chat_id": f"eq.{g.current_user_id}"}, use_service_role=True
             )
     except Exception as e:

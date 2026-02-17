@@ -907,7 +907,9 @@ const ProjectAssistantScreen: React.FC = () => {
             <Text style={styles.headerTitle} numberOfLines={1}>
               {project?.title || params.projectTitle}
             </Text>
-            <Text style={styles.headerSubtitle}>{project?.subject || params.subject}</Text>
+            <Text style={styles.headerSubtitle} numberOfLines={1} ellipsizeMode="tail">
+              {project?.subject || params.subject}
+            </Text>
           </View>
           <TouchableOpacity style={styles.docButton} onPress={handleGenerateDocument}>
             <Ionicons name="document-text-outline" size={24} color="#FFF" />
@@ -1455,6 +1457,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    minWidth: 0,
   },
   backButton: {
     padding: 8,
@@ -1463,20 +1466,25 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     marginHorizontal: 10,
+    minWidth: 0,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFFFFF',
+    flexShrink: 1,
   },
   headerSubtitle: {
     fontSize: 12,
     color: 'rgba(255, 255, 255, 0.8)',
+    flexShrink: 1,
+    textAlign: 'center',
   },
   docButton: {
     padding: 8,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 12,
+    flexShrink: 0,
   },
   messagesContainer: {
     flex: 1,
@@ -1520,6 +1528,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderBottomRightRadius: 4,
     overflow: 'hidden',
+    minWidth: 0,
   },
   assistantMessageRow: {
     width: '100%',
@@ -1594,11 +1603,13 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     lineHeight: 22,
+    flexShrink: 1,
   },
   assistantMessageText: {
     color: '#333333',
     fontSize: 16,
     lineHeight: 22,
+    flexShrink: 1,
   },
   timestamp: {
     fontSize: 10,

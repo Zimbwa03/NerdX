@@ -3,7 +3,7 @@
  * Uses local notes directly for offline access - no server calls needed.
  */
 
-import { getMathTopicNotes, getMathTopics, MathTopicNotes } from '../../data/mathNotes';
+import type { MathTopicNotes } from '../../data/mathNotes/types';
 import { getALevelPureMathNotes, getAvailableALevelPureMathTopics } from '../../data/aLevelPureMath';
 import { getOLevelMathNotes, getAvailableOLevelMathTopics } from '../../data/oLevelMath/notes';
 import { getMathFormTopicNotes } from '../../data/mathematics';
@@ -17,11 +17,7 @@ export const mathNotesApi = {
         if (gradeLevel === 'A-Level' || gradeLevel === 'A Level') {
             return getAvailableALevelPureMathTopics();
         }
-        // For O-Level, combine topics from both sources
-        const oldTopics = getMathTopics();
-        const newTopics = getAvailableOLevelMathTopics();
-        // Return unique topics
-        return [...new Set([...newTopics, ...oldTopics])];
+        return getAvailableOLevelMathTopics();
     },
 
     /**
@@ -56,14 +52,6 @@ export const mathNotesApi = {
             return comprehensiveNotes;
         }
 
-        // Try older O-Level notes
-        const oLevelNotes = getMathTopicNotes(topic);
-        if (oLevelNotes) {
-            return oLevelNotes;
-        }
-
-        // Fallback: check A-Level notes if O-Level not found
-        const aLevelNotes = getALevelPureMathNotes(topic);
-        return aLevelNotes;
+        return null;
     }
 };

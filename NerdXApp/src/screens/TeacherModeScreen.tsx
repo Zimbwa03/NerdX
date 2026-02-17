@@ -36,9 +36,6 @@ import { Colors } from '../theme/colors';
 import { Audio } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { Dimensions } from 'react-native';
-
-const { width } = Dimensions.get('window');
 
 import { VideoStreamPlayer } from '../components/VideoStreamPlayer';
 import ZoomableImageModal from '../components/ZoomableImageModal';
@@ -65,11 +62,13 @@ const TeacherModeScreen: React.FC = () => {
   const themedColors = useThemedColors();
   const { showSuccess, showError, showWarning, showInfo } = useNotification();
   const insets = useSafeAreaInsets();
-  const { subject, gradeLevel, topic } = route.params as {
+  const { subject, gradeLevel, topic, formLevel } = route.params as {
     subject: string;
     gradeLevel: string;
     topic?: string;
+    formLevel?: string;
   };
+  const effectiveGradeLevel = formLevel || gradeLevel;
   const isMathSubject = (subject || '').toLowerCase().includes('math');
 
   const [session, setSession] = useState<TeacherSession | null>(null);
@@ -122,9 +121,9 @@ const TeacherModeScreen: React.FC = () => {
         );
         return;
       }
-      console.log('Starting Teacher Mode session with:', { subject, gradeLevel, topic });
+      console.log('Starting Teacher Mode session with:', { subject, gradeLevel: effectiveGradeLevel, topic, formLevel });
 
-      const sessionData = await teacherApi.startSession(subject, gradeLevel, topic);
+      const sessionData = await teacherApi.startSession(subject, effectiveGradeLevel, topic);
       console.log('Session data received:', sessionData);
 
       if (sessionData && sessionData.session_id) {
@@ -667,9 +666,9 @@ const TeacherModeScreen: React.FC = () => {
             <Text style={styles.teacherAvatarText}>👨‍🏫</Text>
           </View>
           <View style={styles.headerInfo}>
-            <Text style={styles.headerTitle}>Teacher Mode</Text>
-            <Text style={styles.headerSubtitle}>
-              {subject} • {gradeLevel}
+            <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">Teacher Mode</Text>
+            <Text style={styles.headerSubtitle} numberOfLines={2} ellipsizeMode="tail">
+              {subject} • {effectiveGradeLevel}
             </Text>
           </View>
           <View style={styles.creditsContainer}>
@@ -1057,6 +1056,7 @@ const styles = StyleSheet.create({
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    minWidth: 0,
   },
   teacherAvatar: {
     width: 56,
@@ -1074,17 +1074,20 @@ const styles = StyleSheet.create({
   },
   headerInfo: {
     flex: 1,
+    minWidth: 0,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginBottom: 4,
+    flexShrink: 1,
   },
   headerSubtitle: {
     fontSize: 14,
     color: '#FFFFFF',
     opacity: 0.9,
+    flexShrink: 1,
   },
   creditsContainer: {
     alignItems: 'center',
@@ -1094,6 +1097,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
+    marginLeft: 10,
+    flexShrink: 0,
   },
   credits: {
     fontSize: 18,
@@ -1134,10 +1139,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderBottomRightRadius: 4,
     overflow: 'hidden',
+    minWidth: 0,
   },
   assistantMessageFullWidth: {
     width: '100%',
     paddingHorizontal: 16,
+    minWidth: 0,
   },
   assistantAvatarSmall: {
     width: 32,
@@ -1164,6 +1171,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
     color: '#FFFFFF',
+    flexShrink: 1,
   },
   markdownContainer: {
     padding: 0,
@@ -1313,7 +1321,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.border.light,
   },
   graphImage: {
-    width: width * 0.65,
+    width: '100%',
+    maxWidth: 340,
     height: 180,
     borderRadius: 4,
   },

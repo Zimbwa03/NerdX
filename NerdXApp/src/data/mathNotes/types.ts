@@ -15,6 +15,7 @@ export interface MathNotesSection {
     title: string;
     content: string; // Markdown with KaTeX support
     worked_examples?: MathWorkedExample[];
+    videoUrl?: string;
 }
 
 export interface MathTopicNotes {

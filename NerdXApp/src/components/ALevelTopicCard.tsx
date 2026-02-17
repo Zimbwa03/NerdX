@@ -6,13 +6,9 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-
-const { width } = Dimensions.get('window');
 
 interface TopicCardProps {
     title: string;
@@ -89,8 +85,10 @@ export const ALevelTopicCard: React.FC<TopicCardProps> = ({
                         style={[
                             styles.title, 
                             { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }
-                        ]} 
+                        ]}
                         numberOfLines={2}
+                        ellipsizeMode="tail"
+                        maxFontSizeMultiplier={1.15}
                     >
                         {title}
                     </Text>
@@ -98,8 +96,10 @@ export const ALevelTopicCard: React.FC<TopicCardProps> = ({
                         style={[
                             styles.description,
                             { color: isDarkMode ? 'rgba(255,255,255,0.65)' : 'rgba(26,26,46,0.6)' }
-                        ]} 
+                        ]}
                         numberOfLines={2}
+                        ellipsizeMode="tail"
+                        maxFontSizeMultiplier={1.15}
                     >
                         {description}
                     </Text>
@@ -122,7 +122,11 @@ export const ALevelTopicCard: React.FC<TopicCardProps> = ({
                                         style={styles.badgeIcon}
                                     />
                                 )}
-                                <Text style={[styles.badgeText, { color: badge.color }]}>
+                                <Text
+                                    style={[styles.badgeText, { color: badge.color }]}
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                >
                                     {badge.text}
                                 </Text>
                             </View>
@@ -140,7 +144,11 @@ export const ALevelTopicCard: React.FC<TopicCardProps> = ({
                                     color={primaryColor} 
                                     style={styles.badgeIcon}
                                 />
-                                <Text style={[styles.badgeText, { color: primaryColor }]}>
+                                <Text
+                                    style={[styles.badgeText, { color: primaryColor }]}
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                >
                                     {objectives} objectives
                                 </Text>
                             </View>
@@ -193,13 +201,21 @@ export const ALevelFeatureCard: React.FC<FeatureCardProps> = ({
                 <Text style={[
                     styles.featureTitle,
                     { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }
-                ]}>
+                ]}
+                    numberOfLines={2}
+                    ellipsizeMode="tail"
+                    maxFontSizeMultiplier={1.15}
+                >
                     {title}
                 </Text>
                 <Text style={[
                     styles.featureSubtitle,
                     { color: isDarkMode ? 'rgba(255,255,255,0.6)' : 'rgba(26,26,46,0.55)' }
-                ]}>
+                ]}
+                    numberOfLines={2}
+                    ellipsizeMode="tail"
+                    maxFontSizeMultiplier={1.15}
+                >
                     {subtitle}
                 </Text>
             </View>
@@ -245,8 +261,8 @@ export const ALevelExamCard: React.FC<ExamCardProps> = ({
                         {icon}
                     </View>
                     <View style={styles.examTextContent}>
-                        <Text style={styles.examTitle}>{title}</Text>
-                        <Text style={styles.examSubtitle}>{subtitle}</Text>
+                        <Text style={styles.examTitle} numberOfLines={2} ellipsizeMode="tail">{title}</Text>
+                        <Text style={styles.examSubtitle} numberOfLines={2} ellipsizeMode="tail">{subtitle}</Text>
                     </View>
                     <View style={styles.examArrow}>
                         <Ionicons name="play" size={24} color="rgba(255,255,255,0.9)" />
@@ -290,13 +306,21 @@ export const ALevelInfoCard: React.FC<InfoCardProps> = ({
                 <Text style={[
                     styles.infoTitle,
                     { color: isDarkMode ? '#FFFFFF' : '#1A1A2E' }
-                ]}>
+                ]}
+                    numberOfLines={2}
+                    ellipsizeMode="tail"
+                    maxFontSizeMultiplier={1.15}
+                >
                     {title}
                 </Text>
                 <Text style={[
                     styles.infoText,
                     { color: isDarkMode ? 'rgba(255,255,255,0.65)' : 'rgba(26,26,46,0.6)' }
-                ]}>
+                ]}
+                    numberOfLines={4}
+                    ellipsizeMode="tail"
+                    maxFontSizeMultiplier={1.15}
+                >
                     {content}
                 </Text>
             </View>
@@ -344,6 +368,7 @@ const styles = StyleSheet.create({
         padding: 16,
         paddingLeft: 14,
         gap: 14,
+        minWidth: 0,
     },
     iconWrapper: {
         width: 54,
@@ -367,17 +392,20 @@ const styles = StyleSheet.create({
     },
     textContent: {
         flex: 1,
+        minWidth: 0,
     },
     title: {
         fontSize: 15,
         fontWeight: '700',
         letterSpacing: 0.2,
         marginBottom: 4,
+        flexShrink: 1,
     },
     description: {
         fontSize: 12.5,
         lineHeight: 17,
         marginBottom: 10,
+        flexShrink: 1,
     },
     badgesRow: {
         flexDirection: 'row',
@@ -405,6 +433,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
+        flexShrink: 0,
     },
 
     // Feature Card Styles
@@ -430,16 +459,19 @@ const styles = StyleSheet.create({
     },
     featureTextContent: {
         flex: 1,
+        minWidth: 0,
     },
     featureTitle: {
         fontSize: 16,
         fontWeight: '700',
         letterSpacing: 0.2,
         marginBottom: 3,
+        flexShrink: 1,
     },
     featureSubtitle: {
         fontSize: 13,
         lineHeight: 18,
+        flexShrink: 1,
     },
 
     // Exam Card Styles
@@ -472,6 +504,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 16,
+        minWidth: 0,
     },
     examIconWrapper: {
         width: 60,
@@ -483,6 +516,7 @@ const styles = StyleSheet.create({
     },
     examTextContent: {
         flex: 1,
+        minWidth: 0,
     },
     examTitle: {
         fontSize: 19,
@@ -490,11 +524,13 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         letterSpacing: 0.3,
         marginBottom: 4,
+        flexShrink: 1,
     },
     examSubtitle: {
         fontSize: 13,
         color: 'rgba(255,255,255,0.85)',
         lineHeight: 18,
+        flexShrink: 1,
     },
     examArrow: {
         width: 44,
@@ -503,6 +539,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.2)',
         justifyContent: 'center',
         alignItems: 'center',
+        flexShrink: 0,
     },
 
     // Info Card Styles
@@ -523,16 +560,19 @@ const styles = StyleSheet.create({
     },
     infoTextContent: {
         flex: 1,
+        minWidth: 0,
     },
     infoTitle: {
         fontSize: 14,
         fontWeight: '700',
         letterSpacing: 0.2,
         marginBottom: 4,
+        flexShrink: 1,
     },
     infoText: {
         fontSize: 12,
         lineHeight: 18,
+        flexShrink: 1,
     },
 });
 

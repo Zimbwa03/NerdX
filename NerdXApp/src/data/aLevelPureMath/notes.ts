@@ -2,7 +2,7 @@
 // Textbook-quality notes with worked examples and practice problems
 // Following the MathTopicNotes interface for consistency with O-Level notes
 
-import { MathTopicNotes } from '../mathNotes/types';
+import type { MathTopicNotes } from '../mathNotes/types';
 import { aLevelPureMathTopics } from './topics';
 
 // Complete notes for each A-Level Pure Mathematics topic
@@ -8636,6 +8636,5066 @@ $= \\tan A$ = RHS ✓
     }
 };
 
+// Deep expansion for Topic 1 (Lower Sixth): book-style enrichment with more examples and visual guidance.
+const polynomialTopic = aLevelPureMathNotes['Polynomials'];
+if (polynomialTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Graph Behaviour and Root Multiplicity',
+            content: `## Why root multiplicity matters
+
+When a polynomial has a factor $(x-a)^k$:
+- $k$ odd: the curve crosses the $x$-axis at $x=a$
+- $k$ even: the curve touches and turns at $x=a$
+
+## End behaviour (leading term test)
+
+For $P(x)=a_nx^n+\\cdots$:
+- If $n$ is even and $a_n>0$: both ends up
+- If $n$ is even and $a_n<0$: both ends down
+- If $n$ is odd and $a_n>0$: left down, right up
+- If $n$ is odd and $a_n<0$: left up, right down
+
+## Sign chart method
+
+1. Factorise fully.
+2. Mark roots on a number line.
+3. Test one value in each interval.
+4. Determine where $P(x)>0$ or $P(x)<0$.
+
+## Sketch workflow
+
+1. Identify degree and leading coefficient.
+2. Find real roots and multiplicities.
+3. Find $y$-intercept from $P(0)$.
+4. Use turning-point estimate (at most $n-1$).
+5. Draw consistent smooth shape.`,
+            worked_examples: [
+                {
+                    question: 'For $P(x)=(x-2)^2(x+1)$, describe crossings/touches and end behaviour.',
+                    steps: [
+                        'Degree is $3$ (odd), leading coefficient is positive.',
+                        'So left tail down, right tail up.',
+                        'Root $x=2$ has multiplicity 2 (even), so curve touches and turns at $x=2$.',
+                        'Root $x=-1$ has multiplicity 1 (odd), so curve crosses at $x=-1$.',
+                        '$y$-intercept: $P(0)=(-2)^2(1)=4$.'
+                    ],
+                    final_answer: 'Crosses at $x=-1$, touches at $x=2$, passes through $(0,4)$, with left-down/right-up end behaviour.'
+                },
+                {
+                    question: 'Solve the inequality $(x-3)(x+2)(x-1)>0$.',
+                    steps: [
+                        'Roots are $x=-2,1,3$.',
+                        'Test intervals: $(-\\infty,-2),(-2,1),(1,3),(3,\\infty)$.',
+                        'Pick test points: $-3,0,2,4$.',
+                        'Signs: at $-3$ gives negative; at $0$ gives positive; at $2$ gives negative; at $4$ gives positive.',
+                        'Need positive regions only.'
+                    ],
+                    final_answer: '$x\\in(-2,1)\\cup(3,\\infty)$.'
+                },
+                {
+                    question: 'Sketch key features of $y=-x^4+4x^2$.',
+                    steps: [
+                        'Factor: $y=-x^2(x^2-4)=-x^2(x-2)(x+2)$.',
+                        'Roots: $x=-2,0,2$, with multiplicity 2 at $x=0$.',
+                        'Even degree with negative leading term: both ends down.',
+                        'At $x=0$, curve touches axis (even multiplicity).',
+                        'At $x=\\pm2$, curve crosses axis.'
+                    ],
+                    final_answer: 'Symmetric quartic: both tails down, crosses at $x=\\pm2$, touches at $x=0$.'
+                }
+            ]
+        },
+        {
+            title: '11. Polynomial Modelling and Functional Construction',
+            content: `## Building a polynomial from conditions
+
+Use factors for known roots:
+$$P(x)=k(x-r_1)(x-r_2)\\cdots(x-r_n)$$
+Then use an extra condition (often a point) to find $k$.
+
+## Typical exam pattern
+- Given roots, find polynomial equation
+- Given one factor and one root, determine the remaining factor
+- Given graph features, reconstruct the polynomial
+
+## Modelling checklist
+1. Translate information into factors.
+2. Include repeated roots for touches/turns.
+3. Use one coordinate to solve for scale factor $k$.
+4. Expand only at the end if required.`,
+            worked_examples: [
+                {
+                    question: 'Find a cubic polynomial with roots $2,-1,4$ and $P(0)=16$.',
+                    steps: [
+                        'Start with factors: $P(x)=k(x-2)(x+1)(x-4)$.',
+                        'Use $P(0)=16$: $16=k(-2)(1)(-4)=8k$.',
+                        'So $k=2$.',
+                        'Hence polynomial is $P(x)=2(x-2)(x+1)(x-4)$.',
+                        'Expand if required for standard form.'
+                    ],
+                    final_answer: '$P(x)=2(x-2)(x+1)(x-4)=2x^3-10x^2+4x+16$.'
+                },
+                {
+                    question: 'A quartic touches the axis at $x=1$, crosses at $x=-2$ and $x=3$, and passes through $(0,-12)$. Find $P(x)$.',
+                    steps: [
+                        'Touch at $x=1$ gives repeated factor $(x-1)^2$.',
+                        'Crossings at $x=-2,3$ give factors $(x+2)(x-3)$.',
+                        'Set $P(x)=k(x-1)^2(x+2)(x-3)$.',
+                        'Use point $(0,-12)$: $-12=k(1)(2)(-3)=-6k$.',
+                        'So $k=2$.'
+                    ],
+                    final_answer: '$P(x)=2(x-1)^2(x+2)(x-3)$.'
+                },
+                {
+                    question: 'If $(x-5)$ is a factor of $x^3+ax^2+bx-20$ and $P(2)=10$, find $a$ and $b$.',
+                    steps: [
+                        'Factor theorem: $P(5)=0$.',
+                        'So $125+25a+5b-20=0\\Rightarrow25a+5b=-105\\Rightarrow5a+b=-21$.',
+                        'Use $P(2)=10$: $8+4a+2b-20=10\\Rightarrow4a+2b=22\\Rightarrow2a+b=11$.',
+                        'Subtract equations: $(5a+b)-(2a+b)=-21-11\\Rightarrow3a=-32$.',
+                        '$a=-\\frac{32}{3}$, then $b=11-2a=11+\\frac{64}{3}=\\frac{97}{3}$.'
+                    ],
+                    final_answer: '$a=-\\frac{32}{3},\\; b=\\frac{97}{3}$.'
+                }
+            ]
+        },
+        {
+            title: '12. Book Drill: Exam-Style Mixed Practice with Full Method',
+            content: `## Practice set structure
+
+These questions mirror typical Lower Sixth progression:
+1. Algebraic manipulation
+2. Factor/remainder theorem
+3. Equation solving
+4. Inequality and graph interpretation
+5. Construction from conditions
+
+Use this as a mini chapter test. Attempt first, then compare with method.`,
+            worked_examples: [
+                {
+                    question: 'Divide $2x^4-3x^3+5x^2-7x+6$ by $(x-2)$ and state quotient and remainder.',
+                    steps: [
+                        'Use synthetic division with root $2$.',
+                        'Coefficients: $2,-3,5,-7,6$.',
+                        'Bring down $2$. Multiply by $2$ gives $4$; add to $-3$ gives $1$.',
+                        'Multiply $1$ by $2$ gives $2$; add to $5$ gives $7$.',
+                        'Multiply $7$ by $2$ gives $14$; add to $-7$ gives $7$.',
+                        'Multiply $7$ by $2$ gives $14$; add to $6$ gives remainder $20$.'
+                    ],
+                    final_answer: 'Quotient $=2x^3+x^2+7x+7$, remainder $=20$.'
+                },
+                {
+                    question: 'Given $P(x)=x^3-6x^2+11x-6$, solve $P(x)=0$.',
+                    steps: [
+                        'Try integer roots using factors of 6: $\\pm1,\\pm2,\\pm3,\\pm6$.',
+                        '$P(1)=1-6+11-6=0$, so $(x-1)$ is a factor.',
+                        'Divide to get quotient $x^2-5x+6$.',
+                        'Factor quadratic: $x^2-5x+6=(x-2)(x-3)$.'
+                    ],
+                    final_answer: 'Roots are $x=1,2,3$.'
+                },
+                {
+                    question: 'Find all $k$ such that $(x+2)$ is a factor of $P(x)=x^3+kx^2-4x-8$.',
+                    steps: [
+                        'Use factor theorem: $P(-2)=0$.',
+                        '$(-2)^3+k(-2)^2-4(-2)-8=0$.',
+                        '$-8+4k+8-8=0\\Rightarrow4k-8=0$.',
+                        'Solve: $k=2$.'
+                    ],
+                    final_answer: '$k=2$.'
+                },
+                {
+                    question: 'Solve $x^3-4x^2-x+4=0$ and state the interval where expression is negative.',
+                    steps: [
+                        'Group terms: $x^2(x-4)-1(x-4)=(x^2-1)(x-4)$.',
+                        'Then $(x-1)(x+1)(x-4)=0$ gives roots $-1,1,4$.',
+                        'Sign intervals: $(-\\infty,-1),(-1,1),(1,4),(4,\\infty)$.',
+                        'Test points: $-2,0,2,5$ gives signs $-,+,-,+$.',
+                        'Negative where sign is minus.'
+                    ],
+                    final_answer: 'Roots: $x=-1,1,4$. Expression is negative on $(-\\infty,-1)\\cup(1,4)$.'
+                }
+            ]
+        },
+        {
+            title: '13. Diagram Walkthroughs for Fast Recall',
+            content: `## Diagram A: End behaviour map
+
+Use leading term $a_nx^n$ to predict tail directions before full sketching.
+
+## Diagram B: Multiplicity behaviour
+
+At simple roots, the graph crosses the axis.
+At repeated even roots, the graph touches and turns.
+
+## Diagram C: Division workflow
+
+Dividend -> divide leading terms -> multiply back -> subtract -> repeat.
+
+## Diagram D: Factor theorem check line
+
+Evaluate $P(a)$ quickly to test if $(x-a)$ is a factor.`,
+            worked_examples: [
+                {
+                    question: 'For $P(x)=x^4-5x^2+4$, identify expected crossings/touches before full solving.',
+                    steps: [
+                        'Even degree with positive leading coefficient: both ends up.',
+                        'Factor: $(x^2-1)(x^2-4)=(x-1)(x+1)(x-2)(x+2)$.',
+                        'All roots are simple (multiplicity 1), so each is a crossing point.'
+                    ],
+                    final_answer: 'Crosses at $x=-2,-1,1,2$ with both ends rising.'
+                },
+                {
+                    question: 'Explain why $P(3)=0$ immediately confirms $(x-3)$ as a factor.',
+                    steps: [
+                        'By the factor theorem, $(x-a)$ is a factor exactly when $P(a)=0$.',
+                        'Substitute $a=3$. If result is zero, the polynomial has root 3.',
+                        'A root at 3 means the polynomial is divisible by $(x-3)$ with zero remainder.'
+                    ],
+                    final_answer: 'Because factor theorem gives a direct equivalence: $P(3)=0\\iff(x-3)$ is a factor.'
+                }
+            ]
+        }
+    ];
+
+    polynomialTopic.sections = [...polynomialTopic.sections, ...extraSections];
+    polynomialTopic.key_points = Array.from(
+        new Set([
+            ...polynomialTopic.key_points,
+            'Root multiplicity determines whether a curve crosses or touches the x-axis.',
+            'Always use leading term test before sketching a polynomial graph.',
+            'Sign charts are the safest method for polynomial inequalities.',
+            'Build polynomials from roots using a scale factor k, then use a known point.',
+            'For factor checks, evaluate P(a) first before long division.',
+        ])
+    );
+    polynomialTopic.exam_tips = Array.from(
+        new Set([
+            ...polynomialTopic.exam_tips,
+            'When solving inequalities, keep roots in ascending order and test each interval.',
+            'State multiplicity explicitly in graph questions; examiners look for this language.',
+            'Leave expressions factorised as long as possible to reduce algebra mistakes.',
+            'In structured questions, write the theorem name before using it (factor or remainder).',
+        ])
+    );
+    polynomialTopic.visual_descriptions = Array.from(
+        new Set([
+            ...polynomialTopic.visual_descriptions,
+            'Cubic and quartic sketch panel showing crossing vs touching roots.',
+            'Polynomial sign chart across root intervals.',
+            'Synthetic division table with coefficient flow.',
+            'Construction map: roots -> factors -> scale factor k -> final polynomial.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 2 (Lower Sixth): rational functions chapter upgrade.
+const rationalFunctionsTopic = aLevelPureMathNotes['Rational Functions'];
+if (rationalFunctionsTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Asymptotes and End Behaviour (Deep Graph Strategy)',
+            content: `## Vertical asymptotes
+
+If denominator $Q(x)=0$ at $x=a$ and factor does not cancel with numerator, then:
+$$x=a \\text{ is a vertical asymptote}.$$
+
+## Horizontal asymptotes
+
+For $f(x)=\\frac{P(x)}{Q(x)}$:
+- $\\deg(P)<\\deg(Q)$: $y=0$
+- $\\deg(P)=\\deg(Q)$: $y=\\frac{\\text{leading coeff of }P}{\\text{leading coeff of }Q}$
+- $\\deg(P)>\\deg(Q)$: no horizontal asymptote
+
+## Oblique (slant) asymptotes
+
+If $\\deg(P)=\\deg(Q)+1$, divide:
+$$\\frac{P(x)}{Q(x)} = ax+b + \\frac{R(x)}{Q(x)}$$
+then asymptote is:
+$$y=ax+b.$$
+
+## Sketch checklist
+1. Factorise and identify domain restrictions.
+2. Check removable holes (cancelled factors).
+3. Find all asymptotes.
+4. Find intercepts.
+5. Use test points around each asymptote.
+6. Draw branch behaviour and arrows.`,
+            worked_examples: [
+                {
+                    question: 'Find all asymptotes of $f(x)=\\frac{2x+5}{x-3}$.',
+                    steps: [
+                        'Denominator is zero at $x=3$, no cancellation, so vertical asymptote is $x=3$.',
+                        'Numerator and denominator have same degree (1 and 1).',
+                        'Horizontal asymptote is ratio of leading coefficients: $\\frac{2}{1}=2$.',
+                        'So horizontal asymptote is $y=2$.'
+                    ],
+                    final_answer: 'Vertical asymptote: $x=3$; Horizontal asymptote: $y=2$.'
+                },
+                {
+                    question: 'Determine asymptotes of $f(x)=\\frac{x^2+1}{x-2}$.',
+                    steps: [
+                        'Vertical asymptote: denominator zero at $x=2$ (no common factor), so $x=2$.',
+                        'Degree of numerator is 2, denominator is 1, difference is 1, so expect slant asymptote.',
+                        'Divide: $x^2+1=(x-2)(x+2)+5$.',
+                        'Hence $f(x)=x+2+\\frac{5}{x-2}$.',
+                        'As $x\\to\\pm\\infty$, fraction term tends to 0.'
+                    ],
+                    final_answer: 'Vertical asymptote: $x=2$; Oblique asymptote: $y=x+2$.'
+                },
+                {
+                    question: 'For $f(x)=\\frac{x^2-1}{x^2+4x+4}$, find asymptotes.',
+                    steps: [
+                        'Factorise denominator: $x^2+4x+4=(x+2)^2$.',
+                        'No common factor with numerator $(x-1)(x+1)$, so vertical asymptote at $x=-2$.',
+                        'Degrees are equal (2 and 2).',
+                        'Horizontal asymptote = ratio of leading coefficients $=\\frac{1}{1}=1$.'
+                    ],
+                    final_answer: 'Vertical asymptote: $x=-2$; Horizontal asymptote: $y=1$.'
+                }
+            ]
+        },
+        {
+            title: '11. Advanced Partial Fractions Patterns',
+            content: `## Standard decomposition structures
+
+### Distinct linear factors
+$$\\frac{P(x)}{(x-a)(x-b)}=\\frac{A}{x-a}+\\frac{B}{x-b}.$$
+
+### Repeated linear factor
+$$\\frac{P(x)}{(x-a)^2}=\\frac{A}{x-a}+\\frac{B}{(x-a)^2}.$$
+
+### Irreducible quadratic
+$$\\frac{P(x)}{x^2+px+q}=\\frac{Ax+B}{x^2+px+q}.$$
+
+### Mixed case
+Include every required term once:
+$$\\frac{P(x)}{(x-1)^2(x+3)}=\\frac{A}{x-1}+\\frac{B}{(x-1)^2}+\\frac{C}{x+3}.$$
+
+## Fast coefficient strategy
+1. Use cover-up for simple distinct factors.
+2. Use substitution values first.
+3. Expand and compare coefficients for remaining unknowns.`,
+            worked_examples: [
+                {
+                    question: 'Decompose $\\frac{5x+1}{(x-2)(x+1)}$.',
+                    steps: [
+                        'Write $\\frac{5x+1}{(x-2)(x+1)}=\\frac{A}{x-2}+\\frac{B}{x+1}$.',
+                        'Multiply through: $5x+1=A(x+1)+B(x-2)$.',
+                        'Let $x=2$: $11=3A\\Rightarrow A=\\frac{11}{3}$.',
+                        'Let $x=-1$: $-4=-3B\\Rightarrow B=\\frac{4}{3}$.'
+                    ],
+                    final_answer: '$\\frac{5x+1}{(x-2)(x+1)}=\\frac{11}{3(x-2)}+\\frac{4}{3(x+1)}$.'
+                },
+                {
+                    question: 'Decompose $\\frac{2x+3}{(x-1)^2}$.',
+                    steps: [
+                        'Use repeated-factor form: $\\frac{2x+3}{(x-1)^2}=\\frac{A}{x-1}+\\frac{B}{(x-1)^2}$.',
+                        'Multiply through: $2x+3=A(x-1)+B$.',
+                        'Set $x=1$: $5=B$.',
+                        'Then $2x+3=A(x-1)+5\\Rightarrow2x-2=A(x-1)\\Rightarrow A=2$.'
+                    ],
+                    final_answer: '$\\frac{2x+3}{(x-1)^2}=\\frac{2}{x-1}+\\frac{5}{(x-1)^2}$.'
+                },
+                {
+                    question: 'Decompose $\\frac{x^2+2}{(x+1)(x^2+1)}$.',
+                    steps: [
+                        'Form: $\\frac{x^2+2}{(x+1)(x^2+1)}=\\frac{A}{x+1}+\\frac{Bx+C}{x^2+1}$.',
+                        'Multiply through: $x^2+2=A(x^2+1)+(Bx+C)(x+1)$.',
+                        'Expand RHS: $(A+B)x^2+(B+C)x+(A+C)$.',
+                        'Compare coefficients with $x^2+0x+2$:',
+                        '$A+B=1,\\;B+C=0,\\;A+C=2$.',
+                        'Solve: $A=\\frac{3}{2},\\;B=-\\frac{1}{2},\\;C=\\frac{1}{2}$.'
+                    ],
+                    final_answer: '$\\frac{x^2+2}{(x+1)(x^2+1)}=\\frac{3}{2(x+1)}+\\frac{-x+1}{2(x^2+1)}$.'
+                }
+            ]
+        },
+        {
+            title: '12. Rational Equations and Inequalities (Exam Method)',
+            content: `## Rational equations
+
+When solving:
+1. State restricted values (denominator cannot be zero).
+2. Multiply by LCD to clear fractions.
+3. Solve resulting polynomial equation.
+4. Reject invalid roots.
+
+## Rational inequalities
+
+Use sign chart:
+1. Move all terms to one side.
+2. Factor numerator and denominator.
+3. Mark critical points (zeros + undefined points).
+4. Test each interval.
+5. Use strict/non-strict endpoint rules carefully.`,
+            worked_examples: [
+                {
+                    question: 'Solve $\\frac{x+1}{x-2}=3$.',
+                    steps: [
+                        'Restriction: $x\\neq2$.',
+                        'Multiply both sides by $(x-2)$: $x+1=3(x-2)$.',
+                        'So $x+1=3x-6\\Rightarrow7=2x\\Rightarrow x=\\frac{7}{2}$.',
+                        'Check: $\\frac{7}{2}\\neq2$, valid.'
+                    ],
+                    final_answer: '$x=\\frac{7}{2}$.'
+                },
+                {
+                    question: 'Solve $\\frac{2}{x+1}+\\frac{1}{x-1}=1$.',
+                    steps: [
+                        'Restrictions: $x\\neq-1,1$.',
+                        'LCD is $(x+1)(x-1)$.',
+                        'Multiply through: $2(x-1)+(x+1)=(x+1)(x-1)$.',
+                        'LHS: $3x-1$, RHS: $x^2-1$.',
+                        'So $x^2-1=3x-1\\Rightarrow x^2-3x=0\\Rightarrow x(x-3)=0$.',
+                        'Candidates: $x=0$ or $x=3$, both allowed.'
+                    ],
+                    final_answer: '$x=0$ or $x=3$.'
+                },
+                {
+                    question: 'Solve inequality $\\frac{x-1}{x+2}\\ge0$.',
+                    steps: [
+                        'Critical points: numerator zero at $x=1$, denominator zero at $x=-2$.',
+                        'Intervals: $(-\\infty,-2),(-2,1),(1,\\infty)$.',
+                        'Test signs: at $x=-3$ gives positive, at $x=0$ gives negative, at $x=2$ gives positive.',
+                        'Need non-negative: include positive intervals and point where expression is zero.',
+                        '$x=1$ gives zero so include; $x=-2$ undefined so exclude.'
+                    ],
+                    final_answer: '$x\\in(-\\infty,-2)\\cup[1,\\infty)$.'
+                }
+            ]
+        },
+        {
+            title: '13. Rational Functions in Calculus and Modelling',
+            content: `## Integration connection
+
+Partial fractions is foundational for:
+$$\\int \\frac{P(x)}{Q(x)}\\,dx.$$
+
+Typical pipeline:
+1. Ensure proper fraction (divide first if improper).
+2. Decompose.
+3. Integrate each piece.
+
+## Modelling interpretation
+
+Rational models appear in:
+- growth with saturation
+- cost/time trade-off curves
+- response curves in sciences
+
+Always interpret asymptotes as limiting behaviour, not necessarily reachable values.`,
+            worked_examples: [
+                {
+                    question: 'Evaluate $\\int\\frac{3x+5}{(x+1)(x+2)}\\,dx$.',
+                    steps: [
+                        'Set $\\frac{3x+5}{(x+1)(x+2)}=\\frac{A}{x+1}+\\frac{B}{x+2}$.',
+                        'So $3x+5=A(x+2)+B(x+1)$.',
+                        'At $x=-1$: $2=A$. At $x=-2$: $-1=-B\\Rightarrow B=1$.',
+                        'Integral becomes $\\int\\left(\\frac{2}{x+1}+\\frac{1}{x+2}\\right)dx$.',
+                        'Integrate termwise.'
+                    ],
+                    final_answer: '$2\\ln|x+1|+\\ln|x+2|+C$.'
+                },
+                {
+                    question: 'A model is $C(x)=\\frac{120}{x}+8$ for unit cost. Interpret asymptotes.',
+                    steps: [
+                        'Domain in context: $x>0$.',
+                        'As $x\\to0^+$, $C(x)\\to\\infty$ (very small production size gives huge unit cost).',
+                        'As $x\\to\\infty$, $C(x)\\to8$.',
+                        'So $y=8$ is long-run minimum trend (horizontal asymptote).'
+                    ],
+                    final_answer: 'Vertical asymptote $x=0$ (infinite cost near zero output); horizontal asymptote $y=8$ (long-run unit cost floor).'
+                },
+                {
+                    question: 'Find $k$ so that $f(x)=\\frac{x+k}{x-4}$ passes through $(2,-3)$.',
+                    steps: [
+                        'Substitute point: $-3=\\frac{2+k}{2-4}=\\frac{2+k}{-2}$.',
+                        'Multiply: $6=2+k$.',
+                        'Hence $k=4$.'
+                    ],
+                    final_answer: '$k=4$.'
+                }
+            ]
+        }
+    ];
+
+    rationalFunctionsTopic.sections = [...rationalFunctionsTopic.sections, ...extraSections];
+    rationalFunctionsTopic.key_points = Array.from(
+        new Set([
+            ...rationalFunctionsTopic.key_points,
+            'Always check for cancelled factors to distinguish holes from vertical asymptotes.',
+            'For inequalities, include denominator zeros in the sign chart as excluded points.',
+            'In partial fractions, repeated factors require separate powers in decomposition.',
+            'When degree numerator exceeds denominator, perform polynomial division first.',
+            'Asymptotes describe approach behaviour, not necessarily attainable coordinates.',
+        ])
+    );
+    rationalFunctionsTopic.exam_tips = Array.from(
+        new Set([
+            ...rationalFunctionsTopic.exam_tips,
+            'State domain restrictions before solving rational equations.',
+            'Use substitution-friendly values first in coefficient comparison questions.',
+            'In graph sketches, label asymptotes explicitly before plotting branch points.',
+            'Reject invalid solutions created by multiplying through by expressions containing x.',
+        ])
+    );
+    rationalFunctionsTopic.visual_descriptions = Array.from(
+        new Set([
+            ...rationalFunctionsTopic.visual_descriptions,
+            'Asymptote map showing vertical, horizontal, and oblique behaviours.',
+            'Partial fractions decomposition templates for distinct, repeated, and quadratic factors.',
+            'Rational inequality sign chart with excluded points and interval testing.',
+            'Improper fraction division flow: divide first, then decompose remainder.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 3 (Lower Sixth): indices, surds, and logarithms chapter upgrade.
+const indicesSurdsLogsTopic = aLevelPureMathNotes['Indices, Surds and Logarithms'];
+if (indicesSurdsLogsTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Advanced Indices and Exponential Models',
+            content: `## Core index structure revisited
+
+For $a>0$:
+- $a^m\\cdot a^n=a^{m+n}$
+- $\\frac{a^m}{a^n}=a^{m-n}$
+- $(a^m)^n=a^{mn}$
+- $a^{-n}=\\frac{1}{a^n}$
+- $a^{\\frac{p}{q}}=\\sqrt[q]{a^p}$
+
+## Standard simplification pipeline
+1. Rewrite all terms with common base where possible.
+2. Convert roots to fractional indices.
+3. Apply laws carefully in one direction at a time.
+4. Return final answer in exact form.
+
+## Exponential growth/decay models
+
+Continuous model:
+$$N(t)=N_0e^{kt}$$
+
+Discrete multiplier model:
+$$N(t)=N_0(1+r)^t$$
+
+where $r$ may be negative for decay.
+
+## Exam trap
+
+Do not treat:
+$$a^m+a^n=a^{m+n}$$
+This is false in general.`,
+            worked_examples: [
+                {
+                    question: 'Simplify $\\frac{27^{2/3}\\cdot9^{-1/2}}{3^{-1}}$.',
+                    steps: [
+                        'Write in base 3: $27=3^3$ and $9=3^2$.',
+                        '$27^{2/3}=(3^3)^{2/3}=3^2=9$.',
+                        '$9^{-1/2}=(3^2)^{-1/2}=3^{-1}=\\frac{1}{3}$.',
+                        'Numerator: $9\\cdot\\frac{1}{3}=3$.',
+                        'Denominator: $3^{-1}=\\frac{1}{3}$.',
+                        'So $\\frac{3}{1/3}=9$.'
+                    ],
+                    final_answer: '$9$'
+                },
+                {
+                    question: 'Solve $2^{x+1}=16\\cdot2^{x-3}$.',
+                    steps: [
+                        'Write $16=2^4$.',
+                        'Right side: $2^4\\cdot2^{x-3}=2^{x+1}$.',
+                        'Equation becomes $2^{x+1}=2^{x+1}$.',
+                        'Identity true for all real $x$.'
+                    ],
+                    final_answer: 'All real values of $x$.'
+                },
+                {
+                    question: 'A culture doubles every 3 hours. If initial amount is 500, find amount after 12 hours.',
+                    steps: [
+                        '12 hours contains $\\frac{12}{3}=4$ doubling periods.',
+                        'So amount $=500\\cdot2^4$.',
+                        '$2^4=16$, therefore amount is $500\\cdot16=8000$.'
+                    ],
+                    final_answer: '$8000$ units.'
+                }
+            ]
+        },
+        {
+            title: '11. Surd Mastery and Rationalisation Techniques',
+            content: `## Surd forms
+
+A surd is an irrational root expression in exact form, for example:
+$$\\sqrt{2},\\;\\sqrt{5},\\;2\\sqrt{3}.$$
+
+## Simplification strategy
+1. Factor radicand into perfect square times remainder.
+2. Extract perfect square root.
+3. Combine like surds only.
+
+## Rationalising denominators
+
+### Case A: denominator $\\sqrt{a}$
+Multiply top and bottom by $\\sqrt{a}$.
+
+### Case B: denominator $a+\\sqrt{b}$
+Use conjugate:
+$$a-\\sqrt{b}.$$
+
+Because:
+$$(a+\\sqrt{b})(a-\\sqrt{b})=a^2-b.$$
+
+## Important identity
+$$\\sqrt{m}\\cdot\\sqrt{n}=\\sqrt{mn},\\quad \\frac{\\sqrt{m}}{\\sqrt{n}}=\\sqrt{\\frac{m}{n}}\\;(n>0).$$`,
+            worked_examples: [
+                {
+                    question: 'Simplify $\\sqrt{72}-2\\sqrt{8}+\\sqrt{18}$.',
+                    steps: [
+                        '$\\sqrt{72}=\\sqrt{36\\cdot2}=6\\sqrt{2}$.',
+                        '$\\sqrt{8}=\\sqrt{4\\cdot2}=2\\sqrt{2}$, so $-2\\sqrt{8}=-4\\sqrt{2}$.',
+                        '$\\sqrt{18}=\\sqrt{9\\cdot2}=3\\sqrt{2}$.',
+                        'Add coefficients: $(6-4+3)\\sqrt{2}=5\\sqrt{2}$.'
+                    ],
+                    final_answer: '$5\\sqrt{2}$.'
+                },
+                {
+                    question: 'Rationalise $\\frac{5}{2+\\sqrt{3}}$.',
+                    steps: [
+                        'Multiply by conjugate $\\frac{2-\\sqrt{3}}{2-\\sqrt{3}}$.',
+                        'Numerator: $5(2-\\sqrt{3})=10-5\\sqrt{3}$.',
+                        'Denominator: $(2+\\sqrt{3})(2-\\sqrt{3})=4-3=1$.',
+                        'So denominator becomes 1.'
+                    ],
+                    final_answer: '$10-5\\sqrt{3}$.'
+                },
+                {
+                    question: 'Show that $\\frac{1}{\\sqrt{5}-2}=\\sqrt{5}+2$.',
+                    steps: [
+                        'Multiply numerator and denominator by conjugate $(\\sqrt{5}+2)$.',
+                        '$\\frac{1}{\\sqrt{5}-2}\\cdot\\frac{\\sqrt{5}+2}{\\sqrt{5}+2}=\\frac{\\sqrt{5}+2}{(\\sqrt{5})^2-2^2}$.',
+                        'Denominator becomes $5-4=1$.',
+                        'Hence expression equals $\\sqrt{5}+2$.'
+                    ],
+                    final_answer: '$\\frac{1}{\\sqrt{5}-2}=\\sqrt{5}+2$.'
+                }
+            ]
+        },
+        {
+            title: '12. Logarithmic Equations, Inequalities and Change of Base',
+            content: `## Exponential-log inverse relationship
+
+$$y=a^x\\iff x=\\log_a y,\\quad a>0,\\;a\\neq1,\\;y>0.$$
+
+## Log laws
+- $\\log_a(xy)=\\log_a x+\\log_a y$
+- $\\log_a\\left(\\frac{x}{y}\\right)=\\log_a x-\\log_a y$
+- $\\log_a(x^k)=k\\log_a x$
+- $\\log_a b=\\frac{\\log_c b}{\\log_c a}$ (change of base)
+
+## Equation solving pattern
+1. Restrict arguments: log inputs must be positive.
+2. Combine logs to single expression if possible.
+3. Convert to exponential form.
+4. Solve and check domain.
+
+## Inequality note
+
+For $a>1$, $\\log_a x$ is increasing.
+For $0<a<1$, it is decreasing (inequality direction reverses).`,
+            worked_examples: [
+                {
+                    question: 'Solve $\\log_3(x-1)+\\log_3(x+2)=2$.',
+                    steps: [
+                        'Domain: $x-1>0\\Rightarrow x>1$ and $x+2>0$ (already true if $x>1$).',
+                        'Combine: $\\log_3[(x-1)(x+2)]=2$.',
+                        'Convert: $(x-1)(x+2)=3^2=9$.',
+                        'Expand: $x^2+x-2=9\\Rightarrow x^2+x-11=0$.',
+                        '$x=\\frac{-1\\pm\\sqrt{45}}{2}=\\frac{-1\\pm3\\sqrt{5}}{2}$.',
+                        'Apply domain $x>1$: keep positive root only.'
+                    ],
+                    final_answer: '$x=\\frac{-1+3\\sqrt{5}}{2}$.'
+                },
+                {
+                    question: 'Given $\\log_2 7=2.807$, estimate $\\log_4 49$.',
+                    steps: [
+                        '$\\log_4 49=\\frac{\\log_2 49}{\\log_2 4}$ by change of base.',
+                        '$\\log_2 49=\\log_2(7^2)=2\\log_2 7=2(2.807)=5.614$.',
+                        '$\\log_2 4=2$.',
+                        'So $\\log_4 49=\\frac{5.614}{2}=2.807$.'
+                    ],
+                    final_answer: '$\\log_4 49\\approx2.807$.'
+                },
+                {
+                    question: 'Solve $\\ln(x^2-5x+6)=0$.',
+                    steps: [
+                        '$\\ln A=0\\Rightarrow A=1$.',
+                        'So $x^2-5x+6=1\\Rightarrow x^2-5x+5=0$.',
+                        'Use formula: $x=\\frac{5\\pm\\sqrt{25-20}}{2}=\\frac{5\\pm\\sqrt{5}}{2}$.',
+                        'Check log domain: $x^2-5x+6>0$ at both roots because expression equals 1.'
+                    ],
+                    final_answer: '$x=\\frac{5\\pm\\sqrt{5}}{2}$.'
+                }
+            ]
+        },
+        {
+            title: '13. Book Drill: Mixed Structured Questions',
+            content: `## Chapter drill format
+
+This section blends all three strands:
+- indices manipulation
+- surd simplification/rationalisation
+- logarithmic equation solving
+
+Use full method lines exactly as in exam scripts.`,
+            worked_examples: [
+                {
+                    question: 'Simplify and express in index form: $\\frac{(16x^{1/2}y^{-1})^{3/2}}{8x^{-1/4}y^{1/2}}$.',
+                    steps: [
+                        'Apply outer power: $16^{3/2}x^{3/4}y^{-3/2}$.',
+                        '$16^{3/2}=(\\sqrt{16})^3=4^3=64$.',
+                        'Expression becomes $\\frac{64x^{3/4}y^{-3/2}}{8x^{-1/4}y^{1/2}}$.',
+                        'Divide coefficients: $64/8=8$.',
+                        'Subtract powers: $x^{3/4-(-1/4)}=x^1$, $y^{-3/2-1/2}=y^{-2}$.'
+                    ],
+                    final_answer: '$8xy^{-2}=\\frac{8x}{y^2}$.'
+                },
+                {
+                    question: 'Rationalise and simplify: $\\frac{\\sqrt{12}}{\\sqrt{3}-1}$.',
+                    steps: [
+                        '$\\sqrt{12}=2\\sqrt{3}$, so expression is $\\frac{2\\sqrt{3}}{\\sqrt{3}-1}$.',
+                        'Multiply by conjugate: $\\frac{2\\sqrt{3}(\\sqrt{3}+1)}{(\\sqrt{3}-1)(\\sqrt{3}+1)}$.',
+                        'Denominator: $3-1=2$.',
+                        'Numerator: $2\\sqrt{3}(\\sqrt{3}+1)=2(3+\\sqrt{3})=6+2\\sqrt{3}$.',
+                        'Divide by 2: $3+\\sqrt{3}$.'
+                    ],
+                    final_answer: '$3+\\sqrt{3}$.'
+                },
+                {
+                    question: 'Solve $\\log_5(x)+\\log_5(x-4)=2$.',
+                    steps: [
+                        'Domain: $x>0$ and $x-4>0\\Rightarrow x>4$.',
+                        'Combine logs: $\\log_5[x(x-4)]=2$.',
+                        'Convert: $x(x-4)=5^2=25$.',
+                        '$x^2-4x-25=0$.',
+                        '$x=\\frac{4\\pm\\sqrt{16+100}}{2}=\\frac{4\\pm\\sqrt{116}}{2}=2\\pm\\sqrt{29}$.',
+                        'Apply domain $x>4$: valid root is $2+\\sqrt{29}$.'
+                    ],
+                    final_answer: '$x=2+\\sqrt{29}$.'
+                },
+                {
+                    question: 'Given $2^x=7$, evaluate $\\log_2\\left(\\frac{49}{8}\\right)$ in terms of $x$.',
+                    steps: [
+                        '$\\log_2\\left(\\frac{49}{8}\\right)=\\log_2(49)-\\log_2(8)$.',
+                        '$\\log_2(49)=\\log_2(7^2)=2\\log_2 7=2x$.',
+                        '$\\log_2(8)=3$.',
+                        'Therefore expression equals $2x-3$.'
+                    ],
+                    final_answer: '$2x-3$.'
+                }
+            ]
+        }
+    ];
+
+    indicesSurdsLogsTopic.sections = [...indicesSurdsLogsTopic.sections, ...extraSections];
+    indicesSurdsLogsTopic.key_points = Array.from(
+        new Set([
+            ...indicesSurdsLogsTopic.key_points,
+            'Convert roots to fractional indices early when simplifying complex expressions.',
+            'Use conjugates to rationalise binomial surd denominators cleanly.',
+            'State log domain restrictions before solving equations.',
+            'Change-of-base is essential when calculator base differs from question base.',
+            'For logarithmic inequalities, check if base is greater or less than 1.',
+        ])
+    );
+    indicesSurdsLogsTopic.exam_tips = Array.from(
+        new Set([
+            ...indicesSurdsLogsTopic.exam_tips,
+            'Do not cancel terms across addition inside logs or surds.',
+            'In surd questions, keep exact values; avoid decimal approximations unless requested.',
+            'Always re-check candidate log solutions against argument positivity.',
+            'Write one law per line in index/log proofs to secure method marks.',
+        ])
+    );
+    indicesSurdsLogsTopic.visual_descriptions = Array.from(
+        new Set([
+            ...indicesSurdsLogsTopic.visual_descriptions,
+            'Exponential-log inverse curve pair on shared axes.',
+            'Rationalisation flow using conjugates for surd denominators.',
+            'Logarithm law map linking product, quotient, and power rules.',
+            'Index law pyramid showing negative and fractional powers.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 4 (Lower Sixth): quadratic functions chapter upgrade.
+const quadraticFunctionsTopic = aLevelPureMathNotes['Quadratic Functions'];
+if (quadraticFunctionsTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Vertex Form, Axis of Symmetry, and Graph Control',
+            content: `## Vertex form as the graph key
+
+Write:
+$$y=a(x-h)^2+k$$
+where:
+- vertex is $(h,k)$
+- axis of symmetry is $x=h$
+- $a>0$ opens upward, $a<0$ opens downward
+- larger $|a|$ gives a narrower parabola
+
+## Converting standard form to vertex form
+
+From:
+$$y=ax^2+bx+c$$
+complete the square:
+$$y=a\\left(x+\\frac{b}{2a}\\right)^2+\\left(c-\\frac{b^2}{4a}\\right).$$
+
+## Fast vertex coordinate from standard form
+$$x_{\\text{vertex}}=-\\frac{b}{2a},\\quad y_{\\text{vertex}}=f\\left(-\\frac{b}{2a}\\right).$$
+
+## Sketch sequence
+1. Opening direction from sign of $a$.
+2. Axis and vertex.
+3. $y$-intercept from $x=0$.
+4. Solve for roots (if real).
+5. Draw symmetric curve.`,
+            worked_examples: [
+                {
+                    question: 'Convert $y=2x^2-8x+3$ to vertex form and state the vertex.',
+                    steps: [
+                        'Factor 2 from quadratic terms: $y=2(x^2-4x)+3$.',
+                        'Complete square inside: $x^2-4x=(x-2)^2-4$.',
+                        'So $y=2[(x-2)^2-4]+3=2(x-2)^2-8+3$.',
+                        'Hence $y=2(x-2)^2-5$.'
+                    ],
+                    final_answer: 'Vertex form: $y=2(x-2)^2-5$, vertex $(2,-5)$.'
+                },
+                {
+                    question: 'Find axis of symmetry and turning point of $y=-x^2+6x-1$.',
+                    steps: [
+                        '$a=-1, b=6$, so $x_{\\text{vertex}}=-\\frac{b}{2a}=-\\frac{6}{-2}=3$.',
+                        'Substitute: $y(3)=-9+18-1=8$.',
+                        'Turning point is maximum because $a<0$.'
+                    ],
+                    final_answer: 'Axis: $x=3$, turning point $(3,8)$ (maximum).'
+                },
+                {
+                    question: 'Given $y=a(x+1)^2-4$ passes through $(1,4)$, find $a$.',
+                    steps: [
+                        'Substitute $(x,y)=(1,4)$:',
+                        '$4=a(2)^2-4=4a-4$.',
+                        '$8=4a\\Rightarrow a=2$.'
+                    ],
+                    final_answer: '$a=2$, so equation is $y=2(x+1)^2-4$.'
+                }
+            ]
+        },
+        {
+            title: '11. Discriminant Analysis and Nature of Roots',
+            content: `## Discriminant
+
+For:
+$$ax^2+bx+c=0$$
+discriminant is:
+$$\\Delta=b^2-4ac.$$
+
+## Root classification
+- $\\Delta>0$: two distinct real roots
+- $\\Delta=0$: one repeated real root
+- $\\Delta<0$: no real roots (complex conjugate pair)
+
+## Geometric interpretation
+
+Discriminant tells how many times the parabola intersects the $x$-axis.
+
+## Parameter problems
+
+When coefficients include parameter $k$, form $\\Delta$ in terms of $k$, then solve inequalities for required root type.`,
+            worked_examples: [
+                {
+                    question: 'Determine the nature of roots of $3x^2-5x+2=0$.',
+                    steps: [
+                        '$a=3, b=-5, c=2$.',
+                        '$\\Delta=b^2-4ac=25-24=1$.',
+                        '$\\Delta>0$, so two distinct real roots.'
+                    ],
+                    final_answer: 'Two distinct real roots.'
+                },
+                {
+                    question: 'Find values of $k$ for which $x^2-4x+k=0$ has equal roots.',
+                    steps: [
+                        'Equal roots require $\\Delta=0$.',
+                        '$\\Delta=(-4)^2-4(1)(k)=16-4k$.',
+                        'Set to zero: $16-4k=0\\Rightarrow k=4$.'
+                    ],
+                    final_answer: '$k=4$.'
+                },
+                {
+                    question: 'For what values of $m$ does $x^2+(m-2)x+5=0$ have no real roots?',
+                    steps: [
+                        'Need $\\Delta<0$.',
+                        '$\\Delta=(m-2)^2-20<0$.',
+                        'So $(m-2)^2<20$.',
+                        '$-\\sqrt{20}<m-2<\\sqrt{20}$.',
+                        '$2-2\\sqrt{5}<m<2+2\\sqrt{5}$.'
+                    ],
+                    final_answer: '$2-2\\sqrt{5}<m<2+2\\sqrt{5}$.'
+                }
+            ]
+        },
+        {
+            title: '12. Quadratic Inequalities and Sign-Region Method',
+            content: `## Standard method
+
+To solve:
+$$ax^2+bx+c\\;\\gtrless\\;0$$
+1. Solve $ax^2+bx+c=0$ to get critical points.
+2. Mark regions on number line.
+3. Use test points or parabola orientation.
+4. Apply strict/non-strict endpoint inclusion.
+
+## Orientation shortcut
+
+If $a>0$, parabola is above axis outside roots and below between roots.
+If $a<0$, opposite sign pattern.
+
+## Cases with repeated roots
+
+If repeated root, expression does not change sign at that point.`,
+            worked_examples: [
+                {
+                    question: 'Solve $x^2-5x+6>0$.',
+                    steps: [
+                        'Factor: $x^2-5x+6=(x-2)(x-3)$.',
+                        'Roots: $x=2,3$.',
+                        '$a=1>0$, so positive outside interval between roots.',
+                        'Strict inequality excludes roots.'
+                    ],
+                    final_answer: '$x\\in(-\\infty,2)\\cup(3,\\infty)$.'
+                },
+                {
+                    question: 'Solve $-2x^2+8x-6\\ge0$.',
+                    steps: [
+                        'Multiply by $-1$ and reverse inequality: $2x^2-8x+6\\le0$.',
+                        'Divide by 2: $x^2-4x+3\\le0=(x-1)(x-3)\\le0$.',
+                        'Upward parabola is non-positive between roots including endpoints.'
+                    ],
+                    final_answer: '$x\\in[1,3]$.'
+                },
+                {
+                    question: 'Solve $(x-4)^2<9$.',
+                    steps: [
+                        'Take square inequality: $|x-4|<3$.',
+                        'So $-3<x-4<3$.',
+                        'Add 4: $1<x<7$.'
+                    ],
+                    final_answer: '$x\\in(1,7)$.'
+                }
+            ]
+        },
+        {
+            title: '13. Modelling and Book Drill (Structured Mix)',
+            content: `## Modelling with quadratics
+
+Quadratic models appear in:
+- projectile paths
+- area optimization
+- revenue-profit approximations
+
+General modelling route:
+1. Build equation from conditions/points.
+2. Extract vertex for optimum (max/min).
+3. Interpret roots in context.
+
+## Structured drill target
+
+Blend:
+- equation solving
+- discriminant parameter questions
+- inequalities
+- graph interpretation and construction.`,
+            worked_examples: [
+                {
+                    question: 'A ball follows $h(t)=-5t^2+20t+1$. Find maximum height and time attained.',
+                    steps: [
+                        '$a=-5, b=20$.',
+                        '$t_{\\text{max}}=-\\frac{b}{2a}=-\\frac{20}{-10}=2$.',
+                        '$h(2)=-5(4)+40+1=21$.',
+                        'Since $a<0$, this is maximum.'
+                    ],
+                    final_answer: 'Maximum height is $21$ units at $t=2$ s.'
+                },
+                {
+                    question: 'Find quadratic with roots 2 and -5 and passing through $(0,-20)$.',
+                    steps: [
+                        'Use factor form: $y=k(x-2)(x+5)$.',
+                        'Use point $(0,-20)$: $-20=k(-2)(5)=-10k$.',
+                        'So $k=2$.',
+                        'Equation: $y=2(x-2)(x+5)$.'
+                    ],
+                    final_answer: '$y=2(x-2)(x+5)=2x^2+6x-20$.'
+                },
+                {
+                    question: 'Given $x^2+px+12=0$ has roots differing by 2, find $p$.',
+                    steps: [
+                        'Let roots be $\\alpha,\\beta$ with $|\\alpha-\\beta|=2$.',
+                        'Use identity: $(\\alpha-\\beta)^2=(\\alpha+\\beta)^2-4\\alpha\\beta$.',
+                        'Here $\\alpha+\\beta=-p$ and $\\alpha\\beta=12$.',
+                        'So $4=p^2-48\\Rightarrow p^2=52$.',
+                        'Hence $p=\\pm2\\sqrt{13}$.'
+                    ],
+                    final_answer: '$p=2\\sqrt{13}$ or $p=-2\\sqrt{13}$.'
+                },
+                {
+                    question: 'Solve simultaneously: $y=x^2-4x+3$ and $y=2x-1$.',
+                    steps: [
+                        'Set equal: $x^2-4x+3=2x-1$.',
+                        'Rearrange: $x^2-6x+4=0$.',
+                        'Use formula: $x=\\frac{6\\pm\\sqrt{36-16}}{2}=3\\pm\\sqrt{5}$.',
+                        'Substitute into $y=2x-1$: $y=5\\pm2\\sqrt{5}$.'
+                    ],
+                    final_answer: 'Intersection points: $(3+\\sqrt5,\\;5+2\\sqrt5)$ and $(3-\\sqrt5,\\;5-2\\sqrt5)$.'
+                }
+            ]
+        }
+    ];
+
+    quadraticFunctionsTopic.sections = [...quadraticFunctionsTopic.sections, ...extraSections];
+    quadraticFunctionsTopic.key_points = Array.from(
+        new Set([
+            ...quadraticFunctionsTopic.key_points,
+            'Vertex form gives immediate graph control: location, opening direction, and stretch.',
+            'Discriminant links algebra directly to graph intersection count.',
+            'Quadratic inequalities are solved reliably via roots plus sign regions.',
+            'Use parameterized discriminant conditions for root-type questions.',
+            'In modelling, vertex usually represents optimum value in context.',
+        ])
+    );
+    quadraticFunctionsTopic.exam_tips = Array.from(
+        new Set([
+            ...quadraticFunctionsTopic.exam_tips,
+            'State the discriminant expression before substituting values.',
+            'When multiplying inequalities by negative values, reverse inequality sign.',
+            'Show all completing-square steps; skipped steps often lose method marks.',
+            'Always interpret roots and turning points in context units.',
+        ])
+    );
+    quadraticFunctionsTopic.visual_descriptions = Array.from(
+        new Set([
+            ...quadraticFunctionsTopic.visual_descriptions,
+            'Parabola family showing opening up/down and varying stretch.',
+            'Discriminant-root count map (two roots, repeated root, no real roots).',
+            'Quadratic sign chart across root intervals.',
+            'Vertex shift diagram from y=x^2 to y=a(x-h)^2+k.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 5 (Lower Sixth): functions chapter upgrade.
+const functionsTopic = aLevelPureMathNotes['Functions'];
+if (functionsTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Function Mapping Matrix and Relation Logic',
+            content: `## Function as a mapping matrix
+
+Think of a function as a mapping matrix between two sets:
+- input set (domain)
+- output set (codomain)
+
+Each input row must map to exactly one output column.
+
+## Valid vs invalid mapping matrix ideas
+
+Valid function:
+- one input -> one output
+
+Still valid:
+- many inputs -> same output (many-to-one)
+
+Invalid:
+- one input -> two different outputs
+
+## Relation test checklist
+1. List all ordered pairs.
+2. Check repeated first coordinates.
+3. If a first coordinate has different second coordinates, not a function.
+4. If repeated with same second coordinate, still a function.
+
+## Real-world matrix interpretation
+
+Input matrix:
+- time, quantity, temperature, distance
+
+Output matrix:
+- cost, speed, area, profit
+
+A model is useful only when each input state gives a unique predicted output.`,
+            worked_examples: [
+                {
+                    question: 'Determine whether relation $R=\\{(1,4),(2,5),(3,6),(1,7)\\}$ is a function.',
+                    steps: [
+                        'Check first coordinates: 1, 2, 3, 1.',
+                        'Input 1 maps to 4 and 7 (two outputs).',
+                        'This violates function rule.'
+                    ],
+                    final_answer: 'Not a function.'
+                },
+                {
+                    question: 'Determine whether $S=\\{(-2,3),(-1,3),(0,3),(1,5)\\}$ is a function.',
+                    steps: [
+                        'Each input appears once: -2, -1, 0, 1.',
+                        'No input maps to two different outputs.',
+                        'Many-to-one at output 3 is allowed.'
+                    ],
+                    final_answer: 'Yes, it is a function.'
+                },
+                {
+                    question: 'Given table: $x: -1,0,1,2$ and $f(x): 0,1,4,9$, decide if function and identify pattern.',
+                    steps: [
+                        'Each x has exactly one output value.',
+                        'So this is a function.',
+                        'Outputs match $f(x)=x^2+2x+1=(x+1)^2$ for listed x values.'
+                    ],
+                    final_answer: 'Function; consistent with quadratic rule $f(x)=(x+1)^2$.'
+                }
+            ]
+        },
+        {
+            title: '11. Composite and Inverse Function Matrix (Deep Operations)',
+            content: `## Composite matrix pipeline
+
+For two functions $f$ and $g$:
+- first layer: apply $g$
+- second layer: apply $f$
+
+So:
+$$f\\circ g(x)=f(g(x)).$$
+
+## Domain filter in composites
+
+Input must survive both stages:
+1. in domain of $g$
+2. output of $g$ in domain of $f$
+
+## Inverse function matrix idea
+
+If $f$ maps:
+$$x\\to y$$
+then inverse maps:
+$$y\\to x.$$
+
+Graphically, inverse reflects original graph in line $y=x$.
+
+## Verification protocol
+
+To prove inverse:
+1. compute $f(f^{-1}(x))$
+2. compute $f^{-1}(f(x))$
+3. both must simplify to $x$ on valid domains.`,
+            worked_examples: [
+                {
+                    question: 'Let $f(x)=\\sqrt{x-1}$ and $g(x)=x^2+1$. Find $f\\circ g(x)$ and its domain.',
+                    steps: [
+                        '$f\\circ g(x)=f(g(x))=\\sqrt{(x^2+1)-1}=\\sqrt{x^2}$.',
+                        '$\\sqrt{x^2}=|x|$.',
+                        'Domain of $g$ is all real x.',
+                        'Need $g(x)-1\\ge0\\Rightarrow x^2\\ge0$, always true.'
+                    ],
+                    final_answer: '$f\\circ g(x)=|x|$, domain: all real numbers.'
+                },
+                {
+                    question: 'Given $h(x)=\\frac{2x-3}{x+4}$, find $h^{-1}(x)$.',
+                    steps: [
+                        'Set $y=\\frac{2x-3}{x+4}$.',
+                        'Swap: $x=\\frac{2y-3}{y+4}$.',
+                        'Cross multiply: $x(y+4)=2y-3$.',
+                        '$xy+4x=2y-3$.',
+                        '$xy-2y=-3-4x$.',
+                        '$y(x-2)=-(4x+3)$.',
+                        '$y=\\frac{-(4x+3)}{x-2}=\\frac{4x+3}{2-x}$.'
+                    ],
+                    final_answer: '$h^{-1}(x)=\\frac{4x+3}{2-x}$, with $x\\ne2$.'
+                },
+                {
+                    question: 'If $f(x)=3x-1$ and $g(x)=\\frac{x+1}{3}$, test whether $g=f^{-1}$.',
+                    steps: [
+                        '$f(g(x))=3\\left(\\frac{x+1}{3}\\right)-1=x+1-1=x$.',
+                        '$g(f(x))=\\frac{(3x-1)+1}{3}=\\frac{3x}{3}=x$.',
+                        'Both compositions return x.'
+                    ],
+                    final_answer: 'Yes, $g=f^{-1}$.'
+                }
+            ]
+        },
+        {
+            title: '12. Transformation Matrix for Graph Families',
+            content: `## Transformation matrix view
+
+Take base graph $y=f(x)$ and apply matrix-like operations:
+- horizontal shift: $x\\to x-a$
+- horizontal scale: $x\\to bx$
+- vertical scale: $y\\to ay$
+- vertical shift: $y\\to y+d$
+
+General transformed form:
+$$y=a\\,f(b(x-c))+d.$$
+
+## Parameter effects
+- $c$: right shift if positive
+- $d$: upward shift if positive
+- $a$: vertical stretch and x-axis reflection if negative
+- $b$: horizontal scale by $1/|b|$ and y-axis reflection if negative
+
+## Matrix walkthrough checklist
+1. Start from key points of parent graph.
+2. Transform x-coordinates using inside parameters.
+3. Transform y-coordinates using outside parameters.
+4. Plot transformed key points and sketch.`,
+            worked_examples: [
+                {
+                    question: 'Describe transformations from $y=x^2$ to $y=-2(x-3)^2+5$.',
+                    steps: [
+                        '$(x-3)$ means shift right 3.',
+                        'Factor 2 means vertical stretch by 2.',
+                        'Negative sign reflects in x-axis.',
+                        '+5 shifts graph upward by 5.'
+                    ],
+                    final_answer: 'Right 3, stretch vertically by 2, reflect in x-axis, then up 5.'
+                },
+                {
+                    question: 'Find image of point $(2,4)$ on $y=f(x)$ under $y=3f(x-1)-2$.',
+                    steps: [
+                        '$x-1$: shift right by 1, so x-coordinate becomes 3.',
+                        'Vertical transform: $y\\to3y-2$.',
+                        'From y=4, new y is $3(4)-2=10$.'
+                    ],
+                    final_answer: 'Image point is $(3,10)$.'
+                },
+                {
+                    question: 'Write transformed equation of $f(x)=\\sqrt{x}$ after left shift 4 and reflection in x-axis.',
+                    steps: [
+                        'Left shift 4 means replace x by x+4.',
+                        'Reflection in x-axis multiplies output by -1.'
+                    ],
+                    final_answer: '$y=-\\sqrt{x+4}$.'
+                }
+            ]
+        },
+        {
+            title: '13. Function Domain-Range Matrix and Full Book Drill',
+            content: `## Domain-range matrix workflow
+
+For each function:
+1. list algebraic restrictions
+2. convert to interval domain
+3. identify extrema/asymptotes
+4. build range set
+5. verify with graph logic
+
+## Full mixed drill themes
+- notation and substitution
+- domain/range deduction
+- inverse checks
+- composition with restrictions
+- transformations and graph interpretation`,
+            worked_examples: [
+                {
+                    question: 'Find domain and range of $f(x)=\\frac{x-1}{x^2-4x+3}$.',
+                    steps: [
+                        'Factor denominator: $x^2-4x+3=(x-1)(x-3)$.',
+                        'Original expression simplifies to $\\frac{1}{x-3}$ but original domain excludes x=1 and x=3.',
+                        'So domain: all real except 1 and 3.',
+                        'For range of $\\frac{1}{x-3}$: y cannot be 0.',
+                        'Also x=1 corresponds to y=-1/2 removed from graph as hole.',
+                        'Hence y cannot be 0 or -1/2.'
+                    ],
+                    final_answer: 'Domain: $\\mathbb{R}\\setminus\\{1,3\\}$, Range: $\\mathbb{R}\\setminus\\{0,-\\frac12\\}$.'
+                },
+                {
+                    question: 'Solve $f(g(x))=5$ for $f(x)=2x+1$ and $g(x)=\\sqrt{x+4}$.',
+                    steps: [
+                        '$f(g(x))=2\\sqrt{x+4}+1$.',
+                        'Set equal to 5: $2\\sqrt{x+4}+1=5$.',
+                        '$2\\sqrt{x+4}=4\\Rightarrow\\sqrt{x+4}=2$.',
+                        '$x+4=4\\Rightarrow x=0$.',
+                        'Domain check: x>=-4, so x=0 valid.'
+                    ],
+                    final_answer: '$x=0$.'
+                },
+                {
+                    question: 'Given $p(x)=x^2-6x+8$, find p(1), p^{-1}(0) set, and minimum value.',
+                    steps: [
+                        '$p(1)=1-6+8=3$.',
+                        '$p^{-1}(0)$ means solve $p(x)=0$: $(x-2)(x-4)=0$, so x=2 or x=4.',
+                        'Complete square: $p(x)=(x-3)^2-1$.',
+                        'Minimum value is -1 at x=3.'
+                    ],
+                    final_answer: '$p(1)=3$, $p^{-1}(0)=\\{2,4\\}$, minimum value -1.'
+                },
+                {
+                    question: 'Find function with inverse itself and passing through (0,1).',
+                    steps: [
+                        'Self-inverse condition often satisfied by line symmetric about y=x.',
+                        'General form for reflection-symmetric line: $y=x$ or $y=-x+c$.',
+                        'Using point (0,1): for $y=-x+c$, c=1.',
+                        'Check self-inverse: solving x=-y+1 gives y=-x+1 again.'
+                    ],
+                    final_answer: 'One valid function is $f(x)=-x+1$ (also self-inverse).'
+                }
+            ]
+        }
+    ];
+
+    functionsTopic.sections = [...functionsTopic.sections, ...extraSections];
+    functionsTopic.key_points = Array.from(
+        new Set([
+            ...functionsTopic.key_points,
+            'A mapping is a function only when each input has exactly one output.',
+            'Composite domains must satisfy both inner and outer function restrictions.',
+            'Inverse existence requires one-to-one behavior on the chosen domain.',
+            'General transformation form a f(b(x-c))+d controls all shifts, scales, and reflections.',
+            'Domain and range should always be justified algebraically and graphically.',
+        ])
+    );
+    functionsTopic.exam_tips = Array.from(
+        new Set([
+            ...functionsTopic.exam_tips,
+            'When finding inverse, swap x and y first, then solve cleanly for y.',
+            'In composite questions, explicitly state domain restrictions before final answer.',
+            'Use interval notation consistently and avoid mixing with set notation mid-solution.',
+            'For transformation questions, describe operations in correct order.',
+        ])
+    );
+    functionsTopic.visual_descriptions = Array.from(
+        new Set([
+            ...functionsTopic.visual_descriptions,
+            'Function mapping matrix from domain set to codomain set.',
+            'Inverse reflection diagram across y=x.',
+            'Transformation matrix showing effect of a, b, c, d in y=a f(b(x-c))+d.',
+            'Composite function flowchart: input -> g -> f -> output.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 6 (Lower Sixth): coordinate geometry chapter upgrade.
+const coordinateGeometryTopic = aLevelPureMathNotes['Coordinate Geometry'];
+if (coordinateGeometryTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '8. Line Matrix Toolkit and Coordinate Proof Engine',
+            content: `## High-speed line matrix
+
+Use this decision matrix in timed papers:
+
+1. Convert every line to a form that reveals gradient quickly.
+2. Store gradient, intercept, and normal vector.
+3. Decide relation: parallel, perpendicular, intersecting, or coincident.
+4. If geometry proof is required, combine slope tests with distance checks.
+
+## Core formulas
+
+For line $ax + by + c = 0$:
+- gradient: $m = -\\frac{a}{b}$ (if $b\\neq0$)
+- x-intercept: $\\left(-\\frac{c}{a}, 0\\right)$ (if $a\\neq0$)
+- y-intercept: $\\left(0, -\\frac{c}{b}\\right)$ (if $b\\neq0$)
+
+Angle between two lines (gradients $m_1, m_2$):
+$$\\tan\\theta = \\left|\\frac{m_2 - m_1}{1 + m_1m_2}\\right|.$$
+
+Distance from point $(x_0,y_0)$ to line $ax + by + c = 0$:
+$$d = \\frac{|ax_0 + by_0 + c|}{\\sqrt{a^2 + b^2}}.$$
+
+## Coordinate proof strategy
+
+- Parallel test: equal gradients.
+- Right angle test: product of gradients $=-1$.
+- Equal sides: distance formula.
+- Midpoint coincidence: midpoint formula.
+- Collinearity: equal gradients or zero area test.`,
+            worked_examples: [
+                {
+                    question: 'Find the acute angle between lines $y=2x-5$ and $3x+6y-1=0$.',
+                    steps: [
+                        'First line has gradient $m_1=2$.',
+                        'Second line: $6y=-3x+1 \\Rightarrow y=-\\frac12x+\\frac16$, so $m_2=-\\frac12$.',
+                        'Use angle formula: $\\tan\\theta = \\left|\\frac{m_2-m_1}{1+m_1m_2}\\right|$.',
+                        '$\\tan\\theta = \\left|\\frac{-\\frac12-2}{1+2(-\\frac12)}\\right| = \\left|\\frac{-\\frac52}{0}\\right|$.',
+                        'Denominator is 0, so lines are perpendicular.'
+                    ],
+                    final_answer: '$\\theta = 90^\\circ$.'
+                },
+                {
+                    question: 'Find the equation of the angle bisectors between $x-y+2=0$ and $3x+y-4=0$.',
+                    steps: [
+                        'Use angle-bisector formula: $\\frac{a_1x+b_1y+c_1}{\\sqrt{a_1^2+b_1^2}} = \\pm \\frac{a_2x+b_2y+c_2}{\\sqrt{a_2^2+b_2^2}}$.',
+                        'So $\\frac{x-y+2}{\\sqrt2} = \\pm \\frac{3x+y-4}{\\sqrt{10}}$.',
+                        'Multiply through by $\\sqrt{20}$ to keep exact form.'
+                    ],
+                    final_answer: 'Angle bisectors are $\\sqrt{10}(x-y+2)=\\pm\\sqrt2(3x+y-4)$.'
+                },
+                {
+                    question: 'Find the shortest distance from $P(4,-1)$ to line $5x-12y+7=0$.',
+                    steps: [
+                        'Use $d=\\frac{|ax_0+by_0+c|}{\\sqrt{a^2+b^2}}$.',
+                        '$d=\\frac{|5(4)-12(-1)+7|}{\\sqrt{5^2+(-12)^2}} = \\frac{|20+12+7|}{\\sqrt{169}}$.',
+                        '$d=\\frac{39}{13}=3$.'
+                    ],
+                    final_answer: 'Shortest distance is $3$ units.'
+                },
+                {
+                    question: 'Show triangle $A(1,2)$, $B(7,5)$, $C(4,11)$ is isosceles.',
+                    steps: [
+                        '$AB^2=(7-1)^2+(5-2)^2=36+9=45$.',
+                        '$AC^2=(4-1)^2+(11-2)^2=9+81=90$.',
+                        '$BC^2=(4-7)^2+(11-5)^2=9+36=45$.',
+                        'Equal squared lengths: $AB^2=BC^2=45$.'
+                    ],
+                    final_answer: 'Triangle is isosceles with $AB=BC=\\sqrt{45}=3\\sqrt5$.'
+                }
+            ]
+        },
+        {
+            title: '9. Circle Matrix: Chords, Tangency, and Radical Axis',
+            content: `## Circle matrix formulas
+
+General circle:
+$$S \\equiv x^2+y^2+2gx+2fy+c=0.$$
+
+Center and radius:
+- center $(-g,-f)$
+- radius $r=\\sqrt{g^2+f^2-c}$
+
+Tangent at point $(x_1,y_1)$ on $S=0$:
+$$T \\equiv xx_1+yy_1+g(x+x_1)+f(y+y_1)+c=0.$$
+
+Power of point $(p,q)$:
+$$\\Pi = p^2+q^2+2gp+2fq+c.$$
+If $\\Pi>0$, tangent length from point to circle is:
+$$L=\\sqrt{\\Pi}.$$
+
+Radical axis of two circles $S_1=0$ and $S_2=0$:
+$$S_1-S_2=0.$$
+
+## Interpretation matrix
+- Radical axis = locus of equal powers.
+- It is always a straight line.
+- It is perpendicular to line joining circle centers.`,
+            worked_examples: [
+                {
+                    question: 'Find the tangent to $x^2+y^2-6x+4y-12=0$ at point $P(8,2)$.',
+                    steps: [
+                        'For this circle, $g=-3$, $f=2$, $c=-12$.',
+                        'Use tangent form $T=0$ at $(x_1,y_1)=(8,2)$.',
+                        '$8x+2y-3(x+8)+2(y+2)-12=0$.',
+                        'Simplify: $8x+2y-3x-24+2y+4-12=0$.',
+                        '$5x+4y-32=0$.'
+                    ],
+                    final_answer: 'Tangent equation: $5x+4y-32=0$.'
+                },
+                {
+                    question: 'Find the circle through points $(0,0)$, $(4,0)$, and $(0,6)$.',
+                    steps: [
+                        'Take general form $x^2+y^2+2gx+2fy+c=0$.',
+                        'Substitute $(0,0)$: $c=0$.',
+                        'Substitute $(4,0)$: $16+8g=0 \\Rightarrow g=-2$.',
+                        'Substitute $(0,6)$: $36+12f=0 \\Rightarrow f=-3$.'
+                    ],
+                    final_answer: '$x^2+y^2-4x-6y=0$, i.e. $(x-2)^2+(y-3)^2=13$.'
+                },
+                {
+                    question: 'Find the radical axis of circles $x^2+y^2-4x+2y-11=0$ and $x^2+y^2+2x-6y-3=0$.',
+                    steps: [
+                        'Subtract second equation from first.',
+                        '$(-4x+2y-11)-(2x-6y-3)=0$.',
+                        '$-6x+8y-8=0$.',
+                        'Divide by 2: $-3x+4y-4=0$.'
+                    ],
+                    final_answer: 'Radical axis: $3x-4y+4=0$.'
+                },
+                {
+                    question: 'For circle $x^2+y^2-2x-4y-20=0$, find tangent length from $A(8,2)$.',
+                    steps: [
+                        'Here $g=-1$, $f=-2$, $c=-20$.',
+                        'Compute power of point:',
+                        '$\\Pi=8^2+2^2+2(-1)(8)+2(-2)(2)-20$.',
+                        '$\\Pi=64+4-16-8-20=24$.',
+                        'Tangent length $L=\\sqrt{\\Pi}=\\sqrt{24}=2\\sqrt6$.'
+                    ],
+                    final_answer: 'Tangent length is $2\\sqrt6$ units.'
+                }
+            ]
+        },
+        {
+            title: '10. Tangent-Normal Matrix for Curves and Parametrics',
+            content: `## Curve-contact matrix
+
+For explicit curve $y=f(x)$ at $x=a$:
+- point of contact: $(a,f(a))$
+- tangent gradient: $m_T=f'(a)$
+- normal gradient: $m_N=-\\frac{1}{m_T}$ (if $m_T\\neq0$)
+
+For parametric curve $x=x(t), y=y(t)$:
+$$\\frac{dy}{dx}=\\frac{dy/dt}{dx/dt}.$$
+
+Second derivative in parametric form:
+$$\\frac{d^2y}{dx^2}=\\frac{\\frac{d}{dt}(dy/dx)}{dx/dt}.$$
+
+Angle between curve and line with gradient $m$:
+$$\\tan\\phi = \\left|\\frac{m_T-m}{1+m_Tm}\\right|.$$
+
+## Accuracy checklist
+1. Verify point lies on curve.
+2. Differentiate correctly.
+3. Evaluate gradient at correct parameter or x-value.
+4. Write line equation using exact coordinates.`,
+            worked_examples: [
+                {
+                    question: 'Find tangent and normal to $y=x^3-3x+2$ at $x=2$.',
+                    steps: [
+                        'Point: $y=2^3-3(2)+2=4$, so point is $(2,4)$.',
+                        '$\\frac{dy}{dx}=3x^2-3$.',
+                        'At $x=2$, $m_T=3(4)-3=9$.',
+                        'Tangent: $y-4=9(x-2) \\Rightarrow y=9x-14$.',
+                        'Normal gradient $m_N=-\\frac19$.',
+                        'Normal: $y-4=-\\frac19(x-2)$.'
+                    ],
+                    final_answer: 'Tangent $y=9x-14$, normal $y-4=-\\frac19(x-2)$.'
+                },
+                {
+                    question: 'Find points on $y=x^3-6x^2+9x+1$ where tangent is parallel to $y=3x-2$.',
+                    steps: [
+                        'Parallel means tangent gradient $=3$.',
+                        '$\\frac{dy}{dx}=3x^2-12x+9$.',
+                        'Set $3x^2-12x+9=3 \\Rightarrow 3x^2-12x+6=0$.',
+                        'Divide by 3: $x^2-4x+2=0$.',
+                        '$x=2\\pm\\sqrt2$.',
+                        'Substitute into $y=x^3-6x^2+9x+1$ for exact coordinates.'
+                    ],
+                    final_answer: 'Required x-values are $x=2\\pm\\sqrt2$ (with corresponding y from the curve).'
+                },
+                {
+                    question: 'For $x=t^2+1$, $y=t^3-3t$, find equation of tangent at $t=2$.',
+                    steps: [
+                        'Point: $x=5$, $y=8-6=2$, so $(5,2)$.',
+                        '$\\frac{dx}{dt}=2t$, $\\frac{dy}{dt}=3t^2-3$.',
+                        '$\\frac{dy}{dx}=\\frac{3t^2-3}{2t}$.',
+                        'At $t=2$: $m_T=\\frac{12-3}{4}=\\frac94$.',
+                        'Tangent: $y-2=\\frac94(x-5)$.'
+                    ],
+                    final_answer: 'Tangent equation: $y-2=\\frac94(x-5)$.'
+                },
+                {
+                    question: 'Find normal to $y=\\sqrt{x+5}$ at $x=4$.',
+                    steps: [
+                        'Point: $y=\\sqrt{9}=3$, so $(4,3)$.',
+                        '$\\frac{dy}{dx}=\\frac{1}{2\\sqrt{x+5}}$.',
+                        'At $x=4$: $m_T=\\frac16$.',
+                        'Normal gradient: $m_N=-6$.',
+                        'Normal equation: $y-3=-6(x-4)$.'
+                    ],
+                    final_answer: 'Normal line: $y=-6x+27$.'
+                }
+            ]
+        },
+        {
+            title: '11. Coordinate Geometry Full Book Drill (Exam-Length)',
+            content: `## Mixed long-question workflow
+
+In full-length coordinate geometry questions, examiners combine:
+- lines
+- circles
+- tangency
+- distance and midpoint constraints
+- derivative-based tangent/normal conditions
+
+## Structured method
+
+1. Translate every sentence into equations.
+2. Label unknowns clearly (slope, center, radius, parameter, etc).
+3. Solve algebraic system in smallest possible steps.
+4. Check geometry conditions at the end (touching, equal distances, valid points).
+
+## Frequent traps
+
+- forgetting to check that a claimed contact point lies on both objects
+- dropping square roots when using distance
+- using tangent gradient directly as normal gradient
+- sign errors in completing square
+
+## Final answer quality
+
+- Give line equations in requested form.
+- For coordinates, provide exact values unless decimal requested.
+- State geometric conclusion in words after algebra.`,
+            worked_examples: [
+                {
+                    question: 'Circle $C$ has center $(2,-1)$ and touches line $3x-4y+7=0$. Find equation of $C$.',
+                    steps: [
+                        'Radius equals distance from center to line.',
+                        '$r=\\frac{|3(2)-4(-1)+7|}{\\sqrt{3^2+(-4)^2}}=\\frac{|6+4+7|}{5}=\\frac{17}{5}$.',
+                        'Equation: $(x-2)^2+(y+1)^2=r^2$.',
+                        '$r^2=\\frac{289}{25}$.'
+                    ],
+                    final_answer: '$(x-2)^2+(y+1)^2=\\frac{289}{25}$.'
+                },
+                {
+                    question: 'Find equation of line through $(1,3)$ that cuts equal intercepts on the axes.',
+                    steps: [
+                        'Equal intercept form: $\\frac{x}{a}+\\frac{y}{a}=1 \\Rightarrow x+y=a$.',
+                        'Line passes through $(1,3)$, so $1+3=a=4$.',
+                        'Hence equation is $x+y=4$.'
+                    ],
+                    final_answer: '$x+y=4$.'
+                },
+                {
+                    question: 'Find point(s) where normal to $y=x^2-4x+7$ is parallel to line $2x+y-5=0$.',
+                    steps: [
+                        'Given line has gradient $-2$.',
+                        'Normal must have gradient $-2$, so tangent gradient must be $\\frac12$.',
+                        'For curve, $\\frac{dy}{dx}=2x-4$.',
+                        'Set $2x-4=\\frac12 \\Rightarrow 2x=\\frac92 \\Rightarrow x=\\frac94$.',
+                        'Find y: $y=\\left(\\frac94\\right)^2-4\\left(\\frac94\\right)+7=\\frac{81}{16}-9+7=\\frac{49}{16}$.'
+                    ],
+                    final_answer: 'Point is $\\left(\\frac94,\\frac{49}{16}\\right)$.'
+                },
+                {
+                    question: 'A chord of $x^2+y^2=25$ has midpoint $(3,2)$. Find equation of the chord.',
+                    steps: [
+                        'Radius from origin to midpoint has gradient $\\frac{2}{3}$.',
+                        'Chord is perpendicular to this radius at midpoint.',
+                        'So chord gradient is $-\\frac{3}{2}$.',
+                        'Use point-slope through $(3,2)$:',
+                        '$y-2=-\\frac32(x-3)$.'
+                    ],
+                    final_answer: 'Chord equation: $y-2=-\\frac32(x-3)$ (equivalently $3x+2y-13=0$).'
+                }
+            ]
+        }
+    ];
+
+    coordinateGeometryTopic.sections = [...coordinateGeometryTopic.sections, ...extraSections];
+    coordinateGeometryTopic.key_points = Array.from(
+        new Set([
+            ...coordinateGeometryTopic.key_points,
+            'A line question becomes faster when you store gradient, normal vector, and intercepts together.',
+            'Angle-bisector and point-to-line distance formulas are high-value in long problems.',
+            'Use tangent formula T=0 for circles to avoid re-deriving from slope every time.',
+            'Radical axis comes directly from subtracting circle equations.',
+            'In curve-contact problems, identify point first, then gradient, then equation.',
+            'Always finish by checking geometric validity of your algebraic result.',
+        ])
+    );
+    coordinateGeometryTopic.exam_tips = Array.from(
+        new Set([
+            ...coordinateGeometryTopic.exam_tips,
+            'Convert all lines into a consistent form before comparing gradients.',
+            'When proving tangency, show discriminant equals zero and state what that means geometrically.',
+            'For circle construction questions, compute radius from distance formula before expanding equations.',
+            'In parametric tasks, keep derivatives in terms of t until the final substitution.',
+            'Write a one-line geometric conclusion after each major calculation.',
+        ])
+    );
+    coordinateGeometryTopic.visual_descriptions = Array.from(
+        new Set([
+            ...coordinateGeometryTopic.visual_descriptions,
+            'Line relation matrix showing parallel, perpendicular, and intersection angles.',
+            'Circle-chord-tangent map with center-radius geometry.',
+            'Radical axis sketch for two intersecting/non-intersecting circles.',
+            'Curve with tangent and normal pair at a marked contact point.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 7 (Lower Sixth): sequences and series chapter upgrade.
+const sequencesSeriesTopic = aLevelPureMathNotes['Sequences and Series'];
+if (sequencesSeriesTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '8. Recurrence Matrix and Iterative Sequence Control',
+            content: `## Recurrence matrix view
+
+A recurrence defines each term from earlier terms:
+$$u_{n+1}=f(u_n), \\quad \\text{or} \\quad u_{n+2}=f(u_{n+1},u_n).$$
+
+## First-order linear recurrence
+
+Standard type:
+$$u_{n+1}=au_n+b.$$
+
+Equilibrium value $L$ satisfies:
+$$L=aL+b \\Rightarrow L=\\frac{b}{1-a}\\quad (a\\ne1).$$
+
+Then rewrite using $v_n=u_n-L$:
+$$v_{n+1}=av_n,$$
+which is a geometric progression.
+
+## Convergence logic
+
+For $u_{n+1}=au_n+b$:
+- if $|a|<1$, sequence converges to $L=\\frac{b}{1-a}$
+- if $|a|>1$, sequence diverges
+- if $a=-1$, oscillation often appears
+
+## Exam workflow
+1. Find fixed point(s).
+2. Test convergence using coefficient behavior.
+3. Build closed form when possible.
+4. State limit clearly with justification.`,
+            worked_examples: [
+                {
+                    question: 'Given $u_{n+1}=2u_n+3$ with $u_1=1$, find $u_n$.',
+                    steps: [
+                        'Fixed point: $L=2L+3 \\Rightarrow L=-3$.',
+                        'Define $v_n=u_n+3$, then $v_{n+1}=u_{n+1}+3=2u_n+6=2(u_n+3)=2v_n$.',
+                        'So $v_n$ is GP with ratio 2.',
+                        '$v_1=u_1+3=4$, hence $v_n=4\\cdot2^{n-1}=2^{n+1}$.',
+                        'Therefore $u_n=v_n-3=2^{n+1}-3$.'
+                    ],
+                    final_answer: '$u_n=2^{n+1}-3$.'
+                },
+                {
+                    question: 'Sequence is defined by $x_{n+1}=\\frac{x_n+6}{x_n+1}$, $x_1=2$. Find its possible limit.',
+                    steps: [
+                        'If $x_n\\to L$, then $L=\\frac{L+6}{L+1}$.',
+                        'So $L(L+1)=L+6 \\Rightarrow L^2=6$.',
+                        'Hence candidate limits are $L=\\pm\\sqrt6$.',
+                        'Since starting value is positive and generated terms stay positive, relevant limit is positive root.'
+                    ],
+                    final_answer: 'Possible limit from the iteration is $L=\\sqrt6$ (positive branch for this initial value).'
+                },
+                {
+                    question: 'If $u_1=2$, $u_2=3$ and $u_{n+2}=u_{n+1}+u_n$, find $u_6$.',
+                    steps: [
+                        '$u_3=u_2+u_1=3+2=5$.',
+                        '$u_4=u_3+u_2=5+3=8$.',
+                        '$u_5=u_4+u_3=8+5=13$.',
+                        '$u_6=u_5+u_4=13+8=21$.'
+                    ],
+                    final_answer: '$u_6=21$.'
+                }
+            ]
+        },
+        {
+            title: '9. Summation Matrix: Sigma Algebra, Telescoping, and Polynomial Sums',
+            content: `## Sigma algebra matrix
+
+Break complicated sums into known building blocks:
+$$\\sum(au_r+bv_r)=a\\sum u_r+b\\sum v_r.$$
+
+Core references:
+$$\\sum_{r=1}^{n}r=\\frac{n(n+1)}{2},\\quad
+\\sum_{r=1}^{n}r^2=\\frac{n(n+1)(2n+1)}{6},\\quad
+\\sum_{r=1}^{n}r^3=\\left(\\frac{n(n+1)}{2}\\right)^2.$$
+
+## Telescoping structure
+
+When terms cancel in chain form:
+$$\\sum_{r=1}^{n}\\left(\\frac{1}{r}-\\frac{1}{r+1}\\right)
+=1-\\frac{1}{n+1}.$$
+
+## Polynomial conversion workflow
+1. Expand expression in powers of r.
+2. Split into separate sums.
+3. Apply formula table.
+4. Simplify and factor final expression.`,
+            worked_examples: [
+                {
+                    question: 'Evaluate $\\sum_{r=1}^{n}\\frac{1}{r(r+1)}$.',
+                    steps: [
+                        'Decompose: $\\frac{1}{r(r+1)}=\\frac{1}{r}-\\frac{1}{r+1}$.',
+                        'So sum is telescoping:',
+                        '$\\left(1-\\frac12\\right)+\\left(\\frac12-\\frac13\\right)+\\cdots+\\left(\\frac1n-\\frac1{n+1}\\right)$.',
+                        'All middle terms cancel.'
+                    ],
+                    final_answer: '$\\sum_{r=1}^{n}\\frac{1}{r(r+1)}=\\frac{n}{n+1}$.'
+                },
+                {
+                    question: 'Find $\\sum_{r=1}^{10} r(r+1)$.',
+                    steps: [
+                        '$r(r+1)=r^2+r$, so sum is $\\sum r^2+\\sum r$.',
+                        '$\\sum_{r=1}^{10}r^2=\\frac{10\\cdot11\\cdot21}{6}=385$.',
+                        '$\\sum_{r=1}^{10}r=\\frac{10\\cdot11}{2}=55$.',
+                        'Total $=385+55=440$.'
+                    ],
+                    final_answer: '$\\sum_{r=1}^{10} r(r+1)=440$.'
+                },
+                {
+                    question: 'Simplify $\\sum_{r=1}^{n}(3r-2)^2$.',
+                    steps: [
+                        'Expand: $(3r-2)^2=9r^2-12r+4$.',
+                        'So $\\sum(3r-2)^2=9\\sum r^2-12\\sum r+4\\sum1$.',
+                        'Substitute formulas:',
+                        '$=9\\cdot\\frac{n(n+1)(2n+1)}{6}-12\\cdot\\frac{n(n+1)}{2}+4n$.',
+                        'Simplify:',
+                        '$=\\frac{3}{2}n(n+1)(2n+1)-6n(n+1)+4n$.'
+                    ],
+                    final_answer: '$\\sum_{r=1}^{n}(3r-2)^2=\\frac{3}{2}n(n+1)(2n+1)-6n(n+1)+4n$.'
+                }
+            ]
+        },
+        {
+            title: '10. AP-GP Hybrid Matrix for Modelling and Finance',
+            content: `## Hybrid model scenarios
+
+Many exam tasks combine:
+- AP for linear growth/change
+- GP for percentage growth/decay
+- sigma for accumulated totals
+
+## Financial sequence models
+
+Compound growth:
+$$A_n=A_0(1+r)^n.$$
+
+Regular deposits (end of period):
+$$S_n=D\\frac{(1+r)^n-1}{r}.$$
+
+Depreciation:
+$$V_n=V_0(1-k)^n.$$
+
+## Decision matrix
+
+- Constant additive step -> AP
+- Constant multiplicative step -> GP
+- Repeated percentage/interest -> GP
+- Running totals -> series formula`,
+            worked_examples: [
+                {
+                    question: 'In an AP, $a_4=19$ and $S_8=200$. Find $a$ and $d$.',
+                    steps: [
+                        '$a_4=a+3d=19$ ... (1)',
+                        '$S_8=\\frac{8}{2}[2a+7d]=200 \\Rightarrow 2a+7d=50$ ... (2)',
+                        'From (1): $a=19-3d$.',
+                        'Substitute into (2): $2(19-3d)+7d=50$.',
+                        '$38-6d+7d=50 \\Rightarrow d=12$.',
+                        '$a=19-36=-17$.'
+                    ],
+                    final_answer: '$a=-17$, $d=12$.'
+                },
+                {
+                    question: 'A machine costs $\\$48000$ and depreciates by 12% per year. Find value after 6 years.',
+                    steps: [
+                        'Depreciation factor is $0.88$.',
+                        '$V_6=48000(0.88)^6$.',
+                        'Compute: $(0.88)^6\\approx0.4644$.',
+                        '$V_6\\approx48000\\times0.4644=22291.2$.'
+                    ],
+                    final_answer: 'Value after 6 years is approximately $\\$22,291.20$.'
+                },
+                {
+                    question: 'A student saves $\\$200$ monthly in an account yielding 1% monthly. Find total after 12 months.',
+                    steps: [
+                        'Monthly contributions form annuity sum.',
+                        '$S_{12}=200\\frac{(1.01)^{12}-1}{0.01}$.',
+                        '$(1.01)^{12}\\approx1.126825$.',
+                        '$S_{12}\\approx200\\cdot12.6825=2536.5$.'
+                    ],
+                    final_answer: 'Accumulated amount is about $\\$2,536.50$.'
+                }
+            ]
+        },
+        {
+            title: '11. Sequences and Series Full Book Drill (Exam-Length)',
+            content: `## Long-form paper strategy
+
+In full questions you may need to:
+- derive nth term from conditions
+- prove a sum formula
+- solve inequality involving $S_n$
+- interpret a financial/physical model
+
+## Reliable workflow
+1. Translate words into symbols.
+2. Write governing formula immediately.
+3. Solve algebra first, interpretation second.
+4. Check domain/integer constraints (especially for n).
+
+## Presentation standard
+- Label equations clearly.
+- State whether sequence converges/diverges.
+- Round money/measurement answers only at final step.`,
+            worked_examples: [
+                {
+                    question: 'A GP has first term 12 and common ratio $r$. If $S_\\infty=20$, find $r$.',
+                    steps: [
+                        'Use $S_\\infty=\\frac{a}{1-r}$ with $|r|<1$.',
+                        '$20=\\frac{12}{1-r}$.',
+                        '$1-r=\\frac{12}{20}=\\frac35$.',
+                        '$r=1-\\frac35=\\frac25$.'
+                    ],
+                    final_answer: '$r=\\frac25$.'
+                },
+                {
+                    question: 'For AP with $a=7$, $d=5$, find least n such that $S_n>1500$.',
+                    steps: [
+                        '$S_n=\\frac{n}{2}[2a+(n-1)d]=\\frac{n}{2}[14+5n-5]=\\frac{n}{2}(5n+9)$.',
+                        'Require $\\frac{n}{2}(5n+9)>1500$.',
+                        '$5n^2+9n-3000>0$.',
+                        'Positive root is about $n\\approx23.64$.',
+                        'Least integer satisfying inequality is $n=24$.'
+                    ],
+                    final_answer: 'Least value is $n=24$.'
+                },
+                {
+                    question: 'Evaluate $\\sum_{r=1}^{20}(2r-1)$ and interpret result pattern.',
+                    steps: [
+                        'Odd-number sum identity: first n odd numbers sum to $n^2$.',
+                        'With $n=20$, value is $20^2=400$.',
+                        'Direct check: arithmetic series from 1 to 39 with 20 terms gives 400.'
+                    ],
+                    final_answer: '$\\sum_{r=1}^{20}(2r-1)=400$, confirming odd-sum square pattern.'
+                },
+                {
+                    question: 'Show that $0.\\overline{27}=\\frac{3}{11}$ using GP method.',
+                    steps: [
+                        '$0.\\overline{27}=0.27+0.0027+0.000027+\\cdots$.',
+                        'This is GP with $a=0.27$, $r=0.01$.',
+                        '$S_\\infty=\\frac{0.27}{1-0.01}=\\frac{0.27}{0.99}$.',
+                        '$=\\frac{27}{99}=\\frac{3}{11}$.'
+                    ],
+                    final_answer: '$0.\\overline{27}=\\frac{3}{11}$.'
+                }
+            ]
+        }
+    ];
+
+    sequencesSeriesTopic.sections = [...sequencesSeriesTopic.sections, ...extraSections];
+    sequencesSeriesTopic.key_points = Array.from(
+        new Set([
+            ...sequencesSeriesTopic.key_points,
+            'Recurrence relations can often be converted into GP form via equilibrium shifts.',
+            'Telescoping sums are fastest when partial fractions create cancellation chains.',
+            'Always separate polynomial sums into sigma building blocks before simplification.',
+            'In modelling tasks, identify additive vs multiplicative change first.',
+            'When solving for n, enforce integer constraints after algebraic roots.',
+        ])
+    );
+    sequencesSeriesTopic.exam_tips = Array.from(
+        new Set([
+            ...sequencesSeriesTopic.exam_tips,
+            'Write the exact formula used (AP, GP, sigma, or annuity) before substitution.',
+            'For GP convergence, explicitly state and check the condition $|r|<1$.',
+            'In inequality questions involving $S_n$, solve then round n up to the least valid integer.',
+            'Keep fractions in exact form until the final line to reduce rounding drift.',
+            'In recurrence questions, verify first 2 to 3 terms against your closed form.',
+        ])
+    );
+    sequencesSeriesTopic.visual_descriptions = Array.from(
+        new Set([
+            ...sequencesSeriesTopic.visual_descriptions,
+            'AP vs GP growth comparison matrix across first ten terms.',
+            'Telescoping cancellation ladder for rational series.',
+            'Convergence band diagram for recurrence with fixed point.',
+            'Savings annuity timeline with monthly deposits and compounding.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 8 (Lower Sixth): binomial theorem chapter upgrade.
+const binomialTheoremTopic = aLevelPureMathNotes['Binomial Theorem'];
+if (binomialTheoremTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '8. General Term Targeting Matrix and Power Tracking',
+            content: `## Targeting matrix for specific terms
+
+For $(a+b)^n$:
+$$T_{r+1}=\\binom{n}{r}a^{n-r}b^r.$$
+
+Power tracking method:
+1. Write the power of x in the general term.
+2. Set it equal to desired power.
+3. Solve for r.
+4. Substitute r into coefficient expression.
+
+## Independent term condition
+
+If term has factor $x^{f(r)}$, independent term requires:
+$$f(r)=0.$$
+
+If resulting r is not integer in $[0,n]$, no such term exists.`,
+            worked_examples: [
+                {
+                    question: 'Find the coefficient of $x^5$ in $(2x-3)^9$.',
+                    steps: [
+                        'General term: $T_{r+1}=\\binom{9}{r}(2x)^{9-r}(-3)^r$.',
+                        'Power of x is $9-r$. Set $9-r=5 \\Rightarrow r=4$.',
+                        'Coefficient is $\\binom{9}{4}2^{5}(-3)^4$.',
+                        '$\\binom{9}{4}=126$, so coefficient $=126\\cdot32\\cdot81=326592$.'
+                    ],
+                    final_answer: 'Coefficient of $x^5$ is $326592$.'
+                },
+                {
+                    question: 'Determine the term independent of x in $\\left(x^2+\\frac{1}{x}\\right)^{10}$.',
+                    steps: [
+                        '$T_{r+1}=\\binom{10}{r}(x^2)^{10-r}\\left(\\frac{1}{x}\\right)^r$.',
+                        'Power of x is $2(10-r)-r=20-3r$.',
+                        'Set $20-3r=0 \\Rightarrow r=\\frac{20}{3}$, not an integer.',
+                        'Hence no valid term index gives power zero.'
+                    ],
+                    final_answer: 'There is no term independent of x.'
+                },
+                {
+                    question: 'Find the coefficient of $x^3$ in $(1+2x)^6(1-x)^4$.',
+                    steps: [
+                        'From $(1+2x)^6$, coefficients up to $x^3$: $1,12,60,160$.',
+                        'From $(1-x)^4$, coefficients up to $x^3$: $1,-4,6,-4$.',
+                        'For product coefficient of $x^3$: combine matching pairs:',
+                        '$160(1)+60(-4)+12(6)+1(-4)=160-240+72-4$.',
+                        'Total $=-12$.'
+                    ],
+                    final_answer: 'Coefficient of $x^3$ is $-12$.'
+                }
+            ]
+        },
+        {
+            title: '9. Non-Integer Binomial Series Matrix and Validity Domain',
+            content: `## Extended binomial form
+
+For real n and $|x|<1$:
+$$
+(1+x)^n=1+nx+\\frac{n(n-1)}{2!}x^2+\\frac{n(n-1)(n-2)}{3!}x^3+\\cdots
+$$
+
+## Validity domain
+
+For $(1+u)^n$, convergence condition is:
+$$|u|<1.$$
+
+Always convert expression to this form before expanding.
+
+## Why this matters
+
+- approximation of irrational/exponential-like values
+- fast estimation without calculator-heavy powers
+- error control from next omitted term`,
+            worked_examples: [
+                {
+                    question: 'Expand $(1-2x)^{-1/2}$ up to the term in $x^3$.',
+                    steps: [
+                        'Use $(1+u)^n$ with $u=-2x$, $n=-\\frac12$.',
+                        'First term: $1$.',
+                        'Second: $nu=(-\\frac12)(-2x)=x$.',
+                        'Third: $\\frac{n(n-1)}{2}u^2=\\frac{(-\\frac12)(-\\frac32)}{2}(4x^2)=\\frac32x^2$.',
+                        'Fourth: $\\frac{n(n-1)(n-2)}{6}u^3=\\frac52x^3$.'
+                    ],
+                    final_answer: '$(1-2x)^{-1/2}=1+x+\\frac32x^2+\\frac52x^3+\\cdots$.'
+                },
+                {
+                    question: 'Use binomial expansion to approximate $\\frac{1}{1.05}$ up to cubic term.',
+                    steps: [
+                        '$\\frac{1}{1.05}=(1+0.05)^{-1}$.',
+                        'Use $(1+x)^{-1}=1-x+x^2-x^3+\\cdots$.',
+                        'Substitute $x=0.05$: $1-0.05+0.0025-0.000125$.',
+                        'Approximation $=0.952375$.'
+                    ],
+                    final_answer: '$\\frac{1}{1.05}\\approx0.952375$.'
+                },
+                {
+                    question: 'State the interval of validity for expansion of $(1+3x)^{-4}$.',
+                    steps: [
+                        'Set $u=3x$ in $(1+u)^n$.',
+                        'Need $|u|<1$.',
+                        'So $|3x|<1 \\Rightarrow |x|<\\frac13$.'
+                    ],
+                    final_answer: 'Valid for $|x|<\\frac13$.'
+                }
+            ]
+        },
+        {
+            title: '10. Coefficient Matching Matrix and Identity Construction',
+            content: `## Matching matrix idea
+
+When coefficients are compared across expressions:
+1. expand required terms only
+2. equate matching powers
+3. solve resulting algebraic system
+
+## Symmetry property
+$$\\binom{n}{r}=\\binom{n}{n-r},$$
+useful to shorten computations.
+
+## Coefficient logic in products
+
+If
+$$A(x)=\\sum a_r x^r,\\quad B(x)=\\sum b_r x^r,$$
+then coefficient of $x^k$ in $A(x)B(x)$ is:
+$$\\sum_{r=0}^{k}a_r b_{k-r}.$$`,
+            worked_examples: [
+                {
+                    question: 'In expansion of $(1+ax)^6$, coefficient of $x$ equals coefficient of $x^2$. Find a.',
+                    steps: [
+                        'Coefficient of $x$: $\\binom61 a=6a$.',
+                        'Coefficient of $x^2$: $\\binom62 a^2=15a^2$.',
+                        'Set equal: $6a=15a^2$.',
+                        '$a(15a-6)=0$.',
+                        'Non-zero solution: $a=\\frac{2}{5}$.'
+                    ],
+                    final_answer: '$a=\\frac25$ (non-zero solution).'
+                },
+                {
+                    question: 'Coefficient of $x^3$ in $(1+px)^8$ is 224. Find p.',
+                    steps: [
+                        'Coefficient of $x^3$ is $\\binom83 p^3=56p^3$.',
+                        'So $56p^3=224 \\Rightarrow p^3=4$.',
+                        'Hence $p=\\sqrt[3]{4}$.'
+                    ],
+                    final_answer: '$p=\\sqrt[3]{4}$.'
+                },
+                {
+                    question: 'Show quickly that $\\binom{12}{9}=\\binom{12}{3}$.',
+                    steps: [
+                        'Use symmetry: $\\binom{n}{r}=\\binom{n}{n-r}$.',
+                        'With $n=12$, $r=9$, this gives $\\binom{12}{9}=\\binom{12}{3}$.',
+                        'Numerically both equal 220.'
+                    ],
+                    final_answer: '$\\binom{12}{9}=\\binom{12}{3}=220$.'
+                }
+            ]
+        },
+        {
+            title: '11. Approximation and Error-Control Matrix (Exam-Length)',
+            content: `## Approximation discipline
+
+For small $|x|$, truncated binomial series gives high-accuracy estimates.
+
+## Error estimate principle
+
+If terms are decreasing in magnitude, the next omitted term gives a practical error scale.
+
+## Exam protocol
+1. Put expression into $(1+u)^n$.
+2. Confirm $|u|<1$.
+3. Keep required number of terms.
+4. Quote estimate and error awareness.`,
+            worked_examples: [
+                {
+                    question: 'Use first 4 terms to approximate $(1.01)^8$.',
+                    steps: [
+                        'Set $x=0.01$ in $(1+x)^8$.',
+                        'First terms: $1+8x+28x^2+56x^3$.',
+                        '$=1+0.08+0.0028+0.000056=1.082856$.'
+                    ],
+                    final_answer: '$(1.01)^8\\approx1.082856$ (with this truncation).'
+                },
+                {
+                    question: 'Use binomial expansion to approximate $(0.98)^{-2}$ up to $x^2$ terms.',
+                    steps: [
+                        'Write $(0.98)^{-2}=(1-0.02)^{-2}$.',
+                        'Use $(1-x)^{-2}=1+2x+3x^2+\\cdots$.',
+                        'Substitute $x=0.02$: $1+0.04+0.0012=1.0412$.'
+                    ],
+                    final_answer: '$(0.98)^{-2}\\approx1.0412$.'
+                },
+                {
+                    question: 'Explain why first-three-term approximation is weaker for $(1+0.4)^5$.',
+                    steps: [
+                        'Here $x=0.4$ is not very small.',
+                        'Third and higher terms remain significant.',
+                        'So truncation error is larger than in small-x problems.',
+                        'Hence approximation is less reliable unless more terms are kept.'
+                    ],
+                    final_answer: 'Because $|x|=0.4$ is relatively large, omitted terms are not negligible.'
+                },
+                {
+                    question: 'Approximate $\\sqrt{1.06}$ using first three terms of $(1+x)^{1/2}$.',
+                    steps: [
+                        'Use $(1+x)^{1/2}\\approx1+\\frac12x-\\frac18x^2$.',
+                        'Set $x=0.06$.',
+                        '$1+\\frac12(0.06)-\\frac18(0.06)^2$',
+                        '$=1+0.03-0.00045=1.02955$.'
+                    ],
+                    final_answer: '$\\sqrt{1.06}\\approx1.02955$.'
+                }
+            ]
+        }
+    ];
+
+    binomialTheoremTopic.sections = [...binomialTheoremTopic.sections, ...extraSections];
+    binomialTheoremTopic.key_points = Array.from(
+        new Set([
+            ...binomialTheoremTopic.key_points,
+            'General term targeting is the fastest method for coefficient and independent-term questions.',
+            'Always solve the power equation for r before substitution.',
+            'For non-integer powers, convert to $(1+u)^n$ and state $|u|<1$.',
+            'Coefficient matching converts binomial tasks into algebraic systems.',
+            'Approximation quality depends on the size of the expansion variable.',
+        ])
+    );
+    binomialTheoremTopic.exam_tips = Array.from(
+        new Set([
+            ...binomialTheoremTopic.exam_tips,
+            'Write $T_{r+1}$ explicitly before solving for a specific power.',
+            'Check that r is an integer within 0 to n in finite expansions.',
+            'Keep signs under strict control when expanding $(a-b)^n$.',
+            'For approximations, mention why truncation is reasonable (small |x|).',
+            'If asked for accuracy, compare with the first omitted term.',
+        ])
+    );
+    binomialTheoremTopic.visual_descriptions = Array.from(
+        new Set([
+            ...binomialTheoremTopic.visual_descriptions,
+            'Pascal coefficient grid with symmetry around central column.',
+            'Power-flow map showing exponent transfer between factors in $T_{r+1}$.',
+            'Validity band diagram for non-integer expansion intervals.',
+            'Approximation error ladder showing omitted-term contribution.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 9 (Lower Sixth): trigonometry chapter upgrade.
+const trigonometryTopic = aLevelPureMathNotes['Trigonometry'];
+if (trigonometryTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '8. Unit Circle Matrix and Quadrant Sign Engine',
+            content: `## Unit circle matrix
+
+In the unit circle:
+$$x=\\cos\\theta, \\quad y=\\sin\\theta.$$
+
+This gives fast coordinate-angle conversion.
+
+## Quadrant sign matrix (CAST)
+
+- QI: all positive
+- QII: sine positive
+- QIII: tangent positive
+- QIV: cosine positive
+
+## Reference-angle protocol
+1. Find reference angle in first quadrant.
+2. Use quadrant sign to restore correct sign.
+3. Write exact value using standard-angle table.
+
+## Symmetry identities
+$$\\sin(\\pi-\\theta)=\\sin\\theta, \\quad \\cos(\\pi-\\theta)=-\\cos\\theta,$$
+$$\\sin(2\\pi-\\theta)=-\\sin\\theta, \\quad \\cos(2\\pi-\\theta)=\\cos\\theta.$$
+
+These identities speed equation solving and expression simplification.`,
+            worked_examples: [
+                {
+                    question: 'Find exact values of $\\sin\\frac{7\\pi}{6}$, $\\cos\\frac{7\\pi}{6}$ and $\\tan\\frac{7\\pi}{6}$.',
+                    steps: [
+                        '$\\frac{7\\pi}{6}=\\pi+\\frac{\\pi}{6}$ lies in Quadrant III.',
+                        'Reference angle is $\\frac{\\pi}{6}$.',
+                        'In QIII, sine and cosine are negative, tangent is positive.',
+                        '$\\sin\\frac{7\\pi}{6}=-\\frac12$, $\\cos\\frac{7\\pi}{6}=-\\frac{\\sqrt3}{2}$.',
+                        '$\\tan\\frac{7\\pi}{6}=\\frac{\\sin}{\\cos}=\\frac{1}{\\sqrt3}=\\frac{\\sqrt3}{3}$.'
+                    ],
+                    final_answer: '$\\sin\\frac{7\\pi}{6}=-\\frac12$, $\\cos\\frac{7\\pi}{6}=-\\frac{\\sqrt3}{2}$, $\\tan\\frac{7\\pi}{6}=\\frac{\\sqrt3}{3}$.'
+                },
+                {
+                    question: 'Given $\\sin\\theta=-\\frac45$ and $\\theta$ is in QIV, find $\\cos\\theta$ and $\\tan\\theta$.',
+                    steps: [
+                        'Use $\\sin^2\\theta+\\cos^2\\theta=1$.',
+                        '$\\cos^2\\theta=1-\\left(\\frac45\\right)^2=1-\\frac{16}{25}=\\frac{9}{25}$.',
+                        'In QIV, cosine is positive, so $\\cos\\theta=\\frac35$.',
+                        '$\\tan\\theta=\\frac{\\sin\\theta}{\\cos\\theta}=\\frac{-4/5}{3/5}=-\\frac43$.'
+                    ],
+                    final_answer: '$\\cos\\theta=\\frac35$ and $\\tan\\theta=-\\frac43$.'
+                },
+                {
+                    question: 'Simplify $\\cos(\\pi+x)+\\sin(\\frac{3\\pi}{2}-x)$.',
+                    steps: [
+                        '$\\cos(\\pi+x)=-\\cos x$.',
+                        '$\\sin\\left(\\frac{3\\pi}{2}-x\\right)=-\\cos x$.',
+                        'So sum is $-\\cos x-\\cos x=-2\\cos x$.'
+                    ],
+                    final_answer: '$\\cos(\\pi+x)+\\sin(\\frac{3\\pi}{2}-x)=-2\\cos x$.'
+                }
+            ]
+        },
+        {
+            title: '9. Trig Equation Matrix: Substitution, Factorization, and Interval Control',
+            content: `## Equation matrix workflow
+
+For exam equations:
+1. reduce to one trig function where possible
+2. factor or use quadratic method
+3. solve standard trig equation
+4. filter to required interval
+
+## Useful substitutions
+
+- if equation has $\\sin^2x$ and $\\sin x$, let $u=\\sin x$
+- if equation has $\\cos2x$ and $\\cos x$, use double-angle formula
+- for mixed sine/cosine squares, convert with $\\sin^2x=1-\\cos^2x$ or vice versa
+
+## Interval discipline
+
+Always present final answers in the exact requested domain and units.`,
+            worked_examples: [
+                {
+                    question: 'Solve $2\\sin^2x+5\\sin x-3=0$ for $0\\le x<2\\pi$.',
+                    steps: [
+                        'Let $u=\\sin x$. Then $2u^2+5u-3=0$.',
+                        'Factor: $(2u-1)(u+3)=0$.',
+                        '$u=\\frac12$ or $u=-3$ (invalid).',
+                        'So $\\sin x=\\frac12$.',
+                        'In $[0,2\\pi)$: $x=\\frac{\\pi}{6},\\frac{5\\pi}{6}$.'
+                    ],
+                    final_answer: '$x=\\frac{\\pi}{6},\\frac{5\\pi}{6}$.'
+                },
+                {
+                    question: 'Solve $\\cos 2x=\\sin x$ for $0\\le x\\le2\\pi$.',
+                    steps: [
+                        'Use $\\cos2x=1-2\\sin^2x$.',
+                        'Then $1-2\\sin^2x=\\sin x$.',
+                        'Rearrange: $2\\sin^2x+\\sin x-1=0$.',
+                        'Factor: $(2\\sin x-1)(\\sin x+1)=0$.',
+                        '$\\sin x=\\frac12$ or $\\sin x=-1$.',
+                        'So $x=\\frac{\\pi}{6},\\frac{5\\pi}{6},\\frac{3\\pi}{2}$.'
+                    ],
+                    final_answer: '$x=\\frac{\\pi}{6},\\frac{5\\pi}{6},\\frac{3\\pi}{2}$.'
+                },
+                {
+                    question: 'Solve $\\tan 3x=\\sqrt3$ for $0\\le x<\\pi$.',
+                    steps: [
+                        '$\\tan\\theta=\\sqrt3$ at $\\theta=\\frac{\\pi}{3}+k\\pi$.',
+                        'So $3x=\\frac{\\pi}{3}+k\\pi$.',
+                        '$x=\\frac{\\pi}{9}+\\frac{k\\pi}{3}$.',
+                        'Within $[0,\\pi)$, valid k values are $0,1,2$.',
+                        'Hence $x=\\frac{\\pi}{9},\\frac{4\\pi}{9},\\frac{7\\pi}{9}$.'
+                    ],
+                    final_answer: '$x=\\frac{\\pi}{9},\\frac{4\\pi}{9},\\frac{7\\pi}{9}$.'
+                }
+            ]
+        },
+        {
+            title: '10. R-Alpha Matrix and Harmonic Modelling',
+            content: `## Harmonic matrix form
+
+Any linear combination
+$$a\\sin x+b\\cos x$$
+can be written as
+$$R\\sin(x+\\alpha),\\quad R=\\sqrt{a^2+b^2}.$$
+
+Coefficient matching:
+$$R\\cos\\alpha=a, \\quad R\\sin\\alpha=b.$$
+
+## Why this matters
+
+- quick max/min extraction
+- easier equation solving
+- direct amplitude-phase interpretation in wave models
+
+Maximum and minimum:
+$$-R\\le a\\sin x+b\\cos x\\le R.$$
+
+## Modelling interpretation
+
+For signal $y=R\\sin(\\omega x+\\phi)$:
+- amplitude = $R$
+- period = $\\frac{2\\pi}{\\omega}$
+- phase shift = $-\\frac{\\phi}{\\omega}$`,
+            worked_examples: [
+                {
+                    question: 'Express $5\\sin x-12\\cos x$ in the form $R\\sin(x-\\alpha)$.',
+                    steps: [
+                        '$R=\\sqrt{5^2+(-12)^2}=13$.',
+                        'Using $R\\sin(x-\\alpha)=R\\sin x\\cos\\alpha-R\\cos x\\sin\\alpha$.',
+                        'Match coefficients: $13\\cos\\alpha=5$, $13\\sin\\alpha=12$.',
+                        'So $\\cos\\alpha=\\frac{5}{13}$, $\\sin\\alpha=\\frac{12}{13}$.',
+                        '$\\alpha=\\arctan\\frac{12}{5}$.'
+                    ],
+                    final_answer: '$5\\sin x-12\\cos x=13\\sin(x-\\alpha)$ with $\\alpha=\\arctan\\frac{12}{5}$.'
+                },
+                {
+                    question: 'Find max and min of $2\\sin x+3\\cos x$.',
+                    steps: [
+                        '$R=\\sqrt{2^2+3^2}=\\sqrt{13}$.',
+                        'Hence expression is equivalent to $\\sqrt{13}\\sin(x+\\alpha)$ for some $\\alpha$.',
+                        'So range is $[-\\sqrt{13},\\sqrt{13}]$.'
+                    ],
+                    final_answer: 'Maximum $=\\sqrt{13}$, minimum $=-\\sqrt{13}$.'
+                },
+                {
+                    question: 'Solve $2\\sin x+3\\cos x=1$ for $0\\le x<2\\pi$ using R-alpha.',
+                    steps: [
+                        'Write as $\\sqrt{13}\\sin(x+\\alpha)=1$, where $\\tan\\alpha=\\frac{3}{2}$.',
+                        'So $\\sin(x+\\alpha)=\\frac{1}{\\sqrt{13}}$.',
+                        'Let $\\beta=\\arcsin\\frac{1}{\\sqrt{13}}$.',
+                        'Then $x+\\alpha=\\beta$ or $x+\\alpha=\\pi-\\beta$ (mod $2\\pi$).',
+                        'Hence $x=-\\alpha+\\beta$ or $x=-\\alpha+\\pi-\\beta$ (then adjust to interval).'
+                    ],
+                    final_answer: '$x=-\\alpha+\\beta$ or $x=-\\alpha+\\pi-\\beta$ modulo $2\\pi$, with $\\tan\\alpha=\\frac32$ and $\\beta=\\arcsin\\frac{1}{\\sqrt{13}}$.'
+                }
+            ]
+        },
+        {
+            title: '11. Trigonometry Full Book Drill (Exam-Length)',
+            content: `## Full drill strategy
+
+Long trig questions often combine:
+- identity proof
+- exact values
+- equation solving
+- R-alpha transformation
+- geometric/trigonometric interpretation
+
+## Structured response model
+1. choose identity or formula explicitly
+2. transform in controlled algebraic steps
+3. solve and filter interval
+4. conclude with exact values where required
+
+## Accuracy policy
+
+- keep exact forms ($\\pi$, radicals, fractions) as long as possible
+- only decimalize at final requested stage
+- check candidate solutions in original equation`,
+            worked_examples: [
+                {
+                    question: 'Prove that $\\frac{1-\\cos2x}{\\sin2x}=\\tan x$.',
+                    steps: [
+                        '$1-\\cos2x=2\\sin^2x$ and $\\sin2x=2\\sin x\\cos x$.',
+                        'So LHS $=\\frac{2\\sin^2x}{2\\sin x\\cos x}=\\frac{\\sin x}{\\cos x}=\\tan x$.'
+                    ],
+                    final_answer: 'Identity proven: $\\frac{1-\\cos2x}{\\sin2x}=\\tan x$.'
+                },
+                {
+                    question: 'Solve $\\sin x+\\sin2x=0$ for $0\\le x\\le2\\pi$.',
+                    steps: [
+                        '$\\sin x+2\\sin x\\cos x=0$.',
+                        '$\\sin x(1+2\\cos x)=0$.',
+                        'So $\\sin x=0$ or $\\cos x=-\\frac12$.',
+                        'From $\\sin x=0$: $x=0,\\pi,2\\pi$.',
+                        'From $\\cos x=-\\frac12$: $x=\\frac{2\\pi}{3},\\frac{4\\pi}{3}$.'
+                    ],
+                    final_answer: '$x=0,\\frac{2\\pi}{3},\\pi,\\frac{4\\pi}{3},2\\pi$.'
+                },
+                {
+                    question: 'Find exact value of $\\cos75^\\circ\\cos15^\\circ-\\sin75^\\circ\\sin15^\\circ$.',
+                    steps: [
+                        'Use $\\cos(A+B)=\\cos A\\cos B-\\sin A\\sin B$.',
+                        'Expression $=\\cos(75^\\circ+15^\\circ)=\\cos90^\\circ=0$.'
+                    ],
+                    final_answer: 'Exact value is $0$.'
+                },
+                {
+                    question: 'In $0\\le x<2\\pi$, solve $4\\sin^2x-4\\sin x+1=0$.',
+                    steps: [
+                        'Recognize perfect square: $(2\\sin x-1)^2=0$.',
+                        'So $\\sin x=\\frac12$.',
+                        'Hence $x=\\frac{\\pi}{6},\\frac{5\\pi}{6}$.'
+                    ],
+                    final_answer: '$x=\\frac{\\pi}{6},\\frac{5\\pi}{6}$.'
+                }
+            ]
+        }
+    ];
+
+    trigonometryTopic.sections = [...trigonometryTopic.sections, ...extraSections];
+    trigonometryTopic.key_points = Array.from(
+        new Set([
+            ...trigonometryTopic.key_points,
+            'Unit-circle coordinates give exact sine and cosine values quickly.',
+            'Use reference-angle and quadrant sign logic before writing final trig values.',
+            'Reduce equations to a single trig function whenever possible.',
+            'R-alpha converts mixed sine-cosine expressions into one sinusoid.',
+            'For interval-based solving, always list all principal solutions then filter.',
+        ])
+    );
+    trigonometryTopic.exam_tips = Array.from(
+        new Set([
+            ...trigonometryTopic.exam_tips,
+            'State the identity used before each manipulation in proof questions.',
+            'When solving trig equations, substitute back to validate against the original form.',
+            'Keep answers exact in radians unless the question asks for decimal approximation.',
+            'In R-alpha questions, quote R and alpha explicitly before solving.',
+            'Use symmetry and periodicity to generate full solution sets efficiently.',
+        ])
+    );
+    trigonometryTopic.visual_descriptions = Array.from(
+        new Set([
+            ...trigonometryTopic.visual_descriptions,
+            'Unit circle with key radian angles and sign quadrants.',
+            'Sine and cosine wave overlay across one full period.',
+            'R-alpha vector triangle mapping a and b to amplitude R.',
+            'Trig-equation interval strip showing accepted roots.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 10 (Lower Sixth): differentiation chapter upgrade.
+const differentiationTopic = aLevelPureMathNotes['Differentiation'];
+if (differentiationTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '8. Derivative Matrix: Structural Pattern Recognition',
+            content: `## Pattern recognition matrix
+
+Before differentiating, classify expression type:
+- power form
+- product
+- quotient
+- composite (chain)
+- implicit/mixed
+
+Then choose minimum-rule route.
+
+## High-speed rule map
+
+$$\\frac{d}{dx}[x^n]=nx^{n-1}, \\quad
+\\frac{d}{dx}[uv]=u'v+uv', \\quad
+\\frac{d}{dx}\\left(\\frac{u}{v}\\right)=\\frac{u'v-uv'}{v^2}.$$
+
+Composite:
+$$\\frac{d}{dx}[f(g(x))]=f'(g(x))g'(x).$$
+
+## Optimization of workflow
+1. simplify algebra where possible
+2. differentiate cleanly
+3. factor final derivative when useful
+4. validate with a quick dimensional/sign check`,
+            worked_examples: [
+                {
+                    question: 'Differentiate $y=\\frac{(3x^2+1)^5}{x^3}$.',
+                    steps: [
+                        'Rewrite: $y=(3x^2+1)^5x^{-3}$.',
+                        'Use product rule with chain on first factor.',
+                        '$\\frac{d}{dx}(3x^2+1)^5=5(3x^2+1)^4\\cdot6x=30x(3x^2+1)^4$.',
+                        '$\\frac{d}{dx}x^{-3}=-3x^{-4}$.',
+                        '$y\'=30x(3x^2+1)^4x^{-3}+(3x^2+1)^5(-3x^{-4})$.',
+                        'Factor common term: $y\'=(3x^2+1)^4x^{-4}[30x^2-3(3x^2+1)]$.',
+                        'Simplify bracket: $30x^2-9x^2-3=21x^2-3=3(7x^2-1)$.'
+                    ],
+                    final_answer: '$y\'=\\frac{3(7x^2-1)(3x^2+1)^4}{x^4}$.'
+                },
+                {
+                    question: 'Find $\\frac{d}{dx}[\\ln(\\sin x)]$.',
+                    steps: [
+                        'Let $u=\\sin x$.',
+                        '$\\frac{d}{dx}[\\ln u]=\\frac{u\'}{u}$.',
+                        'So derivative is $\\frac{\\cos x}{\\sin x}=\\cot x$.'
+                    ],
+                    final_answer: '$\\frac{d}{dx}[\\ln(\\sin x)]=\\cot x$.'
+                },
+                {
+                    question: 'Differentiate $y=(x^2+2x-1)\\,e^{3x}$.',
+                    steps: [
+                        'Use product rule.',
+                        '$\\frac{d}{dx}(x^2+2x-1)=2x+2$.',
+                        '$\\frac{d}{dx}(e^{3x})=3e^{3x}$.',
+                        '$y\'=(2x+2)e^{3x}+(x^2+2x-1)3e^{3x}$.',
+                        'Factor $e^{3x}$: $y\'=e^{3x}[2x+2+3x^2+6x-3]$.',
+                        '$y\'=e^{3x}(3x^2+8x-1)$.'
+                    ],
+                    final_answer: '$y\'=e^{3x}(3x^2+8x-1)$.'
+                }
+            ]
+        },
+        {
+            title: '9. Implicit and Parametric Differentiation Matrix',
+            content: `## Implicit matrix
+
+When $y$ is mixed with $x$, differentiate both sides and treat $y$ as $y(x)$:
+$$\\frac{d}{dx}[y^n]=ny^{n-1}\\frac{dy}{dx}.$$
+
+## Parametric matrix
+
+For
+$$x=x(t),\\ y=y(t):\\quad \\frac{dy}{dx}=\\frac{dy/dt}{dx/dt}.$$
+
+Second derivative:
+$$\\frac{d^2y}{dx^2}=\\frac{\\frac{d}{dt}(dy/dx)}{dx/dt}.$$
+
+## Exam workflow
+1. compute derivatives symbolically first
+2. substitute point/parameter after
+3. isolate $\\frac{dy}{dx}$ cleanly`,
+            worked_examples: [
+                {
+                    question: 'Given $x^2+xy+y^2=7$, find $\\frac{dy}{dx}$.',
+                    steps: [
+                        'Differentiate termwise:',
+                        '$2x+(x\\frac{dy}{dx}+y)+2y\\frac{dy}{dx}=0$.',
+                        'Group derivative terms:',
+                        '$(x+2y)\\frac{dy}{dx}=-(2x+y)$.',
+                        'Hence $\\frac{dy}{dx}=-\\frac{2x+y}{x+2y}$.'
+                    ],
+                    final_answer: '$\\frac{dy}{dx}=-\\frac{2x+y}{x+2y}$.'
+                },
+                {
+                    question: 'For $x=t^2-1$, $y=t^3+t$, find $\\frac{dy}{dx}$ at $t=2$.',
+                    steps: [
+                        '$\\frac{dx}{dt}=2t$, $\\frac{dy}{dt}=3t^2+1$.',
+                        '$\\frac{dy}{dx}=\\frac{3t^2+1}{2t}$.',
+                        'At $t=2$: $\\frac{dy}{dx}=\\frac{13}{4}$.'
+                    ],
+                    final_answer: 'Slope at $t=2$ is $\\frac{13}{4}$.'
+                },
+                {
+                    question: 'For $x=t^2$, $y=t^4-2t$, find $\\frac{d^2y}{dx^2}$.',
+                    steps: [
+                        '$\\frac{dx}{dt}=2t$, $\\frac{dy}{dt}=4t^3-2$.',
+                        '$\\frac{dy}{dx}=\\frac{4t^3-2}{2t}=2t^2-\\frac{1}{t}$.',
+                        '$\\frac{d}{dt}\\left(\\frac{dy}{dx}\\right)=4t+\\frac{1}{t^2}$.',
+                        '$\\frac{d^2y}{dx^2}=\\frac{4t+1/t^2}{2t}=2+\\frac{1}{2t^3}$.'
+                    ],
+                    final_answer: '$\\frac{d^2y}{dx^2}=2+\\frac{1}{2t^3}$.'
+                }
+            ]
+        },
+        {
+            title: '10. Gradient Matrix, Tangent-Normal Links, and Local Behavior',
+            content: `## Local behavior matrix
+
+At a point $x=a$:
+- tangent gradient: $m=f'(a)$
+- normal gradient: $m_N=-\\frac{1}{m}$ (if $m\\ne0$)
+
+Stationary points satisfy:
+$$f'(x)=0.$$
+
+Nature test (local):
+- if $f''(a)>0$, local minimum
+- if $f''(a)<0$, local maximum
+- if sign uncertain, inspect gradient change
+
+## Gradient-use checklist
+1. differentiate correctly
+2. solve $f'(x)=0$ fully
+3. compute y-values
+4. classify with $f''$ or sign chart`,
+            worked_examples: [
+                {
+                    question: 'Find stationary points of $y=x^3-6x^2+9x+1$ and classify.',
+                    steps: [
+                        '$y\'=3x^2-12x+9=3(x-1)(x-3)$.',
+                        'Stationary x-values: $x=1,3$.',
+                        '$y(1)=1-6+9+1=5$, $y(3)=27-54+27+1=1$.',
+                        '$y\'\'=6x-12$.',
+                        '$y\'\'(1)=-6<0$ so local max at $(1,5)$.',
+                        '$y\'\'(3)=6>0$ so local min at $(3,1)$.'
+                    ],
+                    final_answer: 'Local maximum at $(1,5)$ and local minimum at $(3,1)$.'
+                },
+                {
+                    question: 'Find equation of normal to $y=\\ln x$ at $x=e$.',
+                    steps: [
+                        '$y\'=\\frac{1}{x}$, so tangent slope at $x=e$ is $\\frac1e$.',
+                        'Normal slope is $-e$.',
+                        'Point is $(e,1)$ since $\\ln e=1$.',
+                        'Normal: $y-1=-e(x-e)$.'
+                    ],
+                    final_answer: 'Normal equation: $y-1=-e(x-e)$.'
+                },
+                {
+                    question: 'At what x is tangent to $y=\\frac{1}{x}$ parallel to line $2x+y=0$?',
+                    steps: [
+                        'Line $2x+y=0$ has slope $-2$.',
+                        'For $y=\\frac1x$, derivative is $y\'=-\\frac{1}{x^2}$.',
+                        'Set $-\\frac{1}{x^2}=-2$.',
+                        '$\\frac{1}{x^2}=2 \\Rightarrow x^2=\\frac12$.',
+                        '$x=\\pm\\frac{1}{\\sqrt2}=\\pm\\frac{\\sqrt2}{2}$.'
+                    ],
+                    final_answer: '$x=\\pm\\frac{\\sqrt2}{2}$.'
+                }
+            ]
+        },
+        {
+            title: '11. Differentiation Full Book Drill (Exam-Length)',
+            content: `## Full drill structure
+
+A long differentiation question may combine:
+- rule-based derivative
+- tangent/normal equations
+- stationary-point analysis
+- interpretation of rates of change
+
+## Robust exam protocol
+1. rewrite function in easiest differentiation form
+2. compute derivative carefully
+3. substitute target value exactly
+4. conclude with clear statement and units when required
+
+## Accuracy traps
+- sign errors in product/quotient
+- missing chain multiplier
+- algebra slips when solving $f'(x)=0$
+- not verifying final coordinates`,
+            worked_examples: [
+                {
+                    question: 'Given $y=(x-2)^2(x+1)$, find $\\frac{dy}{dx}$ and stationary points.',
+                    steps: [
+                        'Expand first: $y=x^3-3x^2+4$.',
+                        '$y\'=3x^2-6x=3x(x-2)$.',
+                        'Stationary x-values: $x=0,2$.',
+                        '$y(0)=4$, $y(2)=0$.',
+                        '$y\'\'=6x-6$, so $y\'\'(0)=-6$ (max), $y\'\'(2)=6$ (min).'
+                    ],
+                    final_answer: '$\\frac{dy}{dx}=3x(x-2)$; local max at $(0,4)$ and local min at $(2,0)$.'
+                },
+                {
+                    question: 'A particle has displacement $s=t^3-6t^2+9t$ (m). Find velocity and acceleration at $t=2$.',
+                    steps: [
+                        'Velocity: $v=\\frac{ds}{dt}=3t^2-12t+9$.',
+                        'At $t=2$: $v=12-24+9=-3$ m/s.',
+                        'Acceleration: $a=\\frac{dv}{dt}=6t-12$.',
+                        'At $t=2$: $a=0$ m/s^2.'
+                    ],
+                    final_answer: 'At $t=2$, velocity is $-3$ m/s and acceleration is $0$ m/s^2.'
+                },
+                {
+                    question: 'Find tangent line to $y=\\sqrt{2x+5}$ at $x=2$.',
+                    steps: [
+                        'Point: $y=\\sqrt9=3$, so $(2,3)$.',
+                        '$y\'=(2x+5)^{1/2}\\Rightarrow y\'=\\frac{1}{2}(2x+5)^{-1/2}\\cdot2=\\frac{1}{\\sqrt{2x+5}}$.',
+                        'At $x=2$, slope $=\\frac13$.',
+                        'Tangent: $y-3=\\frac13(x-2)$.'
+                    ],
+                    final_answer: 'Tangent equation: $y-3=\\frac13(x-2)$.'
+                },
+                {
+                    question: 'If $f(x)=x^2e^x$, show $f\'\'(x)=e^x(x^2+4x+2)$.',
+                    steps: [
+                        '$f\'(x)=2xe^x+x^2e^x=e^x(x^2+2x)$.',
+                        '$f\'\'(x)=e^x(x^2+2x)+e^x(2x+2)$.',
+                        '$f\'\'(x)=e^x(x^2+4x+2)$.'
+                    ],
+                    final_answer: 'Verified: $f\'\'(x)=e^x(x^2+4x+2)$.'
+                }
+            ]
+        }
+    ];
+
+    differentiationTopic.sections = [...differentiationTopic.sections, ...extraSections];
+    differentiationTopic.key_points = Array.from(
+        new Set([
+            ...differentiationTopic.key_points,
+            'Choose derivative rules by structure before calculating.',
+            'Chain rule multipliers are mandatory for nested functions.',
+            'Implicit differentiation requires dy/dx on every y-term derivative.',
+            'Stationary points come from f\'(x)=0 and must be classified.',
+            'Tangent and normal equations require both slope and contact point.',
+        ])
+    );
+    differentiationTopic.exam_tips = Array.from(
+        new Set([
+            ...differentiationTopic.exam_tips,
+            'Rewrite complex quotients/powers into simpler forms before differentiating.',
+            'Factor derivatives where possible to solve stationary-point equations cleanly.',
+            'In parametric questions, keep expressions in t until final substitution.',
+            'When modelling motion, include physical units for velocity and acceleration.',
+            'Check final lines by substituting the test point back into original function.',
+        ])
+    );
+    differentiationTopic.visual_descriptions = Array.from(
+        new Set([
+            ...differentiationTopic.visual_descriptions,
+            'Derivative rule matrix linking form to method (power, product, quotient, chain).',
+            'Curve with tangent and normal at a selected point.',
+            'Gradient-sign chart showing increasing/decreasing intervals.',
+            'Stationary-point classification map using second derivative test.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 11 (Lower Sixth): applications of differentiation chapter upgrade.
+const applicationsOfDifferentiationTopic = aLevelPureMathNotes['Applications of Differentiation'];
+if (applicationsOfDifferentiationTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '8. Optimization Matrix: Build, Differentiate, Decide',
+            content: `## Optimization workflow
+
+1. Define variables and domain constraints.
+2. Build objective function in one variable.
+3. Differentiate and solve $f'(x)=0$.
+4. Classify with $f''(x)$ or endpoint checks.
+5. Interpret result in context.
+
+## Core principle
+
+An answer is only valid if it lies inside the practical domain.`,
+            worked_examples: [
+                {
+                    question: 'A rectangle has perimeter 50 cm. Find dimensions for maximum area.',
+                    steps: [
+                        'Let sides be $x$ and $y$, so $2x+2y=50 \\Rightarrow y=25-x$.',
+                        'Area: $A=x(25-x)=25x-x^2$.',
+                        '$A\'=25-2x=0 \\Rightarrow x=12.5$.',
+                        '$A\'\'=-2<0$, so maximum.',
+                        '$y=25-12.5=12.5$.'
+                    ],
+                    final_answer: 'Maximum area occurs at $12.5\\text{ cm} \\times 12.5\\text{ cm}$.'
+                },
+                {
+                    question: 'Find minimum value of $f(x)=x+\\frac{16}{x}$ for $x>0$.',
+                    steps: [
+                        '$f\'(x)=1-\\frac{16}{x^2}$.',
+                        'Set to zero: $1-\\frac{16}{x^2}=0 \\Rightarrow x^2=16 \\Rightarrow x=4$.',
+                        '$f\'\'(x)=\\frac{32}{x^3}>0$ at $x=4$, so minimum.',
+                        '$f(4)=4+4=8$.'
+                    ],
+                    final_answer: 'Minimum value is $8$ at $x=4$.'
+                }
+            ]
+        },
+        {
+            title: '9. Curve Application Matrix: Stationary Points and Shape',
+            content: `## Application sketch matrix
+
+For model interpretation:
+- solve $f'(x)=0$ for stationary points
+- use $f''(x)$ for local classification
+- analyze sign of $f'(x)$ for increase/decrease intervals
+
+## Interpretation link
+
+Stationary points often represent peaks, troughs, or turning states in applied models.`,
+            worked_examples: [
+                {
+                    question: 'For $y=x^3-3x^2-9x+4$, find stationary points and classify.',
+                    steps: [
+                        '$y\'=3x^2-6x-9=3(x-3)(x+1)$.',
+                        'So stationary x-values are $x=-1$ and $x=3$.',
+                        '$y(-1)=-1-3+9+4=9$, $y(3)=27-27-27+4=-23$.',
+                        '$y\'\'=6x-6$.',
+                        '$y\'\'(-1)=-12<0$ => local maximum at $(-1,9)$.',
+                        '$y\'\'(3)=12>0$ => local minimum at $(3,-23)$.'
+                    ],
+                    final_answer: 'Local max at $(-1,9)$ and local min at $(3,-23)$.'
+                },
+                {
+                    question: 'Find point of inflection for $y=x^3-6x^2+12x+5$.',
+                    steps: [
+                        '$y\'\'=6x-12$.',
+                        'Set $y\'\'=0$: $x=2$.',
+                        '$y(2)=8-24+24+5=13$.'
+                    ],
+                    final_answer: 'Point of inflection is $(2,13)$.'
+                }
+            ]
+        },
+        {
+            title: '10. Rates and Context Matrix (Kinematics, Cost, Profit)',
+            content: `## Rate interpretation matrix
+
+If displacement is $s(t)$:
+$$v(t)=\\frac{ds}{dt}, \\quad a(t)=\\frac{d^2s}{dt^2}.$$
+
+If cost is $C(x)$, marginal cost is:
+$$MC=C'(x).$$
+
+If profit is $P(x)$, maximize by solving:
+$$P'(x)=0, \\quad P''(x)<0.$$
+
+## Reporting standard
+
+Always include units and practical interpretation after the calculation.`,
+            worked_examples: [
+                {
+                    question: 'A particle has $s=t^3-9t^2+24t$ (m). Find times when it is at rest.',
+                    steps: [
+                        'Velocity: $v=\\frac{ds}{dt}=3t^2-18t+24=3(t-2)(t-4)$.',
+                        'At rest when $v=0$: $t=2$ or $t=4$.'
+                    ],
+                    final_answer: 'Particle is at rest at $t=2\\text{ s}$ and $t=4\\text{ s}$.'
+                },
+                {
+                    question: 'Revenue $R(x)=150x-3x^2$, cost $C(x)=30x+200$. Find output maximizing profit.',
+                    steps: [
+                        '$P(x)=R-C=(150x-3x^2)-(30x+200)=-3x^2+120x-200$.',
+                        '$P\'(x)=-6x+120=0 \\Rightarrow x=20$.',
+                        '$P\'\'(x)=-6<0$, so this is a maximum.'
+                    ],
+                    final_answer: 'Profit is maximized at $x=20$ units.'
+                }
+            ]
+        }
+    ];
+
+    applicationsOfDifferentiationTopic.sections = [...applicationsOfDifferentiationTopic.sections, ...extraSections];
+    applicationsOfDifferentiationTopic.key_points = Array.from(
+        new Set([
+            ...applicationsOfDifferentiationTopic.key_points,
+            'Optimization requires objective function in one variable plus domain constraints.',
+            'Second derivative test rapidly classifies local max/min in many applied tasks.',
+            'For nearest-distance problems, minimize squared distance first.',
+            'Context answers are incomplete without units and interpretation.',
+        ])
+    );
+    applicationsOfDifferentiationTopic.exam_tips = Array.from(
+        new Set([
+            ...applicationsOfDifferentiationTopic.exam_tips,
+            'Write constraints before differentiating objective functions.',
+            'Check endpoint values when domain is bounded.',
+            'In motion problems, distinguish velocity sign from speed magnitude.',
+            'Use a final sentence to explain practical meaning of the numeric result.',
+        ])
+    );
+    applicationsOfDifferentiationTopic.visual_descriptions = Array.from(
+        new Set([
+            ...applicationsOfDifferentiationTopic.visual_descriptions,
+            'Optimization flow matrix from setup to final decision.',
+            'Curve with stationary-point classification labels.',
+            'Profit/cost/revenue sketch showing maximizing output.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 12 (Lower Sixth): integration chapter upgrade.
+const integrationTopic = aLevelPureMathNotes['Integration'];
+if (integrationTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '8. Integral Matrix: Reverse-Derivative Pattern Recognition',
+            content: `## Pattern matrix
+
+Before integrating, classify expression:
+- power form
+- standard exponential/trig
+- composite requiring substitution
+- product requiring parts
+
+## Core anti-derivative map
+
+$$\\int x^n\\,dx=\\frac{x^{n+1}}{n+1}+C \\ (n\\ne-1),$$
+$$\\int \\frac{1}{x}\\,dx=\\ln|x|+C,$$
+$$\\int e^{ax}\\,dx=\\frac{1}{a}e^{ax}+C,$$
+$$\\int \\cos(ax)\\,dx=\\frac{1}{a}\\sin(ax)+C.$$
+
+## Quick check
+
+Differentiate your final answer mentally to verify correctness.`,
+            worked_examples: [
+                {
+                    question: 'Evaluate $\\int (6x^2-4x+\\frac{3}{x})\\,dx$.',
+                    steps: [
+                        'Integrate termwise.',
+                        '$\\int 6x^2dx=2x^3$.',
+                        '$\\int -4x\\,dx=-2x^2$.',
+                        '$\\int \\frac{3}{x}dx=3\\ln|x|$.'
+                    ],
+                    final_answer: '$2x^3-2x^2+3\\ln|x|+C$.'
+                },
+                {
+                    question: 'Find $\\int (e^{4x}+5\\cos3x)\\,dx$.',
+                    steps: [
+                        '$\\int e^{4x}dx=\\frac14e^{4x}$.',
+                        '$\\int 5\\cos3x\\,dx=5\\cdot\\frac13\\sin3x=\\frac53\\sin3x$.'
+                    ],
+                    final_answer: '$\\frac14e^{4x}+\\frac53\\sin3x+C$.'
+                }
+            ]
+        },
+        {
+            title: '9. Substitution and Parts Matrix',
+            content: `## Substitution matrix
+
+Use substitution when you see:
+- function and its derivative pair
+- inner expression with power/composite outer form
+
+If $u=g(x)$ then:
+$$\\int f(g(x))g'(x)\\,dx=\\int f(u)\\,du.$$
+
+## Integration by parts matrix
+
+$$\\int u\\,dv=uv-\\int v\\,du.$$
+
+Choose $u$ with LIATE preference:
+log, inverse trig, algebraic, trig, exponential.`,
+            worked_examples: [
+                {
+                    question: 'Evaluate $\\int \\frac{2x}{x^2+5}\\,dx$.',
+                    steps: [
+                        'Let $u=x^2+5$, then $du=2x\\,dx$.',
+                        'Integral becomes $\\int \\frac{1}{u}\\,du=\\ln|u|+C$.'
+                    ],
+                    final_answer: '$\\ln(x^2+5)+C$.'
+                },
+                {
+                    question: 'Evaluate $\\int x\\ln x\\,dx$.',
+                    steps: [
+                        'Take $u=\\ln x$, $dv=x\\,dx$.',
+                        'Then $du=\\frac1x\\,dx$, $v=\\frac{x^2}{2}$.',
+                        '$\\int x\\ln x\\,dx=\\frac{x^2}{2}\\ln x-\\int \\frac{x^2}{2}\\cdot\\frac1x\\,dx$.',
+                        '$=\\frac{x^2}{2}\\ln x-\\frac12\\int x\\,dx=\\frac{x^2}{2}\\ln x-\\frac{x^2}{4}+C$.'
+                    ],
+                    final_answer: '$\\frac{x^2}{2}\\ln x-\\frac{x^2}{4}+C$.'
+                }
+            ]
+        },
+        {
+            title: '10. Definite Integrals and Area Matrix (Exam-Length)',
+            content: `## Definite-integral matrix
+
+$$\\int_a^b f(x)\\,dx=F(b)-F(a).$$
+
+## Area logic
+
+If graph crosses axis, split intervals and use absolute area interpretation when asked for total area.
+
+## Exam protocol
+1. find intersection limits
+2. decide top-minus-bottom function
+3. integrate carefully
+4. conclude with units`,
+            worked_examples: [
+                {
+                    question: 'Evaluate $\\int_1^3 (2x^2-3x+1)\\,dx$.',
+                    steps: [
+                        'Antiderivative: $F(x)=\\frac{2}{3}x^3-\\frac{3}{2}x^2+x$.',
+                        '$F(3)=18-13.5+3=7.5$.',
+                        '$F(1)=\\frac23-\\frac32+1=\\frac16$.',
+                        'Difference: $7.5-\\frac16=\\frac{45}{6}-\\frac16=\\frac{44}{6}=\\frac{22}{3}$.'
+                    ],
+                    final_answer: '$\\int_1^3 (2x^2-3x+1)\\,dx=\\frac{22}{3}$.'
+                },
+                {
+                    question: 'Find area enclosed by $y=2x$ and $y=x^2$.',
+                    steps: [
+                        'Intersections: $x^2=2x \\Rightarrow x=0,2$.',
+                        'On $(0,2)$, line $2x$ is above parabola $x^2$.',
+                        'Area $=\\int_0^2 (2x-x^2)\\,dx$.',
+                        '$=\\left[x^2-\\frac{x^3}{3}\\right]_0^2=4-\\frac{8}{3}=\\frac{4}{3}$.'
+                    ],
+                    final_answer: 'Enclosed area is $\\frac{4}{3}$ square units.'
+                }
+            ]
+        }
+    ];
+
+    integrationTopic.sections = [...integrationTopic.sections, ...extraSections];
+    integrationTopic.key_points = Array.from(
+        new Set([
+            ...integrationTopic.key_points,
+            'Classify integrand structure before selecting a method.',
+            'Substitution is strongest when inner derivative is present.',
+            'Parts is suitable for products of unlike function types.',
+            'Definite integrals require correct limits and antiderivative evaluation.',
+            'For geometric area, decide top-minus-bottom carefully.',
+        ])
+    );
+    integrationTopic.exam_tips = Array.from(
+        new Set([
+            ...integrationTopic.exam_tips,
+            'Differentiate your answer quickly to catch integration slips.',
+            'Keep constants/fractions outside integrals to reduce errors.',
+            'In definite integrals, substitute upper limit first consistently.',
+            'Split intervals when curve crosses axis for total area questions.',
+            'State final units for area/volume applications.',
+        ])
+    );
+    integrationTopic.visual_descriptions = Array.from(
+        new Set([
+            ...integrationTopic.visual_descriptions,
+            'Method-selection matrix: standard, substitution, parts, definite area.',
+            'Area-between-curves diagram with intersection limits marked.',
+            'Fundamental theorem flow from antiderivative to exact value.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 13 (Upper Sixth): further trigonometry chapter upgrade.
+const furtherTrigonometryTopic = aLevelPureMathNotes['Further Trigonometry'];
+if (furtherTrigonometryTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '8. Advanced Identity Matrix and Strategic Transformations',
+            content: `## Identity strategy matrix
+
+For advanced identity work:
+1. decide target form (single function or factorized form)
+2. convert everything to sine-cosine or tangent form
+3. use core identities at high precision
+4. simplify stepwise and verify domain restrictions
+
+## High-value identities
+
+$$\\sin^2x+\\cos^2x=1, \\quad 1+\\tan^2x=\\sec^2x,$$
+$$\\sin2x=2\\sin x\\cos x, \\quad \\cos2x=1-2\\sin^2x=2\\cos^2x-1,$$
+$$\\sin A\\pm\\sin B=2\\sin\\frac{A\\pm B}{2}\\cos\\frac{A\\mp B}{2},$$
+$$\\cos A+\\cos B=2\\cos\\frac{A+B}{2}\\cos\\frac{A-B}{2}.$$
+
+## Practical note
+
+In proofs, transform one side only unless instructed otherwise.`,
+            worked_examples: [
+                {
+                    question: 'Simplify $\\frac{1-\\cos2x}{\\sin2x}$.',
+                    steps: [
+                        'Use double-angle forms: $1-\\cos2x=2\\sin^2x$, $\\sin2x=2\\sin x\\cos x$.',
+                        'So expression is $\\frac{2\\sin^2x}{2\\sin x\\cos x}$.',
+                        'Cancel common factor $\\sin x$.'
+                    ],
+                    final_answer: '$\\tan x$ (where defined).'
+                },
+                {
+                    question: 'Express $\\sin5x+\\sin x$ as a product.',
+                    steps: [
+                        'Use sum-to-product: $\\sin A+\\sin B=2\\sin\\frac{A+B}{2}\\cos\\frac{A-B}{2}$.',
+                        'Set $A=5x$, $B=x$.',
+                        'Get $2\\sin3x\\cos2x$.'
+                    ],
+                    final_answer: '$\\sin5x+\\sin x=2\\sin3x\\cos2x$.'
+                },
+                {
+                    question: 'Simplify $\\cos^2x-\\sin^2x+2\\sin^2x$.',
+                    steps: [
+                        'First combine terms: $\\cos^2x+\\sin^2x$.',
+                        'Apply Pythagorean identity.'
+                    ],
+                    final_answer: '1'
+                }
+            ]
+        },
+        {
+            title: '9. Equation Matrix: Multi-Angle and Transformation Solving',
+            content: `## Multi-angle equation workflow
+
+1. reduce equation to standard trig forms
+2. factor using sum/product formulas
+3. solve each factor in required interval
+4. verify against original equation
+
+## Common transformations
+
+- $\\sin2x=2\\sin x\\cos x$
+- $\\cos2x=2\\cos^2x-1=1-2\\sin^2x$
+- $\\tan2x=\\frac{2\\tan x}{1-\\tan^2x}$
+
+## Interval discipline
+
+Always convert final answers into the question's requested domain and unit.`,
+            worked_examples: [
+                {
+                    question: 'Solve $\\cos3x=\\cos x$ for $0\\le x<2\\pi$.',
+                    steps: [
+                        'Use identity: $\\cos A=\\cos B \\Rightarrow A=2k\\pi\\pm B$.',
+                        'So $3x=2k\\pi\\pm x$.',
+                        'Case 1: $3x=2k\\pi+x \\Rightarrow 2x=2k\\pi \\Rightarrow x=k\\pi$.',
+                        'Case 2: $3x=2k\\pi-x \\Rightarrow 4x=2k\\pi \\Rightarrow x=\\frac{k\\pi}{2}$.',
+                        'Collect values in $[0,2\\pi)$: $0,\\frac{\\pi}{2},\\pi,\\frac{3\\pi}{2}$.'
+                    ],
+                    final_answer: '$x=0,\\frac{\\pi}{2},\\pi,\\frac{3\\pi}{2}$.'
+                },
+                {
+                    question: 'Solve $2\\sin^2x+\\sin x-1=0$ for $0\\le x\\le2\\pi$.',
+                    steps: [
+                        'Factor: $(2\\sin x-1)(\\sin x+1)=0$.',
+                        'So $\\sin x=\\frac12$ or $\\sin x=-1$.',
+                        'In interval: $x=\\frac{\\pi}{6},\\frac{5\\pi}{6},\\frac{3\\pi}{2}$.'
+                    ],
+                    final_answer: '$x=\\frac{\\pi}{6},\\frac{5\\pi}{6},\\frac{3\\pi}{2}$.'
+                },
+                {
+                    question: 'Solve $\\tan2x=\\sqrt3$ for $0\\le x<\\pi$.',
+                    steps: [
+                        '$\\tan\\theta=\\sqrt3$ at $\\theta=\\frac{\\pi}{3}+k\\pi$.',
+                        'Set $2x=\\frac{\\pi}{3}+k\\pi$.',
+                        'So $x=\\frac{\\pi}{6}+\\frac{k\\pi}{2}$.',
+                        'Valid values in $[0,\\pi)$ are $x=\\frac{\\pi}{6},\\frac{2\\pi}{3}$.'
+                    ],
+                    final_answer: '$x=\\frac{\\pi}{6},\\frac{2\\pi}{3}$.'
+                }
+            ]
+        },
+        {
+            title: '10. Inverse and Hyperbolic Link Matrix',
+            content: `## Inverse trig matrix
+
+Principal-value conventions:
+- $\\sin^{-1}x\\in\\left[-\\frac\\pi2,\\frac\\pi2\\right]$
+- $\\cos^{-1}x\\in[0,\\pi]$
+- $\\tan^{-1}x\\in\\left(-\\frac\\pi2,\\frac\\pi2\\right)$
+
+## Hyperbolic bridge
+
+Further trig interacts with hyperbolic forms through exponential definitions and identity structure:
+$$\\cosh^2x-\\sinh^2x=1.$$
+
+## Exam value
+
+Principal ranges prevent wrong-angle errors in exact-value tasks.`,
+            worked_examples: [
+                {
+                    question: 'Find exact value of $\\sin(2\\cos^{-1}(\\frac35))$.',
+                    steps: [
+                        'Let $\\theta=\\cos^{-1}(\\frac35)$ so $\\cos\\theta=\\frac35$.',
+                        'Construct right triangle: $\\sin\\theta=\\frac45$.',
+                        'Use double-angle: $\\sin2\\theta=2\\sin\\theta\\cos\\theta$.',
+                        '$=2\\cdot\\frac45\\cdot\\frac35=\\frac{24}{25}$.'
+                    ],
+                    final_answer: '$\\frac{24}{25}$.'
+                },
+                {
+                    question: 'Evaluate $\\tan(\\sin^{-1}(\\frac{5}{13}))$.',
+                    steps: [
+                        'Let $\\theta=\\sin^{-1}(\\frac{5}{13})$, so $\\sin\\theta=\\frac{5}{13}$.',
+                        'In principal range, cosine is positive.',
+                        '$\\cos\\theta=\\frac{12}{13}$.',
+                        '$\\tan\\theta=\\frac{\\sin\\theta}{\\cos\\theta}=\\frac{5}{12}$.'
+                    ],
+                    final_answer: '$\\frac{5}{12}$.'
+                },
+                {
+                    question: 'Find principal value of $\\cos^{-1}(-\\frac12)$.',
+                    steps: [
+                        'Principal range for arccos is $[0,\\pi]$.',
+                        '$\\cos x=-\\frac12$ in this range at $x=\\frac{2\\pi}{3}$.'
+                    ],
+                    final_answer: '$\\frac{2\\pi}{3}$.'
+                }
+            ]
+        },
+        {
+            title: '11. Further Trigonometry Full Book Drill (Exam-Length)',
+            content: `## Full drill framework
+
+Advanced trig papers combine:
+- identity proofs
+- exact values with inverse forms
+- multi-angle equation solving
+- product-sum or sum-product transformations
+
+## Robust response sequence
+1. identify the controlling formula
+2. transform with clean algebra
+3. solve and filter interval
+4. present exact answers where possible
+
+## Accuracy control
+
+- do not drop domain conditions
+- track principal-value restrictions
+- verify each candidate solution in original equation`,
+            worked_examples: [
+                {
+                    question: 'Prove that $\\frac{\\sec x-1}{\\sec x+1}=\\frac{1-\\cos x}{1+\\cos x}$.',
+                    steps: [
+                        'Start with LHS: $\\frac{1/\\cos x-1}{1/\\cos x+1}$.',
+                        'Multiply numerator and denominator by $\\cos x$.',
+                        'Get $\\frac{1-\\cos x}{1+\\cos x}$.'
+                    ],
+                    final_answer: 'Identity proven.'
+                },
+                {
+                    question: 'Solve $\\sin4x=\\sin2x$ for $0\\le x<2\\pi$.',
+                    steps: [
+                        'Use $\\sin A=\\sin B \\Rightarrow A=B+2k\\pi$ or $A=\\pi-B+2k\\pi$.',
+                        'Case 1: $4x=2x+2k\\pi \\Rightarrow x=k\\pi$.',
+                        'Case 2: $4x=\\pi-2x+2k\\pi \\Rightarrow 6x=\\pi+2k\\pi \\Rightarrow x=\\frac{\\pi}{6}+\\frac{k\\pi}{3}$.',
+                        'Collect all values in interval.'
+                    ],
+                    final_answer: '$x=0,\\frac{\\pi}{6},\\frac{\\pi}{2},\\frac{5\\pi}{6},\\pi,\\frac{7\\pi}{6},\\frac{3\\pi}{2},\\frac{11\\pi}{6}$.'
+                },
+                {
+                    question: 'Find exact value of $\\cos(\\tan^{-1}2)$.',
+                    steps: [
+                        'Let $\\theta=\\tan^{-1}2$, so $\\tan\\theta=2=\\frac{2}{1}$.',
+                        'Construct right triangle: opposite 2, adjacent 1, hypotenuse $\\sqrt5$.',
+                        '$\\cos\\theta=\\frac{1}{\\sqrt5}=\\frac{\\sqrt5}{5}$.'
+                    ],
+                    final_answer: '$\\frac{\\sqrt5}{5}$.'
+                }
+            ]
+        }
+    ];
+
+    furtherTrigonometryTopic.sections = [...furtherTrigonometryTopic.sections, ...extraSections];
+    furtherTrigonometryTopic.key_points = Array.from(
+        new Set([
+            ...furtherTrigonometryTopic.key_points,
+            'Use transformation identities to reduce multi-angle expressions systematically.',
+            'Principal-value ranges are essential for inverse-trig accuracy.',
+            'Equation solving should combine algebraic factoring with interval filtering.',
+            'Sum-product identities are powerful for factorization and simplification.',
+            'Always verify candidate roots in the original trig equation.',
+        ])
+    );
+    furtherTrigonometryTopic.exam_tips = Array.from(
+        new Set([
+            ...furtherTrigonometryTopic.exam_tips,
+            'In proof questions, transform one side only until it matches the other.',
+            'Keep answers exact (fractions/radicals/pi) unless decimals are requested.',
+            'Write interval restrictions early to prevent extra or missing roots.',
+            'When using inverse trig, state principal range before solving.',
+            'Use product-to-sum identities to simplify difficult equation forms.',
+        ])
+    );
+    furtherTrigonometryTopic.visual_descriptions = Array.from(
+        new Set([
+            ...furtherTrigonometryTopic.visual_descriptions,
+            'Unit-circle sign matrix with reference-angle mapping.',
+            'Transformation network connecting sum, product, and multi-angle forms.',
+            'Inverse-trig principal-range strip for arcsin/arccos/arctan.',
+            'Equation-solution interval timeline with accepted roots highlighted.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 14 (Upper Sixth): hyperbolic functions chapter upgrade.
+const hyperbolicFunctionsTopic = aLevelPureMathNotes['Hyperbolic Functions'];
+if (hyperbolicFunctionsTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '9. Exponential Matrix and Hyperbolic Reconstruction',
+            content: `## Reconstruction matrix
+
+Hyperbolic expressions can be rebuilt from exponentials:
+$$\\sinh x=\\frac{e^x-e^{-x}}{2},\\quad \\cosh x=\\frac{e^x+e^{-x}}{2},\\quad \\tanh x=\\frac{\\sinh x}{\\cosh x}.$$
+
+## Useful conversions
+
+$$e^x=\\cosh x+\\sinh x,\\quad e^{-x}=\\cosh x-\\sinh x.$$
+
+These are powerful for equation solving.
+
+## Symmetry structure
+
+- $\\sinh x$ is odd
+- $\\cosh x$ is even
+- $\\tanh x$ is odd
+
+## Growth behavior
+
+For large positive $x$, both $\\sinh x$ and $\\cosh x$ behave like $\\frac{e^x}{2}$.`,
+            worked_examples: [
+                {
+                    question: 'Show that $\\cosh x+\\sinh x=e^x$.',
+                    steps: [
+                        'Substitute definitions:',
+                        '$\\cosh x+\\sinh x=\\frac{e^x+e^{-x}}{2}+\\frac{e^x-e^{-x}}{2}$.',
+                        'Combine numerators:',
+                        '$=\\frac{2e^x}{2}=e^x$.'
+                    ],
+                    final_answer: '$\\cosh x+\\sinh x=e^x$.'
+                },
+                {
+                    question: 'If $\\tanh x=\\frac35$, find $\\sinh x$ and $\\cosh x$.',
+                    steps: [
+                        '$\\tanh x=\\frac{\\sinh x}{\\cosh x}=\\frac35$, so let $\\sinh x=3k,\\ \\cosh x=5k$.',
+                        'Use identity $\\cosh^2x-\\sinh^2x=1$.',
+                        'So $(5k)^2-(3k)^2=1 \\Rightarrow 16k^2=1 \\Rightarrow k=\\frac14$ (positive scale).',
+                        'Hence $\\sinh x=\\frac34$, $\\cosh x=\\frac54$.'
+                    ],
+                    final_answer: '$\\sinh x=\\frac34$, $\\cosh x=\\frac54$.'
+                },
+                {
+                    question: 'Express $e^{2x}+e^{-2x}$ in hyperbolic form.',
+                    steps: [
+                        'Use $\\cosh u=\\frac{e^u+e^{-u}}{2}$ with $u=2x$.',
+                        'So $e^{2x}+e^{-2x}=2\\cosh2x$.'
+                    ],
+                    final_answer: '$e^{2x}+e^{-2x}=2\\cosh2x$.'
+                }
+            ]
+        },
+        {
+            title: '10. Hyperbolic Equation Matrix and Inverse Control',
+            content: `## Equation-solving matrix
+
+Use one of three methods:
+1. convert to exponentials
+2. use identities to reduce degree
+3. apply inverse hyperbolic functions with domain checks
+
+## Inverse control
+
+$$\\operatorname{asinh}(x)=\\ln\\left(x+\\sqrt{x^2+1}\\right),$$
+$$\\operatorname{acosh}(x)=\\ln\\left(x+\\sqrt{x^2-1}\\right),\\ x\\ge1,$$
+$$\\operatorname{atanh}(x)=\\frac12\\ln\\left(\\frac{1+x}{1-x}\\right),\\ |x|<1.$$
+
+## Domain guardrails
+
+- $\\cosh x\\ge1$ always
+- $|\\tanh x|<1$ always
+- $\\sinh x$ takes all real values`,
+            worked_examples: [
+                {
+                    question: 'Solve $\\sinh x=4$ in logarithmic form.',
+                    steps: [
+                        '$x=\\operatorname{asinh}(4)$.',
+                        '$x=\\ln\\left(4+\\sqrt{4^2+1}\\right)=\\ln\\left(4+\\sqrt{17}\\right)$.'
+                    ],
+                    final_answer: '$x=\\ln(4+\\sqrt{17})$.'
+                },
+                {
+                    question: 'Solve $\\cosh x=\\frac52$.',
+                    steps: [
+                        '$x=\\pm\\operatorname{acosh}\\left(\\frac52\\right)$ because $\\cosh$ is even.',
+                        '$x=\\pm\\ln\\left(\\frac52+\\sqrt{\\frac{25}{4}-1}\\right)$.',
+                        '$=\\pm\\ln\\left(\\frac52+\\frac{\\sqrt{21}}{2}\\right)$.'
+                    ],
+                    final_answer: '$x=\\pm\\ln\\left(\\frac{5+\\sqrt{21}}{2}\\right)$.'
+                },
+                {
+                    question: 'Solve $2\\cosh x-\\sinh x=3$.',
+                    steps: [
+                        'Use exponential forms:',
+                        '$2\\cdot\\frac{e^x+e^{-x}}{2}-\\frac{e^x-e^{-x}}{2}=3$.',
+                        '$\\frac{e^x+3e^{-x}}{2}=3 \\Rightarrow e^x+3e^{-x}=6$.',
+                        'Multiply by $e^x$: $e^{2x}-6e^x+3=0$.',
+                        'Let $u=e^x$: $u^2-6u+3=0$.',
+                        '$u=3\\pm\\sqrt6$ (both positive), so $x=\\ln(3\\pm\\sqrt6)$.'
+                    ],
+                    final_answer: '$x=\\ln(3+\\sqrt6)$ or $x=\\ln(3-\\sqrt6)$.'
+                }
+            ]
+        },
+        {
+            title: '11. Calculus Matrix: Differential Equations and Integrals',
+            content: `## Differential matrix
+
+Derivative pair:
+$$\\frac{d}{dx}(\\sinh x)=\\cosh x,\\quad \\frac{d}{dx}(\\cosh x)=\\sinh x.$$
+
+Second derivatives:
+$$\\frac{d^2}{dx^2}(\\sinh x)=\\sinh x,\\quad \\frac{d^2}{dx^2}(\\cosh x)=\\cosh x.$$
+
+This links directly to equations of type:
+$$y''=y.$$
+
+## Integral matrix
+
+$$\\int\\sinh x\\,dx=\\cosh x+C,\\quad \\int\\cosh x\\,dx=\\sinh x+C,$$
+$$\\int\\operatorname{sech}^2x\\,dx=\\tanh x+C.$$
+
+## Application note
+
+Catenary and growth/decay models often reduce to hyperbolic calculus forms.`,
+            worked_examples: [
+                {
+                    question: 'Verify that $y=\\cosh x$ satisfies $y\'\'=y$.',
+                    steps: [
+                        '$y=\\cosh x$.',
+                        '$y\'=\\sinh x$.',
+                        '$y\'\'=\\cosh x=y$.'
+                    ],
+                    final_answer: '$y=\\cosh x$ satisfies $y\'\'=y$.'
+                },
+                {
+                    question: 'Evaluate $\\int(3\\sinh2x-4\\cosh3x)\\,dx$.',
+                    steps: [
+                        '$\\int 3\\sinh2x\\,dx=3\\cdot\\frac12\\cosh2x=\\frac32\\cosh2x$.',
+                        '$\\int -4\\cosh3x\\,dx=-4\\cdot\\frac13\\sinh3x=-\\frac43\\sinh3x$.'
+                    ],
+                    final_answer: '$\\frac32\\cosh2x-\\frac43\\sinh3x+C$.'
+                },
+                {
+                    question: 'Find $\\frac{d}{dx}[\\operatorname{asinh}(2x)]$.',
+                    steps: [
+                        'Use chain rule with $u=2x$.',
+                        '$\\frac{d}{dx}[\\operatorname{asinh}(u)]=\\frac{u\'}{\\sqrt{u^2+1}}$.',
+                        'So derivative is $\\frac{2}{\\sqrt{4x^2+1}}$.'
+                    ],
+                    final_answer: '$\\frac{d}{dx}[\\operatorname{asinh}(2x)]=\\frac{2}{\\sqrt{4x^2+1}}$.'
+                }
+            ]
+        },
+        {
+            title: '12. Hyperbolic Functions Full Book Drill (Exam-Length)',
+            content: `## Full drill structure
+
+Upper-sixth tasks combine:
+- definition-based manipulation
+- identity proof
+- inverse-log forms
+- calculus applications
+- equation solving in exponential form
+
+## Exam protocol
+1. state the hyperbolic identity/definition used
+2. simplify with controlled algebra
+3. apply domain checks for inverse outputs
+4. conclude with exact logarithmic forms where possible
+
+## Reliability checks
+
+- test solutions in original equation
+- ensure logs have positive arguments
+- keep exact radicals before approximation`,
+            worked_examples: [
+                {
+                    question: 'Prove that $1-\\tanh^2x=\\operatorname{sech}^2x$.',
+                    steps: [
+                        '$\\tanh x=\\frac{\\sinh x}{\\cosh x}$ so $\\tanh^2x=\\frac{\\sinh^2x}{\\cosh^2x}$.',
+                        '$1-\\tanh^2x=\\frac{\\cosh^2x-\\sinh^2x}{\\cosh^2x}$.',
+                        'Use $\\cosh^2x-\\sinh^2x=1$.',
+                        'So result is $\\frac{1}{\\cosh^2x}=\\operatorname{sech}^2x$.'
+                    ],
+                    final_answer: 'Identity proven: $1-\\tanh^2x=\\operatorname{sech}^2x$.'
+                },
+                {
+                    question: 'Solve $\\tanh x=\\frac13$.',
+                    steps: [
+                        '$x=\\operatorname{atanh}(\\frac13)$.',
+                        '$x=\\frac12\\ln\\left(\\frac{1+1/3}{1-1/3}\\right)=\\frac12\\ln\\left(\\frac{4/3}{2/3}\\right)$.',
+                        '$x=\\frac12\\ln2$.'
+                    ],
+                    final_answer: '$x=\\frac12\\ln2$.'
+                },
+                {
+                    question: 'Evaluate $\\int_0^{\\ln2}\\cosh x\\,dx$.',
+                    steps: [
+                        'Antiderivative is $\\sinh x$.',
+                        '$\\int_0^{\\ln2}\\cosh x\\,dx=\\sinh(\\ln2)-\\sinh0$.',
+                        '$\\sinh(\\ln2)=\\frac{2-1/2}{2}=\\frac{3}{4}$, and $\\sinh0=0$.'
+                    ],
+                    final_answer: '$\\int_0^{\\ln2}\\cosh x\\,dx=\\frac34$.'
+                }
+            ]
+        }
+    ];
+
+    hyperbolicFunctionsTopic.sections = [...hyperbolicFunctionsTopic.sections, ...extraSections];
+    hyperbolicFunctionsTopic.key_points = Array.from(
+        new Set([
+            ...hyperbolicFunctionsTopic.key_points,
+            'Hyperbolic functions are best manipulated through exponential definitions.',
+            'The identity $\\cosh^2x-\\sinh^2x=1$ is the core simplification tool.',
+            'Inverse hyperbolic functions require strict domain awareness.',
+            'Many equations reduce to quadratics in $e^x$.',
+            'Hyperbolic derivatives and integrals form a tightly linked calculus pair.',
+        ])
+    );
+    hyperbolicFunctionsTopic.exam_tips = Array.from(
+        new Set([
+            ...hyperbolicFunctionsTopic.exam_tips,
+            'State the definition before expanding to exponentials in proof problems.',
+            'When solving equations, substitute $u=e^x$ only after clearing negative exponents.',
+            'For inverse forms, keep exact log expressions before decimal approximations.',
+            'Check that proposed inverse-function inputs satisfy required domains.',
+            'Use identity conversions before attempting heavy algebra.',
+        ])
+    );
+    hyperbolicFunctionsTopic.visual_descriptions = Array.from(
+        new Set([
+            ...hyperbolicFunctionsTopic.visual_descriptions,
+            'Overlay of sinh and cosh showing odd/even symmetry contrast.',
+            'Domain strip for asinh, acosh, and atanh.',
+            'Flowchart for converting hyperbolic equations into exponential quadratics.',
+            'Catenary interpretation sketch for y = a cosh(x/a).',
+        ])
+    );
+}
+
+// Deep expansion for Topic 15 (Upper Sixth): further differentiation chapter upgrade.
+const furtherDifferentiationTopic = aLevelPureMathNotes['Further Differentiation'];
+if (furtherDifferentiationTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Parametric Curvature Matrix and Tangent-Normal Control',
+            content: `## Core parametric matrix
+
+For $x=f(t),\\ y=g(t)$:
+$$\\frac{dy}{dx}=\\frac{dy/dt}{dx/dt},\\qquad \\frac{d^2y}{dx^2}=\\frac{\\frac{d}{dt}\\left(\\frac{dy}{dx}\\right)}{dx/dt}.$$
+
+At parameter value $t=t_0$:
+- point is $\\big(x(t_0),y(t_0)\\big)$
+- tangent gradient is $m_t=\\frac{dy}{dx}\\big|_{t_0}$
+- normal gradient is $m_n=-\\frac{1}{m_t}$ (if $m_t\\ne0$)
+
+## Tangent and normal equations
+
+$$y-y_0=m_t(x-x_0),\\qquad y-y_0=m_n(x-x_0).$$
+
+## Sign structure for curvature
+
+- $\\frac{d^2y}{dx^2}>0$: turning upward
+- $\\frac{d^2y}{dx^2}<0$: turning downward
+
+Use the second derivative in parameter form to avoid messy elimination.`,
+            worked_examples: [
+                {
+                    question: 'For $x=2\\cos t,\\ y=3\\sin t$, find the tangent at $t=\\frac\\pi6$.',
+                    steps: [
+                        '$\\frac{dx}{dt}=-2\\sin t,\\ \\frac{dy}{dt}=3\\cos t$.',
+                        '$\\frac{dy}{dx}=\\frac{3\\cos t}{-2\\sin t}=-\\frac32\\cot t$.',
+                        'At $t=\\frac\\pi6$, $\\cot\\frac\\pi6=\\sqrt3$, so $m_t=-\\frac{3\\sqrt3}{2}$.',
+                        'Point: $x=2\\cos\\frac\\pi6=\\sqrt3,\\ y=3\\sin\\frac\\pi6=\\frac32$.',
+                        'Hence tangent: $y-\\frac32=-\\frac{3\\sqrt3}{2}(x-\\sqrt3)$.'
+                    ],
+                    final_answer: '$y-\\frac32=-\\frac{3\\sqrt3}{2}(x-\\sqrt3)$.'
+                },
+                {
+                    question: 'Find $\\frac{d^2y}{dx^2}$ for $x=t^2+1,\\ y=t^3-t$.',
+                    steps: [
+                        '$\\frac{dx}{dt}=2t,\\ \\frac{dy}{dt}=3t^2-1$.',
+                        '$\\frac{dy}{dx}=\\frac{3t^2-1}{2t}=\\frac32t-\\frac{1}{2t}$.',
+                        '$\\frac{d}{dt}\\!\\left(\\frac{dy}{dx}\\right)=\\frac32+\\frac{1}{2t^2}$.',
+                        '$\\frac{d^2y}{dx^2}=\\frac{\\frac32+\\frac{1}{2t^2}}{2t}=\\frac{3t^2+1}{4t^3}$.'
+                    ],
+                    final_answer: '$\\frac{d^2y}{dx^2}=\\frac{3t^2+1}{4t^3}$.'
+                },
+                {
+                    question: 'For $x=t^2,\\ y=t^4$, find the normal at $t=1$.',
+                    steps: [
+                        '$\\frac{dx}{dt}=2t,\\ \\frac{dy}{dt}=4t^3\\Rightarrow \\frac{dy}{dx}=2t^2$.',
+                        'At $t=1$, tangent slope $m_t=2$, so normal slope $m_n=-\\frac12$.',
+                        'Point is $(1,1)$.',
+                        'Normal: $y-1=-\\frac12(x-1)$.'
+                    ],
+                    final_answer: '$y-1=-\\frac12(x-1)$.'
+                }
+            ]
+        },
+        {
+            title: '11. Related Rates Matrix and Implicit-Time Differentiation',
+            content: `## Time-link structure
+
+Different variables can depend on time:
+$$\\frac{dy}{dt}=\\frac{dy}{dx}\\cdot\\frac{dx}{dt},\\qquad
+\\frac{d}{dt}[F(x,y)]=F_x\\frac{dx}{dt}+F_y\\frac{dy}{dt}.$$
+
+## Workflow for exam questions
+
+1. define variables clearly with units  
+2. write the geometric/physical relation  
+3. differentiate with respect to $t$  
+4. substitute the instant values  
+5. interpret sign (increasing/decreasing)
+
+## Accuracy control
+
+- keep symbols until late substitution  
+- convert to decimal only at final step  
+- keep unit consistency in every line`,
+            worked_examples: [
+                {
+                    question: 'Given $x^2y=16$, if $\\frac{dx}{dt}=3$ when $x=2$, find $\\frac{dy}{dt}$.',
+                    steps: [
+                        'Differentiate implicitly w.r.t. $t$: $2x\\frac{dx}{dt}y+x^2\\frac{dy}{dt}=0$.',
+                        'When $x=2$, from $x^2y=16$ we get $y=4$.',
+                        'Substitute: $2(2)(3)(4)+4\\frac{dy}{dt}=0$.',
+                        '$48+4\\frac{dy}{dt}=0\\Rightarrow \\frac{dy}{dt}=-12$.'
+                    ],
+                    final_answer: '$\\frac{dy}{dt}=-12$.'
+                },
+                {
+                    question: 'A sphere grows with $\\frac{dr}{dt}=0.2$ cm/s. Find $\\frac{dV}{dt}$ when $r=6$.',
+                    steps: [
+                        '$V=\\frac43\\pi r^3$.',
+                        '$\\frac{dV}{dt}=4\\pi r^2\\frac{dr}{dt}$.',
+                        'At $r=6$: $\\frac{dV}{dt}=4\\pi(36)(0.2)=28.8\\pi$.'
+                    ],
+                    final_answer: '$\\frac{dV}{dt}=28.8\\pi\\ \\text{cm}^3\\!\\!/\\text{s}$.'
+                },
+                {
+                    question: 'A ladder of length 10 m has foot moving at $0.6$ m/s. Find top speed when foot is 8 m from wall.',
+                    steps: [
+                        'Let foot distance be $x$, height be $y$: $x^2+y^2=100$.',
+                        'Differentiate: $2x\\frac{dx}{dt}+2y\\frac{dy}{dt}=0$.',
+                        'At $x=8$, $y=6$.',
+                        '$2(8)(0.6)+2(6)\\frac{dy}{dt}=0$.',
+                        '$9.6+12\\frac{dy}{dt}=0\\Rightarrow \\frac{dy}{dt}=-0.8$.'
+                    ],
+                    final_answer: 'Top moves downward at $0.8$ m/s.'
+                }
+            ]
+        },
+        {
+            title: '12. Series Matrix, Local Approximation, and Error Awareness',
+            content: `## Maclaurin control matrix
+
+$$f(x)=f(0)+f'(0)x+\\frac{f''(0)}{2!}x^2+\\frac{f^{(3)}(0)}{3!}x^3+\\cdots$$
+
+Key standard series:
+$$e^x=1+x+\\frac{x^2}{2!}+\\frac{x^3}{3!}+\\cdots,$$
+$$\\sin x=x-\\frac{x^3}{3!}+\\frac{x^5}{5!}-\\cdots,$$
+$$\\cos x=1-\\frac{x^2}{2!}+\\frac{x^4}{4!}-\\cdots.$$
+
+## Local approximation strategy
+
+- match the expansion center to the target point  
+- retain enough terms for required accuracy  
+- control truncation by next non-zero term size
+
+## Small-angle system (radians)
+
+$$\\sin x\\approx x,\\quad \\cos x\\approx 1-\\frac{x^2}{2},\\quad \\tan x\\approx x.$$
+
+These are first/second-order truncations of Maclaurin expansions.`,
+            worked_examples: [
+                {
+                    question: 'Find the first four non-zero terms of $e^{2x}\\sin x$.',
+                    steps: [
+                        '$e^{2x}=1+2x+2x^2+\\frac{4}{3}x^3+\\cdots$.',
+                        '$\\sin x=x-\\frac{x^3}{6}+\\cdots$.',
+                        'Multiply and keep up to $x^4$: ',
+                        '$e^{2x}\\sin x=(1+2x+2x^2+\\frac{4}{3}x^3)(x-\\frac{x^3}{6})+\\cdots$.',
+                        '$=x+2x^2+\\frac{11}{6}x^3+x^4+\\cdots$.'
+                    ],
+                    final_answer: '$e^{2x}\\sin x=x+2x^2+\\frac{11}{6}x^3+x^4+\\cdots$.'
+                },
+                {
+                    question: 'Evaluate $\\lim_{x\\to0}\\frac{e^x-1-x}{x^2}$ using series.',
+                    steps: [
+                        '$e^x=1+x+\\frac{x^2}{2}+\\frac{x^3}{6}+\\cdots$.',
+                        '$e^x-1-x=\\frac{x^2}{2}+\\frac{x^3}{6}+\\cdots$.',
+                        '$\\frac{e^x-1-x}{x^2}=\\frac12+\\frac{x}{6}+\\cdots\\to\\frac12$.'
+                    ],
+                    final_answer: '$\\frac12$.'
+                },
+                {
+                    question: 'Approximate $\\ln(1.2)$ using three non-zero Maclaurin terms for $\\ln(1+u)$.',
+                    steps: [
+                        'Take $u=0.2$ and use $\\ln(1+u)=u-\\frac{u^2}{2}+\\frac{u^3}{3}-\\cdots$.',
+                        '$\\ln(1.2)\\approx0.2-\\frac{0.2^2}{2}+\\frac{0.2^3}{3}$.',
+                        '$=0.2-0.02+0.002666\\ldots=0.182666\\ldots$.'
+                    ],
+                    final_answer: '$\\ln(1.2)\\approx0.18267$ (actual $\\approx0.18232$).'
+                }
+            ]
+        },
+        {
+            title: "13. Further Differentiation Full Book Drill (Exam-Length)",
+            content: `## Full drill matrix
+
+Upper-sixth questions in this chapter combine:
+- parametric gradient and curvature
+- related rates with interpretation
+- higher derivatives and local behavior
+- Maclaurin/Taylor approximations
+- indeterminate limits using L'Hopital or series
+
+## Exam protocol
+
+1. choose the correct differentiation framework  
+2. write structure formula first  
+3. substitute carefully with domain/unit checks  
+4. present final answer in exact form where possible  
+5. add interpretation sentence for applied rates
+
+## Reliability checks
+
+- verify indeterminate form before applying L'Hopital  
+- keep parameter values attached to computed points  
+- ensure small-angle approximations use radians only`,
+            worked_examples: [
+                {
+                    question: 'Show that $\\lim_{x\\to0}\\frac{\\tan x-x}{x^3}=\\frac13$.',
+                    steps: [
+                        'Use $\\tan x=x+\\frac{x^3}{3}+O(x^5)$.',
+                        'So $\\tan x-x=\\frac{x^3}{3}+O(x^5)$.',
+                        'Divide by $x^3$: $\\frac{\\tan x-x}{x^3}=\\frac13+O(x^2)$.',
+                        'Hence the limit is $\\frac13$.'
+                    ],
+                    final_answer: '$\\displaystyle \\lim_{x\\to0}\\frac{\\tan x-x}{x^3}=\\frac13$.'
+                },
+                {
+                    question: 'For $x=t-\\sin t,\\ y=1-\\cos t$, find $\\frac{dy}{dx}$ and classify at $t=\\pi$.',
+                    steps: [
+                        '$\\frac{dx}{dt}=1-\\cos t,\\ \\frac{dy}{dt}=\\sin t$.',
+                        '$\\frac{dy}{dx}=\\frac{\\sin t}{1-\\cos t}$.',
+                        'At $t=\\pi$: numerator $0$, denominator $2$, so gradient is $0$.',
+                        'Local geometry here is horizontal tangent on cycloid arch.'
+                    ],
+                    final_answer: '$\\frac{dy}{dx}=\\frac{\\sin t}{1-\\cos t}$ and at $t=\\pi$ the tangent is horizontal.'
+                },
+                {
+                    question: "Evaluate $\\lim_{x\\to0}\\frac{\\ln(1+x)-x+\\frac{x^2}{2}}{x^3}$.",
+                    steps: [
+                        'Use $\\ln(1+x)=x-\\frac{x^2}{2}+\\frac{x^3}{3}+O(x^4)$.',
+                        'Numerator becomes $\\frac{x^3}{3}+O(x^4)$.',
+                        'Divide by $x^3$: $\\frac13+O(x)$.',
+                        'Limit is $\\frac13$.'
+                    ],
+                    final_answer: '$\\frac13$.'
+                }
+            ]
+        }
+    ];
+
+    furtherDifferentiationTopic.sections = [...furtherDifferentiationTopic.sections, ...extraSections];
+    furtherDifferentiationTopic.key_points = Array.from(
+        new Set([
+            ...furtherDifferentiationTopic.key_points,
+            'For parametric curves, work with parameter derivatives before eliminating the parameter.',
+            'Second parametric derivatives are computed by dividing by $dx/dt$, not by differentiating in isolation.',
+            'Related-rates questions demand clear variable definitions, signs, and units.',
+            'Series expansions provide clean control for limits and approximations near the expansion point.',
+            "Check indeterminate type before using L'Hopital's rule.",
+        ])
+    );
+    furtherDifferentiationTopic.exam_tips = Array.from(
+        new Set([
+            ...furtherDifferentiationTopic.exam_tips,
+            'In parametric questions, calculate point coordinates before writing tangent/normal equations.',
+            'Keep expressions exact during series manipulation; round only at the final line.',
+            'When using approximations, state the order of truncation to justify accuracy.',
+            'Applied rates answers should include direction language (increasing/decreasing).',
+            'Use radians for all small-angle results.',
+        ])
+    );
+    furtherDifferentiationTopic.visual_descriptions = Array.from(
+        new Set([
+            ...furtherDifferentiationTopic.visual_descriptions,
+            'Parametric tangent-normal frame on a curve with parameter marker.',
+            'Related-rates dependency map linking geometry equation to time derivatives.',
+            'Maclaurin approximation overlay showing polynomial fit near the origin.',
+            'Limit-evaluation decision flow: substitution, LHopital, or series.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 16 (Upper Sixth): further integration chapter upgrade.
+const furtherIntegrationTopic = aLevelPureMathNotes['Further Integration Techniques'];
+if (furtherIntegrationTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Partial Fractions Matrix: Full Decomposition Control',
+            content: `## Decomposition matrix
+
+For rational integrals, first enforce:
+1. proper fraction status
+2. complete denominator factorization
+3. correct template selection
+
+Templates:
+$$\\frac{P(x)}{(x-a)(x-b)}=\\frac{A}{x-a}+\\frac{B}{x-b},$$
+$$\\frac{P(x)}{(x-a)^2}=\\frac{A}{x-a}+\\frac{B}{(x-a)^2},$$
+$$\\frac{P(x)}{(x-a)(x^2+bx+c)}=\\frac{A}{x-a}+\\frac{Bx+C}{x^2+bx+c}.$$
+
+## Integration target forms
+
+- linear denominator gives logarithms
+- repeated linear terms give reciprocal powers
+- irreducible quadratics produce logarithmic plus arctangent components
+
+## Reliability checks
+
+- include absolute values in logarithms
+- verify constants by recombining to original fraction`,
+            worked_examples: [
+                {
+                    question: 'Evaluate $\\int\\frac{5x+1}{(x-1)(x+2)}\\,dx$.',
+                    steps: [
+                        'Set $\\frac{5x+1}{(x-1)(x+2)}=\\frac{A}{x-1}+\\frac{B}{x+2}$.',
+                        '$5x+1=A(x+2)+B(x-1)$.',
+                        'At $x=1$: $6=3A\\Rightarrow A=2$.',
+                        'At $x=-2$: $-9=-3B\\Rightarrow B=3$.',
+                        'Integrate termwise: $\\int\\left(\\frac{2}{x-1}+\\frac{3}{x+2}\\right)dx$.'
+                    ],
+                    final_answer: '$2\\ln|x-1|+3\\ln|x+2|+C$.'
+                },
+                {
+                    question: 'Find $\\int\\frac{2x+7}{(x-3)^2}\\,dx$.',
+                    steps: [
+                        'Write $\\frac{2x+7}{(x-3)^2}=\\frac{A}{x-3}+\\frac{B}{(x-3)^2}$.',
+                        '$2x+7=A(x-3)+B$.',
+                        'Compare coefficients: $A=2$.',
+                        'Use $x=3$: $13=B$.',
+                        'Integrate: $\\int\\left(\\frac{2}{x-3}+\\frac{13}{(x-3)^2}\\right)dx$.'
+                    ],
+                    final_answer: '$2\\ln|x-3|-\\frac{13}{x-3}+C$.'
+                },
+                {
+                    question: 'Evaluate $\\int\\frac{3x^2+2x+5}{(x+1)(x^2+1)}\\,dx$.',
+                    steps: [
+                        'Use $\\frac{A}{x+1}+\\frac{Bx+C}{x^2+1}$.',
+                        '$3x^2+2x+5=A(x^2+1)+(Bx+C)(x+1)$.',
+                        'Equate coefficients: $A+B=3$, $B+C=2$, $A+C=5$.',
+                        'Solve to get $A=3$, $B=0$, $C=2$.',
+                        'Integrate: $\\int\\left(\\frac{3}{x+1}+\\frac{2}{x^2+1}\\right)dx$.'
+                    ],
+                    final_answer: '$3\\ln|x+1|+2\\tan^{-1}x+C$.'
+                }
+            ]
+        },
+        {
+            title: '11. By-Parts Matrix and Reduction Sequences',
+            content: `## Core by-parts matrix
+
+$$\\int u\\,dv=uv-\\int v\\,du.$$
+
+Selection priorities:
+- logarithmic first
+- inverse trigonometric next
+- algebraic before trig/exponential when possible
+
+## Reduction sequence model
+
+Define a family:
+$$I_n=\\int x^n e^x\\,dx,$$
+then derive recursion:
+$$I_n=x^n e^x-nI_{n-1}.$$
+
+This converts a high-power integral into manageable base cases.
+
+## Cyclic integration case
+
+For integrals like $\\int e^{ax}\\sin bx\\,dx$, by parts twice and solve algebraically for the original integral.`,
+            worked_examples: [
+                {
+                    question: 'Evaluate $\\int x^3\\ln x\\,dx$.',
+                    steps: [
+                        'Take $u=\\ln x$, $dv=x^3dx$.',
+                        'Then $du=\\frac1x dx$, $v=\\frac{x^4}{4}$.',
+                        '$\\int x^3\\ln x\\,dx=\\frac{x^4}{4}\\ln x-\\frac14\\int x^3dx$.',
+                        '$=\\frac{x^4}{4}\\ln x-\\frac{x^4}{16}+C$.'
+                    ],
+                    final_answer: '$\\frac{x^4}{4}\\left(\\ln x-\\frac14\\right)+C$.'
+                },
+                {
+                    question: 'Use the reduction relation to evaluate $I_2=\\int x^2e^x\\,dx$.',
+                    steps: [
+                        '$I_2=x^2e^x-2I_1$.',
+                        '$I_1=xe^x-I_0$.',
+                        '$I_0=\\int e^xdx=e^x$.',
+                        'So $I_1=e^x(x-1)$.',
+                        '$I_2=x^2e^x-2e^x(x-1)=e^x(x^2-2x+2)$.'
+                    ],
+                    final_answer: '$\\int x^2e^x\\,dx=e^x(x^2-2x+2)+C$.'
+                },
+                {
+                    question: 'Evaluate $\\int e^x\\cos x\\,dx$.',
+                    steps: [
+                        'Let $I=\\int e^x\\cos x\\,dx$.',
+                        'After two by-parts steps, obtain $I=e^x\\sin x+e^x\\cos x-I$.',
+                        'So $2I=e^x(\\sin x+\\cos x)$.',
+                        'Hence $I=\\frac12e^x(\\sin x+\\cos x)+C$.'
+                    ],
+                    final_answer: '$\\int e^x\\cos x\\,dx=\\frac12e^x(\\sin x+\\cos x)+C$.'
+                }
+            ]
+        },
+        {
+            title: '12. Improper Integrals and Numerical Accuracy Matrix',
+            content: `## Improper structure
+
+Infinite bounds:
+$$\\int_a^{\\infty}f(x)\\,dx=\\lim_{b\\to\\infty}\\int_a^b f(x)\\,dx.$$
+
+Endpoint singularity:
+$$\\int_a^b f(x)\\,dx=\\lim_{t\\to a^+}\\int_t^b f(x)\\,dx.$$
+
+## Convergence control
+
+- always state the limit explicitly
+- conclude with converges/diverges statement
+
+## Numerical matrix
+
+Trapezium:
+$$T_n=\\frac{h}{2}\\left(y_0+2\\sum_{k=1}^{n-1}y_k+y_n\\right).$$
+
+Simpson:
+$$S_n=\\frac{h}{3}\\left(y_0+4\\sum_{\\text{odd}}y_k+2\\sum_{\\text{even}}y_k+y_n\\right),\\ n\\text{ even}.$$
+
+Simpson usually improves curvature capture significantly.`,
+            worked_examples: [
+                {
+                    question: 'Determine whether $\\int_1^{\\infty}\\frac{1}{x^{3/2}}\\,dx$ converges.',
+                    steps: [
+                        '$\\int_1^{\\infty}x^{-3/2}dx=\\lim_{b\\to\\infty}\\int_1^b x^{-3/2}dx$.',
+                        'Antiderivative: $-2x^{-1/2}$.',
+                        'Value: $\\lim_{b\\to\\infty}\\left[-2x^{-1/2}\\right]_1^b=\\lim_{b\\to\\infty}(-2b^{-1/2}+2)=2$.'
+                    ],
+                    final_answer: 'Converges to $2$.'
+                },
+                {
+                    question: 'Test $\\int_0^1\\frac{1}{\\sqrt{x}}\\,dx$ for convergence.',
+                    steps: [
+                        '$\\int_0^1x^{-1/2}dx=\\lim_{t\\to0^+}\\int_t^1 x^{-1/2}dx$.',
+                        'Antiderivative: $2\\sqrt{x}$.',
+                        'Value: $\\lim_{t\\to0^+}(2-2\\sqrt{t})=2$.'
+                    ],
+                    final_answer: 'Converges to $2$.'
+                },
+                {
+                    question: 'Approximate $\\int_0^2\\frac{1}{1+x^2}\\,dx$ using Simpson with $n=4$.',
+                    steps: [
+                        '$h=0.5$, points: $x=0,0.5,1,1.5,2$.',
+                        '$y_0=1,\\ y_1=0.8,\\ y_2=0.5,\\ y_3\\approx0.3077,\\ y_4=0.2$.',
+                        '$S_4=\\frac{0.5}{3}[y_0+4(y_1+y_3)+2y_2+y_4]$.',
+                        '$=\\frac{1}{6}[1+4(1.1077)+1+0.2]\\approx\\frac{6.6308}{6}\\approx1.1051$.'
+                    ],
+                    final_answer: '$\\int_0^2\\frac{1}{1+x^2}dx\\approx1.1051$ (exact $\\tan^{-1}2\\approx1.1071$).'
+                }
+            ]
+        },
+        {
+            title: '13. Further Integration Full Book Drill (Exam-Length)',
+            content: `## Full drill matrix
+
+Upper-sixth exam blends include:
+- decomposition and algebraic cleanup
+- by-parts chaining
+- substitution conversion and back-substitution
+- convergence testing with proper notation
+- numerical approximation with method comparison
+
+## Exam protocol
+
+1. identify integrand structure first  
+2. choose one method and execute cleanly  
+3. keep exact forms until final rounding  
+4. include domain/convergence statements when improper  
+5. label numerical method and strip count clearly
+
+## Reliability checks
+
+- differentiate final antiderivative quickly
+- verify decomposition constants by recombination
+- ensure Simpson uses even strip count`,
+            worked_examples: [
+                {
+                    question: 'Evaluate $\\int\\frac{x^2+4x+7}{x^2+2x+5}\\,dx$.',
+                    steps: [
+                        'Write numerator as $(x^2+2x+5)+(2x+2)$.',
+                        'So integral is $\\int 1\\,dx+\\int\\frac{2x+2}{x^2+2x+5}dx$.',
+                        'For second term, let $u=x^2+2x+5$, then $du=(2x+2)dx$.',
+                        'Result is $x+\\ln(x^2+2x+5)+C$.'
+                    ],
+                    final_answer: '$x+\\ln(x^2+2x+5)+C$.'
+                },
+                {
+                    question: 'Evaluate $\\int_0^{\\infty}xe^{-2x}\\,dx$.',
+                    steps: [
+                        'Use by parts on $\\int_0^b xe^{-2x}dx$, then take $b\\to\\infty$.',
+                        'Antiderivative: $-\\frac{x}{2}e^{-2x}-\\frac14e^{-2x}$.',
+                        'At infinity both terms go to $0$; at $0$ value is $-\\frac14$.',
+                        'Total is $0-(-\\frac14)=\\frac14$.'
+                    ],
+                    final_answer: '$\\int_0^{\\infty}xe^{-2x}dx=\\frac14$.'
+                },
+                {
+                    question: 'Using 6 strips, compare trapezium and Simpson for $\\int_0^3 e^{-x}dx$.',
+                    steps: [
+                        'Compute values at $x=0,0.5,1,1.5,2,2.5,3$.',
+                        'Apply trapezium formula to get $T_6\\approx0.9696$.',
+                        'Apply Simpson formula to get $S_6\\approx0.9503$.',
+                        'Exact value is $1-e^{-3}\\approx0.9502$, so Simpson is closer.'
+                    ],
+                    final_answer: 'With same nodes, Simpson gives the better approximation here.'
+                }
+            ]
+        }
+    ];
+
+    furtherIntegrationTopic.sections = [...furtherIntegrationTopic.sections, ...extraSections];
+    furtherIntegrationTopic.key_points = Array.from(
+        new Set([
+            ...furtherIntegrationTopic.key_points,
+            'Classify integrand structure before selecting an integration method.',
+            'Partial fraction templates must match exact denominator factor structure.',
+            'Reduction formulas turn high-order integrals into tractable recursions.',
+            'Improper integrals require explicit limit notation and convergence conclusion.',
+            'Simpson usually outperforms trapezium for smooth curved integrands.',
+        ])
+    );
+    furtherIntegrationTopic.exam_tips = Array.from(
+        new Set([
+            ...furtherIntegrationTopic.exam_tips,
+            'Always rewrite improper fractions as polynomial plus proper fraction first.',
+            'After decomposition, verify constants by recombining to avoid hidden algebra errors.',
+            'When a by-parts integral cycles, solve algebraically for the original integral.',
+            'In numerical questions, state strip width and number of strips before substitution.',
+            'Round only at the final line unless question specifies intermediate rounding.',
+        ])
+    );
+    furtherIntegrationTopic.visual_descriptions = Array.from(
+        new Set([
+            ...furtherIntegrationTopic.visual_descriptions,
+            'Method-selection map connecting integrand structure to integration technique.',
+            'Convergence flow for improper integrals with finite and infinite outcomes.',
+            'Overlay comparison of trapezium and Simpson approximations on curved data.',
+            'Partial-fraction decomposition tree from denominator factors to template terms.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 17 (Upper Sixth): differential equations chapter upgrade.
+const differentialEquationsTopic = aLevelPureMathNotes['Differential Equations'];
+if (differentialEquationsTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Operator Matrix and Complementary Function Control',
+            content: `## Operator form matrix
+
+Second-order linear equations can be written as:
+$$a\\frac{d^2y}{dx^2}+b\\frac{dy}{dx}+cy=0.$$
+
+Use characteristic equation:
+$$am^2+bm+c=0.$$
+
+## Root-to-solution map
+
+- distinct real roots $m_1,m_2$: $y=Ae^{m_1x}+Be^{m_2x}$
+- repeated root $m$: $y=(A+Bx)e^{mx}$
+- complex roots $p\\pm qi$: $y=e^{px}(A\\cos qx+B\\sin qx)$
+
+## Quality check
+
+After forming $y$, substitute quickly into the original equation to confirm no algebra slip.`,
+            worked_examples: [
+                {
+                    question: 'Solve $\\frac{d^2y}{dx^2}-3\\frac{dy}{dx}+2y=0$.',
+                    steps: [
+                        'Characteristic equation: $m^2-3m+2=0$.',
+                        'Factor: $(m-1)(m-2)=0$.',
+                        'Roots are $m=1,2$.',
+                        'Use distinct-root form.'
+                    ],
+                    final_answer: '$y=Ae^x+Be^{2x}$.'
+                },
+                {
+                    question: 'Solve $\\frac{d^2y}{dx^2}+4\\frac{dy}{dx}+4y=0$.',
+                    steps: [
+                        'Characteristic equation: $m^2+4m+4=0$.',
+                        'So $(m+2)^2=0$, repeated root $m=-2$.',
+                        'Use repeated-root template.'
+                    ],
+                    final_answer: '$y=(A+Bx)e^{-2x}$.'
+                },
+                {
+                    question: 'Solve $\\frac{d^2y}{dx^2}+9y=0$.',
+                    steps: [
+                        'Characteristic equation: $m^2+9=0$.',
+                        'Roots: $m=\\pm 3i$.',
+                        'Use complex-root form with $p=0$, $q=3$.'
+                    ],
+                    final_answer: '$y=A\\cos 3x+B\\sin 3x$.'
+                }
+            ]
+        },
+        {
+            title: '11. Particular Integral Matrix and Resonance Handling',
+            content: `## Full equation structure
+
+$$a\\frac{d^2y}{dx^2}+b\\frac{dy}{dx}+cy=f(x),\\qquad y=y_{CF}+y_{PI}.$$
+
+## Trial matrix for $y_{PI}$
+
+- polynomial forcing: polynomial trial of matching degree
+- $e^{\\alpha x}$ forcing: $Ae^{\\alpha x}$
+- trig forcing: $A\\cos\\omega x+B\\sin\\omega x$
+
+## Resonance rule
+
+If trial overlaps with complementary function terms, multiply trial by $x$ (or higher power if needed).`,
+            worked_examples: [
+                {
+                    question: 'Solve $\\frac{d^2y}{dx^2}-3\\frac{dy}{dx}+2y=e^x$.',
+                    steps: [
+                        'CF from $(m-1)(m-2)=0$ is $y_{CF}=Ae^x+Be^{2x}$.',
+                        'Because $e^x$ is already in CF, choose $y_{PI}=Ax e^x$.',
+                        'Substitute into equation to get $-A e^x=e^x$.',
+                        'Hence $A=-1$.'
+                    ],
+                    final_answer: '$y=Ae^x+Be^{2x}-xe^x$.'
+                },
+                {
+                    question: 'Solve $\\frac{d^2y}{dx^2}+y=\\cos 2x$.',
+                    steps: [
+                        'CF: $y_{CF}=A\\cos x+B\\sin x$.',
+                        'Try $y_{PI}=C\\cos 2x+D\\sin 2x$.',
+                        'Then $y_{PI,xx}+y_{PI}=(-3C)\\cos 2x+(-3D)\\sin 2x$.',
+                        'Match coefficients with $\\cos 2x$: $-3C=1$, $-3D=0$.'
+                    ],
+                    final_answer: '$y=A\\cos x+B\\sin x-\\frac13\\cos 2x$.'
+                },
+                {
+                    question: 'Solve $\\frac{d^2y}{dx^2}-y=x$.',
+                    steps: [
+                        'CF from $m^2-1=0$ is $y_{CF}=Ae^x+Be^{-x}$.',
+                        'For polynomial forcing, try $y_{PI}=Cx+D$.',
+                        'Substitute: $0-(Cx+D)=x$.',
+                        'So $C=-1$ and $D=0$.'
+                    ],
+                    final_answer: '$y=Ae^x+Be^{-x}-x$.'
+                }
+            ]
+        },
+        {
+            title: '12. Model Matrix: Growth, Decay, and SHM Links',
+            content: `## First-order model family
+
+Exponential model:
+$$\\frac{dN}{dt}=kN\\Rightarrow N=N_0e^{kt}.$$
+
+Cooling model:
+$$\\frac{dT}{dt}=-k(T-T_a).$$
+
+## Oscillation model
+
+Simple harmonic motion:
+$$\\frac{d^2x}{dt^2}+\\omega^2x=0,$$
+with solution:
+$$x=A\\cos(\\omega t)+B\\sin(\\omega t).$$
+
+## Interpretation matrix
+
+- sign of $k$ sets growth or decay
+- initial data fixes constants uniquely
+- period in SHM is $T=\\frac{2\\pi}{\\omega}$`,
+            worked_examples: [
+                {
+                    question: 'A population doubles every 4 hours. If $N(0)=200$, find $N(12)$.',
+                    steps: [
+                        'Use $N=N_0e^{kt}$ with doubling condition $e^{4k}=2$.',
+                        'So $k=\\frac{\\ln2}{4}$.',
+                        '$N(12)=200e^{12k}=200e^{3\\ln2}=200\\cdot2^3$.'
+                    ],
+                    final_answer: '$N(12)=1600$.'
+                },
+                {
+                    question: 'For cooling law $\\frac{dT}{dt}=-k(T-20)$, given $T(0)=80$ and $T(10)=50$, find $k$.',
+                    steps: [
+                        'General solution: $T-20=Ae^{-kt}$.',
+                        'From $T(0)=80$, get $A=60$.',
+                        'Use $T(10)=50$: $30=60e^{-10k}$.',
+                        'Hence $e^{-10k}=\\frac12$ so $k=\\frac{\\ln2}{10}$.'
+                    ],
+                    final_answer: '$k=\\frac{\\ln2}{10}\\approx0.0693$.'
+                },
+                {
+                    question: 'Solve $\\frac{d^2x}{dt^2}+16x=0$ with $x(0)=0$ and $\\frac{dx}{dt}(0)=8$.',
+                    steps: [
+                        'General SHM form: $x=A\\cos4t+B\\sin4t$.',
+                        'From $x(0)=0$, get $A=0$.',
+                        '$\\frac{dx}{dt}=-4A\\sin4t+4B\\cos4t$, so at $t=0$: $4B=8$.',
+                        'Thus $B=2$.'
+                    ],
+                    final_answer: '$x=2\\sin4t$.'
+                }
+            ]
+        },
+        {
+            title: '13. Differential Equations Full Book Drill (Exam-Length)',
+            content: `## Full drill matrix
+
+Upper-sixth mixed tasks combine:
+- separable solving and initial-value fitting
+- integrating-factor linear equations
+- second-order complementary plus particular construction
+- interpretation in physical context
+
+## Exam protocol
+
+1. classify equation type first  
+2. write the matching method formula  
+3. solve symbolically before substituting conditions  
+4. apply initial data cleanly  
+5. verify by substitution when time allows
+
+## Reliability checks
+
+- keep constants until condition stage
+- state method names in long questions
+- keep exact forms before decimal approximations`,
+            worked_examples: [
+                {
+                    question: 'Solve $\\frac{dy}{dx}=(x+1)(y-2)$ with $y(0)=3$.',
+                    steps: [
+                        'Separate: $\\frac{dy}{y-2}=(x+1)dx$.',
+                        'Integrate: $\\ln|y-2|=\\frac{x^2}{2}+x+C$.',
+                        '$y-2=Ae^{x^2/2+x}$.',
+                        'Use $y(0)=3$ to get $A=1$.'
+                    ],
+                    final_answer: '$y=2+e^{x^2/2+x}$.'
+                },
+                {
+                    question: 'Solve $\\frac{dy}{dx}+y=x$ with $y(0)=1$.',
+                    steps: [
+                        'Integrating factor: $\\mu=e^{\\int1dx}=e^x$.',
+                        'Then $\\frac{d}{dx}(e^xy)=xe^x$.',
+                        'Integrate: $e^xy=e^x(x-1)+C$.',
+                        '$y=x-1+Ce^{-x}$, and from $y(0)=1$ get $C=2$.'
+                    ],
+                    final_answer: '$y=x-1+2e^{-x}$.'
+                },
+                {
+                    question: 'Solve $\\frac{d^2y}{dx^2}+4y=8$ with $y(0)=1$ and $\\frac{dy}{dx}(0)=0$.',
+                    steps: [
+                        'CF from $m^2+4=0$: $y_{CF}=A\\cos2x+B\\sin2x$.',
+                        'Try constant PI: $y_{PI}=C$.',
+                        'Substitute: $4C=8\\Rightarrow C=2$.',
+                        'So $y=A\\cos2x+B\\sin2x+2$.',
+                        'Use $y(0)=1$: $A+2=1\\Rightarrow A=-1$.',
+                        'Use $\\frac{dy}{dx}(0)=0$: $2B=0\\Rightarrow B=0$.'
+                    ],
+                    final_answer: '$y=2-\\cos2x$.'
+                }
+            ]
+        }
+    ];
+
+    differentialEquationsTopic.sections = [...differentialEquationsTopic.sections, ...extraSections];
+    differentialEquationsTopic.key_points = Array.from(
+        new Set([
+            ...differentialEquationsTopic.key_points,
+            'Classify differential equation type before selecting a method.',
+            'Second-order constant-coefficient equations are controlled by the characteristic roots.',
+            'Particular-integral trial forms depend directly on forcing type.',
+            'Resonance requires multiplying the trial by x until independence is restored.',
+            'Initial conditions must be applied after obtaining the general symbolic form.',
+        ])
+    );
+    differentialEquationsTopic.exam_tips = Array.from(
+        new Set([
+            ...differentialEquationsTopic.exam_tips,
+            'State whether the equation is separable, linear, homogeneous, or non-homogeneous before solving.',
+            'In integrating-factor problems, simplify to exact derivative form before integration.',
+            'For second-order questions, present CF and PI separately before combining.',
+            'Use exact constants such as ln values before giving decimal approximations.',
+            'Finish modeling questions with one sentence interpreting the sign and unit meaning.',
+        ])
+    );
+    differentialEquationsTopic.visual_descriptions = Array.from(
+        new Set([
+            ...differentialEquationsTopic.visual_descriptions,
+            'Characteristic-root map linking root type to complementary-function shape.',
+            'Resonance decision flow for selecting the correct particular-integral trial.',
+            'Growth and decay family plot with parameter sign comparison.',
+            'SHM phase portrait and sinusoidal displacement timeline.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 18 (Upper Sixth): complex numbers chapter upgrade.
+const complexNumbersTopic = aLevelPureMathNotes['Complex Numbers'];
+if (complexNumbersTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Argand Matrix: Loci, Geometry, and Transform Control',
+            content: `## Locus matrix on Argand plane
+
+With $z=x+iy$, standard geometric forms are:
+
+$$|z-z_0|=r\\quad\\text{circle center }z_0,\\text{ radius }r,$$
+$$|z-a|=|z-b|\\quad\\text{perpendicular bisector of }a,b,$$
+$$\\arg(z-z_0)=\\theta\\quad\\text{ray from }z_0.$$
+
+## Conjugate symmetry matrix
+
+- $\\bar z$ is reflection in the real axis
+- $-z$ is rotation by $\\pi$ about the origin
+- $iz$ is rotation by $\\frac\\pi2$ about the origin
+
+## Ratio argument structure
+
+$$\\arg\\left(\\frac{z-a}{z-b}\\right)=\\phi$$
+
+is an angle condition at point $z$, often producing an arc or line.`,
+            worked_examples: [
+                {
+                    question: 'Describe the locus $|z-(1+2i)|=3$.',
+                    steps: [
+                        'Interpret directly as distance from fixed point $1+2i$.',
+                        'Center is $(1,2)$ on Argand plane.',
+                        'Radius is $3$.'
+                    ],
+                    final_answer: 'Circle centered at $(1,2)$ with radius $3$.'
+                },
+                {
+                    question: 'Find the equation of locus $|z-2|=|z+2|$.',
+                    steps: [
+                        'Let $z=x+iy$. Then $|z-2|^2=(x-2)^2+y^2$.',
+                        '$|z+2|^2=(x+2)^2+y^2$.',
+                        'Equate: $(x-2)^2=(x+2)^2$.',
+                        'Expand and simplify to get $x=0$.'
+                    ],
+                    final_answer: 'Imaginary axis, equation $x=0$.'
+                },
+                {
+                    question: 'Given $z=3-4i$, find $iz$ and interpret geometrically.',
+                    steps: [
+                        '$iz=i(3-4i)=3i-4i^2=4+3i$.',
+                        'Coordinates move from $(3,-4)$ to $(4,3)$.',
+                        'This is a rotation by $\\frac\\pi2$ anticlockwise.'
+                    ],
+                    final_answer: '$iz=4+3i$, representing a quarter-turn anticlockwise.'
+                }
+            ]
+        },
+        {
+            title: '11. De Moivre Matrix and Root-Generation Control',
+            content: `## Power-generation matrix
+
+For $z=r(\\cos\\theta+i\\sin\\theta)$:
+$$z^n=r^n\\big(\\cos(n\\theta)+i\\sin(n\\theta)\\big).$$
+
+## Root-generation matrix
+
+For $z=re^{i\\theta}$, the $n$th roots are:
+$$w_k=r^{1/n}e^{i(\\theta+2\\pi k)/n},\\quad k=0,1,\\ldots,n-1.$$
+
+## Root-of-unity geometry
+
+$n$th roots of unity form a regular $n$-gon on unit circle:
+$$1,\\omega,\\omega^2,\\ldots,\\omega^{n-1},\\quad \\omega=e^{2\\pi i/n}.$$
+and
+$$1+\\omega+\\cdots+\\omega^{n-1}=0.$$`,
+            worked_examples: [
+                {
+                    question: 'Evaluate $(\\sqrt3+i)^6$.',
+                    steps: [
+                        '$\\sqrt3+i=2\\left(\\cos\\frac\\pi6+i\\sin\\frac\\pi6\\right)$.',
+                        'Raise to power 6: $2^6\\left(\\cos\\pi+i\\sin\\pi\\right)$.',
+                        'This is $64(-1+0i)=-64$.'
+                    ],
+                    final_answer: '$-64$.'
+                },
+                {
+                    question: 'Find all solutions of $z^4=16i$.',
+                    steps: [
+                        'Write $16i=16e^{i\\pi/2}$.',
+                        'Modulus of each root: $16^{1/4}=2$.',
+                        'Arguments: $\\frac{\\pi/2+2\\pi k}{4}=\\frac\\pi8+\\frac{k\\pi}{2}$ for $k=0,1,2,3$.',
+                        'So roots are $2e^{i(\\pi/8+k\\pi/2)}$.'
+                    ],
+                    final_answer: '$z=2e^{i\\pi/8},\\ 2e^{i5\\pi/8},\\ 2e^{i9\\pi/8},\\ 2e^{i13\\pi/8}$.'
+                },
+                {
+                    question: 'If $\\omega=e^{2\\pi i/5}$, evaluate $1+\\omega+\\omega^2+\\omega^3+\\omega^4$.',
+                    steps: [
+                        'These are the five roots of $z^5=1$.',
+                        'Sum of all fifth roots of unity is $0$.',
+                        'Hence the expression equals $0$.'
+                    ],
+                    final_answer: '$0$.'
+                }
+            ]
+        },
+        {
+            title: '12. Polynomial Matrix with Complex-Conjugate Constraints',
+            content: `## Conjugate-root matrix
+
+For real-coefficient polynomials:
+if $a+bi$ is a root, then $a-bi$ is also a root.
+
+Quadratic factor from a conjugate pair:
+$$\\big(x-(a+bi)\\big)\\big(x-(a-bi)\\big)=x^2-2ax+(a^2+b^2).$$
+
+## Reconstruction workflow
+
+1. convert each root pair into a real quadratic  
+2. multiply by remaining linear factors  
+3. expand and compare coefficients`,
+            worked_examples: [
+                {
+                    question: 'Form a monic cubic with roots $2+3i$, $2-3i$, and $-1$.',
+                    steps: [
+                        'Conjugate pair gives factor $x^2-4x+13$.',
+                        'Include third root factor $(x+1)$.',
+                        'Multiply: $(x^2-4x+13)(x+1)$.',
+                        'Expand to $x^3-3x^2+9x+13$.'
+                    ],
+                    final_answer: '$x^3-3x^2+9x+13=0$.'
+                },
+                {
+                    question: 'Solve $z^2-6z+13=0$ and classify roots geometrically.',
+                    steps: [
+                        'Use quadratic formula: $z=\\frac{6\\pm\\sqrt{36-52}}{2}$.',
+                        '$=\\frac{6\\pm4i}{2}=3\\pm2i$.',
+                        'Points are conjugates, symmetric about real axis.'
+                    ],
+                    final_answer: '$z=3+2i$ and $z=3-2i$, a conjugate pair.'
+                },
+                {
+                    question: 'Given roots $1+i$, $1-i$, $-2+i$, $-2-i$, form the monic quartic.',
+                    steps: [
+                        'First pair gives $x^2-2x+2$.',
+                        'Second pair gives $x^2+4x+5$.',
+                        'Multiply: $(x^2-2x+2)(x^2+4x+5)$.',
+                        'Expand: $x^4+2x^3-x^2-2x+10$.'
+                    ],
+                    final_answer: '$x^4+2x^3-x^2-2x+10=0$.'
+                }
+            ]
+        },
+        {
+            title: '13. Complex Numbers Full Book Drill (Exam-Length)',
+            content: `## Full drill matrix
+
+Upper-sixth complex-number tasks combine:
+- algebra in Cartesian form
+- modulus-argument conversion
+- De Moivre powers and roots
+- polynomial reconstruction with conjugate structure
+- Argand geometric interpretation
+
+## Exam protocol
+
+1. choose the strongest form (Cartesian or polar) first  
+2. keep exact arguments and radicals until final line  
+3. state principal argument range when required  
+4. present all roots with complete argument set  
+5. verify polynomial reconstructions by expansion
+
+## Reliability checks
+
+- denominator must be real after division
+- root count must match equation degree
+- conjugate pairing must be preserved for real coefficients`,
+            worked_examples: [
+                {
+                    question: 'Express $\\frac{1-2i}{2+i}$ in both Cartesian and polar forms.',
+                    steps: [
+                        'Multiply by conjugate of denominator: $\\frac{(1-2i)(2-i)}{(2+i)(2-i)}$.',
+                        'Numerator: $2-i-4i+2i^2=2-5i-2=-5i$.',
+                        'So Cartesian form is $-\\frac{5}{5}i=-i$.',
+                        'Polar form: modulus $1$, argument $-\\frac\\pi2$.'
+                    ],
+                    final_answer: 'Cartesian: $-i$; Polar: $e^{-i\\pi/2}$.'
+                },
+                {
+                    question: 'Solve $z^3=-8$ and list all roots in Cartesian form.',
+                    steps: [
+                        'Write $-8=8e^{i\\pi}$.',
+                        'Cube-root modulus: $2$.',
+                        'Arguments: $\\frac{\\pi+2\\pi k}{3}$ for $k=0,1,2$.',
+                        'So roots are at $\\frac\\pi3,\\ \\pi,\\ \\frac{5\\pi}{3}$.',
+                        'Convert to Cartesian values.'
+                    ],
+                    final_answer: '$z=1+i\\sqrt3,\\ -2,\\ 1-i\\sqrt3$.'
+                },
+                {
+                    question: 'Find real values $a,b$ if $2-3i$ is a root of $z^2+az+b=0$ with real coefficients.',
+                    steps: [
+                        'Conjugate root is $2+3i$.',
+                        'Sum of roots is $4=-a$.',
+                        'Product is $(2-3i)(2+3i)=13=b$.',
+                        'Hence $a=-4$, $b=13$.'
+                    ],
+                    final_answer: '$a=-4$, $b=13$.'
+                }
+            ]
+        }
+    ];
+
+    complexNumbersTopic.sections = [...complexNumbersTopic.sections, ...extraSections];
+    complexNumbersTopic.key_points = Array.from(
+        new Set([
+            ...complexNumbersTopic.key_points,
+            'Argand loci translate algebraic modulus and argument conditions into geometric sets.',
+            'De Moivre converts high powers into angle multiplication with exact control.',
+            'Nth roots require full argument family using +2kpi.',
+            'Real-coefficient polynomials enforce conjugate pairing automatically.',
+            'Choose Cartesian for addition and subtraction, polar for powers and roots.',
+        ])
+    );
+    complexNumbersTopic.exam_tips = Array.from(
+        new Set([
+            ...complexNumbersTopic.exam_tips,
+            'State principal argument range before giving argument values.',
+            'When dividing complex numbers, always rationalize denominator first.',
+            'List all roots explicitly and avoid missing k values.',
+            'Keep exact forms in radicals and pi unless decimal values are requested.',
+            'After building a polynomial from roots, expand and compare coefficients as a check.',
+        ])
+    );
+    complexNumbersTopic.visual_descriptions = Array.from(
+        new Set([
+            ...complexNumbersTopic.visual_descriptions,
+            'Argand-locus map for circles, bisectors, and angle rays.',
+            'Unit-circle root distribution for nth roots and roots of unity.',
+            'Conjugate symmetry reflection in the real axis.',
+            'Root-generation spiral showing argument progression by 2kpi/n.',
+        ])
+    );
+}
+
+// Deep expansion for Topic 19 (Upper Sixth): matrices and determinants chapter upgrade.
+const matricesTopic = aLevelPureMathNotes['Matrices and Determinants'];
+if (matricesTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Matrix System Matrix and Transformation Pipeline',
+            content: `## System pipeline
+
+Write linear systems as:
+$$AX=B,\\quad X=A^{-1}B\\ (\\det A\\ne0).$$
+
+## Cramer structure
+
+For 3 unknowns:
+$$x=\\frac{\\Delta_x}{\\Delta},\\ y=\\frac{\\Delta_y}{\\Delta},\\ z=\\frac{\\Delta_z}{\\Delta}.$$
+
+## Transformation composition
+
+If transformation $T_1$ is followed by $T_2$, overall matrix is:
+$$T_2T_1$$
+with right-to-left action on vectors.`,
+            worked_examples: [
+                {
+                    question: 'Solve $2x+y=7,\\ 3x+2y=11$ by inverse matrix.',
+                    steps: [
+                        '$A=\\begin{pmatrix}2&1\\\\3&2\\end{pmatrix}$, $B=\\begin{pmatrix}7\\\\11\\end{pmatrix}$.',
+                        '$\\det A=1$, so $A^{-1}=\\begin{pmatrix}2&-1\\\\-3&2\\end{pmatrix}$.',
+                        '$X=A^{-1}B=\\begin{pmatrix}3\\\\1\\end{pmatrix}$.'
+                    ],
+                    final_answer: '$x=3,\\ y=1$.'
+                },
+                {
+                    question: 'A reflection in $y=x$ is followed by a $90^\\circ$ anticlockwise rotation. Find composite matrix.',
+                    steps: [
+                        '$R=\\begin{pmatrix}0&-1\\\\1&0\\end{pmatrix}$, $F=\\begin{pmatrix}0&1\\\\1&0\\end{pmatrix}$.',
+                        'Composite is $RF$.',
+                        '$RF=\\begin{pmatrix}-1&0\\\\0&1\\end{pmatrix}$.'
+                    ],
+                    final_answer: 'Composite matrix is $\\begin{pmatrix}-1&0\\\\0&1\\end{pmatrix}$.'
+                }
+            ]
+        },
+        {
+            title: '11. Eigen Matrix and Diagonalization Insight',
+            content: `## Eigen pipeline
+
+Solve
+$$\\det(A-\\lambda I)=0$$
+for eigenvalues, then
+$$ (A-\\lambda I)v=0$$
+for eigenvectors.
+
+## Diagonalization condition
+
+If $A$ has enough independent eigenvectors:
+$$A=PDP^{-1},$$
+then
+$$A^n=PD^nP^{-1}.$$
+
+This is powerful for fast powers and recursion models.`,
+            worked_examples: [
+                {
+                    question: 'For $A=\\begin{pmatrix}4&1\\\\2&3\\end{pmatrix}$, find eigenvalues.',
+                    steps: [
+                        '$\\det(A-\\lambda I)=\\begin{vmatrix}4-\\lambda&1\\\\2&3-\\lambda\\end{vmatrix}=0$.',
+                        'So $(4-\\lambda)(3-\\lambda)-2=0$.',
+                        '$\\lambda^2-7\\lambda+10=0=(\\lambda-5)(\\lambda-2)$.'
+                    ],
+                    final_answer: '$\\lambda=5,2$.'
+                },
+                {
+                    question: 'Find an eigenvector for $\\lambda=5$.',
+                    steps: [
+                        '$A-5I=\\begin{pmatrix}-1&1\\\\2&-2\\end{pmatrix}$.',
+                        'Solve $-x+y=0$, so $y=x$.',
+                        'Choose $x=1$.'
+                    ],
+                    final_answer: 'One eigenvector is $\\begin{pmatrix}1\\\\1\\end{pmatrix}$.'
+                }
+            ]
+        }
+    ];
+
+    matricesTopic.sections = [...matricesTopic.sections, ...extraSections];
+    matricesTopic.key_points = Array.from(new Set([...matricesTopic.key_points, 'Use $AX=B$ structure to organize elimination and inverse methods.', 'Composite transformation matrices act right to left on vectors.', 'Eigenvalues come from determinant-zero condition of $(A-\\lambda I)$.']));
+    matricesTopic.exam_tips = Array.from(new Set([...matricesTopic.exam_tips, 'Check determinant first before attempting inverse methods.', 'In composition questions, write order of mappings before multiplying matrices.', 'After finding eigenvectors, substitute back once to validate.']));
+    matricesTopic.visual_descriptions = Array.from(new Set([...matricesTopic.visual_descriptions, 'Flow from system equations to matrix form to solution vector.', 'Eigen-direction sketch showing vectors preserved in direction under transformation.']));
+}
+
+// Deep expansion for Topic 20 (Upper Sixth): vectors in 3D chapter upgrade.
+const vectors3DTopic = aLevelPureMathNotes['Vectors in 3D'];
+if (vectors3DTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Line-Plane Matrix and Distance Geometry',
+            content: `## Line matrix
+
+A line through point $a$ with direction $d$:
+$$r=a+\\lambda d.$$
+
+## Plane matrix
+
+Plane with normal $n$ through point $a$:
+$$n\\cdot(r-a)=0.$$
+
+## Distance forms
+
+- point to plane:
+$$\\text{dist}=\\frac{|n\\cdot(p-a)|}{|n|}$$
+- skew-line shortest segment uses perpendicular to both directions.`,
+            worked_examples: [
+                {
+                    question: 'Find equation of plane through $(1,0,2)$ with normal $(2,-1,3)$.',
+                    steps: [
+                        'Use $n\\cdot(r-a)=0$.',
+                        'So $2(x-1)-1(y-0)+3(z-2)=0$.',
+                        'Simplify.'
+                    ],
+                    final_answer: '$2x-y+3z-8=0$.'
+                },
+                {
+                    question: 'Find distance from $P(2,1,0)$ to plane $2x-y+2z-3=0$.',
+                    steps: [
+                        'Use $\\frac{|Ax_0+By_0+Cz_0+D|}{\\sqrt{A^2+B^2+C^2}}$.',
+                        '$=\\frac{|4-1+0-3|}{\\sqrt{4+1+4}}=\\frac{0}{3}$.'
+                    ],
+                    final_answer: 'Distance is $0$, so the point lies on the plane.'
+                }
+            ]
+        },
+        {
+            title: '11. Dot-Cross Matrix and Area-Volume Control',
+            content: `## Dot and angle
+$$a\\cdot b=|a||b|\\cos\\theta.$$
+
+## Cross and area
+$$|a\\times b|=|a||b|\\sin\\theta$$
+gives parallelogram area.
+
+## Triple product and volume
+$$|a\\cdot(b\\times c)|$$
+gives parallelepiped volume.`,
+            worked_examples: [
+                {
+                    question: 'Given $a=(1,2,2)$ and $b=(2,1,-1)$, find angle between them.',
+                    steps: [
+                        '$a\\cdot b=1\\cdot2+2\\cdot1+2\\cdot(-1)=2$.',
+                        '$|a|=3$, $|b|=\\sqrt6$.',
+                        '$\\cos\\theta=\\frac{2}{3\\sqrt6}$.'
+                    ],
+                    final_answer: '$\\theta=\\cos^{-1}\\!\\left(\\frac{2}{3\\sqrt6}\\right)$.'
+                },
+                {
+                    question: 'Find area of triangle with side vectors $u=(1,0,2)$ and $v=(2,1,1)$.',
+                    steps: [
+                        '$u\\times v=(-2,3,1)$.',
+                        '$|u\\times v|=\\sqrt{14}$.',
+                        'Triangle area is half of parallelogram area.'
+                    ],
+                    final_answer: 'Area $=\\frac{\\sqrt{14}}{2}$.'
+                }
+            ]
+        }
+    ];
+
+    vectors3DTopic.sections = [...vectors3DTopic.sections, ...extraSections];
+    vectors3DTopic.key_points = Array.from(new Set([...vectors3DTopic.key_points, 'Use vector and Cartesian forms interchangeably for lines and planes.', 'Dot product controls orthogonality and angle calculations.', 'Cross product gives normal direction and area magnitude.']));
+    vectors3DTopic.exam_tips = Array.from(new Set([...vectors3DTopic.exam_tips, 'State direction and normal vectors clearly before calculations.', 'When finding distances, keep exact radicals until final step.', 'Check geometric interpretation after numeric computation.']));
+    vectors3DTopic.visual_descriptions = Array.from(new Set([...vectors3DTopic.visual_descriptions, '3D line and plane intersection sketch with direction and normal vectors.', 'Parallelogram area from cross product magnitude.']));
+}
+
+// Deep expansion for Topic 21 (Upper Sixth): summation chapter upgrade.
+const summationTopic = aLevelPureMathNotes['Summation of Series'];
+if (summationTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Sigma Matrix and Telescoping Engine',
+            content: `## Sigma decomposition
+
+Use linearity:
+$$\\sum(af(k)+bg(k))=a\\sum f(k)+b\\sum g(k).$$
+
+Standard sums:
+$$\\sum_{k=1}^n k=\\frac{n(n+1)}{2},\\quad
+\\sum_{k=1}^n k^2=\\frac{n(n+1)(2n+1)}{6}.$$
+
+## Telescoping matrix
+
+If term is $u_k-u_{k+1}$, most terms cancel:
+$$\\sum_{k=1}^n(u_k-u_{k+1})=u_1-u_{n+1}.$$`,
+            worked_examples: [
+                {
+                    question: 'Evaluate $\\sum_{k=1}^{n}(3k^2-2k+1)$.',
+                    steps: [
+                        'Split into standard sums.',
+                        '$3\\sum k^2-2\\sum k+\\sum1$.',
+                        'Substitute formulas and simplify.'
+                    ],
+                    final_answer: '$\\frac{n(2n^2+1)}{2}$.'
+                },
+                {
+                    question: 'Evaluate $\\sum_{k=1}^{n}\\frac{1}{k(k+1)}$.',
+                    steps: [
+                        'Write as $\\frac1k-\\frac1{k+1}$.',
+                        'Apply telescoping cancellation.',
+                        'Keep first and last surviving terms.'
+                    ],
+                    final_answer: '$1-\\frac{1}{n+1}=\\frac{n}{n+1}$.'
+                }
+            ]
+        },
+        {
+            title: '11. Infinite-Series Matrix and Convergence Limits',
+            content: `## Geometric convergence
+
+$$\\sum_{k=0}^{\\infty}ar^k=\\frac{a}{1-r},\\quad |r|<1.$$
+
+## p-series test
+$$\\sum\\frac1{k^p}$$
+converges for $p>1$, diverges for $p\\le1$.
+
+## Error estimate for geometric truncation
+$$R_n=\\frac{ar^{n+1}}{1-r},\\quad |r|<1.$$`,
+            worked_examples: [
+                {
+                    question: 'Find $\\sum_{k=0}^{\\infty}\\left(\\frac23\\right)^k$.',
+                    steps: [
+                        'Identify $a=1$, $r=\\frac23$.',
+                        'Use infinite geometric formula.'
+                    ],
+                    final_answer: '$3$.'
+                },
+                {
+                    question: 'Does $\\sum_{k=1}^{\\infty}\\frac{1}{k\\sqrt{k}}$ converge?',
+                    steps: [
+                        'Rewrite as $\\sum k^{-3/2}$.',
+                        'Here $p=\\frac32>1$.',
+                        'Apply p-series test.'
+                    ],
+                    final_answer: 'Convergent.'
+                }
+            ]
+        }
+    ];
+
+    summationTopic.sections = [...summationTopic.sections, ...extraSections];
+    summationTopic.key_points = Array.from(new Set([...summationTopic.key_points, 'Linearity of sigma notation is a core simplification tool.', 'Telescoping structure often appears after partial fractions.', 'Infinite geometric sums require strict $|r|<1$.']));
+    summationTopic.exam_tips = Array.from(new Set([...summationTopic.exam_tips, 'Rewrite complex summands into known sum blocks before substituting formulas.', 'For infinite series always state convergence condition before value.', 'Use cancellation layout in telescoping proofs for full method marks.']));
+    summationTopic.visual_descriptions = Array.from(new Set([...summationTopic.visual_descriptions, 'Cancellation ladder for telescoping sums.', 'Geometric area model for infinite geometric series convergence.']));
+}
+
+// Deep expansion for Topic 22 (Upper Sixth): numerical methods chapter upgrade.
+const numericalMethodsTopic = aLevelPureMathNotes['Numerical Methods'];
+if (numericalMethodsTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Root-Finding Matrix: Iteration and Newton Control',
+            content: `## Iteration matrix
+
+Fixed-point:
+$$x_{n+1}=g(x_n),\\quad |g'(\\alpha)|<1\\text{ near root }\\alpha.$$
+
+Newton-Raphson:
+$$x_{n+1}=x_n-\\frac{f(x_n)}{f'(x_n)}.$$
+
+## Reliability protocol
+
+- choose initial guess near sign change
+- monitor stabilization of decimal places
+- stop when required tolerance is achieved`,
+            worked_examples: [
+                {
+                    question: 'Use one Newton step for $f(x)=x^3-5$ from $x_0=1.7$.',
+                    steps: [
+                        '$f(1.7)=4.913-5=-0.087$.',
+                        '$f\'(x)=3x^2$, so $f\'(1.7)=8.67$.',
+                        '$x_1=1.7-\\frac{-0.087}{8.67}\\approx1.7100$.'
+                    ],
+                    final_answer: '$x_1\\approx1.7100$.'
+                },
+                {
+                    question: 'For iteration $x_{n+1}=\\cos x_n$, test local convergence near root.',
+                    steps: [
+                        '$g(x)=\\cos x$, so $g\'(x)=-\\sin x$.',
+                        'At fixed point near $0.739$, $|g\'|\\approx0.674<1$.',
+                        'So local convergence condition is satisfied.'
+                    ],
+                    final_answer: 'The fixed-point iteration converges locally.'
+                }
+            ]
+        },
+        {
+            title: '11. Numerical Integration Matrix and Error Comparison',
+            content: `## Trapezium and Simpson
+$$T_n=\\frac{h}{2}\\left(y_0+2\\sum y_i+y_n\\right),\\quad
+S_n=\\frac{h}{3}\\left(y_0+4\\sum y_{odd}+2\\sum y_{even}+y_n\\right).$$
+
+## Error trend
+
+- trapezium error scales roughly with $h^2$
+- Simpson error scales roughly with $h^4$ for smooth functions
+
+## Practical check
+
+Compare $T_n$ and $T_{2n}$ (or $S_n$ and $S_{2n}$) for stability.`,
+            worked_examples: [
+                {
+                    question: 'Approximate $\\int_0^1 e^{-x}dx$ by trapezium with $n=2$.',
+                    steps: [
+                        '$h=0.5$, points: $0,0.5,1$.',
+                        '$y_0=1$, $y_1\\approx0.6065$, $y_2\\approx0.3679$.',
+                        '$T_2=\\frac{0.5}{2}[1+2(0.6065)+0.3679]$.'
+                    ],
+                    final_answer: '$T_2\\approx0.6452$.'
+                },
+                {
+                    question: 'Approximate same integral by Simpson with $n=2$.',
+                    steps: [
+                        'Use same $h$ and nodes.',
+                        '$S_2=\\frac{0.5}{3}[1+4(0.6065)+0.3679]$.',
+                        'Compute final value.'
+                    ],
+                    final_answer: '$S_2\\approx0.6323$ (closer to exact $1-e^{-1}\\approx0.6321$).'
+                }
+            ]
+        }
+    ];
+
+    numericalMethodsTopic.sections = [...numericalMethodsTopic.sections, ...extraSections];
+    numericalMethodsTopic.key_points = Array.from(new Set([...numericalMethodsTopic.key_points, 'Convergence checks are as important as raw computation in iterative methods.', 'Newton method is fast but depends on derivative behavior near guess.', 'Simpson generally improves accuracy for smooth integrands.']));
+    numericalMethodsTopic.exam_tips = Array.from(new Set([...numericalMethodsTopic.exam_tips, 'Always write iteration formula before substituting values.', 'Quote tolerance or decimal-stability stopping rule.', 'State method name and strip count clearly in numerical integration.']));
+    numericalMethodsTopic.visual_descriptions = Array.from(new Set([...numericalMethodsTopic.visual_descriptions, 'Cobweb and tangent-step diagrams for iterative root methods.', 'Overlay of trapezium and Simpson approximating the same area.']));
+}
+
+// Deep expansion for Topic 23 (Upper Sixth): proof and induction chapter upgrade.
+const proofTopic = aLevelPureMathNotes['Proof and Mathematical Induction'];
+if (proofTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Induction Matrix: Structure and Algebraic Closure',
+            content: `## Induction protocol
+
+1. Base case at $n=n_0$  
+2. Assume statement true for $n=k$  
+3. Prove true for $n=k+1$  
+4. Conclude true for all $n\\ge n_0$
+
+## Closure principle
+
+The step from $k$ to $k+1$ must explicitly use the induction hypothesis and clean algebraic transformation.`,
+            worked_examples: [
+                {
+                    question: 'Prove $1+2+\\cdots+n=\\frac{n(n+1)}2$ by induction.',
+                    steps: [
+                        'Base: $n=1$, both sides equal $1$.',
+                        'Assume true at $n=k$: $1+\\cdots+k=\\frac{k(k+1)}2$.',
+                        'Then for $k+1$: $1+\\cdots+k+(k+1)=\\frac{k(k+1)}2+(k+1)$.',
+                        'Factor: $(k+1)\\left(\\frac{k}{2}+1\\right)=\\frac{(k+1)(k+2)}2$.'
+                    ],
+                    final_answer: 'Statement proven for all $n\\in\\mathbb N$.'
+                },
+                {
+                    question: 'Prove $2^n\\ge n+1$ for $n\\ge1$.',
+                    steps: [
+                        'Base: $n=1$, $2\\ge2$.',
+                        'Assume $2^k\\ge k+1$.',
+                        'Then $2^{k+1}=2\\cdot2^k\\ge2(k+1)=k+1+(k+1)\\ge k+2$.'
+                    ],
+                    final_answer: 'Inequality proven for all $n\\ge1$.'
+                }
+            ]
+        },
+        {
+            title: '11. Direct, Contradiction, and Counterexample Matrix',
+            content: `## Proof-method matrix
+
+- direct proof: chain valid implications
+- contradiction: assume negation, derive impossibility
+- counterexample: one valid contradiction to universal claim
+
+## Divisibility proof form
+
+Represent integers with parameterized forms such as:
+$$n=2k,\\ n=2k+1,\\ n=3k+r.$$`,
+            worked_examples: [
+                {
+                    question: 'Prove: if $n$ is odd then $n^2$ is odd.',
+                    steps: [
+                        'Let $n=2k+1$.',
+                        '$n^2=(2k+1)^2=4k^2+4k+1=2(2k^2+2k)+1$.',
+                        'This has form $2m+1$, so odd.'
+                    ],
+                    final_answer: 'Proven.'
+                },
+                {
+                    question: 'Disprove: all primes are odd.',
+                    steps: [
+                        'Provide counterexample $2$.',
+                        '$2$ is prime and even.',
+                        'Universal statement fails.'
+                    ],
+                    final_answer: 'Statement is false.'
+                }
+            ]
+        }
+    ];
+
+    proofTopic.sections = [...proofTopic.sections, ...extraSections];
+    proofTopic.key_points = Array.from(new Set([...proofTopic.key_points, 'Induction requires a valid base and a fully justified transition step.', 'Counterexample is sufficient to refute a universal statement.', 'Choose proof method by statement structure and quantifiers.']));
+    proofTopic.exam_tips = Array.from(new Set([...proofTopic.exam_tips, 'Label base case, hypothesis, and inductive step explicitly.', 'In contradiction proofs, identify exactly where impossibility appears.', 'Do not skip algebra steps inside induction transitions.']));
+    proofTopic.visual_descriptions = Array.from(new Set([...proofTopic.visual_descriptions, 'Induction ladder showing base and recursive step propagation.', 'Proof-method decision map: direct, contradiction, or counterexample.']));
+}
+
+// Deep expansion for Topic 24 (Upper Sixth): additional pure math chapter upgrade.
+const additionalPureTopic = aLevelPureMathNotes['Additional Pure Math Topics'];
+if (additionalPureTopic) {
+    const extraSections: MathTopicNotes['sections'] = [
+        {
+            title: '10. Polar-Parametric Matrix and Advanced Curve Control',
+            content: `## Polar matrix
+
+With $x=r\\cos\\theta$, $y=r\\sin\\theta$:
+$$\\text{Area}=\\frac12\\int r^2\\,d\\theta.$$
+
+## Parametric derivative matrix
+$$\\frac{dy}{dx}=\\frac{dy/dt}{dx/dt},\\qquad
+\\frac{d^2y}{dx^2}=\\frac{\\frac{d}{dt}(dy/dx)}{dx/dt}.$$
+
+## Curve workflow
+
+- identify symmetry
+- find intercepts or key parameter values
+- determine monotonic segments
+- annotate turning behavior`,
+            worked_examples: [
+                {
+                    question: 'For $r=2\\cos\\theta$, find area enclosed by the curve.',
+                    steps: [
+                        'Curve is a circle traced over $-\\frac\\pi2\\le\\theta\\le\\frac\\pi2$.',
+                        'Area $=\\frac12\\int_{-\\pi/2}^{\\pi/2}(2\\cos\\theta)^2d\\theta$.',
+                        '$=2\\int_{-\\pi/2}^{\\pi/2}\\cos^2\\theta\\,d\\theta=2\\cdot\\frac\\pi2=\\pi$.'
+                    ],
+                    final_answer: 'Enclosed area is $\\pi$.'
+                },
+                {
+                    question: 'For $x=t^2,\\ y=t^3-3t$, find points where tangent is horizontal.',
+                    steps: [
+                        '$\\frac{dy}{dt}=3t^2-3$, $\\frac{dx}{dt}=2t$.',
+                        'Horizontal tangent needs $\\frac{dy}{dt}=0$ and $\\frac{dx}{dt}\\ne0$.',
+                        'So $t=\\pm1$ and both satisfy $2t\\ne0$.',
+                        'Coordinates: $(1,-2)$ and $(1,2)$.'
+                    ],
+                    final_answer: 'Horizontal tangents at $(1,-2)$ and $(1,2)$.'
+                }
+            ]
+        },
+        {
+            title: '11. Consolidation Matrix and Exam Integration Drill',
+            content: `## Integration drill matrix
+
+Mixed papers combine:
+- algebraic structuring
+- calculus execution
+- geometric interpretation
+- proof-level justification
+
+## Final protocol
+
+1. classify domain and notation early  
+2. keep exact forms during core derivation  
+3. only round at final requested stage  
+4. verify with substitution or derivative checks`,
+            worked_examples: [
+                {
+                    question: 'Simplify and solve: $\\ln(x-1)+\\ln(x+1)=\\ln6$.',
+                    steps: [
+                        'Combine logs: $\\ln[(x-1)(x+1)]=\\ln6$.',
+                        'So $x^2-1=6\\Rightarrow x^2=7$.',
+                        'Domain needs $x>1$, so keep positive root only.'
+                    ],
+                    final_answer: '$x=\\sqrt7$.'
+                },
+                {
+                    question: 'Evaluate $\\int_0^1\\frac{2x}{x^2+1}dx$ and interpret.',
+                    steps: [
+                        'Let $u=x^2+1$, $du=2xdx$.',
+                        'Integral becomes $\\int_{1}^{2}\\frac{1}{u}du$.',
+                        'Value is $\\ln2$.'
+                    ],
+                    final_answer: '$\\ln2$, representing exact accumulated area under the curve on $[0,1]$.'
+                }
+            ]
+        }
+    ];
+
+    additionalPureTopic.sections = [...additionalPureTopic.sections, ...extraSections];
+    additionalPureTopic.key_points = Array.from(new Set([...additionalPureTopic.key_points, 'Advanced consolidation relies on selecting the correct representation quickly.', 'Polar and parametric tools are strongest when paired with symmetry analysis.', 'Exact-form management is critical in upper-level pure mathematics exam scripts.']));
+    additionalPureTopic.exam_tips = Array.from(new Set([...additionalPureTopic.exam_tips, 'State restrictions such as domains and principal values before final answers.', 'Cross-check long derivations by differentiating backward where possible.', 'In mixed-topic questions, separate method stages with clear headings.']));
+    additionalPureTopic.visual_descriptions = Array.from(new Set([...additionalPureTopic.visual_descriptions, 'Mixed-topic decision tree from algebra, calculus, geometry, and proof branches.', 'Polar and parametric curve overlays with key geometric markers.']));
+}
+
 // Helper function to get notes for a specific topic
 export function getALevelPureMathNotes(topicName: string): MathTopicNotes | null {
     // Fast path: exact match
@@ -8652,6 +13712,16 @@ export function getALevelPureMathNotes(topicName: string): MathTopicNotes | null
     const wanted = normalize(topicName);
     const keyMatch = Object.keys(aLevelPureMathNotes).find((k) => normalize(k) === wanted);
     if (keyMatch) return aLevelPureMathNotes[keyMatch];
+
+    // Topic name aliases so every syllabus topic resolves to the full chapter notes.
+    const aliases: Record<string, string> = {
+        [normalize('Trigonometry (Identities & Equations)')]: 'Trigonometry',
+        [normalize('Group Theory')]: 'Additional Pure Math Topics',
+    };
+    const aliasKey = aliases[wanted];
+    if (aliasKey && aLevelPureMathNotes[aliasKey]) {
+        return aLevelPureMathNotes[aliasKey];
+    }
 
     // Final fallback: generate a professional "starter notes" page from the syllabus topic metadata
     const topicMeta = aLevelPureMathTopics.find((t) => normalize(t.name) === wanted);

@@ -1,4 +1,4 @@
-// Dashboard Screen Component - World-Class UI/UX Design ✨
+﻿// Dashboard Screen Component - World-Class UI/UX Design âœ¨
 // Featuring: Animated cards, Motivational quotes, Floating particles
 import React, { useEffect, useState } from 'react';
 import {
@@ -30,7 +30,7 @@ import { gamificationService, UserProgress, Badge } from '../services/Gamificati
 import { dktService, KnowledgeMap } from '../services/api/dktApi';
 import { KnowledgeMapWidget } from '../components/KnowledgeMapWidget';
 
-// ✨ New animated components
+// âœ¨ New animated components
 import MotivationalSlider from '../components/MotivationalSlider';
 import AnimatedCard from '../components/AnimatedCard';
 import FloatingParticles from '../components/FloatingParticles';
@@ -458,7 +458,7 @@ const DashboardScreen: React.FC = () => {
         <View style={styles.progressHeader}>
           <Text style={styles.progressTitle}>Science Mastery</Text>
           <View style={styles.streakBadge}>
-            <Text style={styles.streakText}>🔥 {userProgress.streak} Day Streak</Text>
+            <Text style={styles.streakText}>ðŸ”¥ {userProgress.streak} Day Streak</Text>
           </View>
         </View>
 
@@ -501,13 +501,13 @@ const DashboardScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: themedColors.background.default }]}>
-      {/* 🎨 Professional Background Image */}
+      {/* ðŸŽ¨ Professional Background Image */}
       <ImageBackground
         source={require('../../assets/images/default_background.png')}
         style={styles.backgroundImage}
         resizeMode="cover"
       >
-        {/* ✨ Floating Particles Background */}
+        {/* âœ¨ Floating Particles Background */}
         <FloatingParticles count={20} />
 
         <StatusBar
@@ -515,7 +515,7 @@ const DashboardScreen: React.FC = () => {
           backgroundColor={themedColors.background.default}
         />
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          {/* ✨ Modern Compact Transparent Header */}
+          {/* âœ¨ Modern Compact Transparent Header */}
           <View style={styles.modernHeader}>
             {/* Top Row - Icons and Actions */}
             <View style={styles.topRow}>
@@ -531,7 +531,7 @@ const DashboardScreen: React.FC = () => {
                   activeOpacity={0.7}
                 >
                   <Text style={styles.iconEmoji}>
-                    {isDarkMode ? '☀️' : '🌙'}
+                    {isDarkMode ? 'â˜€ï¸' : 'ðŸŒ™'}
                   </Text>
                 </TouchableOpacity>
 
@@ -576,12 +576,12 @@ const DashboardScreen: React.FC = () => {
             {/* User Info Row - Compact */}
             <View style={styles.userRow}>
               <View style={styles.userNameSection}>
-                <Text style={styles.greeting}>Welcome back 👋</Text>
-                <Text style={styles.displayName}>
+                <Text style={styles.greeting} numberOfLines={1} ellipsizeMode="tail">Welcome back</Text>
+                <Text style={styles.displayName} numberOfLines={2} ellipsizeMode="tail" adjustsFontSizeToFit minimumFontScale={0.8}>
                   {user?.name ? `${user.name} ${user.surname || ''}` : 'Student'}
                 </Text>
                 <View style={styles.compactIdBadge}>
-                  <Text style={styles.compactId}>ID: {user?.nerdx_id || 'N/A'}</Text>
+                  <Text style={styles.compactId} numberOfLines={1} ellipsizeMode="tail">ID: {user?.nerdx_id || 'N/A'}</Text>
                 </View>
               </View>
 
@@ -606,7 +606,7 @@ const DashboardScreen: React.FC = () => {
           </View>
 
           <View style={styles.mainContent}>
-            {/* ✨ Motivational Quotes Slider - Rotates every 3 seconds */}
+            {/* âœ¨ Motivational Quotes Slider - Rotates every 3 seconds */}
             <MotivationalSlider intervalMs={3000} showCategory={true} showAuthor={true} />
 
             {renderDailyReviewWidget()}
@@ -630,10 +630,10 @@ const DashboardScreen: React.FC = () => {
                     end={{ x: 1, y: 1 }}
                     style={styles.levelTabGradient}
                   >
-                    <Text style={styles.levelTabTextActive}>O Level</Text>
+                    <Text style={styles.levelTabTextActive} numberOfLines={1} ellipsizeMode="tail">O Level</Text>
                   </LinearGradient>
                 ) : (
-                  <Text style={styles.levelTabText}>O Level</Text>
+                  <Text style={styles.levelTabText} numberOfLines={1} ellipsizeMode="tail">O Level</Text>
                 )}
               </TouchableOpacity>
               <TouchableOpacity
@@ -651,10 +651,10 @@ const DashboardScreen: React.FC = () => {
                     end={{ x: 1, y: 1 }}
                     style={styles.levelTabGradient}
                   >
-                    <Text style={styles.levelTabTextActive}>A Level</Text>
+                    <Text style={styles.levelTabTextActive} numberOfLines={1} ellipsizeMode="tail">A Level</Text>
                   </LinearGradient>
                 ) : (
-                  <Text style={styles.levelTabText}>A Level</Text>
+                  <Text style={styles.levelTabText} numberOfLines={1} ellipsizeMode="tail">A Level</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -861,7 +861,7 @@ const DashboardScreen: React.FC = () => {
               {/* Full Width Cards - Always visible */}
               <AnimatedCard
                 title="Offline Chat"
-                subtitle="Free • Basic Questions • Works Offline"
+                subtitle="Free â€¢ Basic Questions â€¢ Works Offline"
                 imageSource={require('../../assets/images/offline_chat_card.png')}
                 onPress={navigateToOfflineChat}
                 glowColor="#10B981"
@@ -940,7 +940,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  // ✨ Modern Compact Header Styles
+  // âœ¨ Modern Compact Header Styles
   modernHeader: {
     paddingTop: 50,
     paddingHorizontal: 20,
@@ -949,12 +949,14 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 16,
   },
   leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
+    minWidth: 0,
+    flexShrink: 1,
   },
   appTitle: {
     fontSize: 24,
@@ -969,6 +971,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    marginLeft: 12,
+    flexShrink: 0,
   },
   iconButton: {
     width: 36,
@@ -1032,15 +1036,18 @@ const styles = StyleSheet.create({
   userRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    gap: 12,
   },
   userNameSection: {
     flex: 1,
+    minWidth: 0,
   },
   greeting: {
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.8)',
     marginBottom: 4,
+    flexShrink: 1,
   },
   displayName: {
     fontSize: 28,
@@ -1050,6 +1057,8 @@ const styles = StyleSheet.create({
     textShadowColor: Colors.primary.main,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
+    lineHeight: 33,
+    flexShrink: 1,
   },
   compactIdBadge: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -1065,12 +1074,15 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.9)',
     fontWeight: '600',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    flexShrink: 1,
   },
   floatingCreditsBadge: {
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(124, 77, 255, 0.3)',
+    alignSelf: 'flex-start',
+    flexShrink: 0,
   },
   creditsBadgeGradient: {
     paddingHorizontal: 16,
@@ -1401,3 +1413,4 @@ const styles = StyleSheet.create({
 });
 
 export default DashboardScreen;
+

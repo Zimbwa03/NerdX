@@ -18,6 +18,14 @@ import { useTheme } from '../context/ThemeContext';
 import { useThemedColors } from '../theme/useThemedStyles';
 import { useNotification } from '../context/NotificationContext';
 import { Colors } from '../theme/colors';
+import {
+  getMathTopicsByForm,
+  type MathFormLevel,
+} from '../data/mathematics';
+import {
+  getHistoryTopicsByForm,
+  type HistoryFormLevel,
+} from '../data/history';
 
 const { width } = Dimensions.get('window');
 
@@ -445,6 +453,20 @@ const SUBJECT_ICONS: Record<string, string> = {
   History: '📜',
 };
 
+type TeacherFormLevel = 'Form 1' | 'Form 2' | 'Form 3' | 'Form 4';
+const teacherFormLevels: TeacherFormLevel[] = ['Form 1', 'Form 2', 'Form 3', 'Form 4'];
+
+const normalizeTeacherSubject = (value?: string): string => {
+  if (!value) return '';
+  if (value === 'Mathematics') return 'O Level Mathematics';
+  if (value === 'A Level Pure Mathematics' || value === 'A-Level Pure Mathematics') {
+    return 'Pure Mathematics';
+  }
+  if (value === 'A Level Computer Science') return 'A-Level Computer Science';
+  if (value === 'A Level Geography') return 'A-Level Geography';
+  return value;
+};
+
 const TeacherModeSetupScreen: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation();
@@ -452,30 +474,71 @@ const TeacherModeSetupScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
   const { showError } = useNotification();
-  const { subject, preselectedSubject, preselectedTopic } = (route.params || {}) as {
-    subject?: any;
+  const { preselectedSubject, preselectedTopic, preselectedForm } = (route.params || {}) as {
     preselectedSubject?: string;
     preselectedTopic?: string;
+    preselectedForm?: TeacherFormLevel;
   };
+  const initialSubject = normalizeTeacherSubject(preselectedSubject);
+  const initialFormLevel: TeacherFormLevel = teacherFormLevels.includes(preselectedForm as TeacherFormLevel)
+    ? (preselectedForm as TeacherFormLevel)
+    : 'Form 1';
 
-  const [selectedSubject, setSelectedSubject] = useState<string>(preselectedSubject || '');
-  const [selectedGradeLevel, setSelectedGradeLevel] = useState<string>('Form 3-4 (O-Level)');
+  const [selectedSubject, setSelectedSubject] = useState<string>(initialSubject || '');
+  const [selectedGradeLevel, setSelectedGradeLevel] = useState<string>(
+    initialSubject === 'Pure Mathematics' || initialSubject.includes('A-Level')
+      ? 'A-Level'
+      : 'Form 3-4 (O-Level)'
+  );
   const [selectedTopic, setSelectedTopic] = useState<string>(preselectedTopic || '');
+  const [selectedFormLevel, setSelectedFormLevel] = useState<TeacherFormLevel>(initialFormLevel);
 
   const subjects = ['O Level Mathematics', 'Pure Mathematics', 'English', 'Biology', 'Chemistry', 'Physics', 'Computer Science', 'A-Level Computer Science', 'Geography', 'A-Level Geography', 'Principles of Accounting', 'Business Enterprise and Skills', 'Commerce', 'History'];
   const gradeLevels = ['Form 1-2', 'Form 3-4 (O-Level)', 'A-Level'];
 
+  const isFormScopedSubject = selectedSubject === 'O Level Mathematics' || selectedSubject === 'History';
+
+  useEffect(() => {
+    if (isFormScopedSubject) {
+      if (selectedGradeLevel !== selectedFormLevel) {
+        setSelectedGradeLevel(selectedFormLevel);
+      }
+      return;
+    }
+
+    if (
+      (selectedSubject === 'Pure Mathematics' || selectedSubject.includes('A-Level')) &&
+      selectedGradeLevel !== 'A-Level'
+    ) {
+      setSelectedGradeLevel('A-Level');
+    }
+  }, [isFormScopedSubject, selectedFormLevel, selectedSubject, selectedGradeLevel]);
+
   // Get topics for selected subject
   // A-Level subjects: Use A_LEVEL_TOPICS when A-Level is selected OR when subject name includes "A-Level"
   const availableTopics = selectedSubject
-    ? (selectedGradeLevel === 'A-Level' || selectedSubject.includes('A-Level')
-      ? A_LEVEL_TOPICS[selectedSubject] || []
-      : SUBJECT_TOPICS[selectedSubject] || [])
+    ? (() => {
+      if (selectedSubject === 'O Level Mathematics') {
+        return Array.from(
+          new Set(getMathTopicsByForm(selectedFormLevel as MathFormLevel).map((topic) => topic.name))
+        );
+      }
+
+      if (selectedSubject === 'History') {
+        return Array.from(
+          new Set(getHistoryTopicsByForm(selectedFormLevel as HistoryFormLevel).map((topic) => topic.name))
+        );
+      }
+
+      return selectedGradeLevel === 'A-Level' || selectedSubject.includes('A-Level')
+        ? A_LEVEL_TOPICS[selectedSubject] || []
+        : SUBJECT_TOPICS[selectedSubject] || [];
+    })()
     : [];
-  const subjectColor = selectedSubject ? SUBJECT_COLORS[selectedSubject] : Colors.secondary.main;
+  const subjectColor = selectedSubject ? (SUBJECT_COLORS[selectedSubject] || Colors.secondary.main) : Colors.secondary.main;
 
   const handleStart = () => {
-    if (!selectedSubject || !selectedGradeLevel) {
+    if (!selectedSubject || (!isFormScopedSubject && !selectedGradeLevel)) {
       Alert.alert('Error', 'Please select subject and grade level');
       return;
     }
@@ -503,9 +566,12 @@ const TeacherModeSetupScreen: React.FC = () => {
     //   return;
     // }
 
+    const gradeLevelForSession = isFormScopedSubject ? selectedFormLevel : selectedGradeLevel;
+
     navigation.navigate('TeacherMode' as any, {
       subject: selectedSubject,
-      gradeLevel: selectedGradeLevel,
+      gradeLevel: gradeLevelForSession,
+      formLevel: isFormScopedSubject ? selectedFormLevel : undefined,
       topic: selectedTopic || undefined,
     } as any);
   };
@@ -580,6 +646,9 @@ const TeacherModeSetupScreen: React.FC = () => {
                 onPress={() => {
                   setSelectedSubject(subj);
                   setSelectedTopic(''); // Reset topic when subject changes
+                  if (subj === 'Pure Mathematics' || subj.includes('A-Level')) {
+                    setSelectedGradeLevel('A-Level');
+                  }
                 }}
               >
                 <Text style={styles.subjectChipIcon}>{SUBJECT_ICONS[subj]}</Text>
@@ -600,6 +669,52 @@ const TeacherModeSetupScreen: React.FC = () => {
           </ScrollView>
         </View>
 
+        {/* Form Selection for O-Level Mathematics and History */}
+        {selectedSubject && isFormScopedSubject && (
+          <View style={[styles.section, { backgroundColor: themedColors.background.paper }]}>
+            <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
+              Select Form
+            </Text>
+            <Text style={[styles.sectionDescription, { color: themedColors.text.secondary }]}>
+              Pick Form 1 to Form 4 to load the matching topic list.
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.topicsScroll}
+              contentContainerStyle={styles.topicsScrollContent}
+            >
+              {teacherFormLevels.map((formLevel) => (
+                <TouchableOpacity
+                  key={formLevel}
+                  style={[
+                    styles.topicChip,
+                    {
+                      backgroundColor: selectedFormLevel === formLevel
+                        ? subjectColor
+                        : isDarkMode ? 'rgba(255,255,255,0.08)' : '#F0F2F5',
+                      borderColor: selectedFormLevel === formLevel ? subjectColor : 'rgba(255,255,255,0.1)',
+                    },
+                  ]}
+                  onPress={() => {
+                    setSelectedFormLevel(formLevel);
+                    setSelectedTopic('');
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.topicChipText,
+                      { color: selectedFormLevel === formLevel ? '#FFFFFF' : themedColors.text.primary },
+                    ]}
+                  >
+                    {formLevel}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         {/* Topic Selection - Only shows when subject is selected */}
         {selectedSubject && (
           <View style={[styles.section, { backgroundColor: themedColors.background.paper }]}>
@@ -607,7 +722,9 @@ const TeacherModeSetupScreen: React.FC = () => {
               📖 Choose Topic
             </Text>
             <Text style={[styles.sectionDescription, { color: themedColors.text.secondary }]}>
-              Slide to select a specific topic, or leave empty for general tutoring
+              {isFormScopedSubject
+                ? `Showing ${selectedFormLevel} topics. Slide to select one, or leave empty for general tutoring.`
+                : 'Slide to select a specific topic, or leave empty for general tutoring'}
             </Text>
             <ScrollView
               horizontal
@@ -667,6 +784,7 @@ const TeacherModeSetupScreen: React.FC = () => {
         )}
 
         {/* Grade Level Selection */}
+        {!isFormScopedSubject && (
         <View style={[styles.section, { backgroundColor: themedColors.background.paper }]}>
           <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
             📊 Grade Level
@@ -702,6 +820,7 @@ const TeacherModeSetupScreen: React.FC = () => {
             ))}
           </View>
         </View>
+        )}
 
         {/* Info Box */}
         <View style={[styles.infoBox, {
@@ -727,7 +846,7 @@ const TeacherModeSetupScreen: React.FC = () => {
             <View style={styles.infoItem}>
               <Ionicons name="bar-chart-outline" size={18} color={themedColors.text.secondary} />
               <Text style={[styles.infoItemText, { color: themedColors.text.secondary }]}>
-                {selectedSubject === 'Mathematics' ? 'Dynamic graph generation' : 'Visual diagrams'}
+                {(selectedSubject || '').toLowerCase().includes('math') ? 'Dynamic graph generation' : 'Visual diagrams'}
               </Text>
             </View>
             <View style={styles.infoItem}>
@@ -749,10 +868,10 @@ const TeacherModeSetupScreen: React.FC = () => {
           style={[
             styles.startButton,
             { backgroundColor: selectedSubject ? subjectColor : Colors.text.disabled },
-            (!selectedSubject || !selectedGradeLevel) && styles.startButtonDisabled,
+            (!selectedSubject || (!isFormScopedSubject && !selectedGradeLevel)) && styles.startButtonDisabled,
           ]}
           onPress={handleStart}
-          disabled={!selectedSubject || !selectedGradeLevel}
+          disabled={!selectedSubject || (!isFormScopedSubject && !selectedGradeLevel)}
           activeOpacity={0.8}
         >
           <LinearGradient

@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   StatusBar,
+  useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -24,6 +25,8 @@ type HistoryFormLevel = 'Form 1' | 'Form 2' | 'Form 3' | 'Form 4';
 const SubjectsScreen: React.FC = () => {
   const { isDarkMode } = useTheme();
   const themedColors = useThemedColors();
+  const { width: windowWidth } = useWindowDimensions();
+  const isCompactScreen = windowWidth <= 360;
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [mathModalVisible, setMathModalVisible] = useState(false);
@@ -147,18 +150,18 @@ const SubjectsScreen: React.FC = () => {
       alignItems: 'center',
     },
     title: {
-      fontSize: 28,
+      fontSize: isCompactScreen ? 24 : 28,
       fontWeight: 'bold',
       color: '#FFFFFF',
       marginBottom: 8,
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: isCompactScreen ? 14 : 16,
       color: '#FFFFFF',
       opacity: 0.9,
     },
     subjectsContainer: {
-      padding: 20,
+      padding: isCompactScreen ? 14 : 20,
       paddingTop: 10,
     },
     subjectCard: {
@@ -172,21 +175,25 @@ const SubjectsScreen: React.FC = () => {
       flexDirection: 'row',
       alignItems: 'center',
       padding: 8,
+      minWidth: 0,
     },
     subjectInfo: {
       flex: 1,
       marginLeft: 16,
+      minWidth: 0,
     },
     subjectName: {
-      fontSize: 20,
+      fontSize: isCompactScreen ? 17 : 20,
       fontWeight: '600',
       color: themedColors.text.primary,
       marginBottom: 6,
+      flexShrink: 1,
     },
     subjectDescription: {
       fontSize: 14,
       color: themedColors.text.secondary,
       lineHeight: 20,
+      flexShrink: 1,
     },
     modalDescription: {
       fontSize: 15,
@@ -194,7 +201,7 @@ const SubjectsScreen: React.FC = () => {
       marginBottom: 16,
       lineHeight: 22,
     },
-  }), [themedColors]);
+  }), [themedColors, isCompactScreen]);
 
   if (loading) {
     return (
@@ -218,8 +225,8 @@ const SubjectsScreen: React.FC = () => {
         >
           <View style={styles.headerContent}>
             <View>
-              <Text style={styles.title}>Choose a Subject</Text>
-              <Text style={styles.subtitle}>Select a subject to start practicing</Text>
+              <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">Choose a Subject</Text>
+              <Text style={styles.subtitle} numberOfLines={2} ellipsizeMode="tail">Select a subject to start practicing</Text>
             </View>
             {Icons.quiz(32, '#FFFFFF')}
           </View>
@@ -241,12 +248,12 @@ const SubjectsScreen: React.FC = () => {
                 <View style={styles.subjectContent}>
                   <IconCircle
                     icon={subjectIcon}
-                    size={64}
+                    size={isCompactScreen ? 56 : 64}
                     backgroundColor={getSubjectIconBg(subject.id)}
                   />
                   <View style={styles.subjectInfo}>
-                    <Text style={styles.subjectName}>{subject.name}</Text>
-                    <Text style={styles.subjectDescription}>
+                    <Text style={styles.subjectName} numberOfLines={2} ellipsizeMode="tail">{subject.name}</Text>
+                    <Text style={styles.subjectDescription} numberOfLines={2} ellipsizeMode="tail">
                       Practice questions and improve your skills
                     </Text>
                   </View>

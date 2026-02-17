@@ -6,10 +6,10 @@ import {
     TouchableOpacity,
     StyleSheet,
     Modal,
-    Dimensions,
     ScrollView,
     ActivityIndicator,
     Alert,
+    useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Slider from '@react-native-community/slider';
@@ -32,8 +32,6 @@ import {
     DIFFICULTIES,
 } from '../services/api/examApi';
 import { calculateQuizCreditCost, formatCreditCost } from '../utils/creditCalculator';
-
-const { width, height } = Dimensions.get('window');
 
 interface ExamSetupModalProps {
     visible: boolean;
@@ -59,6 +57,9 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
 }) => {
     const { isDarkMode } = useTheme();
     const themedColors = useThemedColors();
+    const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+    const isCompactScreen = windowWidth <= 360;
+    const modalHeight = Math.min(windowHeight * 0.9, 760);
 
     // Helper to determine initial level
     const getInitialLevel = (subj: string): Level => {
@@ -270,12 +271,16 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
             colors={[subjectInfo.color, themedColors.primary.dark]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.header}
+            style={[styles.header, isCompactScreen && styles.headerCompact]}
         >
             <View style={styles.headerContent}>
-                <View>
-                    <Text style={styles.headerTitle}>Exam Setup</Text>
-                    <Text style={styles.headerSubtitle}>{subjectInfo.name}</Text>
+                <View style={styles.headerTitleContainer}>
+                    <Text style={styles.headerTitle} numberOfLines={2} ellipsizeMode="tail">
+                        Exam Setup
+                    </Text>
+                    <Text style={styles.headerSubtitle} numberOfLines={2} ellipsizeMode="tail">
+                        {subjectInfo.name}
+                    </Text>
                 </View>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                     <Ionicons name={asPage ? 'arrow-back' : 'close'} size={24} color="#FFF" />
@@ -288,7 +293,10 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
         <>
             {header}
 
-                    <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                    <ScrollView
+                        style={[styles.content, isCompactScreen && styles.contentCompact]}
+                        showsVerticalScrollIndicator={false}
+                    >
                         {/* Level Selection */}
                         <Text style={[styles.sectionTitle, { color: themedColors.text.primary }]}>
                             Level
@@ -311,7 +319,11 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
                                     <Text style={[
                                         styles.toggleText,
                                         { color: level === lvl ? '#FFF' : themedColors.text.primary }
-                                    ]}>
+                                    ]}
+                                        numberOfLines={1}
+                                        adjustsFontSizeToFit
+                                        minimumFontScale={0.85}
+                                    >
                                         {lvl.replace('_', ' ')}
                                     </Text>
                                 </TouchableOpacity>
@@ -340,7 +352,11 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
                                     <Text style={[
                                         styles.modeText,
                                         { color: questionMode === mode.id ? '#FFF' : themedColors.text.primary }
-                                    ]}>
+                                    ]}
+                                        numberOfLines={1}
+                                        adjustsFontSizeToFit
+                                        minimumFontScale={0.85}
+                                    >
                                         {mode.name}
                                     </Text>
                                 </TouchableOpacity>
@@ -369,7 +385,11 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
                                     <Text style={[
                                         styles.toggleText,
                                         { color: difficulty === diff.id ? '#FFF' : themedColors.text.primary }
-                                    ]}>
+                                    ]}
+                                        numberOfLines={1}
+                                        adjustsFontSizeToFit
+                                        minimumFontScale={0.85}
+                                    >
                                         {diff.name}
                                     </Text>
                                 </TouchableOpacity>
@@ -482,7 +502,12 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
                                     {loadingTime ? (
                                         <ActivityIndicator size="small" color={themedColors.primary.main} />
                                     ) : (
-                                        <Text style={[styles.timeValue, { color: themedColors.text.primary }]}>
+                                        <Text
+                                            style={[styles.timeValue, { color: themedColors.text.primary }]}
+                                            numberOfLines={1}
+                                            adjustsFontSizeToFit
+                                            minimumFontScale={0.85}
+                                        >
                                             {formatTime(displayTimeInfo.total_minutes)}
                                         </Text>
                                     )}
@@ -490,7 +515,11 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
                             </View>
 
                             <View style={styles.timeDetails}>
-                                <Text style={[styles.timeDetail, { color: themedColors.text.disabled }]}>
+                                <Text
+                                    style={[styles.timeDetail, { color: themedColors.text.disabled }]}
+                                    numberOfLines={2}
+                                    ellipsizeMode="tail"
+                                >
                                     Includes {displayTimeInfo.buffer_seconds ? `${Math.round(displayTimeInfo.buffer_seconds / 60)} min` : '10%'} review buffer
                                 </Text>
                             </View>
@@ -516,7 +545,11 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
                                     <Text style={[styles.creditsLabel, { color: themedColors.text.secondary }]}>
                                         Credits Required
                                     </Text>
-                                    <Text style={[styles.creditsValue, { color: themedColors.text.primary }]}>
+                                    <Text
+                                        style={[styles.creditsValue, { color: themedColors.text.primary }]}
+                                        numberOfLines={3}
+                                        ellipsizeMode="tail"
+                                    >
                                         {creditCost.toFixed(1)} credits ({questionCount} questions × {formatCreditCost(creditCost / questionCount)} each) / {userCredits} available
                                     </Text>
                                 </View>
@@ -574,7 +607,12 @@ const ExamSetupModal: React.FC<ExamSetupModalProps> = ({
             onRequestClose={onClose}
         >
             <View style={styles.overlay}>
-                <View style={[styles.modalContainer, { backgroundColor: themedColors.background.default }]}>
+                <View
+                    style={[
+                        styles.modalContainer,
+                        { backgroundColor: themedColors.background.default, height: modalHeight },
+                    ]}
+                >
                     {content}
                 </View>
             </View>
@@ -593,7 +631,6 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     modalContainer: {
-        height: height * 0.85,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         overflow: 'hidden',
@@ -603,20 +640,32 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
         paddingHorizontal: 20,
     },
+    headerCompact: {
+        paddingTop: 16,
+        paddingBottom: 16,
+        paddingHorizontal: 14,
+    },
     headerContent: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
+    headerTitleContainer: {
+        flex: 1,
+        minWidth: 0,
+        paddingRight: 12,
+    },
     headerTitle: {
         fontSize: 24,
         fontWeight: 'bold',
         color: '#FFF',
+        flexShrink: 1,
     },
     headerSubtitle: {
         fontSize: 14,
         color: 'rgba(255, 255, 255, 0.8)',
         marginTop: 4,
+        flexShrink: 1,
     },
     closeButton: {
         width: 40,
@@ -625,10 +674,14 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255, 255, 255, 0.2)',
         justifyContent: 'center',
         alignItems: 'center',
+        flexShrink: 0,
     },
     content: {
         flex: 1,
         padding: 20,
+    },
+    contentCompact: {
+        padding: 14,
     },
     sectionTitle: {
         fontSize: 16,
@@ -646,10 +699,12 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 1,
         alignItems: 'center',
+        minWidth: 0,
     },
     toggleText: {
         fontSize: 14,
         fontWeight: '600',
+        flexShrink: 1,
     },
     modeContainer: {
         flexDirection: 'row',
@@ -661,10 +716,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         borderRadius: 20,
         borderWidth: 1,
+        minWidth: 88,
+        maxWidth: '100%',
     },
     modeText: {
         fontSize: 13,
         fontWeight: '500',
+        flexShrink: 1,
     },
     sliderCard: {
         borderRadius: 16,
@@ -705,6 +763,7 @@ const styles = StyleSheet.create({
     },
     timeInfo: {
         flex: 1,
+        minWidth: 0,
     },
     timeLabel: {
         fontSize: 12,
@@ -722,6 +781,7 @@ const styles = StyleSheet.create({
     },
     timeDetail: {
         fontSize: 12,
+        flexShrink: 1,
     },
     creditsCard: {
         borderRadius: 16,
@@ -736,6 +796,7 @@ const styles = StyleSheet.create({
     },
     creditsInfo: {
         flex: 1,
+        minWidth: 0,
     },
     creditsLabel: {
         fontSize: 12,
@@ -744,6 +805,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         marginTop: 2,
+        lineHeight: 21,
+        flexShrink: 1,
     },
     creditDiscount: {
         fontSize: 13,

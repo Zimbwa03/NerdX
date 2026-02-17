@@ -40,7 +40,10 @@ export const getAuthToken = async (): Promise<string | null> => {
 export const authApi = {
   login: async (data: LoginData): Promise<AuthResponse> => {
     try {
-      const response = await api.post('/api/mobile/auth/login', data);
+      const response = await api.post('/api/mobile/auth/login', {
+        ...data,
+        platform: 'mobile',
+      });
 
       if (response.data.success && response.data.token) {
         // Store token for axios interceptor (handled by useAuth usually, but good to ensure)
@@ -101,6 +104,7 @@ export const authApi = {
       // Backend expects: { provider: 'google', user: { email, id, name, given_name, family_name, ... } }
       const response = await api.post('/api/mobile/auth/social-login', {
         provider,
+        platform: 'mobile',
         user: {
           id: userInfo.id || userInfo.sub,
           email: userInfo.email,

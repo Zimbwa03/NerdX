@@ -29,6 +29,7 @@ interface ButtonProps extends TouchableOpacityProps {
   icon?: string;
   iconPosition?: 'left' | 'right';
   gradient?: boolean;
+  titleNumberOfLines?: number;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -41,6 +42,7 @@ export const Button: React.FC<ButtonProps> = ({
   icon,
   iconPosition = 'left',
   gradient = false,
+  titleNumberOfLines = 2,
   style,
   ...rest
 }) => {
@@ -50,6 +52,7 @@ export const Button: React.FC<ButtonProps> = ({
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
+      minWidth: 0,
     };
 
     // Size styles
@@ -92,6 +95,7 @@ export const Button: React.FC<ButtonProps> = ({
     const baseStyle: TextStyle = {
       fontWeight: '600',
       textAlign: 'center',
+      flexShrink: 1,
     };
 
     // Size text styles
@@ -131,7 +135,16 @@ export const Button: React.FC<ButtonProps> = ({
               <Icon name={icon} size={20} color={getIconColor()} library="ionicons" />
             </View>
           )}
-          <Text style={getTextStyle()}>{title}</Text>
+          <View style={styles.textWrap}>
+            <Text
+              style={getTextStyle()}
+              numberOfLines={titleNumberOfLines}
+              ellipsizeMode="tail"
+              maxFontSizeMultiplier={1.15}
+            >
+              {title}
+            </Text>
+          </View>
           {icon && iconPosition === 'right' && (
             <View style={styles.iconRight}>
               <Icon name={icon} size={20} color={getIconColor()} library="ionicons" />
@@ -143,13 +156,17 @@ export const Button: React.FC<ButtonProps> = ({
   );
 
   if (gradient && (variant === 'primary' || variant === 'secondary')) {
-    const gradientColors =
+    const gradientColors: [string, string] =
       variant === 'primary'
         ? [COLORS.primary.main, COLORS.primary.dark]
         : [COLORS.secondary.main, COLORS.secondary.dark];
 
     return (
-      <TouchableOpacity disabled={disabled || loading} {...rest}>
+      <TouchableOpacity
+        disabled={disabled || loading}
+        style={fullWidth ? styles.fullWidthTouchable : undefined}
+        {...rest}
+      >
         <LinearGradient
           colors={gradientColors}
           start={{ x: 0, y: 0 }}
@@ -165,7 +182,16 @@ export const Button: React.FC<ButtonProps> = ({
                   <Icon name={icon} size={20} color={COLORS.text.white} library="ionicons" />
                 </View>
               )}
-              <Text style={getTextStyle()}>{title}</Text>
+              <View style={styles.textWrap}>
+                <Text
+                  style={getTextStyle()}
+                  numberOfLines={titleNumberOfLines}
+                  ellipsizeMode="tail"
+                  maxFontSizeMultiplier={1.15}
+                >
+                  {title}
+                </Text>
+              </View>
               {icon && iconPosition === 'right' && (
                 <View style={styles.iconRight}>
                   <Icon name={icon} size={20} color={COLORS.text.white} library="ionicons" />
@@ -181,6 +207,7 @@ export const Button: React.FC<ButtonProps> = ({
   return (
     <TouchableOpacity
       disabled={disabled || loading}
+      style={fullWidth ? styles.fullWidthTouchable : undefined}
       {...rest}
     >
       {buttonContent}
@@ -194,6 +221,13 @@ const styles = StyleSheet.create({
   },
   iconRight: {
     marginLeft: 8,
+  },
+  textWrap: {
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  fullWidthTouchable: {
+    alignSelf: 'stretch',
   },
 });
 
