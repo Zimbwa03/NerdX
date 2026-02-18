@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { NotesSection, TopicNotes } from '../../data/scienceNotes/types';
-import { aLevelPhysicsNotes, getTopicById } from '../../data/aLevelPhysics';
+import { aLevelPhysicsNotes, getTopicById, aLevelPhysicsTopics } from '../../data/aLevelPhysics';
 import { MathRenderer } from '../../components/MathRenderer';
 import { FlashcardSection } from '../../components/FlashcardSection';
 import { useAuth } from '../../context/AuthContext';
+import { useContentAccess } from '../../hooks/useContentAccess';
 import {
   ArrowLeft,
   CheckCircle,
@@ -28,10 +29,12 @@ export function ALevelPhysicsNoteDetailPage() {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<number>>(new Set([0]));
 
-  const isMediaLocked = useMemo(() => {
-    const hasPaidCredits = (user?.credit_breakdown?.purchased_credits ?? 0) > 0;
-    return !hasPaidCredits;
-  }, [user]);
+  const { isVideoLocked } = useContentAccess(user);
+  const topicIndex = useMemo(() => {
+    if (!topicId) return 0;
+    return aLevelPhysicsTopics.findIndex(t => t.id === topicId);
+  }, [topicId]);
+  const isMediaLocked = isVideoLocked(topicIndex < 0 ? 999 : topicIndex);
 
   useEffect(() => {
     if (!topicMeta) {

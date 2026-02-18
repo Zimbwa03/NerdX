@@ -3,12 +3,17 @@ import { Link, useParams } from 'react-router-dom';
 import { mathNotesApi } from '../../services/api/mathNotesApi';
 import type { MathTopicNotes } from '../../data/mathNotes/types';
 import { MathRenderer } from '../../components/MathRenderer';
+import { useAuth } from '../../context/AuthContext';
+import { useContentAccess } from '../../hooks/useContentAccess';
 import { ArrowLeft, Info, ChevronDown, ChevronUp, CheckCircle, Lightbulb, PenLine } from 'lucide-react';
 import { VideoPlayer } from '../../components/MediaPlayer';
 
 export function MathNotesPage() {
   const { topic: topicSlug } = useParams<{ topic: string }>();
   const topicName = topicSlug?.replace(/-/g, ' ') ?? '';
+  const { user } = useAuth();
+  const { isVideoLocked } = useContentAccess(user);
+  const [topicIndex, setTopicIndex] = useState<number>(999);
   const [notes, setNotes] = useState<MathTopicNotes | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<number>>(new Set([0]));
@@ -19,8 +24,15 @@ export function MathNotesPage() {
     (async () => {
       setLoading(true);
       try {
-        const data = await mathNotesApi.getTopicNotes(topicName);
-        if (!cancelled) setNotes(data);
+        const [data, topics] = await Promise.all([
+          mathNotesApi.getTopicNotes(topicName),
+          mathNotesApi.getTopics(),
+        ]);
+        if (!cancelled) {
+          setNotes(data);
+          const idx = topics.findIndex(t => t.toLowerCase() === topicName.toLowerCase());
+          setTopicIndex(idx < 0 ? 999 : idx);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -101,6 +113,7 @@ export function MathNotesPage() {
                     src={section.videoUrl}
                     title={`Video: ${section.title}`}
                     accentColor="#7C4DFF"
+                    locked={isVideoLocked(topicIndex)}
                   />
                 )}
 

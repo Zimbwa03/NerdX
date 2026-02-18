@@ -19,6 +19,9 @@ export interface User {
   role: UserRole;
   is_teacher?: boolean;
   teacher_profile_id?: string;
+  user_type?: string;
+  school_name?: string;
+  subscription_expires_at?: string;
 }
 
 // ─── Teacher Marketplace Types ───────────────────────────────────────────────

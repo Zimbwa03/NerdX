@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { NotesSection, TopicNotes } from '../../data/scienceNotes/types';
 import { besNotes } from '../../data/besNotes/notes';
-import { getBESTopicById } from '../../data/oLevelBES/topics';
+import { getBESTopicById, oLevelBESTopics } from '../../data/oLevelBES/topics';
 import { MathRenderer } from '../../components/MathRenderer';
 import { FlashcardSection } from '../../components/FlashcardSection';
 import { useAuth } from '../../context/AuthContext';
+import { useContentAccess } from '../../hooks/useContentAccess';
 import {
   ArrowLeft,
   CheckCircle,
@@ -32,10 +33,13 @@ export function BESNoteDetailPage() {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<number>>(new Set([0]));
 
-  const isMediaLocked = useMemo(() => {
-    const hasPaidCredits = (user?.credit_breakdown?.purchased_credits ?? 0) > 0;
-    return !hasPaidCredits;
-  }, [user]);
+  const { isVideoLocked } = useContentAccess(user);
+  const topicIndex = useMemo(() => {
+    const id = (topicSlug || '').replace(/-/g, '_');
+    if (!id) return 0;
+    return oLevelBESTopics.findIndex(t => t.id === id);
+  }, [topicSlug]);
+  const isMediaLocked = isVideoLocked(topicIndex < 0 ? 999 : topicIndex);
 
   useEffect(() => {
     if (!topicMeta) {

@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Atom, Beaker, BookOpen, Brain, Calculator, Code, Database, Globe, Leaf, Lock, Zap } from 'lucide-react';
 import { FloatingParticles } from '../../components/FloatingParticles';
 import { useAuth } from '../../context/AuthContext';
+import { useContentAccess } from '../../hooks/useContentAccess';
 import type { SimulationMetadata, Subject } from '../../data/virtualLab';
 
 type FilterOption = 'all' | 'science' | Subject;
@@ -56,7 +57,7 @@ export function VirtualLabHubPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-  const hasPaidCredits = (user?.credit_breakdown?.purchased_credits ?? 0) > 0;
+  const { hasFullAccess, isLabLocked, isSchoolStudentActive } = useContentAccess(user);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterOption>('all');
   const [allSimulations, setAllSimulations] = useState<SimulationMetadata[]>([]);
@@ -141,16 +142,18 @@ export function VirtualLabHubPage() {
   }, [activeFilter, allSimulations]);
 
   const isSimulationLocked = (sim: SimulationMetadata): boolean => {
-    if (hasPaidCredits) return false;
     const subjectSims = allSimulations.filter((s) => s.subject === sim.subject);
     const subjectIndex = subjectSims.findIndex((s) => s.id === sim.id);
-    return subjectIndex >= 3;
+    return isLabLocked(subjectIndex < 0 ? 999 : subjectIndex);
   };
 
   const openSimulation = (sim: SimulationMetadata) => {
     if (isSimulationLocked(sim)) {
-      const ok = window.confirm('This simulation is locked. Purchase credits to unlock all simulations?');
-      if (ok) {
+      const isExpiredSchool = user?.user_type === 'school_student' && !isSchoolStudentActive;
+      const message = isExpiredSchool
+        ? 'Your school subscription has expired. Purchase credits or contact your school to regain access.'
+        : 'This simulation is locked. Purchase credits to unlock all simulations?';
+      if (window.confirm(message)) {
         navigate('/app/credits');
       } else {
         showToast('Locked simulation');
@@ -215,8 +218,16 @@ export function VirtualLabHubPage() {
                   <Zap size={24} />
                 </div>
                 <div className="feature-card-text">
-                  <h3>Unlock Labs</h3>
-                  <p>{hasPaidCredits ? 'All labs unlocked (paid credits detected)' : 'Some labs may be locked - purchase credits to unlock all'}</p>
+                  <h3>{isSchoolStudentActive ? 'School Access' : 'Unlock Labs'}</h3>
+                  <p>
+                    {isSchoolStudentActive
+                      ? `All labs unlocked via your school subscription${user?.school_name ? ` (${user.school_name})` : ''}`
+                      : hasFullAccess
+                        ? 'All labs unlocked'
+                        : user?.user_type === 'school_student'
+                          ? 'Your school subscription has expired — renew or purchase credits to unlock all labs'
+                          : 'Some labs may be locked — purchase credits to unlock all'}
+                  </p>
                 </div>
                 <span className="feature-arrow">&rarr;</span>
               </button>

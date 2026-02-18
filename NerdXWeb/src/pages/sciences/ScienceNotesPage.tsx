@@ -9,6 +9,7 @@ import type { NotesSection, TopicNotes } from '../../data/scienceNotes/types';
 import { MathRenderer } from '../../components/MathRenderer';
 import { FlashcardSection } from '../../components/FlashcardSection';
 import { useAuth } from '../../context/AuthContext';
+import { useContentAccess } from '../../hooks/useContentAccess';
 import {
   ArrowLeft,
   CheckCircle,
@@ -66,17 +67,18 @@ export function ScienceNotesPage() {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<number>>(new Set([0]));
 
-  // Media Lock Logic
-  const isMediaLocked = useMemo(() => {
-    // Check if user has purchased credits
-    const hasPaidCredits = (user?.credit_breakdown?.purchased_credits ?? 0) > 0;
+  const { isVideoLocked } = useContentAccess(user);
+  const [topicIndex, setTopicIndex] = useState<number>(999);
 
-    // For now, we don't have topic index easily available here without fetching all topics.
-    // So we'll lock media based on credit status only for simplicity, 
-    // OR we could fetch topics to check index if needed for "First 2 topics free" logic.
-    // For this implementation plan, we'll keep it simple: Paid credits unlock media.
-    return !hasPaidCredits;
-  }, [user]);
+  useEffect(() => {
+    if (!subjectName || !topicName) return;
+    scienceNotesApi.getTopics(subjectName).then(topics => {
+      const idx = topics.findIndex(t => t.toLowerCase() === topicName.toLowerCase());
+      setTopicIndex(idx < 0 ? 999 : idx);
+    }).catch(() => setTopicIndex(999));
+  }, [subjectName, topicName]);
+
+  const isMediaLocked = isVideoLocked(topicIndex);
 
   useEffect(() => {
     if (!subjectName || !topicName) {

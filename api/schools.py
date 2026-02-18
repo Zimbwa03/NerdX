@@ -303,9 +303,17 @@ def api_schools_create():
         started_at = now
         expires_at = now + timedelta(days=days)
 
+        slug = re.sub(r'[^a-z0-9]+', '_', name.lower()).strip('_')
+        existing_slug = make_supabase_request(
+            "GET", "schools", select="id", filters={"slug": f"eq.{slug}"}, use_service_role=True
+        )
+        if existing_slug:
+            slug = f"{slug}_{school_id_raw.lower()}"
+
         payload = {
             "school_id": school_id_raw,
             "name": name,
+            "slug": slug,
             "phone": (data.get("phone") or "").strip() or None,
             "email": (data.get("email") or "").strip() or None,
             "address": (data.get("address") or "").strip() or None,
@@ -896,3 +904,157 @@ def api_school_ai_chat(school_pk):
             "actions_taken": [],
             "pending_students": [],
         }), 500
+
+
+# ─── SCHOOL FINANCE (Admin) ────────────────────────────────────────────────────
+
+REVENUE_PER_STUDENT = 10.0
+SCHOOL_SHARE_PERCENT = 0.30
+NERDX_SHARE_PERCENT = 0.70
+
+
+@schools_bp.route("/schools/<int:pk>/api/finance")
+@login_required
+def api_school_finance(pk):
+    """Admin view: school financial summary."""
+    try:
+        schools = make_supabase_request(
+            "GET", "schools", select="*",
+            filters={"id": f"eq.{pk}"},
+            use_service_role=True
+        )
+        if not schools:
+            return jsonify({"error": "School not found"}), 404
+        school = schools[0]
+        sid = school["school_id"]
+
+        students = make_supabase_request(
+            "GET", "users_registration", select="id",
+            filters={"school_id": f"eq.{pk}"},
+            use_service_role=True
+        ) or []
+        num_students = len(students)
+
+        total_revenue = num_students * REVENUE_PER_STUDENT
+        school_earnings = total_revenue * SCHOOL_SHARE_PERCENT
+        nerdx_share = total_revenue * NERDX_SHARE_PERCENT
+
+        payments = make_supabase_request(
+            "GET", "school_payments", select="*",
+            filters={"school_id": f"eq.{sid}"},
+            use_service_role=True
+        ) or []
+
+        total_paid = sum(float(p.get("amount", 0)) for p in payments if p.get("status") in ("paid", "verified"))
+        total_pending = sum(float(p.get("amount", 0)) for p in payments if p.get("status") == "pending")
+
+        return jsonify({
+            "num_students": num_students,
+            "per_student_fee": REVENUE_PER_STUDENT,
+            "total_monthly_revenue": total_revenue,
+            "school_earnings": school_earnings,
+            "nerdx_share": nerdx_share,
+            "total_paid": total_paid,
+            "total_pending": total_pending,
+            "amount_due": max(0, nerdx_share - total_paid),
+            "payments": sorted(payments, key=lambda p: p.get("created_at", ""), reverse=True),
+        })
+    except Exception as e:
+        logger.error(f"School finance error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@schools_bp.route("/schools/<int:pk>/api/payments")
+@login_required
+def api_school_payments(pk):
+    """Admin view: all payments from a school."""
+    try:
+        schools = make_supabase_request(
+            "GET", "schools", select="school_id",
+            filters={"id": f"eq.{pk}"},
+            use_service_role=True
+        )
+        if not schools:
+            return jsonify({"error": "School not found"}), 404
+
+        payments = make_supabase_request(
+            "GET", "school_payments", select="*",
+            filters={"school_id": f"eq.{schools[0]['school_id']}"},
+            use_service_role=True
+        ) or []
+
+        return jsonify({
+            "payments": sorted(payments, key=lambda p: p.get("created_at", ""), reverse=True)
+        })
+    except Exception as e:
+        logger.error(f"School payments error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@schools_bp.route("/schools/<int:pk>/api/payments/<int:payment_id>", methods=["PATCH"])
+@login_required
+def api_school_verify_payment(pk, payment_id):
+    """Admin: verify or reject a bank transfer payment."""
+    try:
+        schools = make_supabase_request(
+            "GET", "schools", select="school_id",
+            filters={"id": f"eq.{pk}"},
+            use_service_role=True
+        )
+        if not schools:
+            return jsonify({"error": "School not found"}), 404
+        school_id = schools[0]["school_id"]
+
+        body = request.get_json(silent=True) or {}
+        new_status = body.get("status")
+        admin_notes = body.get("admin_notes", "")
+
+        if new_status not in ("verified", "rejected", "paid"):
+            return jsonify({"error": "Status must be verified, rejected, or paid"}), 400
+
+        patch_data = {
+            "status": new_status,
+            "admin_notes": admin_notes,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        if new_status == "verified":
+            patch_data["verified_at"] = datetime.now(timezone.utc).isoformat()
+            patch_data["verified_by"] = getattr(request, "admin_user", {}).get("username", "admin")
+
+        result = make_supabase_request(
+            "PATCH", "school_payments", patch_data,
+            filters={"id": f"eq.{payment_id}", "school_id": f"eq.{school_id}"},
+            use_service_role=True
+        )
+        if not result:
+            return jsonify({"error": "Payment not found for this school"}), 404
+
+        return jsonify({"success": True, "payment": result[0] if result else None})
+    except Exception as e:
+        logger.error(f"Payment verify error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@schools_bp.route("/schools/<int:pk>/api/logo", methods=["POST"])
+@login_required
+def api_school_upload_logo(pk):
+    """Admin: upload/update school logo (base64 data URL)."""
+    try:
+        body = request.get_json(silent=True) or {}
+        logo_data = body.get("logo_url", "")
+
+        if not logo_data:
+            return jsonify({"error": "Logo image data is required"}), 400
+
+        result = make_supabase_request(
+            "PATCH", "schools", {"logo_url": logo_data},
+            filters={"id": f"eq.{pk}"},
+            use_service_role=True
+        )
+
+        if result:
+            return jsonify({"success": True, "logo_url": result[0].get("logo_url")})
+        return jsonify({"error": "School not found"}), 404
+    except Exception as e:
+        logger.error(f"Logo upload error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500

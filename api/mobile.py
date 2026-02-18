@@ -733,6 +733,9 @@ def login():
             "free_credits": _credits_display(credit_info.get("free_credits", 0)),
             "purchased_credits": _credits_display(credit_info.get("purchased_credits", 0)),
         }
+
+        # 3. Resolve school context for content-access decisions on frontend
+        school_name, school_expiry_at = _resolve_school_context(user_data)
         
         # Prepare notifications
         notifications = {
@@ -753,6 +756,9 @@ def login():
                 'credit_breakdown': credit_info_display,
                 'role': stored_role,
                 'is_teacher': is_teacher,
+                'user_type': user_data.get('user_type', 'student'),
+                'school_name': school_name,
+                'subscription_expires_at': school_expiry_at,
             },
             'notifications': notifications,
             'message': 'Login successful'

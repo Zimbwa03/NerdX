@@ -14,6 +14,7 @@ from api.paynow_webhook import paynow_webhook_bp
 from api.payment_sync import payment_sync_bp
 from api.mobile import mobile_bp
 from api.schools import schools_bp
+from api.school_portal import school_portal_bp
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ app.register_blueprint(credit_management_bp, url_prefix='')
 app.register_blueprint(paynow_webhook_bp, url_prefix='')
 app.register_blueprint(payment_sync_bp, url_prefix='')
 app.register_blueprint(mobile_bp, url_prefix='/api/mobile')
+app.register_blueprint(school_portal_bp, url_prefix='/api/school-portal')
 
 # Add route to serve graph images for WhatsApp access
 @app.route('/static/graphs/<filename>')
@@ -178,6 +180,7 @@ def index():
 @app.route('/app')
 @app.route('/app/<path:subpath>')
 @app.route('/auth/<path:subpath>')
+@app.route('/school/<path:subpath>')
 def serve_user_app_routes(subpath=None):
     """Serve React SPA for client-side routes"""
     return _serve_user_app('')

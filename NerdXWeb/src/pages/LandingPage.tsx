@@ -8,7 +8,7 @@ import {
   Microscope, Code, ShoppingCart, MapPin, Clock, Landmark,
   Briefcase, Star, ChevronRight, Menu, X, Twitter, Instagram, Youtube,
   UserPlus, MousePointerClick, Rocket, Camera,
-  Search, CalendarCheck, ShieldCheck, DollarSign, User
+  Search, CalendarCheck, ShieldCheck, DollarSign, User, Smartphone, Download
 } from 'lucide-react';
 import { FEATURED_TEACHERS } from '../data/marketplaceConstants';
 
@@ -82,6 +82,8 @@ const teacherValueProps = [
   { icon: DollarSign, title: 'Grow Your Income', description: 'Earn by sharing your knowledge. More students, more opportunities.' },
 ];
 
+const ANDROID_APP_URL = 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Audio_Notes/NerdX_App/NerdX(v3.00).apk';
+
 export function LandingPage() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -134,6 +136,9 @@ export function LandingPage() {
             <button type="button" className="lp-nav__link lp-nav__link--highlight" onClick={() => scrollTo('for-teachers')}>Teach on NerdX</button>
           </nav>
           <div className="lp-header__actions">
+            <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp-btn lp-btn--download">
+              <Smartphone size={16} /> Get App
+            </a>
             <button type="button" className="lp-btn lp-btn--ghost" onClick={() => navigate('/login')}>Student Login</button>
             <button type="button" className="lp-btn lp-btn--ghost lp-btn--teacher" onClick={() => navigate('/login?role=teacher')}>Teacher Login</button>
             <button type="button" className="lp-btn lp-btn--primary" onClick={() => navigate('/register')}>Get Started</button>
@@ -151,6 +156,9 @@ export function LandingPage() {
             <button type="button" onClick={() => scrollTo('for-teachers')}>Teach on NerdX</button>
             <button type="button" onClick={() => navigate('/login')}>Student Login</button>
             <button type="button" onClick={() => navigate('/login?role=teacher')}>Teacher Login</button>
+            <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp-btn lp-btn--download lp-btn--full lp-mobile-download">
+              <Smartphone size={16} /> Download Android App <Download size={14} />
+            </a>
             <button type="button" className="lp-btn lp-btn--primary lp-btn--full" onClick={() => navigate('/register')}>Get Started</button>
           </div>
         )}
@@ -186,6 +194,16 @@ export function LandingPage() {
               <span><strong>10+</strong> Subjects</span>
             </div>
           </div>
+          <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp-download-hero">
+            <div className="lp-download-hero__icon">
+              <Smartphone size={24} />
+            </div>
+            <div className="lp-download-hero__text">
+              <span className="lp-download-hero__label">Download on</span>
+              <span className="lp-download-hero__title">Android App</span>
+            </div>
+            <Download size={20} className="lp-download-hero__arrow" />
+          </a>
           <div className="lp-hero__actions">
             <button type="button" className="lp-btn lp-btn--primary lp-btn--lg" onClick={() => navigate('/register')}>
               Start Learning Free <ArrowRight size={18} />
@@ -243,6 +261,19 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+
+      <div className="lp-app-banner">
+        <div className="lp-app-banner__inner">
+          <div className="lp-app-banner__pulse"></div>
+          <Smartphone size={20} />
+          <span className="lp-app-banner__text">
+            <strong>NerdX is now on Android!</strong> Learn anywhere, anytime on your phone.
+          </span>
+          <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp-app-banner__btn">
+            Download Now <Download size={14} />
+          </a>
+        </div>
+      </div>
 
       <div className="lp-social-proof">
         <div className="lp-social-proof__inner">
@@ -464,6 +495,9 @@ export function LandingPage() {
           <h2 className="lp-final-cta__title">Ready to Get Started?</h2>
           <p className="lp-final-cta__subtitle">Whether you're a student looking to ace your exams or a teacher ready to make an impact — NerdX is your platform.</p>
           <div className="lp-final-cta__buttons">
+            <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp-btn lp-btn--download-white lp-btn--lg">
+              <Smartphone size={18} /> Download Android App
+            </a>
             <button type="button" className="lp-btn lp-btn--white lp-btn--lg" onClick={() => navigate('/register')}>
               Start Learning <ArrowRight size={18} />
             </button>
@@ -510,6 +544,9 @@ export function LandingPage() {
             </div>
             <div className="lp-footer__col">
               <h4>Get Started</h4>
+              <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp-footer__download">
+                <Smartphone size={14} /> Download Android App
+              </a>
               <button type="button" onClick={() => navigate('/register')}>Student Sign Up</button>
               <button type="button" onClick={() => navigate('/register?role=teacher')}>Teacher Sign Up</button>
               <button type="button" onClick={() => navigate('/login')}>Student Login</button>

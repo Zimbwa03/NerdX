@@ -5,6 +5,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
 import { AppLayout } from './components/AppLayout';
+import { SchoolAuthProvider, SchoolProtectedRoute } from './context/SchoolAuthContext';
 
 const LandingPage = lazy(() => import('./pages/LandingPage').then((m) => ({ default: m.LandingPage })));
 const LoginPage = lazy(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })));
@@ -98,6 +99,8 @@ const TeacherOnboardingPage = lazy(() => import('./pages/teacher-marketplace/Tea
 const TeacherDashboardPage = lazy(() => import('./pages/teacher-marketplace/TeacherDashboardPage').then((m) => ({ default: m.TeacherDashboardPage })));
 const VirtualClassroomPage = lazy(() => import('./pages/teacher-marketplace/VirtualClassroomPage').then((m) => ({ default: m.VirtualClassroomPage })));
 const StudentLessonsPage = lazy(() => import('./pages/teacher-marketplace/StudentLessonsPage').then((m) => ({ default: m.StudentLessonsPage })));
+const SchoolLoginPage = lazy(() => import('./pages/school/SchoolLoginPage').then((m) => ({ default: m.SchoolLoginPage })));
+const SchoolDashboardPage = lazy(() => import('./pages/school/SchoolDashboardPage').then((m) => ({ default: m.SchoolDashboardPage })));
 
 const routeLoadingFallback = (
   <div
@@ -234,6 +237,11 @@ function App() {
             </Route>
             {/* Virtual Classroom - fullscreen, outside AppLayout */}
             <Route path="/app/classroom/:bookingId" element={<ProtectedRoute><VirtualClassroomPage /></ProtectedRoute>} />
+
+            {/* School Portal - separate auth flow */}
+            <Route path="/school/:schoolSlug" element={<SchoolAuthProvider><SchoolLoginPage /></SchoolAuthProvider>} />
+            <Route path="/school/:schoolSlug/dashboard" element={<SchoolAuthProvider><SchoolProtectedRoute><SchoolDashboardPage /></SchoolProtectedRoute></SchoolAuthProvider>} />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           </Suspense>

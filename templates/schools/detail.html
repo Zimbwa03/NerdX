@@ -489,15 +489,37 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h2 mb-0" id="schoolName">&mdash;</h1>
-                    <p class="text-muted mb-0">School ID: <code id="schoolIdDisplay">&mdash;</code></p>
+                <div class="d-flex align-items-center gap-3">
+                    <div id="schoolLogoWrap" style="position:relative;cursor:pointer;" title="Click to upload logo">
+                        <img id="schoolLogo" src="" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover;border:2px solid rgba(255,255,255,0.1);display:none;">
+                        <div id="schoolLogoPlaceholder" style="width:56px;height:56px;border-radius:12px;background:rgba(34,197,94,0.12);display:grid;place-items:center;border:2px solid rgba(34,197,94,0.2);color:#22c55e;font-size:1.5rem;">
+                            <i class="fas fa-school"></i>
+                        </div>
+                        <input type="file" id="logoFileInput" accept="image/*" style="display:none;">
+                        <div style="position:absolute;bottom:-4px;right:-4px;width:22px;height:22px;border-radius:50%;background:#22c55e;display:grid;place-items:center;font-size:0.6rem;color:#fff;border:2px solid #0f172a;">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="h2 mb-0" id="schoolName">&mdash;</h1>
+                        <p class="text-muted mb-0">School ID: <code id="schoolIdDisplay">&mdash;</code> &middot; <span class="text-info" id="schoolSlugDisplay"></span></p>
+                    </div>
                 </div>
                 <a href="{{ url_for('schools.schools_list') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i> Back to list</a>
             </div>
         </div>
     </div>
 
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" id="schoolTabs">
+        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tabOverview">Overview</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabStudents">Students</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabFinance"><i class="fas fa-dollar-sign me-1"></i> Finance</a></li>
+    </ul>
+
+    <div class="tab-content">
+    <!-- Overview Tab -->
+    <div class="tab-pane fade show active" id="tabOverview">
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card shadow h-100">
@@ -528,7 +550,31 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="card shadow h-100 border-info">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase mb-2"><i class="fas fa-link me-1"></i> School Portal Link</h6>
+                    <div id="dashboardLinkSection" style="display:none;">
+                        <div style="background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.25);border-radius:8px;padding:10px 14px;margin-bottom:10px;word-break:break-all;">
+                            <code id="dashboardUrlDisplay" style="font-size:0.82rem;color:#22d3ee;"></code>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button class="btn btn-sm btn-info" id="btnCopyLink"><i class="fas fa-copy me-1"></i> Copy Link</button>
+                            <button class="btn btn-sm btn-outline-success" id="btnCopyMessage"><i class="fas fa-share me-1"></i> Copy with Message</button>
+                        </div>
+                        <div id="linkCopiedAlert" class="alert alert-success py-1 px-2 mt-2 d-none" style="font-size:0.78rem;"><i class="fas fa-check me-1"></i> Copied to clipboard!</div>
+                    </div>
+                    <div id="dashboardLinkPlaceholder">
+                        <p class="text-muted small mb-0">Loading school link...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+    </div>
+
+    <!-- Students Tab -->
+    <div class="tab-pane fade" id="tabStudents">
 
     <div class="row">
         <div class="col-12">
@@ -617,6 +663,73 @@
             </div>
         </div>
     </div>
+    </div>
+
+    <!-- Finance Tab -->
+    <div class="tab-pane fade" id="tabFinance">
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card shadow border-success">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted text-uppercase mb-1" style="font-size:0.7rem;">School Earnings (30%)</h6>
+                        <p class="h3 text-success mb-0" id="finSchoolEarnings">$0.00</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted text-uppercase mb-1" style="font-size:0.7rem;">NerdX Share (70%)</h6>
+                        <p class="h3 mb-0" id="finNerdxShare">$0.00</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted text-uppercase mb-1" style="font-size:0.7rem;">Total Paid</h6>
+                        <p class="h3 text-info mb-0" id="finTotalPaid">$0.00</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted text-uppercase mb-1" style="font-size:0.7rem;">Amount Due</h6>
+                        <p class="h3 text-warning mb-0" id="finAmountDue">$0.00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Payment History</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="paymentsTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Students</th>
+                                <th>Status</th>
+                                <th>Receipt</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentsBody">
+                            <tr><td colspan="7" class="text-center text-muted">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div><!-- end tab-content -->
 </div>
 
 <!-- Add Student Modal -->
@@ -656,6 +769,31 @@
     const studentsUrl = '{{ url_for("schools.api_school_students_list", school_pk=school_id) }}';
     const updateUrl = '{{ url_for("schools.api_school_update", school_pk=school_id) }}';
     const aiChatUrl = '{{ url_for("schools.api_school_ai_chat", school_pk=school_id) }}';
+    const financeUrl = '/admin/schools/{{ school_id }}/api/finance';
+    const paymentsUrl = '/admin/schools/{{ school_id }}/api/payments';
+    const logoUrl = '/admin/schools/{{ school_id }}/api/logo';
+
+    // Logo upload
+    document.getElementById('schoolLogoWrap').addEventListener('click', function() {
+        document.getElementById('logoFileInput').click();
+    });
+    document.getElementById('logoFileInput').addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            fetch(logoUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ logo_url: e.target.result }) })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('schoolLogo').src = data.logo_url;
+                        document.getElementById('schoolLogo').style.display = 'block';
+                        document.getElementById('schoolLogoPlaceholder').style.display = 'none';
+                    }
+                });
+        };
+        reader.readAsDataURL(file);
+    });
 
     function loadSchool() {
         fetch(detailUrl, { credentials: 'same-origin' })
@@ -669,6 +807,41 @@
                 document.getElementById('breadcrumbName').textContent = data.name || 'School';
                 document.getElementById('schoolIdDisplay').textContent = data.school_id || '\u2014';
                 document.getElementById('studentCount').textContent = data.student_count != null ? data.student_count : (data.students ? data.students.length : 0);
+
+                // Logo
+                if (data.logo_url) {
+                    document.getElementById('schoolLogo').src = data.logo_url;
+                    document.getElementById('schoolLogo').style.display = 'block';
+                    document.getElementById('schoolLogoPlaceholder').style.display = 'none';
+                }
+
+                // Slug / Dashboard URL
+                if (data.slug) {
+                    document.getElementById('schoolSlugDisplay').textContent = '/' + data.slug;
+                    const prodBase = 'https://nerdx.onrender.com';
+                    const dashUrl = prodBase + '/school/' + data.slug;
+                    document.getElementById('dashboardUrlDisplay').textContent = dashUrl;
+                    document.getElementById('dashboardLinkSection').style.display = 'block';
+                    document.getElementById('dashboardLinkPlaceholder').style.display = 'none';
+
+                    document.getElementById('btnCopyLink').onclick = function() {
+                        navigator.clipboard.writeText(dashUrl);
+                        showCopiedAlert();
+                    };
+                    document.getElementById('btnCopyMessage').onclick = function() {
+                        const msg = 'Hello ' + (data.name || 'School') + ',\n\n'
+                            + 'Your NerdX School Dashboard is ready! Access it here:\n'
+                            + dashUrl + '\n\n'
+                            + 'Login with your School ID: ' + (data.school_id || '') + '\n\n'
+                            + 'From this dashboard you can:\n'
+                            + '• Monitor student activity & performance\n'
+                            + '• View your earnings & financial reports\n'
+                            + '• Make payments via EcoCash or Bank Transfer\n\n'
+                            + 'NerdX Team';
+                        navigator.clipboard.writeText(msg);
+                        showCopiedAlert();
+                    };
+                }
                 const subType = data.subscription_type || 'monthly';
                 document.getElementById('subTypeSelect').value = subType;
                 document.getElementById('subMonths').value = data.subscription_months || 1;
@@ -695,6 +868,12 @@
                 document.getElementById('schoolName').textContent = 'Error loading';
                 document.getElementById('studentsBody').innerHTML = '<tr><td colspan="3" class="text-center text-danger">Failed to load.</td></tr>';
             });
+    }
+
+    function showCopiedAlert() {
+        const el = document.getElementById('linkCopiedAlert');
+        el.classList.remove('d-none');
+        setTimeout(function() { el.classList.add('d-none'); }, 2500);
     }
 
     function escapeHtml(s) {
@@ -965,6 +1144,59 @@
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 90) + 'px';
     });
+
+    // Finance tab
+    function loadFinance() {
+        fetch(financeUrl, { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) return;
+                document.getElementById('finSchoolEarnings').textContent = '$' + (data.school_earnings || 0).toFixed(2);
+                document.getElementById('finNerdxShare').textContent = '$' + (data.nerdx_share || 0).toFixed(2);
+                document.getElementById('finTotalPaid').textContent = '$' + (data.total_paid || 0).toFixed(2);
+                document.getElementById('finAmountDue').textContent = '$' + (data.amount_due || 0).toFixed(2);
+
+                const payments = data.payments || [];
+                const tbody = document.getElementById('paymentsBody');
+                if (payments.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No payments recorded yet.</td></tr>';
+                } else {
+                    tbody.innerHTML = payments.map(function(p) {
+                        const date = p.created_at ? new Date(p.created_at).toLocaleDateString() : '\u2014';
+                        const amount = '$' + parseFloat(p.amount || 0).toFixed(2);
+                        const method = p.payment_method === 'ecocash' ? 'EcoCash' : 'Bank Transfer';
+                        const statusClass = p.status === 'paid' || p.status === 'verified' ? 'bg-success' : (p.status === 'pending' ? 'bg-warning' : 'bg-danger');
+                        const receiptBtn = p.receipt_url ? '<a href="' + escapeHtml(p.receipt_url) + '" target="_blank" class="btn btn-sm btn-outline-info"><i class="fas fa-eye"></i></a>' : '\u2014';
+                        let actions = '';
+                        if (p.status === 'pending') {
+                            actions = '<button class="btn btn-sm btn-success me-1" onclick="verifyPayment(' + p.id + ', \'verified\')"><i class="fas fa-check"></i></button>' +
+                                      '<button class="btn btn-sm btn-danger" onclick="verifyPayment(' + p.id + ', \'rejected\')"><i class="fas fa-times"></i></button>';
+                        } else {
+                            actions = '<span class="badge ' + statusClass + '">' + escapeHtml(p.status) + '</span>';
+                        }
+                        return '<tr><td>' + escapeHtml(date) + '</td><td>' + escapeHtml(amount) + '</td><td>' + escapeHtml(method) + '</td><td>' + (p.num_students || 0) + '</td><td><span class="badge ' + statusClass + '">' + escapeHtml(p.status) + '</span></td><td>' + receiptBtn + '</td><td>' + actions + '</td></tr>';
+                    }).join('');
+                }
+            })
+            .catch(function() {});
+    }
+
+    window.verifyPayment = function(paymentId, status) {
+        const note = prompt('Admin notes (optional):') || '';
+        fetch(paymentsUrl + '/' + paymentId, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ status: status, admin_notes: note }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) loadFinance();
+        });
+    };
+
+    // Load finance when tab is shown
+    document.querySelector('a[href="#tabFinance"]').addEventListener('shown.bs.tab', loadFinance);
 
     loadSchool();
 })();

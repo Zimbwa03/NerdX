@@ -17,6 +17,18 @@ function consumeStoredReferral(): string | undefined {
   return undefined;
 }
 
+async function waitForSupabaseSession(maxAttempts = 10, delayMs = 300) {
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error || session?.user) {
+      return { session, error };
+    }
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+
+  return { session: null, error: null };
+}
+
 export function AuthCallbackPage() {
   const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
@@ -25,7 +37,33 @@ export function AuthCallbackPage() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const url = new URL(window.location.href);
+        const oauthError = url.searchParams.get('error_description') || url.searchParams.get('error');
+        if (oauthError) {
+          setError(decodeURIComponent(oauthError.replace(/\+/g, ' ')));
+          return;
+        }
+
+        let { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (!session?.user) {
+          const code = url.searchParams.get('code');
+          if (code && typeof supabase.auth.exchangeCodeForSession === 'function') {
+            const { data: exchanged, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+            if (!exchangeError && exchanged?.session) {
+              session = exchanged.session;
+              window.history.replaceState({}, document.title, `${window.location.origin}/auth/callback`);
+            } else if (exchangeError) {
+              console.warn('OAuth code exchange warning:', exchangeError.message);
+            }
+          }
+        }
+
+        if (!session?.user && !sessionError) {
+          const waited = await waitForSupabaseSession();
+          session = waited.session;
+          sessionError = waited.error;
+        }
 
         if (sessionError) {
           setError(sessionError.message);

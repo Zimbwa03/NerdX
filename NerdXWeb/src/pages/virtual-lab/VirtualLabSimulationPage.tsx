@@ -2,22 +2,22 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Clock, Lock, Sparkles, Star } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useContentAccess } from '../../hooks/useContentAccess';
 import type { SimulationMetadata } from '../../data/virtualLab';
 import { HandsOnActivityRenderer, type HandsOnProgress } from '../../components/virtualLab/activities/HandsOnActivityRenderer';
 import { KnowledgeCheckModal } from '../../components/virtualLab/KnowledgeCheckModal';
 import { getCustomLabComponent } from './labRegistry';
 
-function isLocked(simulation: SimulationMetadata, all: SimulationMetadata[], hasPaidCredits: boolean): boolean {
-  if (hasPaidCredits) return false;
+function computeSubjectIndex(simulation: SimulationMetadata, all: SimulationMetadata[]): number {
   const subjectSims = all.filter((s) => s.subject === simulation.subject);
-  const subjectIndex = subjectSims.findIndex((s) => s.id === simulation.id);
-  return subjectIndex >= 3;
+  const idx = subjectSims.findIndex((s) => s.id === simulation.id);
+  return idx < 0 ? 999 : idx;
 }
 
 export function VirtualLabSimulationPage() {
   const { labId } = useParams<{ labId: string }>();
   const { user } = useAuth();
-  const hasPaidCredits = (user?.credit_breakdown?.purchased_credits ?? 0) > 0;
+  const { isLabLocked, isSchoolStudentActive } = useContentAccess(user);
 
   const [loading, setLoading] = useState(true);
   const [simulation, setSimulation] = useState<SimulationMetadata | null>(null);
@@ -60,15 +60,20 @@ export function VirtualLabSimulationPage() {
     return true;
   }, [completedObjectives, handsOnProgress?.isComplete, objectives.length, simulation]);
 
+  const isExpiredSchool = user?.user_type === 'school_student' && !isSchoolStudentActive;
+
   const lockState = useMemo(() => {
-    if (!simulation) return { locked: false, reason: '' };
-    if (!allSimulations.length) return { locked: false, reason: '' };
-    const locked = isLocked(simulation, allSimulations, hasPaidCredits);
-    return {
-      locked,
-      reason: locked ? 'This simulation is locked. Purchase credits to unlock all simulations.' : '',
-    };
-  }, [allSimulations, hasPaidCredits, simulation]);
+    if (!simulation) return { locked: false, reason: '', isExpiredSchool: false };
+    if (!allSimulations.length) return { locked: false, reason: '', isExpiredSchool: false };
+    const subjectIdx = computeSubjectIndex(simulation, allSimulations);
+    const locked = isLabLocked(subjectIdx);
+    const reason = locked
+      ? isExpiredSchool
+        ? 'Your school subscription has expired. Renew through your school or purchase credits to unlock all simulations.'
+        : 'This simulation is locked. Purchase credits to unlock all simulations.'
+      : '';
+    return { locked, reason, isExpiredSchool: locked && isExpiredSchool };
+  }, [allSimulations, isExpiredSchool, isLabLocked, simulation]);
 
   const toggleObjective = (id: string) => {
     setCheckedObjectives((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -144,11 +149,13 @@ export function VirtualLabSimulationPage() {
         </header>
 
         <div className="vl-card">
-          <div className="vl-card-title">Locked simulation</div>
+          <div className="vl-card-title">
+            {lockState.isExpiredSchool ? 'School subscription expired' : 'Locked simulation'}
+          </div>
           <div className="vl-card-subtitle">{lockState.reason}</div>
           <div className="vl-row">
             <Link to="/app/credits" className="vl-btn primary link">
-              Unlock with credits
+              {lockState.isExpiredSchool ? 'Purchase credits' : 'Unlock with credits'}
             </Link>
           </div>
         </div>
