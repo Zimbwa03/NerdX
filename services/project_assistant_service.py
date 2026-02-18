@@ -182,6 +182,13 @@ OUTPUT STYLE:
 - Use bullet points + tables/checklists.
 - Write in Zimbabwe-friendly English, simple but professional.
 - Always include: "What examiners/teachers look for" as general marking points (no fake quotes).
+- Language level must fit 15-18 year students in African school context:
+  short sentences, familiar words, and clear examples.
+- Avoid deep academic wording unless the student asks for advanced detail.
+- Keep most replies concise and mobile-friendly:
+  aim for 1 short explanation + 3-6 bullets.
+- Do not overload the student with long paragraphs.
+- If the student asks for "full details" or "full write-up", then expand.
 
 THE 6 STAGES (YOUR CORE STRUCTURE)
 
@@ -1621,7 +1628,7 @@ Credits are deducted per AI response.
                     response = self.gemini_client.models.generate_content(
                         model="gemini-2.5-flash",
                         contents=full_prompt,
-                        config={"temperature": 0.7, "max_output_tokens": 2000}
+                        config={"temperature": 0.7, "max_output_tokens": 1200}
                     )
                     if response and response.text:
                         ai_text = response.text.strip()

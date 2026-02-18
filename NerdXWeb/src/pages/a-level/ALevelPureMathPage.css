@@ -272,16 +272,45 @@
 
 @media (max-width: 768px) {
   .alevel-search-wrap {
-    min-width: 100%;
+    min-width: 0;
+    width: 100%;
   }
 
   .alevel-level-toggle {
     width: 100%;
-    justify-content: center;
+    justify-content: stretch;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .alevel-level-btn {
-    min-width: 140px;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .alevel-topics-toolbar > * {
+    min-width: 0;
+  }
+
+  .alevel-level-btn span,
+  .alevel-level-btn small,
+  .alevel-pattern-card span {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 520px) {
+  .alevel-level-toggle,
+  .alevel-format-grid,
+  .alevel-pattern-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alevel-modal {
+    padding: 18px 14px;
+    border-radius: 14px;
   }
 }
 

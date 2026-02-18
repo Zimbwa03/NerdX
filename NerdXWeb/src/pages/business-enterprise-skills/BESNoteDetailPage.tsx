@@ -108,7 +108,8 @@ export function BESNoteDetailPage() {
       <div className="science-universe-page bes">
         <div className="science-universe-bg bes-bg" />
         <Link to="/app/business-enterprise-skills" className="super-back-btn">
-          <ArrowLeft size={24} />
+          <ArrowLeft size={18} />
+          <span>Back</span>
         </Link>
         <div className="science-hero">
           <h1>Notes Not Found</h1>

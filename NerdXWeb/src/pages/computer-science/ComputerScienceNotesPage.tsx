@@ -35,7 +35,8 @@ export function ComputerScienceNotesPage() {
       </div>
 
       <Link to="/app/computer-science" className="super-back-btn">
-        <ArrowLeft size={24} />
+        <ArrowLeft size={18} />
+        <span>Back</span>
       </Link>
 
       <div className="science-hero" style={{ paddingBottom: 20 }}>

@@ -1,108 +1,125 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
 import { AppLayout } from './components/AppLayout';
-import { LandingPage } from './pages/LandingPage';
-import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
-import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
-import { ResetPasswordPage } from './pages/ResetPasswordPage';
-import { EmailVerificationPage } from './pages/EmailVerificationPage';
-import { AuthCallbackPage } from './pages/AuthCallbackPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { CreditsPage } from './pages/CreditsPage';
-import { AccountPage } from './pages/AccountPage';
-import { ProgressPage } from './pages/ProgressPage';
-import { MathematicsTopicsPage } from './pages/mathematics/MathematicsTopicsPage';
-import { QuizPage } from './pages/mathematics/QuizPage';
-import { MathNotesPage } from './pages/mathematics/MathNotesPage';
-import { GraphPracticePage } from './pages/mathematics/GraphPracticePage';
-import { TeacherSetupPage } from './pages/teacher/TeacherSetupPage';
-import { TeacherChatPage } from './pages/teacher/TeacherChatPage';
-import { TeacherHistoryPage } from './pages/teacher/TeacherHistoryPage';
-import { ScanSolvePage } from './pages/mathematics/ScanSolvePage';
-import { ExamSetupPage } from './pages/mathematics/ExamSetupPage';
-import { ExamSessionPage } from './pages/mathematics/ExamSessionPage';
-import { ExamReviewPage } from './pages/mathematics/ExamReviewPage';
-import { ScienceQuizPage } from './pages/sciences/ScienceQuizPage';
-import { ScienceNotesPage } from './pages/sciences/ScienceNotesPage';
-import { ScienceTopicsPage } from './pages/sciences/ScienceTopicsPage';
-import { BiologyTopicsPage } from './pages/biology/BiologyTopicsPage';
-import { ChemistryTopicsPage } from './pages/chemistry/ChemistryTopicsPage';
-import { PhysicsTopicsPage } from './pages/physics/PhysicsTopicsPage';
-import { EnglishTopicsPage } from './pages/english/EnglishTopicsPage';
-import { EnglishComprehensionPage } from './pages/english/EnglishComprehensionPage';
-import { EnglishEssayPage } from './pages/english/EnglishEssayPage';
-import { ComputerScienceTopicsPage } from './pages/computer-science/ComputerScienceTopicsPage';
-import { ComputerScienceNotesPage } from './pages/computer-science/ComputerScienceNotesPage';
-import { ComputerScienceNoteDetailPage } from './pages/computer-science/ComputerScienceNoteDetailPage';
-import { CommerceTopicsPage } from './pages/commerce/CommerceTopicsPage';
-import { CommerceNotesPage } from './pages/commerce/CommerceNotesPage';
-import { CommerceNoteDetailPage } from './pages/commerce/CommerceNoteDetailPage';
-import { GeographyTopicsPage } from './pages/geography/GeographyTopicsPage';
-import { GeographyNotesPage } from './pages/geography/GeographyNotesPage';
-import { GeographyNoteDetailPage } from './pages/geography/GeographyNoteDetailPage';
-import { BESTopicsPage } from './pages/business-enterprise-skills/BESTopicsPage';
-import { BESNotesPage } from './pages/business-enterprise-skills/BESNotesPage';
-import { BESNoteDetailPage } from './pages/business-enterprise-skills/BESNoteDetailPage';
-import { HistoryTopicsPage } from './pages/history/HistoryTopicsPage';
-import { HistoryNotesPage } from './pages/history/HistoryNotesPage';
-import { HistoryNoteDetailPage } from './pages/history/HistoryNoteDetailPage';
-import { HistoryEssayPage } from './pages/history/HistoryEssayPage';
-import { AgentHubPage } from './pages/agents/AgentHubPage';
-import { AgentBuilderPage } from './pages/agents/AgentBuilderPage';
-import { VirtualLabHubPage } from './pages/virtual-lab/VirtualLabHubPage';
-import { VirtualLabSimulationPage } from './pages/virtual-lab/VirtualLabSimulationPage';
-import { ALevelPlaceholderPage } from './pages/a-level/ALevelPlaceholderPage';
-import { ALevelPureMathPage } from './pages/a-level/ALevelPureMathPage';
-import { ALevelPureMathNotesPage } from './pages/a-level/ALevelPureMathNotesPage';
-import { ALevelPureMathNoteDetailPage } from './pages/a-level/ALevelPureMathNoteDetailPage';
-import { ALevelBiologyTopicsPage } from './pages/a-level-biology/ALevelBiologyTopicsPage';
-import { ALevelBiologyNotesPage } from './pages/a-level-biology/ALevelBiologyNotesPage';
-import { ALevelBiologyNoteDetailPage } from './pages/a-level-biology/ALevelBiologyNoteDetailPage';
-import { ALevelChemistryTopicsPage } from './pages/a-level-chemistry/ALevelChemistryTopicsPage';
-import { ALevelChemistryNotesPage } from './pages/a-level-chemistry/ALevelChemistryNotesPage';
-import { ALevelChemistryNoteDetailPage } from './pages/a-level-chemistry/ALevelChemistryNoteDetailPage';
-import { ALevelPhysicsTopicsPage } from './pages/a-level-physics/ALevelPhysicsTopicsPage';
-import { ALevelPhysicsNotesPage } from './pages/a-level-physics/ALevelPhysicsNotesPage';
-import { ALevelPhysicsNoteDetailPage } from './pages/a-level-physics/ALevelPhysicsNoteDetailPage';
-import { ALevelComputerScienceTopicsPage } from './pages/a-level-computer-science/ALevelComputerScienceTopicsPage';
-import { ALevelComputerScienceNotesPage } from './pages/a-level-computer-science/ALevelComputerScienceNotesPage';
-import { ALevelComputerScienceNoteDetailPage } from './pages/a-level-computer-science/ALevelComputerScienceNoteDetailPage';
-import { ALevelGeographyTopicsPage } from './pages/a-level-geography/ALevelGeographyTopicsPage';
-import { ALevelGeographyNotesPage } from './pages/a-level-geography/ALevelGeographyNotesPage';
-import { ALevelGeographyNoteDetailPage } from './pages/a-level-geography/ALevelGeographyNoteDetailPage';
-import { FormulaSheetPage } from './pages/tools/FormulaSheetPage';
-import { PastPapersPage } from './pages/tools/PastPapersPage';
-import { AccountingPage } from './pages/accounting/AccountingPage';
-import { AccountingNotesPage } from './pages/accounting/AccountingNotesPage';
-import { AccountingNoteDetailPage } from './pages/accounting/AccountingNoteDetailPage';
-import { NotificationsPage } from './pages/notifications/NotificationsPage';
-import { NotificationDetailPage } from './pages/notifications/NotificationDetailPage';
-import { ReferralHubPage } from './pages/account/ReferralHubPage';
-import { BillingHistoryPage } from './pages/account/BillingHistoryPage';
-import { SecurityCenterPage } from './pages/account/SecurityCenterPage';
-import { LearningPreferencesPage } from './pages/account/LearningPreferencesPage';
-import { ProjectAssistantHubPage } from './pages/project-assistant/ProjectAssistantHubPage';
-import { ProjectAssistantChatPage } from './pages/project-assistant/ProjectAssistantChatPage';
-import { NerdXLivePage } from './pages/nerdx-live/NerdXLivePage';
-import { OfflineChatPage } from './pages/tools/OfflineChatPage';
-import { FindTeacherPage } from './pages/teacher-marketplace/FindTeacherPage';
-import { TeacherProfilePage } from './pages/teacher-marketplace/TeacherProfilePage';
-import { BookLessonPage } from './pages/teacher-marketplace/BookLessonPage';
-import { TeacherFeedPage } from './pages/teacher-marketplace/TeacherFeedPage';
-import { TeacherOnboardingPage } from './pages/teacher-marketplace/TeacherOnboardingPage';
-import { TeacherDashboardPage } from './pages/teacher-marketplace/TeacherDashboardPage';
-import { VirtualClassroomPage } from './pages/teacher-marketplace/VirtualClassroomPage';
-import { StudentLessonsPage } from './pages/teacher-marketplace/StudentLessonsPage';
+
+const LandingPage = lazy(() => import('./pages/LandingPage').then((m) => ({ default: m.LandingPage })));
+const LoginPage = lazy(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })));
+const RegisterPage = lazy(() => import('./pages/RegisterPage').then((m) => ({ default: m.RegisterPage })));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })));
+const EmailVerificationPage = lazy(() => import('./pages/EmailVerificationPage').then((m) => ({ default: m.EmailVerificationPage })));
+const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage').then((m) => ({ default: m.AuthCallbackPage })));
+const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })));
+const CreditsPage = lazy(() => import('./pages/CreditsPage').then((m) => ({ default: m.CreditsPage })));
+const AccountPage = lazy(() => import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })));
+const ProgressPage = lazy(() => import('./pages/ProgressPage').then((m) => ({ default: m.ProgressPage })));
+const MathematicsTopicsPage = lazy(() => import('./pages/mathematics/MathematicsTopicsPage').then((m) => ({ default: m.MathematicsTopicsPage })));
+const QuizPage = lazy(() => import('./pages/mathematics/QuizPage').then((m) => ({ default: m.QuizPage })));
+const MathNotesPage = lazy(() => import('./pages/mathematics/MathNotesPage').then((m) => ({ default: m.MathNotesPage })));
+const GraphPracticePage = lazy(() => import('./pages/mathematics/GraphPracticePage').then((m) => ({ default: m.GraphPracticePage })));
+const TeacherSetupPage = lazy(() => import('./pages/teacher/TeacherSetupPage').then((m) => ({ default: m.TeacherSetupPage })));
+const TeacherChatPage = lazy(() => import('./pages/teacher/TeacherChatPage').then((m) => ({ default: m.TeacherChatPage })));
+const TeacherHistoryPage = lazy(() => import('./pages/teacher/TeacherHistoryPage').then((m) => ({ default: m.TeacherHistoryPage })));
+const ScanSolvePage = lazy(() => import('./pages/mathematics/ScanSolvePage').then((m) => ({ default: m.ScanSolvePage })));
+const ExamSetupPage = lazy(() => import('./pages/mathematics/ExamSetupPage').then((m) => ({ default: m.ExamSetupPage })));
+const ExamSessionPage = lazy(() => import('./pages/mathematics/ExamSessionPage').then((m) => ({ default: m.ExamSessionPage })));
+const ExamReviewPage = lazy(() => import('./pages/mathematics/ExamReviewPage').then((m) => ({ default: m.ExamReviewPage })));
+const ScienceQuizPage = lazy(() => import('./pages/sciences/ScienceQuizPage').then((m) => ({ default: m.ScienceQuizPage })));
+const ScienceNotesPage = lazy(() => import('./pages/sciences/ScienceNotesPage').then((m) => ({ default: m.ScienceNotesPage })));
+const ScienceTopicsPage = lazy(() => import('./pages/sciences/ScienceTopicsPage').then((m) => ({ default: m.ScienceTopicsPage })));
+const BiologyTopicsPage = lazy(() => import('./pages/biology/BiologyTopicsPage').then((m) => ({ default: m.BiologyTopicsPage })));
+const ChemistryTopicsPage = lazy(() => import('./pages/chemistry/ChemistryTopicsPage').then((m) => ({ default: m.ChemistryTopicsPage })));
+const PhysicsTopicsPage = lazy(() => import('./pages/physics/PhysicsTopicsPage').then((m) => ({ default: m.PhysicsTopicsPage })));
+const EnglishTopicsPage = lazy(() => import('./pages/english/EnglishTopicsPage').then((m) => ({ default: m.EnglishTopicsPage })));
+const EnglishComprehensionPage = lazy(() => import('./pages/english/EnglishComprehensionPage').then((m) => ({ default: m.EnglishComprehensionPage })));
+const EnglishEssayPage = lazy(() => import('./pages/english/EnglishEssayPage').then((m) => ({ default: m.EnglishEssayPage })));
+const ComputerScienceTopicsPage = lazy(() => import('./pages/computer-science/ComputerScienceTopicsPage').then((m) => ({ default: m.ComputerScienceTopicsPage })));
+const ComputerScienceNotesPage = lazy(() => import('./pages/computer-science/ComputerScienceNotesPage').then((m) => ({ default: m.ComputerScienceNotesPage })));
+const ComputerScienceNoteDetailPage = lazy(() => import('./pages/computer-science/ComputerScienceNoteDetailPage').then((m) => ({ default: m.ComputerScienceNoteDetailPage })));
+const CommerceTopicsPage = lazy(() => import('./pages/commerce/CommerceTopicsPage').then((m) => ({ default: m.CommerceTopicsPage })));
+const CommerceNotesPage = lazy(() => import('./pages/commerce/CommerceNotesPage').then((m) => ({ default: m.CommerceNotesPage })));
+const CommerceNoteDetailPage = lazy(() => import('./pages/commerce/CommerceNoteDetailPage').then((m) => ({ default: m.CommerceNoteDetailPage })));
+const GeographyTopicsPage = lazy(() => import('./pages/geography/GeographyTopicsPage').then((m) => ({ default: m.GeographyTopicsPage })));
+const GeographyNotesPage = lazy(() => import('./pages/geography/GeographyNotesPage').then((m) => ({ default: m.GeographyNotesPage })));
+const GeographyNoteDetailPage = lazy(() => import('./pages/geography/GeographyNoteDetailPage').then((m) => ({ default: m.GeographyNoteDetailPage })));
+const BESTopicsPage = lazy(() => import('./pages/business-enterprise-skills/BESTopicsPage').then((m) => ({ default: m.BESTopicsPage })));
+const BESNotesPage = lazy(() => import('./pages/business-enterprise-skills/BESNotesPage').then((m) => ({ default: m.BESNotesPage })));
+const BESNoteDetailPage = lazy(() => import('./pages/business-enterprise-skills/BESNoteDetailPage').then((m) => ({ default: m.BESNoteDetailPage })));
+const HistoryTopicsPage = lazy(() => import('./pages/history/HistoryTopicsPage').then((m) => ({ default: m.HistoryTopicsPage })));
+const HistoryNotesPage = lazy(() => import('./pages/history/HistoryNotesPage').then((m) => ({ default: m.HistoryNotesPage })));
+const HistoryNoteDetailPage = lazy(() => import('./pages/history/HistoryNoteDetailPage').then((m) => ({ default: m.HistoryNoteDetailPage })));
+const HistoryEssayPage = lazy(() => import('./pages/history/HistoryEssayPage').then((m) => ({ default: m.HistoryEssayPage })));
+const AgentHubPage = lazy(() => import('./pages/agents/AgentHubPage').then((m) => ({ default: m.AgentHubPage })));
+const AgentBuilderPage = lazy(() => import('./pages/agents/AgentBuilderPage').then((m) => ({ default: m.AgentBuilderPage })));
+const VirtualLabHubPage = lazy(() => import('./pages/virtual-lab/VirtualLabHubPage').then((m) => ({ default: m.VirtualLabHubPage })));
+const VirtualLabSimulationPage = lazy(() => import('./pages/virtual-lab/VirtualLabSimulationPage').then((m) => ({ default: m.VirtualLabSimulationPage })));
+const ALevelPureMathPage = lazy(() => import('./pages/a-level/ALevelPureMathPage').then((m) => ({ default: m.ALevelPureMathPage })));
+const ALevelPureMathNotesPage = lazy(() => import('./pages/a-level/ALevelPureMathNotesPage').then((m) => ({ default: m.ALevelPureMathNotesPage })));
+const ALevelPureMathNoteDetailPage = lazy(() => import('./pages/a-level/ALevelPureMathNoteDetailPage').then((m) => ({ default: m.ALevelPureMathNoteDetailPage })));
+const ALevelBiologyTopicsPage = lazy(() => import('./pages/a-level-biology/ALevelBiologyTopicsPage').then((m) => ({ default: m.ALevelBiologyTopicsPage })));
+const ALevelBiologyNotesPage = lazy(() => import('./pages/a-level-biology/ALevelBiologyNotesPage').then((m) => ({ default: m.ALevelBiologyNotesPage })));
+const ALevelBiologyNoteDetailPage = lazy(() => import('./pages/a-level-biology/ALevelBiologyNoteDetailPage').then((m) => ({ default: m.ALevelBiologyNoteDetailPage })));
+const ALevelChemistryTopicsPage = lazy(() => import('./pages/a-level-chemistry/ALevelChemistryTopicsPage').then((m) => ({ default: m.ALevelChemistryTopicsPage })));
+const ALevelChemistryNotesPage = lazy(() => import('./pages/a-level-chemistry/ALevelChemistryNotesPage').then((m) => ({ default: m.ALevelChemistryNotesPage })));
+const ALevelChemistryNoteDetailPage = lazy(() => import('./pages/a-level-chemistry/ALevelChemistryNoteDetailPage').then((m) => ({ default: m.ALevelChemistryNoteDetailPage })));
+const ALevelPhysicsTopicsPage = lazy(() => import('./pages/a-level-physics/ALevelPhysicsTopicsPage').then((m) => ({ default: m.ALevelPhysicsTopicsPage })));
+const ALevelPhysicsNotesPage = lazy(() => import('./pages/a-level-physics/ALevelPhysicsNotesPage').then((m) => ({ default: m.ALevelPhysicsNotesPage })));
+const ALevelPhysicsNoteDetailPage = lazy(() => import('./pages/a-level-physics/ALevelPhysicsNoteDetailPage').then((m) => ({ default: m.ALevelPhysicsNoteDetailPage })));
+const ALevelComputerScienceTopicsPage = lazy(() => import('./pages/a-level-computer-science/ALevelComputerScienceTopicsPage').then((m) => ({ default: m.ALevelComputerScienceTopicsPage })));
+const ALevelComputerScienceNotesPage = lazy(() => import('./pages/a-level-computer-science/ALevelComputerScienceNotesPage').then((m) => ({ default: m.ALevelComputerScienceNotesPage })));
+const ALevelComputerScienceNoteDetailPage = lazy(() => import('./pages/a-level-computer-science/ALevelComputerScienceNoteDetailPage').then((m) => ({ default: m.ALevelComputerScienceNoteDetailPage })));
+const ALevelGeographyTopicsPage = lazy(() => import('./pages/a-level-geography/ALevelGeographyTopicsPage').then((m) => ({ default: m.ALevelGeographyTopicsPage })));
+const ALevelGeographyNotesPage = lazy(() => import('./pages/a-level-geography/ALevelGeographyNotesPage').then((m) => ({ default: m.ALevelGeographyNotesPage })));
+const ALevelGeographyNoteDetailPage = lazy(() => import('./pages/a-level-geography/ALevelGeographyNoteDetailPage').then((m) => ({ default: m.ALevelGeographyNoteDetailPage })));
+const FormulaSheetPage = lazy(() => import('./pages/tools/FormulaSheetPage').then((m) => ({ default: m.FormulaSheetPage })));
+const PastPapersPage = lazy(() => import('./pages/tools/PastPapersPage').then((m) => ({ default: m.PastPapersPage })));
+const AccountingPage = lazy(() => import('./pages/accounting/AccountingPage').then((m) => ({ default: m.AccountingPage })));
+const AccountingNotesPage = lazy(() => import('./pages/accounting/AccountingNotesPage').then((m) => ({ default: m.AccountingNotesPage })));
+const AccountingNoteDetailPage = lazy(() => import('./pages/accounting/AccountingNoteDetailPage').then((m) => ({ default: m.AccountingNoteDetailPage })));
+const NotificationsPage = lazy(() => import('./pages/notifications/NotificationsPage').then((m) => ({ default: m.NotificationsPage })));
+const NotificationDetailPage = lazy(() => import('./pages/notifications/NotificationDetailPage').then((m) => ({ default: m.NotificationDetailPage })));
+const ReferralHubPage = lazy(() => import('./pages/account/ReferralHubPage').then((m) => ({ default: m.ReferralHubPage })));
+const BillingHistoryPage = lazy(() => import('./pages/account/BillingHistoryPage').then((m) => ({ default: m.BillingHistoryPage })));
+const SecurityCenterPage = lazy(() => import('./pages/account/SecurityCenterPage').then((m) => ({ default: m.SecurityCenterPage })));
+const LearningPreferencesPage = lazy(() => import('./pages/account/LearningPreferencesPage').then((m) => ({ default: m.LearningPreferencesPage })));
+const ProjectAssistantHubPage = lazy(() => import('./pages/project-assistant/ProjectAssistantHubPage').then((m) => ({ default: m.ProjectAssistantHubPage })));
+const ProjectAssistantChatPage = lazy(() => import('./pages/project-assistant/ProjectAssistantChatPage').then((m) => ({ default: m.ProjectAssistantChatPage })));
+const NerdXLivePage = lazy(() => import('./pages/nerdx-live/NerdXLivePage').then((m) => ({ default: m.NerdXLivePage })));
+const OfflineChatPage = lazy(() => import('./pages/tools/OfflineChatPage').then((m) => ({ default: m.OfflineChatPage })));
+const FindTeacherPage = lazy(() => import('./pages/teacher-marketplace/FindTeacherPage').then((m) => ({ default: m.FindTeacherPage })));
+const TeacherProfilePage = lazy(() => import('./pages/teacher-marketplace/TeacherProfilePage').then((m) => ({ default: m.TeacherProfilePage })));
+const BookLessonPage = lazy(() => import('./pages/teacher-marketplace/BookLessonPage').then((m) => ({ default: m.BookLessonPage })));
+const TeacherFeedPage = lazy(() => import('./pages/teacher-marketplace/TeacherFeedPage').then((m) => ({ default: m.TeacherFeedPage })));
+const TeacherOnboardingPage = lazy(() => import('./pages/teacher-marketplace/TeacherOnboardingPage').then((m) => ({ default: m.TeacherOnboardingPage })));
+const TeacherDashboardPage = lazy(() => import('./pages/teacher-marketplace/TeacherDashboardPage').then((m) => ({ default: m.TeacherDashboardPage })));
+const VirtualClassroomPage = lazy(() => import('./pages/teacher-marketplace/VirtualClassroomPage').then((m) => ({ default: m.VirtualClassroomPage })));
+const StudentLessonsPage = lazy(() => import('./pages/teacher-marketplace/StudentLessonsPage').then((m) => ({ default: m.StudentLessonsPage })));
+
+const routeLoadingFallback = (
+  <div
+    style={{
+      minHeight: '40vh',
+      display: 'grid',
+      placeItems: 'center',
+      color: 'rgba(255, 255, 255, 0.78)',
+      fontSize: 14,
+      fontWeight: 600,
+    }}
+  >
+    Loading...
+  </div>
+);
 
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
+          <Suspense fallback={routeLoadingFallback}>
           <Routes>
             {/* Public auth routes */}
             <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
@@ -219,6 +236,7 @@ function App() {
             <Route path="/app/classroom/:bookingId" element={<ProtectedRoute><VirtualClassroomPage /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </Suspense>
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>

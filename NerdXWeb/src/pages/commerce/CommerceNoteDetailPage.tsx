@@ -89,7 +89,8 @@ export function CommerceNoteDetailPage() {
       <div className="science-universe-page com">
         <div className="science-universe-bg com-bg" />
         <Link to="/app/commerce" className="super-back-btn">
-          <ArrowLeft size={24} />
+          <ArrowLeft size={18} />
+          <span>Back</span>
         </Link>
         <div className="science-hero">
           <h1>Notes Not Found</h1>

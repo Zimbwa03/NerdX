@@ -113,6 +113,7 @@ export function QuizPage() {
 
   const generateNext = useCallback(async () => {
     setGenerating(true);
+    setQuestion(null);
     setResult(null);
     setSelectedAnswer('');
     setTextAnswer('');

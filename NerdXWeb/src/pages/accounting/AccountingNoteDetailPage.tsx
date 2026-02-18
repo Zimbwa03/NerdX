@@ -87,7 +87,8 @@ export function AccountingNoteDetailPage() {
       <div className="science-universe-page acc">
         <div className="science-universe-bg acc-bg" />
         <Link to="/app/accounting" className="super-back-btn">
-          <ArrowLeft size={24} />
+          <ArrowLeft size={18} />
+          <span>Back</span>
         </Link>
         <div className="science-hero">
           <h1>Notes Not Found</h1>

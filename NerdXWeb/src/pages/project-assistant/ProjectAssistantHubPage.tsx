@@ -26,9 +26,9 @@ const SUBJECT_OPTIONS = [
 
 function formatStage(stage: unknown): string {
   if (typeof stage === 'number') return `Stage ${stage}`;
-  if (typeof stage !== 'string') return 'Stage —';
+  if (typeof stage !== 'string') return 'Stage -';
   const trimmed = stage.trim();
-  return trimmed.length ? trimmed : 'Stage —';
+  return trimmed.length ? trimmed : 'Stage -';
 }
 
 function formatUpdatedAt(updatedAt: unknown): string {
@@ -92,8 +92,8 @@ export function ProjectAssistantHubPage() {
     void refresh();
   }, []);
 
-  const createProject = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const createProject = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (creating) return;
     if (!subject) {
       setError('Please choose a subject.');
@@ -113,7 +113,6 @@ export function ProjectAssistantHubPage() {
 
       if (!created?.id) {
         setError('Failed to create project. Please try again.');
-        setCreating(false);
         return;
       }
 
@@ -127,8 +126,8 @@ export function ProjectAssistantHubPage() {
 
   const deleteProject = async (projectId: number) => {
     if (deleting != null) return;
-    const confirm = window.confirm('Delete this project? This cannot be undone.');
-    if (!confirm) return;
+    if (!window.confirm('Delete this project? This cannot be undone.')) return;
+
     setDeleting(projectId);
     setError(null);
     try {
@@ -156,7 +155,7 @@ export function ProjectAssistantHubPage() {
           <GraduationCap size={44} className="project-assistant-icon" />
           <h1>Project Assistant</h1>
           <p className="project-assistant-subtitle">
-            Plan, research, and write your ZIMSEC project with an AI mentor (Stages 1â€“6).
+            Start your project here. You will get clear support from Stage 1 to Stage 6.
           </p>
           <p className="project-assistant-meta">
             Credits: <strong>{user?.credits ?? 0}</strong>
@@ -175,14 +174,9 @@ export function ProjectAssistantHubPage() {
 
             <label className="project-assistant-field">
               <span>Subject</span>
-              <select
-                value={subjectPreset}
-                onChange={(e) => setSubjectPreset(e.target.value as (typeof SUBJECT_OPTIONS)[number])}
-              >
+              <select value={subjectPreset} onChange={(e) => setSubjectPreset(e.target.value as (typeof SUBJECT_OPTIONS)[number])}>
                 {SUBJECT_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
+                  <option key={s} value={s}>{s}</option>
                 ))}
               </select>
             </label>
@@ -196,7 +190,7 @@ export function ProjectAssistantHubPage() {
 
             <label className="project-assistant-field project-assistant-field-span">
               <span>Project Title (optional)</span>
-              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="You can refine this in chat" />
+              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="You can refine this later in chat" />
             </label>
 
             <label className="project-assistant-field">
@@ -211,7 +205,7 @@ export function ProjectAssistantHubPage() {
           </div>
 
           <button type="submit" className="gradient-btn project-assistant-create" disabled={creating}>
-            <Plus size={18} /> {creating ? 'Startingâ€¦' : 'Start New Project'}
+            <Plus size={18} /> {creating ? 'Starting...' : 'Start New Project'}
           </button>
         </form>
 
@@ -227,22 +221,18 @@ export function ProjectAssistantHubPage() {
         {error && <div className="project-assistant-error">{error}</div>}
 
         {loading ? (
-          <div className="project-assistant-loading">Loading projectsâ€¦</div>
+          <div className="project-assistant-loading">Loading projects...</div>
         ) : projects.length === 0 ? (
           <p className="project-assistant-empty">No projects yet. Create one above to get started.</p>
         ) : (
           <div className="project-assistant-projects">
             {projects.map((p) => (
               <div key={p.id} className="project-assistant-project-row">
-                <button
-                  type="button"
-                  className="project-assistant-project-open"
-                  onClick={() => navigate(`/app/project-assistant/${p.id}`)}
-                >
+                <button type="button" className="project-assistant-project-open" onClick={() => navigate(`/app/project-assistant/${p.id}`)}>
                   <div className="project-assistant-project-title">{displayTitle(p)}</div>
                   <div className="project-assistant-project-sub">
-                    {displaySubject(p)} â€¢ {formatStage(p.current_stage)}
-                    {p.updated_at ? ` â€¢ ${formatUpdatedAt(p.updated_at)}` : ''}
+                    {displaySubject(p)} - {formatStage(p.current_stage)}
+                    {p.updated_at ? ` - ${formatUpdatedAt(p.updated_at)}` : ''}
                   </div>
                 </button>
                 <button
@@ -263,4 +253,3 @@ export function ProjectAssistantHubPage() {
     </div>
   );
 }
-

@@ -159,7 +159,8 @@ export function ComputerScienceTopicsPage() {
       </div>
 
       <Link to="/app" className="super-back-btn">
-        <ArrowLeft size={24} />
+        <ArrowLeft size={18} />
+        <span>Dashboard</span>
       </Link>
 
       <div className="science-hero">
@@ -364,7 +365,7 @@ export function ComputerScienceTopicsPage() {
 
             {/* Question format selection */}
             <p style={{ fontSize: 14, opacity: 0.7, marginBottom: 12, textAlign: 'center' }}>Choose question type</p>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+            <div className="format-options" style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
               {(['mcq', 'structured', 'essay'] as QuestionFormat[]).map((fmt) => (
                 <button
                   key={fmt}

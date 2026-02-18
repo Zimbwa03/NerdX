@@ -5707,18 +5707,527 @@ This is a key distinction from shear, which preserves area.
   ],
 };
 
+const realNumbersMasterNotes: MathTopicNotes = {
+  topic: 'Real Numbers',
+  subject: 'Mathematics',
+  grade_level: 'O-Level Form 4',
+  summary:
+    'Comprehensive Form 4 note on rational and irrational numbers, surds, sequence patterns, and exam-level real-number applications.',
+  sections: [
+    {
+      title: '1) Number Sets and Classification',
+      content: String.raw`Real numbers contain all values that can be located on the number line.
+
+Main sets:
+- Natural numbers: $1,2,3,\dots$
+- Integers: $\dots,-2,-1,0,1,2,\dots$
+- Rational numbers: numbers expressible as $\frac{p}{q}$ where $q\neq 0$
+- Irrational numbers: non-terminating, non-recurring decimals (for example $\sqrt{2},\pi$)
+
+Useful test:
+- If a decimal terminates or repeats, it is rational.
+- If a decimal never terminates and never repeats, it is irrational.
+
+Examples:
+1. $\frac{7}{8}=0.875$ is rational.
+2. $0.333\ldots$ is rational because $0.333\ldots=\frac{1}{3}$.
+3. $\sqrt{5}$ is irrational.`,
+    },
+    {
+      title: '2) Surds: Simplification and Operations',
+      content: String.raw`A surd is an irrational root left in exact form.
+
+Core rules:
+- $\sqrt{ab}=\sqrt{a}\sqrt{b}$
+- $\sqrt{\frac{a}{b}}=\frac{\sqrt{a}}{\sqrt{b}}$ for $b>0$
+- Only like surds can be added/subtracted.
+
+Worked examples:
+1. $\sqrt{72}=\sqrt{36\times 2}=6\sqrt{2}$.
+2. $\sqrt{50}+3\sqrt{2}=5\sqrt{2}+3\sqrt{2}=8\sqrt{2}$.
+3. $(2\sqrt{3})(5\sqrt{6})=10\sqrt{18}=30\sqrt{2}$.
+4. $(\sqrt{7}-2)(\sqrt{7}+2)=7-4=3$.`,
+    },
+    {
+      title: '3) Rationalising Denominators',
+      content: String.raw`Standard form of answers usually requires no surd in the denominator.
+
+Cases:
+1. Monomial surd denominator:
+   $\frac{a}{\sqrt{b}}=\frac{a\sqrt{b}}{b}$.
+2. Binomial denominator:
+   multiply by the conjugate.
+
+Worked examples:
+1. $\frac{3}{\sqrt{5}}=\frac{3\sqrt{5}}{5}$.
+2. $\frac{2}{3-\sqrt{2}}=\frac{2(3+\sqrt{2})}{9-2}=\frac{6+2\sqrt{2}}{7}$.
+3. $\frac{1}{\sqrt{3}+\sqrt{2}}=\frac{\sqrt{3}-\sqrt{2}}{3-2}=\sqrt{3}-\sqrt{2}$.`,
+    },
+    {
+      title: '4) Number Patterns and Sequences',
+      content: String.raw`Form 4 real-number work includes pattern recognition and sequence modeling.
+
+Arithmetic sequence:
+- Common difference $d$
+- $T_n=a+(n-1)d$
+
+Geometric sequence:
+- Common ratio $r$
+- $T_n=ar^{n-1}$
+
+Worked examples:
+1. Sequence $4,7,10,13,\dots$: $a=4$, $d=3$, so $T_n=4+3(n-1)$.
+2. Sequence $2,6,18,54,\dots$: $a=2$, $r=3$, so $T_n=2\cdot 3^{n-1}$.
+3. For $5,9,13,\dots$, the $20$th term is $5+19(4)=81$.`,
+    },
+    {
+      title: '5) Exam-Style Strategy and Error Control',
+      content: String.raw`Checklist for full marks:
+1. Classify the number type before operating.
+2. Simplify surds fully by extracting perfect squares.
+3. Combine only like surds.
+4. Rationalise final denominators when required.
+5. Keep exact form unless question asks for decimal approximation.
+
+Common mistakes:
+- Treating $\sqrt{a+b}$ as $\sqrt{a}+\sqrt{b}$ (invalid in general).
+- Adding unlike surds directly.
+- Leaving answers with surd denominators when rationalisation is expected.`,
+    },
+  ],
+  key_points: [
+    'Real numbers include both rational and irrational numbers.',
+    'Surds should be simplified to highest square-factor form.',
+    'Only like surds can be added or subtracted.',
+    'Rationalising denominators is a standard finishing step.',
+    'Sequence formulas model arithmetic and geometric patterns.',
+  ],
+  exam_tips: [
+    'Use exact surd form first, then approximate only if requested.',
+    'Show each simplification stage for surds to secure method marks.',
+    'Check whether final answer must be rationalised.',
+    'When classifying decimals, explicitly state terminating/repeating/non-recurring.',
+  ],
+  visual_descriptions: [
+    'Venn-style set map of natural, integer, rational, and irrational numbers',
+    'Step-flow for simplifying surds using square-factor extraction',
+    'Arithmetic and geometric sequence table with n-th term patterns',
+  ],
+};
+
+const ratiosRatesProportionsMasterNotes: MathTopicNotes = {
+  topic: 'Ratios, Rates and Proportions',
+  subject: 'Mathematics',
+  grade_level: 'O-Level Form 4',
+  summary:
+    'Comprehensive Form 4 note on ratio simplification, sharing, rates, direct and inverse proportion, and contextual word-problem solving.',
+  sections: [
+    {
+      title: '1) Ratio Fundamentals and Simplification',
+      content: String.raw`A ratio compares quantities of the same kind.
+
+Rules:
+- Write in the same units before simplifying.
+- Divide all terms by their highest common factor.
+
+Examples:
+1. $18:24=3:4$.
+2. $2.5\text{ m}:75\text{ cm}=250:75=10:3$.
+3. If boys:girls is $5:3$ and total is $48$, then one part is $48\div 8=6$.`,
+    },
+    {
+      title: '2) Sharing Quantities in a Given Ratio',
+      content: String.raw`To share $Q$ in ratio $a:b:c$:
+1. Find total parts $a+b+c$.
+2. One part $=Q/(a+b+c)$.
+3. Multiply by each ratio part.
+
+Worked examples:
+1. Share $420$ in ratio $2:3:5$.
+   Total parts $=10$, one part $=42$.
+   Shares: $84,126,210$.
+2. Divide $\$1800$ in ratio $4:1$.
+   Total parts $=5$, one part $=360$.
+   Shares: $\$1440$ and $\$360$.`,
+    },
+    {
+      title: '3) Rates and Unit Rates',
+      content: String.raw`A rate compares different units.
+
+Core formulas:
+- $\text{speed}=\frac{\text{distance}}{\text{time}}$
+- $\text{density}=\frac{\text{mass}}{\text{volume}}$
+- $\text{work rate}=\frac{\text{work done}}{\text{time}}$
+
+Worked examples:
+1. $240$ km in $3$ h gives speed $80$ km/h.
+2. $18$ L in $6$ min gives $3$ L/min.
+3. $540$ words in $12$ min gives $45$ words/min.`,
+    },
+    {
+      title: '4) Direct and Inverse Proportion',
+      content: String.raw`Direct proportion:
+- $y\propto x \Rightarrow y=kx$.
+
+Inverse proportion:
+- $y\propto \frac{1}{x} \Rightarrow y=\frac{k}{x}$.
+
+Worked examples:
+1. If $y\propto x$ and $y=18$ when $x=6$, then $k=3$, so $y=3x$.
+2. If $y\propto \frac{1}{x}$ and $y=10$ when $x=4$, then $k=40$, so $y=\frac{40}{x}$.
+3. If $m$ workers finish in $t$ days, then $mt=\text{constant}$ for fixed work.`,
+    },
+    {
+      title: '5) Exam Word Problems and Checks',
+      content: String.raw`Translation guide:
+- "directly proportional" $\to y=kx$
+- "inversely proportional" $\to y=\frac{k}{x}$
+- "at constant speed/rate" $\to$ use unit-rate relationships
+
+Validation checks:
+1. Direct proportion graph should pass through the origin.
+2. Inverse proportion product $xy$ should remain constant.
+3. Units must be consistent before ratio or rate calculations.
+
+Common errors:
+- Mixing units (for example hours and minutes) without conversion.
+- Using direct formula when context is inverse.`,
+    },
+  ],
+  key_points: [
+    'Simplify ratios only after converting to common units.',
+    'Sharing in ratio is done via total parts and unit part value.',
+    'Rates compare different units and require unit consistency.',
+    'Direct proportion uses y = kx; inverse uses y = k/x.',
+    'Word clues determine the correct proportional model.',
+  ],
+  exam_tips: [
+    'Write units on every intermediate step in rate problems.',
+    'For proportion questions, find k early and reuse it.',
+    'Check reasonableness: inverse relationships move in opposite directions.',
+    'Use table checks for quick validation in context questions.',
+  ],
+  visual_descriptions: [
+    'Ratio bar model showing part-to-whole sharing',
+    'Direct proportion line through origin and inverse curve comparison',
+    'Unit-rate flow chart for speed, density, and work problems',
+  ],
+};
+
+const logarithmsMasterNotes: MathTopicNotes = {
+  topic: 'Logarithms',
+  subject: 'Mathematics',
+  grade_level: 'O-Level Form 4',
+  summary:
+    'Comprehensive Form 4 note on logarithm definition, laws of logs, index-log conversion, equation solving, and practical interpretation.',
+  sections: [
+    {
+      title: '1) Meaning of a Logarithm',
+      content: String.raw`A logarithm tells the power to which a base is raised.
+
+Definition:
+$$\log_a b = c \iff a^c=b,\quad a>0,\ a\neq 1,\ b>0.$$
+
+Examples:
+1. $\log_{10}1000=3$ because $10^3=1000$.
+2. $\log_2 32=5$ because $2^5=32$.
+3. $\log_3 1=0$ because $3^0=1$.`,
+    },
+    {
+      title: '2) Laws of Logarithms',
+      content: String.raw`Core laws:
+1. $\log_a(MN)=\log_a M+\log_a N$
+2. $\log_a\!\left(\frac{M}{N}\right)=\log_a M-\log_a N$
+3. $\log_a(M^k)=k\log_a M$
+
+Useful results:
+- $\log_a a=1$
+- $\log_a 1=0$
+
+Examples:
+1. $\log_5(25\cdot 5)=\log_5 25+\log_5 5=2+1=3$.
+2. $\log_{10}\!\left(\frac{1000}{10}\right)=3-1=2$.
+3. $\log_2(8^2)=2\log_2 8=2(3)=6$.`,
+    },
+    {
+      title: '3) Relationship Between Indices and Logs',
+      content: String.raw`Index form and logarithmic form are equivalent statements.
+
+Convert:
+- $a^x=b \iff \log_a b=x$
+
+Examples:
+1. $3^x=81 \Rightarrow x=\log_3 81=4$.
+2. $10^y=0.01 \Rightarrow y=\log_{10}(0.01)=-2$.
+3. If $\log_2 x=7$, then $x=2^7=128$.`,
+    },
+    {
+      title: '4) Solving Logarithmic Equations',
+      content: String.raw`Standard procedure:
+1. Use log laws to combine or separate terms.
+2. Convert to index form when possible.
+3. Solve algebraically.
+4. Check domain restrictions ($\text{log argument}>0$).
+
+Worked examples:
+1. $\log_3(x)=2 \Rightarrow x=9$.
+2. $\log_{10}(x-1)+\log_{10}(x-3)=1$
+   $\Rightarrow \log_{10}[(x-1)(x-3)]=1$
+   $\Rightarrow (x-1)(x-3)=10$
+   $\Rightarrow x^2-4x-7=0$.
+3. $\log_2(x+4)-\log_2(x)=1$
+   $\Rightarrow \log_2\!\left(\frac{x+4}{x}\right)=1$
+   $\Rightarrow \frac{x+4}{x}=2 \Rightarrow x=4$.`,
+    },
+    {
+      title: '5) Domain, Accuracy, and Exam Pitfalls',
+      content: String.raw`Domain rule (non-negotiable):
+- Every logarithm argument must be strictly positive.
+
+Examples:
+- $\log(x-5)$ requires $x>5$.
+- $\log(2-x)$ requires $x<2$.
+
+Common errors:
+- Cancelling logs without checking arguments.
+- Ignoring extraneous roots after squaring/rearrangement.
+- Mixing bases incorrectly.
+
+Exam strategy:
+1. State domain at the start.
+2. Show each law applied explicitly.
+3. Verify final values satisfy original log expressions.`,
+    },
+  ],
+  key_points: [
+    'A logarithm is an index in disguise.',
+    'Log laws convert products, quotients, and powers into manageable forms.',
+    'Every log argument must be positive.',
+    'Index-log conversion is central to equation solving.',
+    'Always verify solutions in the original expression.',
+  ],
+  exam_tips: [
+    'Write the base each time to avoid illegal law mixing.',
+    'Use one clean line per log-law transformation.',
+    'Check domain before and after solving.',
+    'If base is 10 and not written, treat as common logarithm.',
+  ],
+  visual_descriptions: [
+    'Two-way bridge diagram between index form and logarithmic form',
+    'Flowchart of log-equation solving with domain checks',
+    'Log-law summary table with worked mini-examples',
+  ],
+};
+
+const similarityCongruencyMasterNotes: MathTopicNotes = {
+  topic: 'Similarity and Congruency',
+  subject: 'Mathematics',
+  grade_level: 'O-Level Form 4',
+  summary:
+    'Comprehensive Form 4 note on congruence tests, similarity criteria, and scale relationships for lengths, areas, volumes, and masses.',
+  sections: [
+    {
+      title: '1) Congruency: Exactly Same Shape and Size',
+      content: String.raw`Congruent figures have equal corresponding sides and angles.
+
+Triangle congruence tests:
+- SSS
+- SAS
+- ASA (or AAS)
+- RHS (right angle, hypotenuse, one side)
+
+If two triangles are congruent:
+- corresponding sides are equal
+- corresponding angles are equal`,
+    },
+    {
+      title: '2) Similarity: Same Shape, Different Size',
+      content: String.raw`Similar figures have equal corresponding angles and proportional corresponding sides.
+
+Triangle similarity criteria:
+- AAA
+- SAS proportional
+- SSS proportional
+
+Scale factor $k$ (image/object):
+- length ratio $=k$
+- perimeter ratio $=k$
+- area ratio $=k^2$
+- volume ratio $=k^3$`,
+    },
+    {
+      title: '3) Area, Volume, and Mass Relationships',
+      content: String.raw`For similar solids:
+- Linear scale factor: $k$
+- Surface area factor: $k^2$
+- Volume factor: $k^3$
+
+If solids are same material:
+- mass ratio follows volume ratio, so mass factor is also $k^3$.
+
+Worked examples:
+1. If $k=3$, area factor is $9$, volume factor is $27$.
+2. If area ratio is $25:1$, then length ratio is $5:1$.
+3. If volume ratio is $64:27$, length ratio is $4:3$.`,
+    },
+    {
+      title: '4) Solving Exam Problems',
+      content: String.raw`Procedure:
+1. Confirm whether figures are congruent or similar.
+2. Match corresponding vertices correctly.
+3. Write ratio equation using corresponding sides.
+4. Solve unknown, then apply area/volume scaling if required.
+
+Common trap:
+- Using area factor when the question asks for length factor (or vice versa).`,
+    },
+    {
+      title: '5) Proof Language and Precision',
+      content: String.raw`Use formal statements in proofs:
+- "Corresponding angles are equal, therefore triangles are similar."
+- "Two sides and included angle are equal, therefore triangles are congruent by SAS."
+
+Always include:
+1. criterion used,
+2. matched corresponding points,
+3. final conclusion in context.`,
+    },
+  ],
+  key_points: [
+    'Congruent means equal shape and size; similar means equal shape only.',
+    'Congruence uses SSS, SAS, ASA/AAS, RHS tests.',
+    'Similarity uses AAA, SAS proportional, SSS proportional.',
+    'Area scales with k squared; volume and mass scale with k cubed.',
+    'Correct vertex correspondence is essential for valid ratios.',
+  ],
+  exam_tips: [
+    'Mark corresponding vertices before writing any ratio.',
+    'State the exact criterion (for example, "similar by AAA").',
+    'Use k, k squared, k cubed consciously based on quantity type.',
+    'Check whether answers are reasonable relative to scale factor.',
+  ],
+  visual_descriptions: [
+    'Pair of similar triangles with matching vertex labels',
+    'Scale-factor ladder showing length, area, and volume relationships',
+    'Congruence test summary chart for triangle conditions',
+  ],
+};
+
+const matricesMasterNotes: MathTopicNotes = {
+  topic: 'Matrices',
+  subject: 'Mathematics',
+  grade_level: 'O-Level Form 4',
+  summary:
+    'Comprehensive Form 4 note on matrix operations, determinants, singularity, inverses, and solving simultaneous equations using matrices.',
+  sections: [
+    {
+      title: '1) Matrix Basics and Order',
+      content: String.raw`A matrix is a rectangular array of numbers.
+
+Order:
+- $m\times n$ means $m$ rows and $n$ columns.
+
+Special matrices:
+- Zero matrix
+- Identity matrix $I=\begin{pmatrix}1&0\\0&1\end{pmatrix}$
+- Square matrix ($n\times n$)`,
+    },
+    {
+      title: '2) Matrix Operations',
+      content: String.raw`Valid operations:
+1. Addition/subtraction: same order required.
+2. Scalar multiplication: multiply every entry.
+3. Matrix multiplication: columns of first must equal rows of second.
+
+For $A=\begin{pmatrix}a&b\\c&d\end{pmatrix}$ and
+$B=\begin{pmatrix}e&f\\g&h\end{pmatrix}$:
+$$AB=\begin{pmatrix}ae+bg & af+bh\\ ce+dg & cf+dh\end{pmatrix}$$
+
+Important:
+- In general, $AB\neq BA$.`,
+    },
+    {
+      title: '3) Determinants and Singularity',
+      content: String.raw`For a $2\times 2$ matrix
+$A=\begin{pmatrix}a&b\\c&d\end{pmatrix}$:
+$$\det(A)=ad-bc.$$
+
+Classification:
+- Non-singular if $\det(A)\neq 0$
+- Singular if $\det(A)=0$
+
+Only non-singular matrices have inverses.`,
+    },
+    {
+      title: '4) Inverse of a 2x2 Matrix',
+      content: String.raw`If $A=\begin{pmatrix}a&b\\c&d\end{pmatrix}$ and $ad-bc\neq 0$, then:
+$$A^{-1}=\frac{1}{ad-bc}\begin{pmatrix}d&-b\\-c&a\end{pmatrix}.$$
+
+Check:
+$$AA^{-1}=I,\quad A^{-1}A=I.$$
+
+Worked example:
+For $\begin{pmatrix}2&1\\5&3\end{pmatrix}$,
+determinant $=6-5=1$,
+so inverse $=\begin{pmatrix}3&-1\\-5&2\end{pmatrix}$.`,
+    },
+    {
+      title: '5) Solving Simultaneous Equations with Matrices',
+      content: String.raw`Write system as:
+$$AX=B,$$
+where $A$ is coefficient matrix, $X$ unknown vector, $B$ constant vector.
+
+If $A$ is invertible:
+$$X=A^{-1}B.$$
+
+Method:
+1. Form $A$, $X$, and $B$.
+2. Find $\det(A)$.
+3. Compute $A^{-1}$.
+4. Multiply $A^{-1}B$.
+
+This gives exact values of unknowns in one structured workflow.`,
+    },
+  ],
+  key_points: [
+    'Matrix order controls which operations are valid.',
+    'Matrix multiplication is not commutative in general.',
+    'Determinant zero means singular and non-invertible.',
+    '2x2 inverse depends on determinant and swapped diagonal signs.',
+    'Simultaneous equations can be solved via X = A^{-1}B.',
+  ],
+  exam_tips: [
+    'Check operation compatibility before calculating.',
+    'Show determinant step explicitly before inverse.',
+    'Write final unknown vector clearly from A^{-1}B.',
+    'Verify with substitution when time allows.',
+  ],
+  visual_descriptions: [
+    '2x2 matrix layout with determinant diagonal arrows',
+    'Flow from AX=B to X=A^{-1}B',
+    'Operation-compatibility grid for addition and multiplication',
+  ],
+};
+
 const generatedForm4Notes: Record<string, MathTopicNotes> = Object.fromEntries(
   form4Outlines.map((outline) => [outline.topic, buildForm4Note(outline)])
 );
 
 export const form4MathNotes: Record<string, MathTopicNotes> = {
   ...generatedForm4Notes,
+  'Real Numbers': realNumbersMasterNotes,
+  'Ratios, Rates and Proportions': ratiosRatesProportionsMasterNotes,
+  'Ratios, Rates, and Proportions': ratiosRatesProportionsMasterNotes,
   'Approximation and Accuracy': approximationAndAccuracyMasterNotes,
   'Measures and Mensuration': measuresAndMensurationMasterNotes,
   'Graphs (Advanced Graphs)': functionalGraphsMasterNotes,
   'Financial Mathematics': consumerArithmeticMasterNotes,
   'Travel Graphs': travelGraphsMasterNotes,
   Variation: variationMasterNotes,
+  Logarithms: logarithmsMasterNotes,
+  Matrices: matricesMasterNotes,
+  'Similarity and Congruency': similarityCongruencyMasterNotes,
+  'Similarity and Congruence': similarityCongruencyMasterNotes,
   'Rotation (Transformation)': rotationTransformationMasterNotes,
   'Enlargement (Transformation)': enlargementTransformationMasterNotes,
   'Reflection (Transformation)': reflectionTransformationMasterNotes,

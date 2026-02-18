@@ -198,13 +198,14 @@ class ProjectExportService:
             for section in sections:
                 if not isinstance(section, dict):
                     continue
-                stage = section.get('stage_number')
-                if stage is not None:
-                    if stage not in sections_by_stage:
-                        sections_by_stage[stage] = {}
-                    section_key = section.get('section_key')
-                    if section_key:
-                        sections_by_stage[stage][section_key] = section
+                stage = self._coerce_stage_number(section.get('stage_number'))
+                if stage is None:
+                    continue
+                if stage not in sections_by_stage:
+                    sections_by_stage[stage] = {}
+                section_key = section.get('section_key')
+                if section_key:
+                    sections_by_stage[stage][section_key] = section
         
         total_items = 0
         completed_items = 0
@@ -248,9 +249,29 @@ class ProjectExportService:
         checklist['overall_completion'] = round((completed_items / total_items) * 100) if total_items > 0 else 0
         
         return checklist
+
+    def _coerce_stage_number(self, value) -> Optional[int]:
+        """Coerce mixed stage values (int/str) into a valid stage number."""
+        try:
+            stage = int(value)
+        except (TypeError, ValueError):
+            return None
+        return stage if stage in self.STAGE_TITLES else None
     
-    def generate_pdf(self, project_id: int, user_id: str) -> Dict:
-        """Generate PDF submission pack"""
+    def _resolve_selected_stages(self, stage_number: Optional[int]) -> Optional[List[int]]:
+        """Resolve export stage selection."""
+        if stage_number is None:
+            return [1, 2, 3, 4, 5, 6]
+        try:
+            stage = int(stage_number)
+        except (TypeError, ValueError):
+            return None
+        if stage not in self.STAGE_TITLES:
+            return None
+        return [stage]
+
+    def generate_pdf(self, project_id: int, user_id: str, stage_number: Optional[int] = None) -> Dict:
+        """Generate PDF submission pack (full project or a single stage)."""
         try:
             data = self.get_project_data(project_id, user_id)
             
@@ -258,16 +279,19 @@ class ProjectExportService:
                 return {'success': False, 'error': 'Project not found'}
             
             project = data['project']
-            project_data = data['project_data']
+            selected_stages = self._resolve_selected_stages(stage_number)
+            if not selected_stages:
+                return {'success': False, 'error': 'Invalid stage number. Use 1-6.'}
             
             # Build context for template
-            context = self._build_export_context(data)
+            context = self._build_export_context(data, selected_stages=selected_stages)
             
             # Generate filename
             title_slug = re.sub(r'[^\w\s-]', '', project.get('project_title', 'Project')).strip().replace(' ', '_')[:30]
             subject_slug = re.sub(r'[^\w\s-]', '', project.get('subject', 'General')).strip().replace(' ', '_')[:20]
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f"ZIMSEC_ProjectPack_{subject_slug}_{title_slug}_{timestamp}.pdf"
+            scope_slug = f"Stage{selected_stages[0]}" if len(selected_stages) == 1 else "Full"
+            filename = f"ZIMSEC_ProjectPack_{subject_slug}_{title_slug}_{scope_slug}_{timestamp}.pdf"
             filepath = os.path.join(self.exports_dir, filename)
             
             # Generate HTML
@@ -306,25 +330,34 @@ class ProjectExportService:
                 'export_id': export_id,
                 'filename': filename,
                 'file_path': filepath,
-                'download_url': f'/static/exports/{filename}'
+                'download_url': f'/static/exports/{filename}',
+                'selected_stages': selected_stages,
             }
             
         except Exception as e:
             logger.error(f"Error generating PDF: {e}", exc_info=True)
             return {'success': False, 'error': str(e)}
     
-    def _build_export_context(self, data: Dict) -> Dict:
+    def _build_export_context(self, data: Dict, selected_stages: Optional[List[int]] = None) -> Dict:
         """Build context for template rendering"""
         project = data['project']
         project_data = data['project_data']
         user = data['user']
+        selected_stages = selected_stages or [1, 2, 3, 4, 5, 6]
         
         # Organize sections by stage
         sections_by_stage = {}
-        for section in data['sections']:
-            stage = section['stage_number']
+        for section in data.get('sections', []):
+            if not isinstance(section, dict):
+                continue
+            stage = self._coerce_stage_number(section.get('stage_number'))
+            if stage is None or stage not in selected_stages:
+                continue
             if stage not in sections_by_stage:
                 sections_by_stage[stage] = {}
+            section_key = section.get('section_key')
+            if not section_key:
+                continue
             
             content = section.get('content_json', {})
             if isinstance(content, str):
@@ -333,22 +366,29 @@ class ProjectExportService:
                 except:
                     content = {}
             
-            sections_by_stage[stage][section['section_key']] = {
-                'title': section['section_title'],
+            sections_by_stage[stage][section_key] = {
+                'title': section.get('section_title') or section_key,
                 'content': content.get('content', ''),
                 'completed': bool(content.get('content'))
             }
         
         # Organize evidence by stage
         evidence_by_stage = {}
-        for ev in data['evidence']:
-            stage = ev['stage_number']
+        for ev in data.get('evidence', []):
+            if not isinstance(ev, dict):
+                continue
+            stage = self._coerce_stage_number(ev.get('stage_number'))
+            if stage is None or stage not in selected_stages:
+                continue
             if stage not in evidence_by_stage:
                 evidence_by_stage[stage] = []
             evidence_by_stage[stage].append(ev)
         
         # Sort logbook by date
-        logbook = sorted(data['logbook'], key=lambda x: x.get('entry_date', ''))
+        logbook = sorted(
+            data.get('logbook', []),
+            key=lambda x: x.get('entry_date', '') if isinstance(x, dict) else '',
+        )
         
         # Generate executive summary
         executive_summary = self._generate_executive_summary(project, project_data, sections_by_stage)
@@ -363,6 +403,7 @@ class ProjectExportService:
             'logbook': logbook,
             'stage_titles': self.STAGE_TITLES,
             'stage_sections': self.STAGE_SECTIONS,
+            'selected_stages': selected_stages,
             'executive_summary': executive_summary,
             'generation_date': datetime.now().strftime('%d %B %Y'),
             'year': datetime.now().year
@@ -420,9 +461,10 @@ class ProjectExportService:
         user = context['user']
         
         # Build stages HTML
+        toc_html = self._build_toc_html(context['selected_stages'])
         stages_html = self._build_stages_html(context)
         references_html = self._build_references_html(context['references'])
-        appendices_html = self._build_appendices_html(context['evidence_by_stage'])
+        appendices_html = self._build_appendices_html(context['evidence_by_stage'], context['selected_stages'])
         logbook_html = self._build_logbook_html(context['logbook'])
         
         return {
@@ -434,19 +476,35 @@ class ProjectExportService:
             'year': context['year'],
             'generation_date': context['generation_date'],
             'executive_summary': context['executive_summary'],
+            'toc_html': toc_html,
             'stages_html': stages_html,
             'references_html': references_html,
             'appendices_html': appendices_html,
             'logbook_html': logbook_html
         }
+
+    def _build_toc_html(self, selected_stages: List[int]) -> str:
+        """Build dynamic table-of-contents HTML."""
+        html_parts = ['<ol>', '<li>Executive Summary</li>']
+        for stage_num in selected_stages:
+            stage_title = self.STAGE_TITLES.get(stage_num, f"Stage {stage_num}")
+            html_parts.append(f'<li>Stage {stage_num}: {stage_title}</li>')
+        html_parts.extend([
+            '<li>References / Bibliography</li>',
+            '<li>Appendices</li>',
+            '<li>Project Logbook</li>',
+            '</ol>',
+        ])
+        return '\n'.join(html_parts)
     
     def _build_stages_html(self, context: Dict) -> str:
         """Build HTML for all stages"""
         html_parts = []
         sections_by_stage = context['sections_by_stage']
+        selected_stages = context.get('selected_stages', [1, 2, 3, 4, 5, 6])
         
-        for stage_num in range(1, 7):
-            stage_title = self.STAGE_TITLES[stage_num]
+        for stage_num in selected_stages:
+            stage_title = self.STAGE_TITLES.get(stage_num, f"Stage {stage_num}")
             html_parts.append(f'<div class="stage"><h2>Stage {stage_num}: {stage_title}</h2>')
             
             stage_sections = self.STAGE_SECTIONS[stage_num]
@@ -543,14 +601,15 @@ class ProjectExportService:
         
         return '\n'.join(html_parts)
     
-    def _build_appendices_html(self, evidence_by_stage: Dict) -> str:
+    def _build_appendices_html(self, evidence_by_stage: Dict, selected_stages: Optional[List[int]] = None) -> str:
         """Build HTML for appendices section"""
         if not evidence_by_stage:
             return '<p class="incomplete"><em>No evidence uploaded yet.</em></p>'
         
         html_parts = []
+        selected = selected_stages or [1, 2, 3, 4, 5, 6]
         
-        for stage_num in range(1, 7):
+        for stage_num in selected:
             evidence = evidence_by_stage.get(stage_num, [])
             if evidence:
                 html_parts.append(f'<h3>Stage {stage_num} Evidence</h3>')
@@ -612,18 +671,7 @@ class ProjectExportService:
     
     <div class="toc">
         <h2>Table of Contents</h2>
-        <ol>
-            <li>Executive Summary</li>
-            <li>Stage 1: Problem Identification</li>
-            <li>Stage 2: Investigation of Related Ideas</li>
-            <li>Stage 3: Generation of Ideas</li>
-            <li>Stage 4: Development / Refinement</li>
-            <li>Stage 5: Presentation of Results</li>
-            <li>Stage 6: Evaluation & Recommendations</li>
-            <li>References / Bibliography</li>
-            <li>Appendices</li>
-            <li>Project Logbook</li>
-        </ol>
+        {toc_html}
     </div>
     
     <div class="section">

@@ -109,6 +109,7 @@ export function ScienceQuizPage() {
 
   const generateNext = useCallback(async () => {
     setGenerating(true);
+    setQuestion(null);
     setResult(null);
     setSelectedAnswer('');
     setTextAnswer('');

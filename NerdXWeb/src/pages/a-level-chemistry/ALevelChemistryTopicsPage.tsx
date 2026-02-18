@@ -156,7 +156,8 @@ export function ALevelChemistryTopicsPage() {
       </div>
 
       <Link to="/app" className="super-back-btn">
-        <ArrowLeft size={24} />
+        <ArrowLeft size={18} />
+        <span>Dashboard</span>
       </Link>
 
       <div className="science-hero">
@@ -294,13 +295,13 @@ export function ALevelChemistryTopicsPage() {
                 {filteredTopics.length} topics
               </span>
             </div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', flex: '1 1 220px', minWidth: 0 }}>
               <Search size={14} />
               <input
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 placeholder="Search topics..."
-                style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', minWidth: 190 }}
+                style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', minWidth: 0, width: '100%' }}
               />
             </label>
           </div>

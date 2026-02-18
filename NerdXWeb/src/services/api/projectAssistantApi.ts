@@ -1,5 +1,5 @@
 // Project Assistant API for NerdX Web (ZIMSEC projects)
-import api from './config';
+import api, { API_BASE_URL } from './config';
 
 export type ProjectLevel = 'O-Level' | 'A-Level';
 
@@ -37,6 +37,7 @@ export interface ProjectHistoryItem {
   role: 'user' | 'assistant';
   content: string;
   timestamp?: string | null;
+  image_url?: string | null;
 }
 
 export interface ProjectChatResponse {
@@ -44,6 +45,8 @@ export interface ProjectChatResponse {
   project_id: number;
   context_pack_id?: string;
   credits_remaining?: number;
+  image_url?: string;
+  aspect_ratio?: string;
 }
 
 export interface ProjectDocumentAnalysis {
@@ -51,9 +54,48 @@ export interface ProjectDocumentAnalysis {
   interaction_id?: string;
 }
 
+export interface SubmissionChecklist {
+  project_id: number;
+  stages: Record<number, {
+    title: string;
+    items: Array<{
+      key: string;
+      title: string;
+      completed: boolean;
+    }>;
+    completed: number;
+    total: number;
+  }>;
+  evidence_count: number;
+  references_count: number;
+  logbook_entries_count: number;
+  overall_completion: number;
+  ready_for_submission?: boolean;
+  missing_stages?: Array<number | string>;
+  message?: string;
+}
+
+export interface ProjectExportResult {
+  export_id?: number;
+  filename?: string;
+  download_url: string;
+  selected_stages?: number[];
+}
+
 function normalizeProjectTitle(title: unknown): string {
   if (typeof title !== 'string') return '';
   return title.trim();
+}
+
+function toAbsoluteDownloadUrl(downloadUrl: string): string {
+  if (!downloadUrl) return '';
+  if (/^https?:\/\//i.test(downloadUrl)) return downloadUrl;
+  const base = API_BASE_URL || window.location.origin;
+  try {
+    return new URL(downloadUrl, base).toString();
+  } catch {
+    return downloadUrl;
+  }
 }
 
 export const projectAssistantApi = {
@@ -116,5 +158,51 @@ export const projectAssistantApi = {
     });
     return (response.data?.data ?? null) as ProjectDocumentAnalysis | null;
   },
-};
 
+  generateImage: async (
+    projectId: number,
+    prompt: string,
+    aspectRatio?: string
+  ): Promise<ProjectChatResponse | null> => {
+    const response = await api.post(`/api/mobile/project/${projectId}/generate-image`, {
+      prompt,
+      ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}),
+    });
+    const data = (response.data?.data ?? null) as ProjectChatResponse | null;
+    if (data && response.data?.credits_remaining !== undefined) {
+      data.credits_remaining = response.data.credits_remaining;
+    }
+    return data;
+  },
+
+  getSubmissionChecklist: async (projectId: number): Promise<SubmissionChecklist | null> => {
+    const response = await api.get(`/api/mobile/project/${projectId}/export/checklist`);
+    return (response.data?.data ?? response.data?.checklist ?? null) as SubmissionChecklist | null;
+  },
+
+  getExportPreview: async (projectId: number): Promise<SubmissionChecklist | null> => {
+    const response = await api.get(`/api/mobile/project/${projectId}/export/preview`);
+    return (response.data?.data ?? response.data?.checklist ?? null) as SubmissionChecklist | null;
+  },
+
+  generateSubmissionPack: async (
+    projectId: number,
+    stageNumber?: number
+  ): Promise<ProjectExportResult | null> => {
+    const response = await api.post(`/api/mobile/project/${projectId}/export/generate`, {
+      file_type: 'pdf',
+      ...(typeof stageNumber === 'number' ? { stage_number: stageNumber } : {}),
+    });
+
+    const raw = response.data?.data ?? response.data ?? null;
+    const downloadUrl = raw?.download_url as string | undefined;
+    if (!downloadUrl) return null;
+
+    return {
+      export_id: raw?.export_id,
+      filename: raw?.filename,
+      download_url: toAbsoluteDownloadUrl(downloadUrl),
+      selected_stages: Array.isArray(raw?.selected_stages) ? raw.selected_stages : undefined,
+    };
+  },
+};

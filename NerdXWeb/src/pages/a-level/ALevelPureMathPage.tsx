@@ -202,7 +202,8 @@ export function ALevelPureMathPage() {
       </div>
 
       <Link to="/app" className="super-back-btn">
-        <ArrowLeft size={22} />
+        <ArrowLeft size={18} />
+        <span>Dashboard</span>
       </Link>
 
       <div className="science-hero">

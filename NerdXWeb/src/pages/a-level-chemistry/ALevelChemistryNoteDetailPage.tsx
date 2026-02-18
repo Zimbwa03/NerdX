@@ -88,7 +88,8 @@ export function ALevelChemistryNoteDetailPage() {
       <div className="science-universe-page chem">
         <div className="science-universe-bg chem-bg" />
         <Link to="/app/a-level-chemistry" className="super-back-btn">
-          <ArrowLeft size={24} />
+          <ArrowLeft size={18} />
+          <span>Back</span>
         </Link>
         <div className="science-hero">
           <h1>Notes Not Found</h1>

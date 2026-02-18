@@ -170,7 +170,8 @@ export const ChemistryTopicsPage = () => {
             </div>
 
             <Link to="/app" className="super-back-btn">
-                <ArrowLeft size={24} />
+                <ArrowLeft size={18} />
+                <span>Dashboard</span>
             </Link>
 
             {/* Hero Section */}

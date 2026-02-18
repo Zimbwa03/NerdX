@@ -12,7 +12,8 @@ export function BESNotesPage() {
       <div className="science-grid-overlay" />
 
       <Link to="/app/business-enterprise-skills" className="super-back-btn">
-        <ArrowLeft size={24} />
+        <ArrowLeft size={18} />
+        <span>Back</span>
       </Link>
 
       <div className="science-hero">

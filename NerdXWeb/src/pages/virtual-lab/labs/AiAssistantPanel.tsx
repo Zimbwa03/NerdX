@@ -96,10 +96,16 @@ export function AiAssistantPanel({
             <style>{`
         .vl-ai-panel {
           position: fixed; bottom: 20px; right: 20px; 
-          width: 320px; height: 450px;
+          width: min(320px, calc(100vw - 24px));
+          height: min(450px, calc(100vh - 24px));
           background: #1A1D26; border: 1px solid #333;
           border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
           display: flex; flex-direction: column; z-index: 1000;
+        }
+        @supports (height: 100dvh) {
+          .vl-ai-panel {
+            height: min(450px, calc(100dvh - 24px));
+          }
         }
         .vl-ai-header {
           padding: 12px; border-bottom: 1px solid #333;
@@ -141,6 +147,21 @@ export function AiAssistantPanel({
             cursor: pointer; white-space: nowrap; transition: all 0.2s;
         }
         .vl-pill:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        @media (max-width: 640px) {
+          .vl-ai-panel {
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            width: auto;
+            height: min(62vh, 420px);
+          }
+          .vl-msg {
+            max-width: 92%;
+          }
+          .vl-ai-input input {
+            font-size: 16px;
+          }
+        }
       `}</style>
         </div>
     );

@@ -22,6 +22,12 @@
 
 html {
   background-color: #0A0E21;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -30,11 +36,26 @@ body {
   background: linear-gradient(135deg, #0F0C29 0%, #302B63 50%, #24243E 100%) !important;
   min-height: 100vh;
   color: var(--text-primary);
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 #root {
   min-height: 100vh;
   background: transparent;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+img,
+video,
+canvas,
+iframe {
+  max-width: 100%;
 }
 
 /* Auth Layout - Two Panel */
@@ -556,6 +577,10 @@ body {
   background-attachment: fixed;
   position: relative;
   --app-header-height: 64px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Animated subtle floating particles for knowledge/education theme */
@@ -716,6 +741,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
 }
 
 .header-logo {
@@ -727,6 +753,7 @@ body {
   color: #fff;
   text-decoration: none;
   letter-spacing: -0.02em;
+  min-width: 0;
 }
 
 .header-logo-img {
@@ -741,6 +768,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .credits-badge {
@@ -828,11 +856,39 @@ body {
 
 @media (max-width: 768px) {
   .header-inner {
-    padding: 14px 20px;
+    padding: 12px 16px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .header-actions {
+    margin-left: auto;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .update-banner {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .update-banner-text {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .update-banner-actions {
+    flex-wrap: wrap;
   }
 
   .app-main {
-    padding: 12px 16px 16px;
+    padding: 12px 14px 16px;
+    min-width: 0;
+  }
+
+  .app-main > * {
+    min-width: 0;
   }
 
   .credits-badge {
@@ -843,6 +899,39 @@ body {
 
   .credits-value {
     font-size: 16px;
+  }
+}
+
+@media (max-width: 1024px) {
+  html,
+  body,
+  #root,
+  .app-layout,
+  .app-main {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .dashboard-header {
+    --app-header-height: 56px;
+  }
+
+  .header-inner {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .update-banner {
+    top: var(--app-header-height, 56px);
+    padding: 8px 12px;
+  }
+
+  .app-main {
+    padding-top: 10px;
   }
 }
 
@@ -1241,6 +1330,101 @@ body {
 .logout-btn:hover {
   background: rgba(255, 23, 68, 0.15);
   border-color: rgba(255, 23, 68, 0.35);
+}
+
+/* ===== Reusable Back Button (BackButton component) ===== */
+.nerdx-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 50px;
+  transition: all 0.22s ease;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* Default variant: solid pill on content pages */
+.nerdx-back-btn--default {
+  padding: 8px 18px 8px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 20px;
+}
+.nerdx-back-btn--default:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  transform: translateX(-2px);
+}
+
+/* Glass variant: floating glassmorphism pill for universe/full-bleed pages */
+.nerdx-back-btn--glass {
+  position: fixed;
+  top: calc(var(--app-header-height, 64px) + 16px);
+  left: 24px;
+  z-index: 90;
+  padding: 10px 20px 10px 14px;
+  background: rgba(15, 20, 40, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+.nerdx-back-btn--glass:hover {
+  background: rgba(15, 20, 40, 0.85);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  transform: translateX(-2px);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.4);
+}
+
+/* Inline variant: minimal text link */
+.nerdx-back-btn--inline {
+  padding: 4px 0;
+  background: transparent;
+  border: none;
+  color: var(--accent, #7C4DFF);
+  margin-bottom: 16px;
+}
+.nerdx-back-btn--inline:hover {
+  color: #fff;
+  transform: translateX(-2px);
+}
+
+/* Light theme overrides */
+[data-theme="light"] .nerdx-back-btn--default {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .nerdx-back-btn--default:hover {
+  background: rgba(0, 0, 0, 0.09);
+  border-color: rgba(0, 0, 0, 0.18);
+  color: var(--text-primary);
+}
+[data-theme="light"] .nerdx-back-btn--glass {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: var(--text-secondary);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+[data-theme="light"] .nerdx-back-btn--glass:hover {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(0, 0, 0, 0.18);
+  color: var(--text-primary);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.15);
+}
+[data-theme="light"] .nerdx-back-btn--inline {
+  color: var(--primary, #7C4DFF);
+}
+[data-theme="light"] .nerdx-back-btn--inline:hover {
+  color: var(--text-primary);
 }
 
 /* Credits, Account, Progress pages */
@@ -8213,6 +8397,82 @@ body {
   }
 }
 
+@media (max-width: 640px) {
+  .science-topics-page {
+    min-width: 0;
+  }
+
+  .science-subject-tabs {
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .science-subject-tab {
+    flex: 1 1 calc(50% - 8px);
+    min-width: 0;
+    padding: 12px;
+    gap: 8px;
+    text-align: left;
+  }
+
+  .science-subject-desc {
+    display: none;
+  }
+
+  .science-feature-card {
+    padding: 14px;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .science-feature-content h3 {
+    font-size: 15px;
+  }
+
+  .science-feature-content p,
+  .science-topic-name,
+  .science-topic-chip {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .science-topics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .science-topic-card {
+    text-align: left;
+  }
+
+  .science-modal {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .science-modal-options {
+    flex-wrap: wrap;
+  }
+
+  .science-modal-option {
+    min-width: 120px;
+    flex: 1 1 calc(50% - 8px);
+  }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .science-topics-header {
+    margin-bottom: 16px;
+  }
+
+  .science-topics-title {
+    font-size: 24px;
+  }
+
+  .science-subject-tabs {
+    margin-bottom: 16px;
+  }
+}
+
 /* Science Notes Page */
 .science-notes-page {
   padding-bottom: 20px;
@@ -8945,6 +9205,33 @@ body {
 .back-btn-v2:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
+  transform: translateX(-2px);
+}
+
+[data-theme="light"] .back-btn-v2 {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .back-btn-v2:hover {
+  background: rgba(0, 0, 0, 0.09);
+  color: var(--text-primary);
+}
+
+/* Light theme for super-back-btn */
+[data-theme="light"] .super-back-btn {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: var(--text-secondary);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .super-back-btn:hover {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(0, 0, 0, 0.18);
+  color: var(--text-primary);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.15);
 }
 
 .subject-header-content {
@@ -9243,7 +9530,10 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  padding: calc(20px + env(safe-area-inset-top, 0px)) calc(20px + env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) calc(20px + env(safe-area-inset-left, 0px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .modal-v2 {
@@ -9253,7 +9543,35 @@ body {
   padding: 32px;
   max-width: 420px;
   width: 100%;
+  max-height: calc(100vh - 40px);
+  max-height: calc(100svh - 40px);
+  overflow-y: auto;
+  overflow-x: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Shared modal safety for routes using inline .modal-overlay/.modal-content */
+.modal-overlay {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.modal-content {
+  max-height: calc(100vh - 24px);
+  max-height: calc(100svh - 24px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+@supports (height: 100dvh) {
+  .modal-v2 {
+    max-height: calc(100dvh - 40px);
+  }
+
+  .modal-content {
+    max-height: calc(100dvh - 24px);
+  }
 }
 
 .modal-title {
@@ -9268,6 +9586,7 @@ body {
   display: flex;
   gap: 12px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .modal-option {
@@ -9281,6 +9600,10 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-align: center;
 }
 
 .modal-option:hover {
@@ -9334,6 +9657,12 @@ body {
 .modal-actions {
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Shared class used by topic-page quiz-start modals */
+.modal-content .format-options {
+  width: 100%;
 }
 
 .modal-cancel {
@@ -9376,6 +9705,41 @@ body {
 .modal-cancel:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+@media (max-width: 640px), (max-height: 620px) {
+  .modal-overlay,
+  .modal-overlay-v2,
+  .vc-modal-overlay {
+    align-items: flex-start !important;
+    padding: 12px;
+  }
+
+  .modal-content,
+  .modal-v2,
+  .vc-modal {
+    margin-top: 4px;
+    border-radius: 16px;
+    padding: 18px !important;
+  }
+
+  .modal-options,
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-content .format-options {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .modal-option,
+  .modal-cancel,
+  .modal-start,
+  .modal-content .format-options > button {
+    width: 100%;
+  }
 }
 
 /* ============================================
@@ -12146,6 +12510,18 @@ body {
 
 [data-theme="light"] .header-notifications-badge {
   border-color: rgba(255, 255, 255, 0.95);
+}
+
+@media (max-width: 480px) {
+  .header-notifications-badge {
+    top: 4px;
+    right: 4px;
+    min-width: 16px;
+    height: 16px;
+    line-height: 16px;
+    font-size: 10px;
+    padding: 0 4px;
+  }
 }
 
 /* Account tools (AccountPage) */
@@ -20848,6 +21224,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100svh;
   background: #0d0d1a;
   overflow: hidden;
 }
@@ -20860,6 +21237,7 @@ body {
   align-items: center;
   justify-content: center;
   height: 100vh;
+  height: 100svh;
   gap: 1rem;
   background: #0d0d1a;
   color: rgba(255,255,255,0.6);
@@ -20871,6 +21249,7 @@ body {
   align-items: center;
   justify-content: center;
   height: 100vh;
+  height: 100svh;
   background: #0d0d1a;
   padding: 2rem;
 }
@@ -20899,7 +21278,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 1rem;
+  padding: calc(0.5rem + env(safe-area-inset-top, 0px)) calc(1rem + env(safe-area-inset-right, 0px)) 0.5rem calc(1rem + env(safe-area-inset-left, 0px));
   background: rgba(255,255,255,0.03);
   border-bottom: 1px solid rgba(255,255,255,0.06);
   flex-shrink: 0;
@@ -21115,6 +21494,8 @@ body {
   transition: all 0.2s;
   text-decoration: none;
   white-space: nowrap;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .vc-join-btn:hover {
   transform: translateY(-1px);
@@ -21195,11 +21576,20 @@ body {
 }
 
 @media (max-width: 600px) {
-  .vc-topbar { padding: 0.4rem 0.6rem; gap: 0.5rem; }
+  .vc-topbar {
+    padding: calc(0.4rem + env(safe-area-inset-top, 0px)) calc(0.6rem + env(safe-area-inset-right, 0px)) 0.4rem calc(0.6rem + env(safe-area-inset-left, 0px));
+    gap: 0.5rem;
+  }
   .vc-topbar__subject { font-size: 0.8rem; }
   .vc-topbar__timer { font-size: 0.75rem; padding: 0.25rem 0.6rem; }
   .vc-view-toggles { display: none; }
   .vc-end-btn { padding: 0.35rem 0.7rem; font-size: 0.75rem; }
+  .vc-join-btn {
+    white-space: normal;
+    text-align: center;
+    justify-content: center;
+    line-height: 1.25;
+  }
 }
 
 /* ─── Dashboard Upcoming Lessons Section ────────────────────────────────────── */
@@ -21386,6 +21776,10 @@ body {
   justify-content: center;
   z-index: 1000;
   backdrop-filter: blur(4px);
+  padding: calc(12px + env(safe-area-inset-top, 0px)) calc(12px + env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) calc(12px + env(safe-area-inset-left, 0px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 .vc-modal {
   background: #1a1a2e;
@@ -21394,6 +21788,10 @@ body {
   padding: 2rem;
   max-width: 400px;
   width: 90%;
+  max-height: calc(100vh - 24px);
+  max-height: calc(100svh - 24px);
+  overflow-y: auto;
+  overflow-x: hidden;
   text-align: center;
 }
 .vc-modal h3 {
@@ -21412,6 +21810,12 @@ body {
   gap: 0.75rem;
   justify-content: center;
   flex-wrap: wrap;
+}
+
+@supports (height: 100dvh) {
+  .vc-modal {
+    max-height: calc(100dvh - 24px);
+  }
 }
 
 /* Panel error fallback */
@@ -22981,6 +23385,7 @@ body {
   right: 0;
   width: min(320px, 86vw);
   height: 100vh;
+  height: 100svh;
   z-index: 200;
   background: rgba(10,14,33,0.98);
   backdrop-filter: blur(16px);
@@ -22989,6 +23394,8 @@ body {
   flex-direction: column;
   gap: 14px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   animation: slideInRight 0.3s ease;
 }
 
@@ -23014,6 +23421,10 @@ body {
   border-radius: 12px;
   font-size: 0.9rem;
   gap: 10px;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .dash-mobile-menu__nav .sidebar-link:hover {
@@ -23033,6 +23444,10 @@ body {
   font-size: 0.85rem;
   cursor: pointer;
   transition: background 0.2s;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-align: left;
 }
 
 .dash-mobile-menu__signout:hover {
@@ -24710,6 +25125,7 @@ body {
   border-right: 1px solid rgba(255,255,255,0.06);
   z-index: 150;
   overflow-y: auto;
+  overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.1) transparent;
 }
@@ -24788,6 +25204,9 @@ body {
   font-weight: 600;
   margin: 0;
   text-align: center;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .td-v2-sidebar__status {
@@ -24832,6 +25251,9 @@ body {
   transition: all 0.2s;
   text-align: left;
   width: 100%;
+  min-width: 0;
+  white-space: normal;
+  line-height: 1.3;
 }
 
 .td-v2-sidebar__nav-item:hover {
@@ -24885,6 +25307,10 @@ body {
   cursor: pointer;
   transition: all 0.2s;
   width: 100%;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .td-v2-sidebar__view-profile:hover {
@@ -26313,6 +26739,7 @@ body {
     z-index: 200;
     transition: left 0.3s ease;
     height: 100vh;
+    height: 100svh;
   }
 
   .td-v2-sidebar--open {
@@ -27176,4 +27603,391 @@ body {
     width: 100%;
     justify-content: center;
   }
+}
+
+/* Final mobile text-fitting pass for cards/chips/tables */
+@media (max-width: 1024px) {
+  .mission-task-title,
+  .insights-skill-name,
+  .insights-skill-meta,
+  .insights-skill-table-name,
+  .insights-skill-table-meta,
+  .notifications-item-text,
+  .cpv2-txn-desc,
+  .km-skill-name,
+  .teacher-setup-page--v3 .teacher-setup-summary-text span,
+  .td-v2-timeline-item__desc,
+  .vc-topbar__subject,
+  .vc-topbar__with {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .science-topic-chip,
+  .math-topic-chip,
+  .topic-chip-v2,
+  .insights-skill-badge,
+  .marketplace-filter-toggle,
+  .lp-floating-card,
+  .auth-divider span,
+  .teacher-setup-chip,
+  .teacher-setup-topic-chip,
+  .exam-setup-topic-chip,
+  .teacher-quick-ask-chip,
+  .mission-start-btn,
+  .mission-secondary-btn,
+  .insights-action-btn,
+  .cpv2-wallet-topup-btn,
+  .vc-join-btn,
+  .vc-end-btn,
+  .find-teacher-banner__cta {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    text-align: center;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .nerdx-back-btn {
+    max-width: 100%;
+  }
+
+  .vc-main,
+  .vc-video-panel,
+  .vc-whiteboard-panel {
+    min-width: 0;
+  }
+
+  .exam-breakdown-score,
+  .badge-count,
+  .plan-time,
+  .td-v2-timeline-item__time,
+  .level-ring-info {
+    white-space: normal;
+  }
+
+  .math-renderer .md-table th,
+  .math-renderer .md-table td,
+  .vl-table th,
+  .vl-table td,
+  .performance-table thead th,
+  .performance-table tbody td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .vl-table,
+  .performance-table {
+    min-width: 100%;
+  }
+
+  .vl-table-wrap,
+  .performance-table-wrap,
+  .math-renderer .md-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .weekly-chart-container svg {
+    min-width: 280px;
+  }
+}
+
+/* Keep virtual classroom usable on short-height landscape phones */
+@media (max-height: 620px) and (orientation: landscape) {
+  .virtual-classroom--split .vc-main {
+    flex-direction: column;
+  }
+
+  .virtual-classroom--split .vc-video-panel {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: 38%;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .vc-topbar {
+    padding: calc(0.35rem + env(safe-area-inset-top, 0px)) calc(0.55rem + env(safe-area-inset-right, 0px)) 0.35rem calc(0.55rem + env(safe-area-inset-left, 0px));
+    gap: 0.45rem;
+  }
+
+  .vc-topbar__subject {
+    font-size: 0.78rem;
+    line-height: 1.2;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .vc-topbar__with {
+    display: none;
+  }
+
+  .vc-view-toggles {
+    display: none;
+  }
+
+  .vc-topbar__timer {
+    font-size: 0.72rem;
+    padding: 0.24rem 0.56rem;
+  }
+
+  .vc-end-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.72rem;
+    line-height: 1.2;
+  }
+}
+
+/* Prevent iOS input auto-zoom and viewport jumps on mobile forms */
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Use dynamic viewport units so portrait/landscape mobile browser chrome does not break layout */
+@supports (height: 100dvh) {
+  body,
+  #root,
+  .auth-layout,
+  .auth-page,
+  .auth-loading,
+  .app-layout,
+  .lp {
+    min-height: 100dvh;
+  }
+
+  .teacher-setup-page,
+  .teacher-mode-page,
+  .teacher-history-page {
+    min-height: calc(100dvh - var(--app-header-height, 64px));
+  }
+
+  .science-topics-page,
+  .science-notes-page,
+  .dashboard-page-v2,
+  .credits-page-v2,
+  .global-feed-page,
+  .td-v2,
+  .td-v2-loading,
+  .td-v2-no-profile {
+    min-height: calc(100dvh - var(--app-header-height, 64px) - 36px);
+  }
+
+  .virtual-classroom,
+  .vc-loading,
+  .vc-error,
+  .dash-mobile-menu {
+    height: 100dvh;
+  }
+
+  .td-v2-sidebar {
+    height: calc(100dvh - var(--app-header-height, 64px));
+  }
+
+  @media (max-width: 768px) {
+    .td-v2-sidebar {
+      height: 100dvh;
+    }
+  }
+}
+
+/* Project Assistant (Teacher-mode parity) */
+.project-assistant-chat-v3 .project-ai-mode-active {
+  border-color: rgba(16, 185, 129, 0.65) !important;
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #6ee7b7 !important;
+}
+
+.project-assistant-chat-v3 .project-assistant-image-wrap {
+  margin-top: 12px;
+}
+
+.project-assistant-chat-v3 .project-assistant-generated-image {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  background: rgba(2, 6, 23, 0.45);
+}
+
+.project-assistant-chat-v3 .project-assistant-image-actions {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.project-assistant-chat-v3 .project-assistant-image-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 10px;
+  padding: 7px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.5);
+  color: rgba(226, 232, 240, 0.95);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.project-assistant-chat-v3 .project-assistant-image-actions button:hover {
+  border-color: rgba(124, 77, 255, 0.48);
+  background: rgba(124, 77, 255, 0.2);
+}
+
+.project-assistant-chat-v3 .project-assistant-mode-indicator {
+  max-width: 960px;
+  margin: 0 auto 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.16);
+  color: #6ee7b7;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.project-assistant-chat-v3 .project-assistant-mode-indicator button {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.project-assistant-chat-v3 .project-assistant-aspect-btn {
+  flex-shrink: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.48);
+  color: rgba(226, 232, 240, 0.9);
+  font-size: 11px;
+  padding: 0 9px;
+  height: 38px;
+  cursor: pointer;
+}
+
+.project-assistant-chat-v3 .project-assistant-add-menu button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.project-assistant-chat-v3 .project-assistant-footer-meta {
+  max-width: 960px;
+  margin: 8px auto 0;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  color: rgba(226, 232, 240, 0.72);
+  font-size: 12px;
+}
+
+.project-assistant-checklist-modal {
+  width: min(640px, 92vw);
+  max-width: 640px;
+}
+
+.project-assistant-checklist-modal h3 {
+  margin-bottom: 10px;
+}
+
+.project-assistant-checklist-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.project-assistant-checklist-card {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.58);
+  padding: 10px;
+}
+
+.project-assistant-checklist-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgba(226, 232, 240, 0.95);
+  font-size: 12px;
+}
+
+.project-assistant-checklist-title strong {
+  font-size: 12px;
+  color: #dcfce7;
+}
+
+.project-assistant-checklist-bar {
+  margin-top: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.28);
+  overflow: hidden;
+}
+
+.project-assistant-checklist-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #22c55e, #10b981);
+}
+
+.project-assistant-checklist-stats {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: rgba(226, 232, 240, 0.82);
+  font-size: 12px;
+}
+
+@media (max-width: 820px) {
+  .project-assistant-chat-v3 .project-assistant-footer-meta {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+
+  .project-assistant-checklist-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+[data-theme="light"] .project-assistant-chat-v3 .project-assistant-image-actions button,
+[data-theme="light"] .project-assistant-chat-v3 .project-assistant-aspect-btn {
+  background: #fff;
+  border-color: rgba(15, 23, 42, 0.16);
+  color: #1f2937;
+}
+
+[data-theme="light"] .project-assistant-chat-v3 .project-assistant-mode-indicator {
+  background: rgba(16, 185, 129, 0.08);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.26);
+}
+
+[data-theme="light"] .project-assistant-chat-v3 .project-assistant-footer-meta,
+[data-theme="light"] .project-assistant-checklist-title,
+[data-theme="light"] .project-assistant-checklist-stats {
+  color: #374151;
+}
+
+[data-theme="light"] .project-assistant-checklist-card {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.1);
 }

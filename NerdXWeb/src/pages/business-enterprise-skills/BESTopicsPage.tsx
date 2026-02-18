@@ -151,7 +151,8 @@ export function BESTopicsPage() {
       </div>
 
       <Link to="/app" className="super-back-btn">
-        <ArrowLeft size={24} />
+        <ArrowLeft size={18} />
+        <span>Dashboard</span>
       </Link>
 
       <div className="science-hero">
@@ -294,7 +295,7 @@ export function BESTopicsPage() {
               {pendingTopic ? pendingTopic.name : 'BES Quiz'}
             </h3>
             <p style={{ opacity: 0.72, marginTop: 0, marginBottom: 20 }}>Choose question type</p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div className="format-options" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               <button
                 type="button"
                 style={{
@@ -375,4 +376,3 @@ export function BESTopicsPage() {
     </div>
   );
 }
-

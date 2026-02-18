@@ -1,6 +1,7 @@
 // Enhanced Gamification Service
 // Complete gamification system with levels, XP, badges, streaks, and progress tracking
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from './api/config';
 
 // ============= TYPE DEFINITIONS =============
 
@@ -194,6 +195,45 @@ export const gamificationService = {
         }
     },
 
+    // Calculate level directly from total XP
+    getLevelFromTotalXP: (totalXP: number): number => {
+        let remainingXP = Math.max(0, totalXP);
+        let level = 1;
+        let xpForLevel = XP_PER_LEVEL(1);
+
+        while (remainingXP >= xpForLevel && level < 100) {
+            remainingXP -= xpForLevel;
+            level++;
+            xpForLevel = XP_PER_LEVEL(level);
+        }
+
+        return level;
+    },
+
+    // Fire backend engagement event for badge unlock (best effort)
+    notifyBadgeEarned: async (badge: Badge) => {
+        try {
+            await api.post('/api/mobile/notifications/engagement/badge-earned', {
+                badge_id: badge.id,
+                badge_name: badge.name,
+                rarity: badge.rarity,
+            });
+        } catch {
+            // Non-blocking: gamification should still work offline/network-fail
+        }
+    },
+
+    // Fire backend engagement event for level-up social proof (best effort)
+    notifyLevelUp: async (newLevel: number) => {
+        try {
+            await api.post('/api/mobile/notifications/engagement/level-up', {
+                new_level: newLevel,
+            });
+        } catch {
+            // Non-blocking
+        }
+    },
+
     // Calculate level from total XP
     getLevelInfo: async (): Promise<LevelInfo> => {
         const progress = await gamificationService.getProgress();
@@ -228,14 +268,17 @@ export const gamificationService = {
     // Add XP and check for level up
     addXP: async (xp: number): Promise<{ newXP: number; leveledUp: boolean; newLevel?: number }> => {
         const progress = await gamificationService.getProgress();
-        const oldLevelInfo = await gamificationService.getLevelInfo();
+        const oldLevel = gamificationService.getLevelFromTotalXP(progress.totalXP);
 
         progress.totalXP += xp;
         progress.points += xp; // Also add to points for backward compatibility
         await gamificationService.saveProgress(progress);
 
-        const newLevelInfo = await gamificationService.getLevelInfo();
-        const leveledUp = newLevelInfo.level > oldLevelInfo.level;
+        const newLevel = gamificationService.getLevelFromTotalXP(progress.totalXP);
+        const leveledUp = newLevel > oldLevel;
+        if (leveledUp) {
+            await gamificationService.notifyLevelUp(newLevel);
+        }
 
         // Check for XP badges
         await gamificationService.checkXPBadges(progress.totalXP);
@@ -243,7 +286,7 @@ export const gamificationService = {
         return {
             newXP: progress.totalXP,
             leveledUp,
-            newLevel: leveledUp ? newLevelInfo.level : undefined,
+            newLevel: leveledUp ? newLevel : undefined,
         };
     },
 
@@ -258,6 +301,7 @@ export const gamificationService = {
     // Log a question answered
     logQuestionAnswered: async (correct: boolean) => {
         const progress = await gamificationService.getProgress();
+        const previousLevel = gamificationService.getLevelFromTotalXP(progress.totalXP);
 
         // Reset daily counters if new day
         const today = new Date().toDateString();
@@ -282,6 +326,10 @@ export const gamificationService = {
         progress.points += xp;
 
         await gamificationService.saveProgress(progress);
+        const newLevel = gamificationService.getLevelFromTotalXP(progress.totalXP);
+        if (newLevel > previousLevel) {
+            await gamificationService.notifyLevelUp(newLevel);
+        }
 
         // Check milestone badges
         await gamificationService.checkQuestionBadges(progress.totalQuestionsAnswered);
@@ -290,6 +338,7 @@ export const gamificationService = {
     // Log quiz completed
     logQuizCompleted: async (score: number, totalQuestions: number) => {
         const progress = await gamificationService.getProgress();
+        const previousLevel = gamificationService.getLevelFromTotalXP(progress.totalXP);
 
         progress.totalQuizzesCompleted++;
         progress.todayQuizzesCompleted++;
@@ -310,6 +359,10 @@ export const gamificationService = {
         progress.points += xp;
 
         await gamificationService.saveProgress(progress);
+        const newLevel = gamificationService.getLevelFromTotalXP(progress.totalXP);
+        if (newLevel > previousLevel) {
+            await gamificationService.notifyLevelUp(newLevel);
+        }
 
         // Check badges
         await gamificationService.checkQuizBadges(progress.totalQuizzesCompleted);
@@ -321,6 +374,7 @@ export const gamificationService = {
     // Log lab completed
     logLabCompleted: async (xpEarned: number) => {
         const progress = await gamificationService.getProgress();
+        const previousLevel = gamificationService.getLevelFromTotalXP(progress.totalXP);
 
         progress.labsCompleted++;
         progress.labXPEarned += xpEarned;
@@ -328,6 +382,10 @@ export const gamificationService = {
         progress.points += xpEarned;
 
         await gamificationService.saveProgress(progress);
+        const newLevel = gamificationService.getLevelFromTotalXP(progress.totalXP);
+        if (newLevel > previousLevel) {
+            await gamificationService.notifyLevelUp(newLevel);
+        }
 
         // Check lab badges
         await gamificationService.checkLabBadges(progress.labsCompleted);
@@ -348,6 +406,7 @@ export const gamificationService = {
     }) => {
         const { xpEarned, totalQuestions, correctAnswers } = params;
         const progress = await gamificationService.getProgress();
+        const previousLevel = gamificationService.getLevelFromTotalXP(progress.totalXP);
 
         // Reset daily counters if new day
         const todayLabel = new Date().toDateString();
@@ -391,6 +450,10 @@ export const gamificationService = {
         progress.points += xpEarned;
 
         await gamificationService.saveProgress(progress);
+        const newLevel = gamificationService.getLevelFromTotalXP(progress.totalXP);
+        if (newLevel > previousLevel) {
+            await gamificationService.notifyLevelUp(newLevel);
+        }
 
         // Badges
         await gamificationService.checkLabBadges(progress.labsCompleted);
@@ -550,6 +613,7 @@ export const gamificationService = {
                 const earnedBadge = { ...badge, earnedDate: new Date().toISOString() };
                 progress.badges.push(earnedBadge);
                 await gamificationService.saveProgress(progress);
+                await gamificationService.notifyBadgeEarned(earnedBadge);
 
                 // Award bonus XP for badge
                 const xpBonus = badge.rarity === 'legendary' ? 500 :

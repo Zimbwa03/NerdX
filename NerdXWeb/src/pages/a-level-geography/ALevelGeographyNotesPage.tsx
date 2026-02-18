@@ -12,7 +12,8 @@ export function ALevelGeographyNotesPage() {
       <div className="science-grid-overlay" />
 
       <Link to="/app/a-level-geography" className="super-back-btn">
-        <ArrowLeft size={24} />
+        <ArrowLeft size={18} />
+        <span>Back</span>
       </Link>
 
       <div className="science-hero">
@@ -78,7 +79,7 @@ export function ALevelGeographyNotesPage() {
               }}>
                 {idx + 1}
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 600 }}>{topic.name}</div>
                 <div style={{ fontSize: 13, opacity: 0.65, marginTop: 2 }}>{topic.description}</div>
               </div>

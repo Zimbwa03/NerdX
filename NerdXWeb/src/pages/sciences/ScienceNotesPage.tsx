@@ -139,7 +139,8 @@ export function ScienceNotesPage() {
       <div className={`science-universe-page ${themeClass}`}>
         <div className="science-universe-bg" />
         <Link to={`/app/${normalizedSubject}`} className="super-back-btn">
-          <ArrowLeft size={24} />
+          <ArrowLeft size={18} />
+          <span>Back</span>
         </Link>
         <div className="science-hero">
           <h1>Notes Not Found</h1>

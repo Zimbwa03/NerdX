@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef, us
 import type { User } from '../types';
 import { creditsApi } from '../services/api/creditsApi';
 import { setAuthToken, clearAuthToken } from '../services/api/config';
-import { signInToSupabaseAuth, signOutFromSupabaseAuth } from '../services/supabase';
+import { supabase, signInToSupabaseAuth, signOutFromSupabaseAuth } from '../services/supabase';
 
 const USER_DATA_KEY = '@user_data';
 
@@ -71,7 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           );
 
           const supabasePromise = (async () => {
-            const { supabase } = await import('../services/supabase');
             const { data } = await supabase.auth.getSession();
             if (data?.session?.user) {
               setIsSupabaseAuthReady(true);

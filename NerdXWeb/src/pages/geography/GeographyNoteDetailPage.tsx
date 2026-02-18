@@ -86,7 +86,8 @@ export function GeographyNoteDetailPage() {
       <div className="science-universe-page geo">
         <div className="science-universe-bg geo-bg" />
         <Link to="/app/geography" className="super-back-btn">
-          <ArrowLeft size={24} />
+          <ArrowLeft size={18} />
+          <span>Back</span>
         </Link>
         <div className="science-hero">
           <h1>Notes Not Found</h1>

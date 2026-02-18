@@ -63,6 +63,8 @@ from services.correction_of_errors_generator import generate_correction_of_error
 from services.not_for_profit_generator import generate_not_for_profit_question
 from services.flashcard_service import flashcard_service
 from services.project_assistant_service import ProjectAssistantService
+from services.project_export_service import project_export_service
+from services.engagement_notification_service import engagement_notification_service
 from services.history_generator import generate_question as history_generate_question
 from services.history_marking_service import mark_history_essay
 from services.lesson_payment_service import lesson_payment_service
@@ -1757,6 +1759,43 @@ def get_user_history():
         }), 200
     except Exception as e:
         logger.error(f"Get user history error: {e}")
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+@mobile_bp.route('/user/preferences', methods=['GET'])
+@require_auth
+def get_user_preferences():
+    """Get learning + notification preferences for the current user."""
+    try:
+        prefs = engagement_notification_service.get_user_preferences(g.current_user_id)
+        return jsonify({'success': True, 'data': prefs}), 200
+    except Exception as e:
+        logger.error(f"Get user preferences error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/user/preferences', methods=['PUT'])
+@require_auth
+def update_user_preferences():
+    """Update learning + notification preferences for the current user."""
+    try:
+        data = request.get_json() or {}
+        if not isinstance(data, dict):
+            return jsonify({'success': False, 'message': 'Invalid request body'}), 400
+
+        updated = engagement_notification_service.update_user_preferences(g.current_user_id, data)
+        if updated is None:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to save preferences. Ensure engagement migration is applied.'
+            }), 500
+
+        return jsonify({
+            'success': True,
+            'data': updated,
+            'message': 'Preferences updated successfully'
+        }), 200
+    except Exception as e:
+        logger.error(f"Update user preferences error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Server error'}), 500
 
 # ============================================================================
@@ -5041,6 +5080,132 @@ def get_user_referral_share():
 # NOTIFICATION EVENT ENDPOINTS
 # ============================================================================
 
+@mobile_bp.route('/notifications/push-token', methods=['POST'])
+@require_auth
+def register_push_token():
+    """Register/update Expo push token for the current mobile user."""
+    try:
+        data = request.get_json() or {}
+        expo_push_token = (data.get('expo_push_token') or '').strip()
+        if not expo_push_token:
+            return jsonify({'success': False, 'message': 'expo_push_token is required'}), 400
+
+        ok, message = engagement_notification_service.register_push_token(
+            user_id=g.current_user_id,
+            expo_push_token=expo_push_token,
+            platform=(data.get('platform') or 'unknown'),
+            device_id=data.get('device_id'),
+            app_version=data.get('app_version'),
+            supabase_user_id=data.get('supabase_user_id'),
+        )
+        if not ok:
+            return jsonify({'success': False, 'message': message}), 400
+
+        return jsonify({'success': True, 'message': message}), 200
+    except Exception as e:
+        logger.error(f"Register push token error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/notifications/push-token', methods=['DELETE'])
+@require_auth
+def unregister_push_token():
+    """Deactivate Expo push token(s) for the current mobile user."""
+    try:
+        data = request.get_json(silent=True) or {}
+        ok, message = engagement_notification_service.unregister_push_token(
+            user_id=g.current_user_id,
+            expo_push_token=data.get('expo_push_token'),
+            device_id=data.get('device_id'),
+        )
+        if not ok:
+            return jsonify({'success': False, 'message': message}), 400
+        return jsonify({'success': True, 'message': message}), 200
+    except Exception as e:
+        logger.error(f"Unregister push token error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/notifications/engagement/badge-earned', methods=['POST'])
+@require_auth
+def engagement_badge_earned():
+    """Trigger a 'new badge unlocked' engagement notification for the current user."""
+    try:
+        data = request.get_json() or {}
+        badge_id = (data.get('badge_id') or '').strip()
+        badge_name = (data.get('badge_name') or '').strip() or badge_id
+        rarity = (data.get('rarity') or '').strip() or None
+
+        if not badge_name:
+            return jsonify({'success': False, 'message': 'badge_name or badge_id is required'}), 400
+
+        result = engagement_notification_service.handle_badge_earned(
+            user_id=g.current_user_id,
+            badge_id=badge_id or badge_name,
+            badge_name=badge_name,
+            rarity=rarity,
+        )
+        return jsonify({'success': True, 'data': result}), 200
+    except Exception as e:
+        logger.error(f"Badge earned notification error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/notifications/engagement/level-up', methods=['POST'])
+@require_auth
+def engagement_level_up():
+    """Trigger friend social-proof notifications when current user levels up."""
+    try:
+        data = request.get_json() or {}
+        new_level = int(data.get('new_level', 0))
+        if new_level <= 0:
+            return jsonify({'success': False, 'message': 'new_level must be greater than 0'}), 400
+
+        result = engagement_notification_service.handle_level_up(
+            user_id=g.current_user_id,
+            new_level=new_level,
+        )
+        return jsonify({'success': True, 'data': result}), 200
+    except ValueError:
+        return jsonify({'success': False, 'message': 'new_level must be an integer'}), 400
+    except Exception as e:
+        logger.error(f"Level-up social notification error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
+@mobile_bp.route('/notifications/engagement/run', methods=['POST'])
+def run_engagement_campaigns():
+    """
+    Run automated engagement campaigns.
+    Requires X-Engagement-Secret header matching ENGAGEMENT_CRON_SECRET.
+    """
+    try:
+        expected_secret = (os.getenv('ENGAGEMENT_CRON_SECRET') or '').strip()
+        provided_secret = (request.headers.get('X-Engagement-Secret') or '').strip()
+
+        if not expected_secret:
+            return jsonify({
+                'success': False,
+                'message': 'ENGAGEMENT_CRON_SECRET is not configured'
+            }), 503
+
+        if not provided_secret or not secrets.compare_digest(provided_secret, expected_secret):
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+
+        data = request.get_json(silent=True) or {}
+        force = bool(data.get('force', False))
+        dry_run = bool(data.get('dry_run', False))
+
+        result = engagement_notification_service.run_scheduled_campaigns(
+            force=force,
+            dry_run=dry_run,
+        )
+        return jsonify({'success': True, 'data': result}), 200
+    except Exception as e:
+        logger.error(f"Run engagement campaigns error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Server error'}), 500
+
+
 @mobile_bp.route('/notifications/event', methods=['POST'])
 @require_auth
 def create_notification_event():
@@ -7966,7 +8131,14 @@ def project_history(project_id):
             return jsonify({'success': False, 'message': 'Project not found'}), 404
         history = get_project_chat_history(project_id)
         out = [
-            {'id': i + 1, 'project_id': project_id, 'role': h.get('role'), 'content': h.get('content'), 'timestamp': h.get('timestamp')}
+            {
+                'id': i + 1,
+                'project_id': project_id,
+                'role': h.get('role'),
+                'content': h.get('content'),
+                'timestamp': h.get('timestamp'),
+                'image_url': h.get('image_url'),
+            }
             for i, h in enumerate(history)
         ]
         return jsonify({'success': True, 'data': {'history': out}}), 200
@@ -8121,6 +8293,124 @@ def project_multimodal_chat(project_id):
 # ═══════════════════════════════════════════════════════════════════════════════
 # LESSON WALLET ENDPOINTS
 # ═══════════════════════════════════════════════════════════════════════════════
+
+@mobile_bp.route('/project/<int:project_id>/export/checklist', methods=['GET'])
+@require_auth
+def project_export_checklist(project_id):
+    """Get project submission checklist and completion summary."""
+    try:
+        user_id = g.current_user_id
+        proj = project_assistant_service.get_project_details(user_id, project_id)
+        if not proj:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+
+        checklist = project_export_service.get_submission_checklist(project_id, user_id)
+        if checklist.get('error'):
+            return jsonify({'success': False, 'message': checklist['error']}), 404
+
+        return jsonify({
+            'success': True,
+            'data': checklist,
+            'checklist': checklist,
+        }), 200
+    except Exception as e:
+        logger.exception("project_export_checklist failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/export/preview', methods=['GET'])
+@require_auth
+def project_export_preview(project_id):
+    """Preview export readiness and missing items before generating a PDF."""
+    try:
+        user_id = g.current_user_id
+        proj = project_assistant_service.get_project_details(user_id, project_id)
+        if not proj:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+
+        checklist = project_export_service.get_submission_checklist(project_id, user_id)
+        if checklist.get('error'):
+            return jsonify({'success': False, 'message': checklist['error']}), 404
+
+        missing_stages = []
+        for stage_num, stage_info in (checklist.get('stages') or {}).items():
+            if (stage_info or {}).get('completed', 0) < (stage_info or {}).get('total', 0):
+                missing_stages.append(stage_num)
+
+        overall_completion = checklist.get('overall_completion', 0)
+        preview = {
+            **checklist,
+            'ready_for_submission': overall_completion >= 80,
+            'missing_stages': missing_stages,
+            'message': (
+                'Submission pack is ready.'
+                if overall_completion >= 80
+                else 'Complete more sections before final submission.'
+            ),
+        }
+
+        return jsonify({
+            'success': True,
+            'data': preview,
+            'checklist': preview,
+        }), 200
+    except Exception as e:
+        logger.exception("project_export_preview failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@mobile_bp.route('/project/<int:project_id>/export/generate', methods=['POST'])
+@require_auth
+def project_export_generate(project_id):
+    """Generate submission PDF for full project or a specific stage."""
+    try:
+        user_id = g.current_user_id
+        proj = project_assistant_service.get_project_details(user_id, project_id)
+        if not proj:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+
+        data = request.get_json() or {}
+        file_type = (data.get('file_type') or 'pdf').strip().lower()
+        stage_number_raw = data.get('stage_number')
+
+        if file_type != 'pdf':
+            return jsonify({'success': False, 'message': 'Only pdf export is currently supported'}), 400
+
+        stage_number = None
+        if stage_number_raw not in (None, ''):
+            try:
+                stage_number = int(stage_number_raw)
+            except (TypeError, ValueError):
+                return jsonify({'success': False, 'message': 'stage_number must be an integer between 1 and 6'}), 400
+            if stage_number < 1 or stage_number > 6:
+                return jsonify({'success': False, 'message': 'stage_number must be between 1 and 6'}), 400
+
+        result = project_export_service.generate_pdf(project_id, user_id, stage_number=stage_number)
+        if not result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': result.get('error', 'Failed to generate export'),
+            }), 400
+
+        payload = {
+            'export_id': result.get('export_id'),
+            'filename': result.get('filename'),
+            'download_url': result.get('download_url'),
+            'selected_stages': result.get('selected_stages') or ([stage_number] if stage_number else [1, 2, 3, 4, 5, 6]),
+        }
+
+        return jsonify({
+            'success': True,
+            'data': payload,
+            'export_id': payload['export_id'],
+            'filename': payload['filename'],
+            'download_url': payload['download_url'],
+            'selected_stages': payload['selected_stages'],
+        }), 200
+    except Exception as e:
+        logger.exception("project_export_generate failed")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 
 @mobile_bp.route('/wallet/balance', methods=['GET'])
 @require_auth

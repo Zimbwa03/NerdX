@@ -12,7 +12,8 @@ export function AccountingNotesPage() {
       <div className="science-grid-overlay" />
 
       <Link to="/app/accounting" className="super-back-btn">
-        <ArrowLeft size={24} />
+        <ArrowLeft size={18} />
+        <span>Back</span>
       </Link>
 
       <div className="science-hero">

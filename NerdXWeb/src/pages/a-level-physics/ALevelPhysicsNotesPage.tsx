@@ -29,7 +29,8 @@ export function ALevelPhysicsNotesPage() {
       <div className="science-grid-overlay" />
 
       <Link to="/app/a-level-physics" className="super-back-btn">
-        <ArrowLeft size={24} />
+        <ArrowLeft size={18} />
+        <span>Back</span>
       </Link>
 
       <div className="science-hero">
@@ -106,13 +107,13 @@ export function ALevelPhysicsNotesPage() {
             >
               A2 Level
             </button>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', flex: '1 1 200px', minWidth: 0 }}>
               <Search size={14} />
               <input
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 placeholder="Search notes..."
-                style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', minWidth: 160 }}
+                style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', minWidth: 0, width: '100%' }}
               />
             </label>
           </div>
@@ -161,7 +162,7 @@ export function ALevelPhysicsNotesPage() {
               >
                 {idx + 1}
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 600 }}>{topic.name}</div>
                 <div style={{ fontSize: 13, opacity: 0.65, marginTop: 2 }}>{topic.description}</div>
               </div>
