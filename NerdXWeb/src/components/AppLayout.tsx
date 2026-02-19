@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Bell, Sun, Moon, Search, Calendar } from 'lucide-react';
@@ -10,10 +10,13 @@ import { appUpdateApi, type AppUpdateInfo } from '../services/api/appUpdateApi';
 export function AppLayout() {
   const { user, isSupabaseAuthReady } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+  const location = useLocation();
   const initial = (user?.name || 'N')[0].toUpperCase();
   const [unreadCount, setUnreadCount] = useState(0);
   const [updateInfo, setUpdateInfo] = useState<AppUpdateInfo | null>(null);
   const [softDismissed, setSoftDismissed] = useState(false);
+
+  const showHeader = location.pathname === '/app' || location.pathname === '/app/';
 
   useEffect(() => {
     let active = true;
@@ -77,44 +80,46 @@ export function AppLayout() {
 
   return (
     <div className="app-layout">
-      <header className="dashboard-header">
-        <div className="header-inner">
-          <Link to="/app" className="header-logo">
-            <img src="/logo.png" alt="" className="header-logo-img" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-            <span>NerdX</span>
-          </Link>
-          <div className="header-actions">
-            <Link to="/app/marketplace" className="icon-btn header-marketplace" aria-label="Find a Teacher" title="Find a Teacher">
-              <Search size={20} />
+      {showHeader && (
+        <header className="dashboard-header">
+          <div className="header-inner">
+            <Link to="/app" className="header-logo">
+              <img src="/logo.png" alt="" className="header-logo-img" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <span>NerdX</span>
             </Link>
-            <Link to="/app/my-lessons" className="icon-btn header-marketplace" aria-label="My Lessons" title="My Lessons">
-              <Calendar size={20} />
-            </Link>
-            <button
-              type="button"
-              className="icon-btn theme-toggle"
-              onClick={toggleTheme}
-              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-              title={isDark ? 'Light mode' : 'Dark mode'}
-            >
-              {isDark ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-            <Link to="/app/notifications" className="icon-btn header-notifications" aria-label="Notifications" title="Notifications">
-              <Bell size={20} />
-              {unreadCount > 0 && (
-                <span className="header-notifications-badge" aria-label={`${unreadCount} unread notifications`}>
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </Link>
-            <Link to="/app/account" className="profile-btn" aria-label="Account">
-              <span className="profile-initial">{initial}</span>
-            </Link>
+            <div className="header-actions">
+              <Link to="/app/marketplace" className="icon-btn header-marketplace" aria-label="Find a Teacher" title="Find a Teacher">
+                <Search size={20} />
+              </Link>
+              <Link to="/app/my-lessons" className="icon-btn header-marketplace" aria-label="My Lessons" title="My Lessons">
+                <Calendar size={20} />
+              </Link>
+              <button
+                type="button"
+                className="icon-btn theme-toggle"
+                onClick={toggleTheme}
+                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                title={isDark ? 'Light mode' : 'Dark mode'}
+              >
+                {isDark ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+              <Link to="/app/notifications" className="icon-btn header-notifications" aria-label="Notifications" title="Notifications">
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="header-notifications-badge" aria-label={`${unreadCount} unread notifications`}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Link>
+              <Link to="/app/account" className="profile-btn" aria-label="Account">
+                <span className="profile-initial">{initial}</span>
+              </Link>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
-      {updateInfo?.soft_update && !updateInfo.update_required && !softDismissed && (
+      {showHeader && updateInfo?.soft_update && !updateInfo.update_required && !softDismissed && (
         <div className="update-banner" role="status">
           <span className="update-banner-text">
             {updateInfo.update_message || 'A new version of NerdX is available.'}
