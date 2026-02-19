@@ -23,7 +23,7 @@ export function calculateQuizCreditCost(params: CreditCostParams): number {
 
   if (isImageQuestion) return 4;
   if (subjectKey === 'mathematics' || subjectKey === 'math') return 1;
-  if (subjectKey === 'combined_science') return 1;
+  if (subjectKey === 'combined_science' || subjectKey === 'biology' || subjectKey === 'chemistry' || subjectKey === 'physics') return 1;
   if (subjectKey === 'english') return 1;
   if (subjectKey === 'a_level_pure_math' || subjectKey === 'a_level_pure_mathematics') return 1;
 

@@ -108,12 +108,14 @@ export function ProjectAssistantChatPage() {
   const [aspectRatio, setAspectRatio] = useState<(typeof ASPECT_RATIOS)[number]>('1:1');
   const [checklist, setChecklist] = useState<SubmissionChecklist | null>(null);
   const [checklistOpen, setChecklistOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [exporting, setExporting] = useState<'full' | 'stage' | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const addMenuRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const railRef = useRef<HTMLElement>(null);
 
   const stageNumber = parseStage(project?.current_stage);
 
@@ -123,6 +125,18 @@ export function ProjectAssistantChatPage() {
       .map(([s, data]) => ({ stage: Number(s), data }))
       .sort((a, b) => a.stage - b.stage);
   }, [checklist]);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (railRef.current && !railRef.current.contains(event.target as Node)) {
+        setMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [mobileMenuOpen]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -148,6 +162,7 @@ export function ProjectAssistantChatPage() {
     if (pid == null) return;
     setStarting(true);
     setError(null);
+    setMobileMenuOpen(false);
     try {
       const [proj, history, nextChecklist] = await Promise.all([
         projectAssistantApi.getProject(pid),
@@ -171,10 +186,10 @@ export function ProjectAssistantChatPage() {
         mapped.length
           ? mapped
           : [{
-              id: 'welcome',
-              role: 'assistant',
-              content: 'I am your Project Assistant. Share your project idea and I will guide you step by step.',
-            }],
+            id: 'welcome',
+            role: 'assistant',
+            content: 'I am your Project Assistant. Share your project idea and I will guide you step by step.',
+          }],
       );
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'Failed to load project.');
@@ -378,15 +393,16 @@ export function ProjectAssistantChatPage() {
 
   return (
     <div className="teacher-mode-page teacher-mode-page--v3 project-assistant-chat-v3">
+      <div className={`teacher-chat-overlay ${mobileMenuOpen ? 'visible' : ''}`} onClick={() => setMobileMenuOpen(false)} />
       <div className="teacher-chat-shell">
-        <aside className="teacher-chat-rail" aria-label="Project actions">
-          <Link to="/app/project-assistant" className="teacher-chat-rail-btn" aria-label="Back to projects">
+        <aside ref={railRef} className={`teacher-chat-rail ${mobileMenuOpen ? 'mobile-open' : ''}`} aria-label="Project actions">
+          <Link to="/app/project-assistant" className="teacher-chat-rail-btn" aria-label="Back to projects" title="Back to projects">
             <ArrowLeft size={18} />
           </Link>
-          <button type="button" className="teacher-chat-rail-btn" onClick={() => void load()} disabled={sending}>
+          <button type="button" className="teacher-chat-rail-btn" onClick={() => void load()} disabled={sending} title="Refresh">
             <RefreshCw size={18} />
           </button>
-          <button type="button" className={`teacher-chat-rail-btn${imageMode ? ' project-ai-mode-active' : ''}`} onClick={() => setImageMode((v) => !v)}>
+          <button type="button" className={`teacher-chat-rail-btn${imageMode ? ' project-ai-mode-active' : ''}`} onClick={() => setImageMode((v) => !v)} title="Image Mode">
             <Sparkles size={18} />
           </button>
           <div className="teacher-chat-rail-spacer" />
@@ -399,6 +415,14 @@ export function ProjectAssistantChatPage() {
         <main className="teacher-chat-main-v3">
           <header className="teacher-chat-header-v3">
             <div className="teacher-chat-header-main">
+              <button
+                type="button"
+                className="teacher-chat-mobile-toggle"
+                onClick={() => setMobileMenuOpen((v) => !v)}
+                aria-label="Menu"
+              >
+                <ClipboardList size={20} className={mobileMenuOpen ? 'rotate-90' : ''} />
+              </button>
               <div className="teacher-chat-subject-avatar">PA</div>
               <div className="teacher-chat-header-text-v3">
                 <h1>{typeof project.title === 'string' && project.title.trim() ? project.title : 'Project Assistant'}</h1>

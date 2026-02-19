@@ -70,6 +70,14 @@ function processContent(content: string): string {
     return `__TABLE__${idx}__TABLE__`;
   });
 
+  // Extract markdown images before escaping HTML: ![alt](url)
+  const imageBlocks: string[] = [];
+  processed = processed.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, url) => {
+    const idx = imageBlocks.length;
+    imageBlocks.push(`<div class="math-notes-diagram"><img src="${url}" alt="${alt}" class="math-notes-diagram-img" />${alt ? `<p class="math-notes-diagram-caption">${alt}</p>` : ''}</div>`);
+    return `__IMG__${idx}__IMG__`;
+  });
+
   // Escape HTML
   processed = processed
     .replace(/&/g, '&amp;')
@@ -105,6 +113,11 @@ function processContent(content: string): string {
   tableBlocks.forEach((table, idx) => {
     const tableHtml = renderMarkdownTable(table);
     processed = processed.replace(`__TABLE__${idx}__TABLE__`, tableHtml);
+  });
+
+  // Restore image blocks
+  imageBlocks.forEach((imgHtml, idx) => {
+    processed = processed.replace(`__IMG__${idx}__IMG__`, imgHtml);
   });
 
   return `<p>${processed}</p>`;

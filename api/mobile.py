@@ -275,7 +275,7 @@ def _get_quiz_credit_action(
 
     if subject_key == 'mathematics':
         return 'math_topical' if qt == 'topical' else 'math_exam'
-    if subject_key == 'combined_science':
+    if subject_key in ('combined_science', 'biology', 'chemistry', 'physics'):
         if qt == 'exam':
             return 'combined_science_exam'
         return 'combined_science_topical_structured' if qf == 'structured' else 'combined_science_topical_mcq'
@@ -2090,6 +2090,17 @@ def get_topics():
                         'name': topic,
                         'subject': 'history',
                     })
+        # Handle standalone O-Level Biology / Chemistry / Physics subjects
+        elif subject in ('biology', 'chemistry', 'physics'):
+            parent_key = subject.capitalize()  # 'Biology', 'Chemistry', 'Physics'
+            if parent_key in TOPICS:
+                for topic in TOPICS[parent_key]:
+                    topics.append({
+                        'id': topic.lower().replace(' ', '_'),
+                        'name': topic,
+                        'subject': subject,
+                        'parent_subject': parent_key
+                    })
         elif subject in TOPICS:
             # Default handling for other subjects
             for topic in TOPICS[subject]:
@@ -2316,34 +2327,45 @@ def generate_question():
                             difficulty
                         )
                         
-            elif subject == 'combined_science':
-                # Combined Science needs parent_subject (Biology/Chemistry/Physics) and topic (subtopic)
-                parent_subject = data.get('parent_subject', 'Biology')  # Default to Biology if not specified
-                
+            elif subject in ('combined_science', 'biology', 'chemistry', 'physics'):
+                # Combined Science and standalone O-Level Biology/Chemistry/Physics
+                from constants import TOPICS
+                import random
+
+                # For standalone biology/chemistry/physics the parent_subject is the subject capitalised
+                if subject in ('biology', 'chemistry', 'physics'):
+                    parent_subject = subject.capitalize()
+                else:
+                    parent_subject = data.get('parent_subject', 'Biology')  # Default to Biology if not specified
+
                 # Handle exam mode - randomly select from all topics across Biology, Chemistry, Physics
                 if question_type == 'exam':
-                    from constants import TOPICS
-                    import random
-                    
-                    # Randomly select a subject (Biology, Chemistry, or Physics)
-                    science_subjects = ['Biology', 'Chemistry', 'Physics']
-                    parent_subject = random.choice(science_subjects)
-                    
-                    # Randomly select a topic from the chosen subject
-                    if parent_subject in TOPICS and len(TOPICS[parent_subject]) > 0:
-                        topic = random.choice(TOPICS[parent_subject])
+                    if subject in ('biology', 'chemistry', 'physics'):
+                        # For standalone subjects use their own topic pool
+                        if parent_subject in TOPICS and len(TOPICS[parent_subject]) > 0:
+                            topic = random.choice(TOPICS[parent_subject])
+                        else:
+                            topic = 'Cell Structure and Organisation'
+                            parent_subject = 'Biology'
                     else:
-                        topic = 'Cell Structure and Organisation'
-                        parent_subject = 'Biology'
-                
+                        # Combined science - randomly select a subject (Biology, Chemistry, or Physics)
+                        science_subjects = ['Biology', 'Chemistry', 'Physics']
+                        parent_subject = random.choice(science_subjects)
+
+                        # Randomly select a topic from the chosen subject
+                        if parent_subject in TOPICS and len(TOPICS[parent_subject]) > 0:
+                            topic = random.choice(TOPICS[parent_subject])
+                        else:
+                            topic = 'Cell Structure and Organisation'
+                            parent_subject = 'Biology'
+
                 # If topic is Biology/Chemistry/Physics itself, use default subtopic
                 elif topic and topic.lower() in ['biology', 'chemistry', 'physics']:
                     parent_subject = topic.capitalize()
                     # Use first subtopic as default
-                    from constants import TOPICS
                     if parent_subject in TOPICS and len(TOPICS[parent_subject]) > 0:
                         topic = TOPICS[parent_subject][0]
-                
+
                 science_gen = CombinedScienceGenerator()
                 if question_format == 'structured':
                     question_data = science_gen.generate_structured_question(parent_subject, topic or 'Cell Structure and Organisation', difficulty, g.current_user_id)

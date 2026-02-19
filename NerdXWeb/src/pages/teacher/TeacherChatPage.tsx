@@ -122,6 +122,7 @@ export function TeacherChatPage() {
   const [showQuickAsk, setShowQuickAsk] = useState(true);
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
   const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sessionEnded, setSessionEnded] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [transcribingAudio, setTranscribingAudio] = useState(false);
@@ -137,6 +138,7 @@ export function TeacherChatPage() {
   const initialMessageSentRef = useRef(false);
   const prefillAppliedRef = useRef(false);
   const creditsRef = useRef<number>(user?.credits ?? 0);
+  const railRef = useRef<HTMLElement>(null);
 
   const quickQuestions = useMemo(
     () => (subject ? (QUICK_QUESTIONS[subject] ?? DEFAULT_QUICK_QUESTIONS) : DEFAULT_QUICK_QUESTIONS),
@@ -159,6 +161,18 @@ export function TeacherChatPage() {
       return [];
     });
   }, []);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (railRef.current && !railRef.current.contains(event.target as Node)) {
+        setMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [mobileMenuOpen]);
 
   useEffect(() => {
     return () => {
@@ -200,6 +214,7 @@ export function TeacherChatPage() {
     setShowQuickAsk(true);
     setShowAddMenu(false);
     setSessionEnded(null);
+    setMobileMenuOpen(false);
 
     let cancelled = false;
 
@@ -585,8 +600,9 @@ export function TeacherChatPage() {
 
   return (
     <div className="teacher-mode-page teacher-mode-page--v3">
+      <div className={`teacher-chat-overlay ${mobileMenuOpen ? 'visible' : ''}`} onClick={() => setMobileMenuOpen(false)} />
       <div className="teacher-chat-shell">
-        <aside className="teacher-chat-rail" aria-label="Teacher actions">
+        <aside ref={railRef} className={`teacher-chat-rail ${mobileMenuOpen ? 'mobile-open' : ''}`} aria-label="Teacher actions">
           <Link to="/app/teacher" className="teacher-chat-rail-btn" aria-label="New session" title="New session">
             <MessageSquarePlus size={18} />
           </Link>
@@ -603,6 +619,14 @@ export function TeacherChatPage() {
         <main className="teacher-chat-main-v3">
           <header className="teacher-chat-header-v3">
             <div className="teacher-chat-header-main">
+              <button
+                type="button"
+                className="teacher-chat-mobile-toggle"
+                onClick={() => setMobileMenuOpen((v) => !v)}
+                aria-label="Menu"
+              >
+                <MoreHorizontal size={20} className={mobileMenuOpen ? 'rotate-90' : ''} />
+              </button>
               <div className="teacher-chat-subject-avatar">{subjectInitials}</div>
               <div className="teacher-chat-header-text-v3">
                 <h1>{subject} Tutor</h1>
@@ -622,9 +646,6 @@ export function TeacherChatPage() {
               >
                 <Share2 size={16} />
                 <span>Share</span>
-              </button>
-              <button type="button" className="teacher-chat-topbar-btn teacher-chat-topbar-btn-icon" aria-label="More options">
-                <MoreHorizontal size={18} />
               </button>
             </div>
           </header>

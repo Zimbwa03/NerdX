@@ -149,17 +149,25 @@ export function LandingPage() {
         </div>
         {mobileMenuOpen && (
           <div className="lp-mobile-menu">
-            <button type="button" onClick={() => scrollTo('features')}>Features</button>
-            <button type="button" onClick={() => scrollTo('subjects')}>Subjects</button>
-            <button type="button" onClick={() => scrollTo('find-teachers')}>Find a Teacher</button>
-            <button type="button" onClick={() => scrollTo('testimonials')}>Testimonials</button>
-            <button type="button" onClick={() => scrollTo('for-teachers')}>Teach on NerdX</button>
-            <button type="button" onClick={() => navigate('/login')}>Student Login</button>
-            <button type="button" onClick={() => navigate('/login?role=teacher')}>Teacher Login</button>
-            <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp-btn lp-btn--download lp-btn--full lp-mobile-download">
-              <Smartphone size={16} /> Download Android App <Download size={14} />
-            </a>
-            <button type="button" className="lp-btn lp-btn--primary lp-btn--full" onClick={() => navigate('/register')}>Get Started</button>
+            <div className="lp-mobile-menu__nav">
+              <button type="button" onClick={() => scrollTo('features')}>Features</button>
+              <button type="button" onClick={() => scrollTo('subjects')}>Subjects</button>
+              <button type="button" onClick={() => scrollTo('find-teachers')}>Find a Teacher</button>
+              <button type="button" onClick={() => scrollTo('testimonials')}>Testimonials</button>
+              <button type="button" onClick={() => scrollTo('for-teachers')}>Teach on NerdX</button>
+            </div>
+            <div className="lp-mobile-menu__actions">
+              <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp-btn lp-btn--download lp-btn--full lp-mobile-download">
+                <Smartphone size={16} /> Download Android App <Download size={14} />
+              </a>
+              <div className="lp-mobile-menu__auth">
+                <button type="button" className="lp-btn lp-btn--ghost" onClick={() => navigate('/login')}>Student Login</button>
+                <button type="button" className="lp-btn lp-btn--ghost lp-btn--teacher" onClick={() => navigate('/login?role=teacher')}>Teacher Login</button>
+              </div>
+              <button type="button" className="lp-btn lp-btn--primary lp-btn--full" onClick={() => navigate('/register')}>
+                Get Started Free <ArrowRight size={16} />
+              </button>
+            </div>
           </div>
         )}
       </header>
@@ -194,16 +202,6 @@ export function LandingPage() {
               <span><strong>10+</strong> Subjects</span>
             </div>
           </div>
-          <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp-download-hero">
-            <div className="lp-download-hero__icon">
-              <Smartphone size={24} />
-            </div>
-            <div className="lp-download-hero__text">
-              <span className="lp-download-hero__label">Download on</span>
-              <span className="lp-download-hero__title">Android App</span>
-            </div>
-            <Download size={20} className="lp-download-hero__arrow" />
-          </a>
           <div className="lp-hero__actions">
             <button type="button" className="lp-btn lp-btn--primary lp-btn--lg" onClick={() => navigate('/register')}>
               Start Learning Free <ArrowRight size={18} />
@@ -212,6 +210,11 @@ export function LandingPage() {
               Start Teaching <GraduationCap size={18} />
             </button>
           </div>
+          <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp-download-hero--compact">
+            <Smartphone size={16} />
+            <span>Also available on <strong>Android App</strong></span>
+            <Download size={14} />
+          </a>
         </div>
         <div className="lp-hero__visual">
           <div className="lp-dashboard-mockup">
@@ -262,7 +265,8 @@ export function LandingPage() {
         </div>
       </section>
 
-      <div className="lp-app-banner">
+      {/* App Download Banner - only shown on non-mobile (mobile already sees download in hero) */}
+      <div className="lp-app-banner lp-app-banner--desktop-only">
         <div className="lp-app-banner__inner">
           <div className="lp-app-banner__pulse"></div>
           <Smartphone size={20} />
