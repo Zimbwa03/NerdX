@@ -22,24 +22,40 @@ Without these redirect URLs configured in Supabase, Google OAuth will **fail** w
 
 Click **Add URL** or **+ Add** for each of these URLs:
 
-#### ✅ Required for Google OAuth:
+#### ✅ Web App - Google OAuth (REQUIRED):
+```
+https://nerdx.onrender.com/auth/callback
+```
+
+#### ✅ Web App - Password Reset:
+```
+https://nerdx.onrender.com/reset-password
+```
+
+#### ✅ Local Development (recommended):
+```
+http://localhost:5173/auth/callback
+http://localhost:5173/reset-password
+```
+
+#### ✅ Mobile App - Google OAuth (REQUIRED):
 ```
 nerdx://auth/callback
 ```
 
-#### ✅ Alternative format (iOS bundle identifier):
+#### ✅ Mobile App - iOS bundle identifier:
 ```
 com.Ngoni03.nerdxapp://auth/callback
+```
+
+#### ✅ Mobile App - Password Reset:
+```
+nerdx://reset-password
 ```
 
 #### ✅ Supabase default callback (REQUIRED):
 ```
 https://lzteiewcvxoazqfxfjgg.supabase.co/auth/v1/callback
-```
-
-#### ✅ For password reset (if using):
-```
-nerdx://reset-password
 ```
 
 ### Step 4: Set Site URL
@@ -59,10 +75,14 @@ After adding the URLs, you should see them listed in the **Redirect URLs** secti
 
 ```
 Redirect URLs:
-✓ nerdx://auth/callback
-✓ com.Ngoni03.nerdxapp://auth/callback
-✓ https://lzteiewcvxoazqfxfjgg.supabase.co/auth/v1/callback
-✓ nerdx://reset-password
+✓ https://nerdx.onrender.com/auth/callback          (Web - Google OAuth)
+✓ https://nerdx.onrender.com/reset-password          (Web - Password Reset)
+✓ http://localhost:5173/auth/callback                (Local Dev)
+✓ http://localhost:5173/reset-password               (Local Dev)
+✓ nerdx://auth/callback                             (Mobile - Google OAuth)
+✓ com.Ngoni03.nerdxapp://auth/callback               (Mobile - iOS)
+✓ https://lzteiewcvxoazqfxfjgg.supabase.co/auth/v1/callback  (Supabase default)
+✓ nerdx://reset-password                            (Mobile - Password Reset)
 ```
 
 ## ⚠️ Important Notes
@@ -97,9 +117,19 @@ Redirect URLs:
 ## ✅ Summary
 
 **YES, you MUST add these redirect URLs to Supabase:**
-- ✅ `nerdx://auth/callback` (Primary - REQUIRED)
-- ✅ `com.Ngoni03.nerdxapp://auth/callback` (Alternative format)
+
+**Web App:**
+- ✅ `https://nerdx.onrender.com/auth/callback` (Web OAuth - REQUIRED)
+- ✅ `https://nerdx.onrender.com/reset-password` (Web password reset)
+- ✅ `http://localhost:5173/auth/callback` (Local dev)
+- ✅ `http://localhost:5173/reset-password` (Local dev)
+
+**Mobile App:**
+- ✅ `nerdx://auth/callback` (Mobile OAuth - REQUIRED)
+- ✅ `com.Ngoni03.nerdxapp://auth/callback` (iOS bundle format)
+- ✅ `nerdx://reset-password` (Mobile password reset)
+
+**Supabase:**
 - ✅ `https://lzteiewcvxoazqfxfjgg.supabase.co/auth/v1/callback` (Supabase callback - REQUIRED)
-- ✅ `nerdx://reset-password` (For password reset)
 
 **Without these, Google OAuth will NOT work!**

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { authApi } from '../services/api/authApi';
@@ -17,24 +17,65 @@ function consumeStoredReferral(): string | undefined {
   return undefined;
 }
 
-async function waitForSupabaseSession(maxAttempts = 10, delayMs = 300) {
-  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error || session?.user) {
-      return { session, error };
-    }
-    await new Promise((resolve) => setTimeout(resolve, delayMs));
-  }
+/**
+ * Wait for the Supabase client to establish a session.
+ * With PKCE flow, `detectSessionInUrl: true` automatically exchanges the
+ * authorization code in the background. Rather than racing it with a manual
+ * `exchangeCodeForSession` call (which fails because the code is single-use),
+ * we listen for the auth state change event and also poll `getSession` as a
+ * fallback.
+ */
+function waitForSession(timeoutMs = 15000): Promise<{ session: any; error: any }> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const settle = (session: any, error: any) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve({ session, error });
+    };
 
-  return { session: null, error: null };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event: string, session: any) => {
+        if (session?.user) {
+          settle(session, null);
+        }
+      },
+    );
+
+    const cleanup = () => {
+      try { subscription.unsubscribe(); } catch { /* noop */ }
+      clearInterval(pollId);
+      clearTimeout(timerId);
+    };
+
+    const pollId = setInterval(async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) { settle(null, error); return; }
+        if (session?.user) { settle(session, null); }
+      } catch { /* ignore */ }
+    }, 500);
+
+    const timerId = setTimeout(() => settle(null, null), timeoutMs);
+
+    supabase.auth.getSession().then(({ data: { session }, error }: any) => {
+      if (error) { settle(null, error); return; }
+      if (session?.user) { settle(session, null); }
+    }).catch(() => { /* ignore */ });
+  });
 }
 
 export function AuthCallbackPage() {
   const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const handledRef = useRef(false);
 
   useEffect(() => {
+    if (handledRef.current) return;
+    handledRef.current = true;
+
     const handleCallback = async () => {
       try {
         const url = new URL(window.location.href);
@@ -44,36 +85,23 @@ export function AuthCallbackPage() {
           return;
         }
 
-        let { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-        if (!session?.user) {
-          const code = url.searchParams.get('code');
-          if (code && typeof supabase.auth.exchangeCodeForSession === 'function') {
-            const { data: exchanged, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-            if (!exchangeError && exchanged?.session) {
-              session = exchanged.session;
-              window.history.replaceState({}, document.title, `${window.location.origin}/auth/callback`);
-            } else if (exchangeError) {
-              console.warn('OAuth code exchange warning:', exchangeError.message);
-            }
-          }
-        }
-
-        if (!session?.user && !sessionError) {
-          const waited = await waitForSupabaseSession();
-          session = waited.session;
-          sessionError = waited.error;
-        }
+        console.log('[AuthCallback] Waiting for Supabase session...');
+        const { session, error: sessionError } = await waitForSession(15000);
 
         if (sessionError) {
+          console.error('[AuthCallback] Session error:', sessionError.message);
           setError(sessionError.message);
           return;
         }
 
         if (!session?.user) {
+          console.error('[AuthCallback] No session after waiting. URL:', window.location.href);
           setError('No session found. Please try signing in again.');
           return;
         }
+
+        console.log('[AuthCallback] Session obtained for:', session.user.email);
+        window.history.replaceState({}, document.title, `${window.location.origin}/auth/callback`);
 
         const user = session.user;
         const metadata = user.user_metadata || {};
@@ -96,16 +124,20 @@ export function AuthCallbackPage() {
           sub: user.id,
         };
 
+        console.log('[AuthCallback] Calling backend socialLogin...');
         const referralCode = consumeStoredReferral();
         const response = await authApi.socialLogin('google', googleUser, referralCode);
 
         if (response.success && response.token && response.user) {
+          console.log('[AuthCallback] Backend login success, navigating to /app');
           await login(response.user, response.token);
           navigate('/app', { replace: true });
         } else {
+          console.error('[AuthCallback] Backend socialLogin failed:', response.message);
           setError(response.message || 'Could not sign in with Google.');
         }
       } catch (err) {
+        console.error('[AuthCallback] Unexpected error:', err);
         setError((err as Error).message || 'Authentication failed.');
       }
     };
