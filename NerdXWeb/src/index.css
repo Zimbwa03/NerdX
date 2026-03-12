@@ -30488,6 +30488,26 @@ iframe {
   gap: 8px;
 }
 
+.sd-student-message {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.sd-student-message--success {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.24);
+}
+
+.sd-student-message--error {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.24);
+}
+
 .sd-student-row {
   display: flex;
   align-items: center;
@@ -30524,6 +30544,11 @@ iframe {
   color: rgba(255, 255, 255, 0.45);
 }
 
+.sd-student-row__expiry {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
 .sd-student-row__stats {
   display: flex;
   align-items: center;
@@ -30556,6 +30581,28 @@ iframe {
 .sd-student-row__chevron {
   color: rgba(255, 255, 255, 0.25);
   flex-shrink: 0;
+}
+
+.sd-student-row__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.sd-student-expiry-editor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sd-student-expiry-input {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #f1f5f9;
+  padding: 8px 10px;
+  font-size: 0.78rem;
 }
 
 /* ─── Student Detail ─── */
@@ -30650,6 +30697,12 @@ iframe {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
+}
+
+.sd-btn--xs {
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 0.76rem;
 }
 
 .sd-btn--primary {
@@ -30978,6 +31031,25 @@ iframe {
   }
 
   .sd-student-row__stats {
+    display: none;
+  }
+
+  .sd-student-row {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .sd-student-row__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .sd-student-expiry-editor {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .sd-student-row__chevron {
     display: none;
   }
 

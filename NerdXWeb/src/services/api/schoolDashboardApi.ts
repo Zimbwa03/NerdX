@@ -80,6 +80,7 @@ export interface SchoolStudent {
   streak: number;
   credits: number;
   daily_credits_used: number;
+  subscription_expires_at: string | null;
   last_active: string | null;
   is_active: boolean;
   joined_at: string | null;
@@ -209,6 +210,23 @@ export const schoolApi = {
       return data;
     } catch {
       return null;
+    }
+  },
+
+  async updateStudentExpiry(
+    token: string,
+    studentId: number,
+    subscriptionExpiresAt: string
+  ): Promise<{ success: boolean; subscription_expires_at?: string; error?: string }> {
+    try {
+      const { data } = await axios.patch(
+        `${BASE}/students/${studentId}/expiry`,
+        { subscription_expires_at: subscriptionExpiresAt },
+        { headers: authHeaders(token) }
+      );
+      return data;
+    } catch (error: unknown) {
+      return { success: false, error: getErrorMessage(error, 'Failed to update expiry date') };
     }
   },
 

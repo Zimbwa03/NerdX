@@ -372,6 +372,7 @@ def _school_students_impl():
             "streak": st.get("streak", 0),
             "credits": st.get("credits", 0),
             "daily_credits_used": st.get("daily_credits_used", 0),
+            "subscription_expires_at": st.get("subscription_expires_at"),
             "last_active": last_active.isoformat() if last_active else None,
             "is_active": is_recently_active,
             "joined_at": st.get("created_at"),
@@ -429,6 +430,7 @@ def school_student_detail(student_id):
             "streak": st.get("streak", 0),
             "credits": st.get("credits", 0),
             "daily_credits_used": st.get("daily_credits_used", 0),
+            "subscription_expires_at": st.get("subscription_expires_at"),
             "last_active": last_active.isoformat() if last_active else None,
             "joined_at": st.get("created_at"),
         },
@@ -446,6 +448,47 @@ def school_student_detail(student_id):
               "subjects": a.get("subjects_accessed", [])} for a in activity],
             key=lambda x: x["date"], reverse=True
         ),
+    })
+
+
+@school_portal_bp.route("/students/<int:student_id>/expiry", methods=["PATCH"])
+@school_auth_required
+def school_update_student_expiry(student_id):
+    """Update a student subscription expiry date for this school."""
+    school = request.school
+    body = request.get_json(silent=True) or {}
+    expires_at_raw = body.get("subscription_expires_at")
+
+    if not expires_at_raw:
+        return jsonify({"error": "subscription_expires_at is required"}), 400
+
+    expires_at = _parse_utc(expires_at_raw)
+    if not expires_at:
+        return jsonify({"error": "Invalid subscription_expires_at format"}), 400
+
+    # Ensure the student belongs to this school before updating.
+    students = make_supabase_request(
+        "GET", "users_registration",
+        select="id",
+        filters={"id": f"eq.{student_id}", "school_id": f"eq.{school['id']}"},
+        use_service_role=True
+    )
+    if not students:
+        return jsonify({"error": "Student not found"}), 404
+
+    updated = make_supabase_request(
+        "PATCH", "users_registration",
+        {"subscription_expires_at": expires_at.isoformat()},
+        filters={"id": f"eq.{student_id}"},
+        use_service_role=True
+    )
+    if updated is None:
+        return jsonify({"error": "Failed to update student expiry"}), 500
+
+    return jsonify({
+        "success": True,
+        "student_id": student_id,
+        "subscription_expires_at": expires_at.isoformat()
     })
 
 

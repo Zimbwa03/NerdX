@@ -35,6 +35,10 @@ export function SchoolDashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<SchoolStudentDetail | null>(null);
   const [studentDetailLoading, setStudentDetailLoading] = useState(false);
+  const [editingStudentId, setEditingStudentId] = useState<number | null>(null);
+  const [editingExpiryDate, setEditingExpiryDate] = useState('');
+  const [savingStudentId, setSavingStudentId] = useState<number | null>(null);
+  const [studentsMessage, setStudentsMessage] = useState<{ success: boolean; message: string } | null>(null);
 
   // Finance
   const [finance, setFinance] = useState<FinanceSummary | null>(null);
@@ -188,6 +192,51 @@ export function SchoolDashboardPage() {
   };
 
   const formatCurrency = (n: number) => `$${n.toFixed(2)}`;
+  const toDateInputValue = (dateValue: string | null) => {
+    if (!dateValue) return '';
+    const base = dateValue.includes('T') ? dateValue.split('T')[0] : dateValue.slice(0, 10);
+    return /^\d{4}-\d{2}-\d{2}$/.test(base) ? base : '';
+  };
+
+  const startEditStudentExpiry = (student: SchoolStudent) => {
+    setStudentsMessage(null);
+    setEditingStudentId(student.id);
+    setEditingExpiryDate(toDateInputValue(student.subscription_expires_at));
+  };
+
+  const cancelEditStudentExpiry = () => {
+    setEditingStudentId(null);
+    setEditingExpiryDate('');
+  };
+
+  const saveStudentExpiry = async (studentId: number) => {
+    if (!token) return;
+    if (!editingExpiryDate) {
+      setStudentsMessage({ success: false, message: 'Please choose a valid expiry date.' });
+      return;
+    }
+
+    setSavingStudentId(studentId);
+    const expiresAt = `${editingExpiryDate}T23:59:59Z`;
+    const res = await schoolApi.updateStudentExpiry(token, studentId, expiresAt);
+
+    if (res.success && res.subscription_expires_at) {
+      setStudents(prev => prev.map(st => (
+        st.id === studentId ? { ...st, subscription_expires_at: res.subscription_expires_at as string } : st
+      )));
+      setSelectedStudent(prev => (
+        prev && prev.student.id === studentId
+          ? { ...prev, student: { ...prev.student, subscription_expires_at: res.subscription_expires_at as string } }
+          : prev
+      ));
+      setStudentsMessage({ success: true, message: 'Student expiry date updated successfully.' });
+      cancelEditStudentExpiry();
+    } else {
+      setStudentsMessage({ success: false, message: res.error || 'Failed to update expiry date.' });
+    }
+
+    setSavingStudentId(null);
+  };
 
   if (!isAuthenticated || !school) return null;
 
@@ -475,6 +524,11 @@ export function SchoolDashboardPage() {
                     />
                   </div>
                 </div>
+                {studentsMessage && (
+                  <div className={`sd-student-message ${studentsMessage.success ? 'sd-student-message--success' : 'sd-student-message--error'}`}>
+                    {studentsMessage.message}
+                  </div>
+                )}
 
                 {studentsLoading ? (
                   <div className="sd-loader"><Loader2 size={28} className="sd-spin" /></div>
@@ -487,6 +541,9 @@ export function SchoolDashboardPage() {
                         <div className="sd-student-row__info">
                           <span className="sd-student-row__name">{st.name}</span>
                           <span className="sd-student-row__level">{st.level}</span>
+                          <span className="sd-student-row__expiry">
+                            Expiry: {formatDate(st.subscription_expires_at)}
+                          </span>
                         </div>
                         <div className="sd-student-row__stats">
                           <span className="sd-student-row__stat"><Zap size={14} /> {st.xp} XP</span>
@@ -494,6 +551,32 @@ export function SchoolDashboardPage() {
                           <span className={`sd-student-row__status ${st.is_active ? 'sd-student-row__status--active' : ''}`}>
                             {st.is_active ? 'Active' : 'Inactive'}
                           </span>
+                        </div>
+                        <div className="sd-student-row__actions" onClick={e => e.stopPropagation()}>
+                          {editingStudentId === st.id ? (
+                            <div className="sd-student-expiry-editor">
+                              <input
+                                className="sd-student-expiry-input"
+                                type="date"
+                                value={editingExpiryDate}
+                                onChange={e => setEditingExpiryDate(e.target.value)}
+                              />
+                              <button
+                                className="sd-btn sd-btn--primary sd-btn--xs"
+                                onClick={() => saveStudentExpiry(st.id)}
+                                disabled={savingStudentId === st.id || !editingExpiryDate}
+                              >
+                                {savingStudentId === st.id ? 'Saving...' : 'Save'}
+                              </button>
+                              <button className="sd-btn sd-btn--ghost sd-btn--xs" onClick={cancelEditStudentExpiry} disabled={savingStudentId === st.id}>
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button className="sd-btn sd-btn--ghost sd-btn--xs" onClick={() => startEditStudentExpiry(st)}>
+                              Edit expiry
+                            </button>
+                          )}
                         </div>
                         <ChevronRight size={18} className="sd-student-row__chevron" />
                       </div>
