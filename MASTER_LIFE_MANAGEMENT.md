@@ -14,8 +14,8 @@ As the Technical Director and CEO of NeuroNet AI Solutions, the user oversees al
 | :--- | :--- | :--- |
 | **NerdX** | Orange House Group of Schools | A joint venture (name TBD). Technical stack includes Python 3.13, Flask, WhatsApp integration, and multiple AI models (DeepSeek, Gemini, OpenAI) [1]. |
 | **Global Intercessors** | Otilia, Auntie Betty, Owen | A 24-hour management system for Zoom-based prayer intercession. |
-| **dog.ai** | Lenmore Masanga (30%), Mr. Nick (50% profit share) | An AI educational platform for medical students. Currently entering the marketing phase. |
-| **More Fitness** | Moses Masiyiwa | An AI fitness coach integrated with physical devices. Currently at the MVP stage. |
+| **Docdot AI** | Lenmore Masanga (30%), Mr. Nick (50% profit share) | An AI educational platform for medical students. Currently entering the marketing phase. |
+| **Mofitness** | Moses Masiyiwa | An AI fitness coach integrated with physical devices. Currently at the MVP stage. |
 
 ### 1.2. Personal Development: 1% Club
 The user is enrolled in a 4-week risk optimization and mindset program.
