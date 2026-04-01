@@ -30,7 +30,7 @@ export function ComplexNumbersLab({ simulation }: { simulation: SimulationMetada
           <span>Back</span>
         </Link>
         <div className="subject-header-content">
-          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #FF4081, #7C4DFF)' }}>
+          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #FF4081, #10B981)' }}>
             <Infinity size={28} />
           </div>
           <div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { authApi } from '../services/api/authApi';
 import { useAuth } from '../context/AuthContext';
+import { getPublicSiteOrigin } from '../services/api/config';
 
 const REFERRAL_STORAGE_KEY = 'nerdx_referral_code';
 
@@ -101,7 +102,7 @@ export function AuthCallbackPage() {
         }
 
         console.log('[AuthCallback] Session obtained for:', session.user.email);
-        window.history.replaceState({}, document.title, `${window.location.origin}/auth/callback`);
+        window.history.replaceState({}, document.title, `${getPublicSiteOrigin()}/auth/callback`);
 
         const user = session.user;
         const metadata = user.user_metadata || {};

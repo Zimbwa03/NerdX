@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class ProjectService:
     def __init__(self):
         self.api_key = Config.GEMINI_API_KEY
-        self.model_name = 'gemini-2.0-flash-exp' # Using the fast model for chat
+        self.model_name = 'gemini-2.5-flash'
         self._configure_genai()
 
     def _configure_genai(self):

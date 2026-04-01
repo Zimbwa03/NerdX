@@ -6,6 +6,10 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
 import { AppLayout } from './components/AppLayout';
 import { SchoolAuthProvider, SchoolProtectedRoute } from './context/SchoolAuthContext';
+import { TeacherAuthProvider, TeacherProtectedRoute } from './context/TeacherAuthContext';
+
+import { AdminGatewayPage } from './pages/AdminGatewayPage';
+import { PageLoadingView } from './components/PageLoadingView';
 
 const LandingPage = lazy(() => import('./pages/LandingPage').then((m) => ({ default: m.LandingPage })));
 const LoginPage = lazy(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })));
@@ -19,12 +23,19 @@ const CreditsPage = lazy(() => import('./pages/CreditsPage').then((m) => ({ defa
 const AccountPage = lazy(() => import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })));
 const ProgressPage = lazy(() => import('./pages/ProgressPage').then((m) => ({ default: m.ProgressPage })));
 const MathematicsTopicsPage = lazy(() => import('./pages/mathematics/MathematicsTopicsPage').then((m) => ({ default: m.MathematicsTopicsPage })));
+const MathTopicHubPage = lazy(() => import('./pages/mathematics/MathTopicHubPage').then((m) => ({ default: m.MathTopicHubPage })));
+const SubjectTopicHubPage = lazy(() =>
+  import('./pages/topic-hub/SubjectTopicHubPage').then((m) => ({ default: m.SubjectTopicHubPage })),
+);
 const QuizPage = lazy(() => import('./pages/mathematics/QuizPage').then((m) => ({ default: m.QuizPage })));
 const MathNotesPage = lazy(() => import('./pages/mathematics/MathNotesPage').then((m) => ({ default: m.MathNotesPage })));
 const GraphPracticePage = lazy(() => import('./pages/mathematics/GraphPracticePage').then((m) => ({ default: m.GraphPracticePage })));
 const TeacherSetupPage = lazy(() => import('./pages/teacher/TeacherSetupPage').then((m) => ({ default: m.TeacherSetupPage })));
 const TeacherChatPage = lazy(() => import('./pages/teacher/TeacherChatPage').then((m) => ({ default: m.TeacherChatPage })));
 const TeacherHistoryPage = lazy(() => import('./pages/teacher/TeacherHistoryPage').then((m) => ({ default: m.TeacherHistoryPage })));
+const AiClassroomPage = lazy(() =>
+  import('./pages/ai-classroom/AiClassroomPage').then((m) => ({ default: m.AiClassroomPage }))
+);
 const ScanSolvePage = lazy(() => import('./pages/mathematics/ScanSolvePage').then((m) => ({ default: m.ScanSolvePage })));
 const ExamSetupPage = lazy(() => import('./pages/mathematics/ExamSetupPage').then((m) => ({ default: m.ExamSetupPage })));
 const ExamSessionPage = lazy(() => import('./pages/mathematics/ExamSessionPage').then((m) => ({ default: m.ExamSessionPage })));
@@ -56,7 +67,7 @@ const HistoryNoteDetailPage = lazy(() => import('./pages/history/HistoryNoteDeta
 const HistoryEssayPage = lazy(() => import('./pages/history/HistoryEssayPage').then((m) => ({ default: m.HistoryEssayPage })));
 const AgentHubPage = lazy(() => import('./pages/agents/AgentHubPage').then((m) => ({ default: m.AgentHubPage })));
 const AgentBuilderPage = lazy(() => import('./pages/agents/AgentBuilderPage').then((m) => ({ default: m.AgentBuilderPage })));
-const VirtualLabHubPage = lazy(() => import('./pages/virtual-lab/VirtualLabHubPage').then((m) => ({ default: m.VirtualLabHubPage })));
+const VirtualLabHubPage = lazy(() => import('./pages/virtual-lab/VirtualLabHubPage'));
 const VirtualLabSimulationPage = lazy(() => import('./pages/virtual-lab/VirtualLabSimulationPage').then((m) => ({ default: m.VirtualLabSimulationPage })));
 const ALevelPureMathPage = lazy(() => import('./pages/a-level/ALevelPureMathPage').then((m) => ({ default: m.ALevelPureMathPage })));
 const ALevelPureMathNotesPage = lazy(() => import('./pages/a-level/ALevelPureMathNotesPage').then((m) => ({ default: m.ALevelPureMathNotesPage })));
@@ -101,19 +112,13 @@ const VirtualClassroomPage = lazy(() => import('./pages/teacher-marketplace/Virt
 const StudentLessonsPage = lazy(() => import('./pages/teacher-marketplace/StudentLessonsPage').then((m) => ({ default: m.StudentLessonsPage })));
 const SchoolLoginPage = lazy(() => import('./pages/school/SchoolLoginPage').then((m) => ({ default: m.SchoolLoginPage })));
 const SchoolDashboardPage = lazy(() => import('./pages/school/SchoolDashboardPage').then((m) => ({ default: m.SchoolDashboardPage })));
+const TeacherLoginPage = lazy(() => import('./pages/teacher-portal/TeacherLoginPage').then((m) => ({ default: m.TeacherLoginPage })));
+const TeacherPortalDashboard = lazy(() => import('./pages/teacher-portal/TeacherPortalDashboard').then((m) => ({ default: m.TeacherPortalDashboard })));
+const TeacherClassroomView = lazy(() => import('./pages/teacher-portal/TeacherClassroomView').then((m) => ({ default: m.TeacherClassroomView })));
 
 const routeLoadingFallback = (
-  <div
-    style={{
-      minHeight: '40vh',
-      display: 'grid',
-      placeItems: 'center',
-      color: 'rgba(255, 255, 255, 0.78)',
-      fontSize: 14,
-      fontWeight: 600,
-    }}
-  >
-    Loading...
+  <div className="min-h-screen bg-[#0a0c0f]">
+    <PageLoadingView title="Loading NerdX" subtitle="Preparing your workspace…" className="min-h-screen" />
   </div>
 );
 
@@ -133,7 +138,8 @@ function App() {
             <Route path="/verify-email" element={<PublicRoute><EmailVerificationPage /></PublicRoute>} />
             <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
-            {/* Admin dashboard is served by Flask backend via /admin proxy */}
+            {/* Admin: full URL hits Vite proxy; in-SPA links hit AdminGateway → full reload → proxy */}
+            <Route path="/admin/*" element={<AdminGatewayPage />} />
 
             {/* Authenticated app routes */}
             <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
@@ -153,21 +159,27 @@ function App() {
               <Route path="virtual-lab" element={<VirtualLabHubPage />} />
               <Route path="virtual-lab/:labId" element={<VirtualLabSimulationPage />} />
               <Route path="pure-math" element={<ALevelPureMathPage />} />
+              <Route path="pure-math/topic/:topicId" element={<SubjectTopicHubPage />} />
               <Route path="pure-math/notes" element={<ALevelPureMathNotesPage />} />
               <Route path="pure-math/notes/:topic" element={<ALevelPureMathNoteDetailPage />} />
               <Route path="a-level-chemistry" element={<ALevelChemistryTopicsPage />} />
+              <Route path="a-level-chemistry/topic/:topicId" element={<SubjectTopicHubPage />} />
               <Route path="a-level-chemistry/notes" element={<ALevelChemistryNotesPage />} />
               <Route path="a-level-chemistry/notes/:topicId" element={<ALevelChemistryNoteDetailPage />} />
               <Route path="a-level-physics" element={<ALevelPhysicsTopicsPage />} />
+              <Route path="a-level-physics/topic/:topicId" element={<SubjectTopicHubPage />} />
               <Route path="a-level-physics/notes" element={<ALevelPhysicsNotesPage />} />
               <Route path="a-level-physics/notes/:topicId" element={<ALevelPhysicsNoteDetailPage />} />
               <Route path="a-level-biology" element={<ALevelBiologyTopicsPage />} />
+              <Route path="a-level-biology/topic/:topicId" element={<SubjectTopicHubPage />} />
               <Route path="a-level-biology/notes" element={<ALevelBiologyNotesPage />} />
               <Route path="a-level-biology/notes/:topicId" element={<ALevelBiologyNoteDetailPage />} />
               <Route path="a-level-computer-science" element={<ALevelComputerScienceTopicsPage />} />
+              <Route path="a-level-computer-science/topic/:topicId" element={<SubjectTopicHubPage />} />
               <Route path="a-level-computer-science/notes" element={<ALevelComputerScienceNotesPage />} />
               <Route path="a-level-computer-science/notes/:topicSlug" element={<ALevelComputerScienceNoteDetailPage />} />
               <Route path="a-level-geography" element={<ALevelGeographyTopicsPage />} />
+              <Route path="a-level-geography/topic/:topicId" element={<SubjectTopicHubPage />} />
               <Route path="a-level-geography/notes" element={<ALevelGeographyNotesPage />} />
               <Route path="a-level-geography/notes/:topicId" element={<ALevelGeographyNoteDetailPage />} />
               <Route path="project-assistant" element={<ProjectAssistantHubPage />} />
@@ -177,28 +189,36 @@ function App() {
               <Route path="formula-sheet" element={<FormulaSheetPage />} />
               <Route path="past-papers" element={<PastPapersPage />} />
               <Route path="accounting" element={<AccountingPage />} />
+              <Route path="accounting/topic/:topicId" element={<SubjectTopicHubPage />} />
               <Route path="accounting/topics" element={<Navigate to="/app/accounting" replace />} />
               <Route path="accounting/notes" element={<AccountingNotesPage />} />
               <Route path="accounting/notes/:topicId" element={<AccountingNoteDetailPage />} />
               <Route path="mathematics" element={<MathematicsTopicsPage />} />
+              <Route path="mathematics/topic/:topicId" element={<MathTopicHubPage />} />
               <Route path="mathematics/quiz" element={<QuizPage />} />
               <Route path="quiz" element={<QuizPage />} />
               <Route path="english" element={<EnglishTopicsPage />} />
+              <Route path="english/topic/:topicId" element={<SubjectTopicHubPage />} />
               <Route path="english/comprehension" element={<EnglishComprehensionPage />} />
               <Route path="english/essay" element={<EnglishEssayPage />} />
               <Route path="computer-science" element={<ComputerScienceTopicsPage />} />
+              <Route path="computer-science/topic/:topicId" element={<SubjectTopicHubPage />} />
               <Route path="computer-science/notes" element={<ComputerScienceNotesPage />} />
               <Route path="computer-science/notes/:topicSlug" element={<ComputerScienceNoteDetailPage />} />
               <Route path="geography" element={<GeographyTopicsPage />} />
+              <Route path="geography/topic/:topicId" element={<SubjectTopicHubPage />} />
               <Route path="geography/notes" element={<GeographyNotesPage />} />
               <Route path="geography/notes/:topicId" element={<GeographyNoteDetailPage />} />
               <Route path="commerce" element={<CommerceTopicsPage />} />
+              <Route path="commerce/topic/:topicId" element={<SubjectTopicHubPage />} />
               <Route path="commerce/notes" element={<CommerceNotesPage />} />
               <Route path="commerce/notes/:topicSlug" element={<CommerceNoteDetailPage />} />
               <Route path="business-enterprise-skills" element={<BESTopicsPage />} />
+              <Route path="business-enterprise-skills/topic/:topicId" element={<SubjectTopicHubPage />} />
               <Route path="business-enterprise-skills/notes" element={<BESNotesPage />} />
               <Route path="business-enterprise-skills/notes/:topicSlug" element={<BESNoteDetailPage />} />
               <Route path="history" element={<HistoryTopicsPage />} />
+              <Route path="history/topic/:topicId" element={<SubjectTopicHubPage />} />
               <Route path="history/notes" element={<HistoryNotesPage />} />
               <Route path="history/notes/:topicId" element={<HistoryNoteDetailPage />} />
               <Route path="history/essay" element={<HistoryEssayPage />} />
@@ -214,10 +234,13 @@ function App() {
               <Route path="exam/review" element={<ExamReviewPage />} />
               {/* Individual Science Subjects */}
               <Route path="biology" element={<BiologyTopicsPage />} />
+              <Route path="biology/topic/:topicId" element={<SubjectTopicHubPage />} />
               <Route path="biology/notes/:topic" element={<ScienceNotesPage />} />
               <Route path="chemistry" element={<ChemistryTopicsPage />} />
+              <Route path="chemistry/topic/:topicId" element={<SubjectTopicHubPage />} />
               <Route path="chemistry/notes/:topic" element={<ScienceNotesPage />} />
               <Route path="physics" element={<PhysicsTopicsPage />} />
+              <Route path="physics/topic/:topicId" element={<SubjectTopicHubPage />} />
               <Route path="physics/notes/:topic" element={<ScienceNotesPage />} />
               <Route path="sciences" element={<ScienceTopicsPage />} />
               <Route path="sciences/quiz" element={<ScienceQuizPage />} />
@@ -234,13 +257,20 @@ function App() {
               <Route path="teacher" element={<TeacherSetupPage />} />
               <Route path="teacher/chat" element={<TeacherChatPage />} />
               <Route path="teacher/history" element={<TeacherHistoryPage />} />
+              <Route path="ai-classroom" element={<AiClassroomPage />} />
             </Route>
             {/* Virtual Classroom - fullscreen, outside AppLayout */}
             <Route path="/app/classroom/:bookingId" element={<ProtectedRoute><VirtualClassroomPage /></ProtectedRoute>} />
 
             {/* School Portal - separate auth flow */}
             <Route path="/school/:schoolSlug" element={<SchoolAuthProvider><SchoolLoginPage /></SchoolAuthProvider>} />
-            <Route path="/school/:schoolSlug/dashboard" element={<SchoolAuthProvider><SchoolProtectedRoute><SchoolDashboardPage /></SchoolProtectedRoute></SchoolAuthProvider>} />
+            <Route path="/school/:schoolSlug/dashboard/*" element={<SchoolAuthProvider><SchoolProtectedRoute><SchoolDashboardPage /></SchoolProtectedRoute></SchoolAuthProvider>} />
+
+            {/* Teacher Portal - separate auth flow */}
+            <Route path="/school/:schoolId/teacher-login" element={<TeacherAuthProvider><TeacherLoginPage /></TeacherAuthProvider>} />
+            <Route path="/school/:schoolId/teacher/dashboard" element={<TeacherAuthProvider><TeacherProtectedRoute><TeacherPortalDashboard /></TeacherProtectedRoute></TeacherAuthProvider>} />
+            <Route path="/school/:schoolId/teacher/classroom/:classroomId" element={<TeacherAuthProvider><TeacherProtectedRoute><TeacherClassroomView /></TeacherProtectedRoute></TeacherAuthProvider>} />
+            <Route path="/school/:schoolId/teacher/classroom/:classroomId/student/:studentId" element={<TeacherAuthProvider><TeacherProtectedRoute><TeacherClassroomView /></TeacherProtectedRoute></TeacherAuthProvider>} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

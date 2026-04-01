@@ -33,12 +33,16 @@ class GeminiInteractionsService:
     - Built-in tools (Google Search, URL context, code execution)
     """
     
-    # Supported models
+    # Supported models (latest stable + preview as of March 2026)
     MODELS = {
+        # Latest stable (production-ready)
         'flash': 'gemini-2.5-flash',
         'flash_lite': 'gemini-2.5-flash-lite',
         'pro': 'gemini-2.5-pro',
-        'pro_3': 'gemini-3-pro-preview',
+        # Gemini 3.x preview models
+        'flash_3': 'gemini-3-flash-preview',
+        'pro_3': 'gemini-3.1-pro-preview',
+        'flash_lite_3': 'gemini-3.1-flash-lite-preview',
     }
     
     # Deep Research agent ID

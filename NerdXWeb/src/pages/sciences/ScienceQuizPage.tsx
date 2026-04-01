@@ -36,18 +36,19 @@ interface SubjectInfo {
   color: string;
 }
 
+type ScienceQuizLocationState = {
+  question: Question;
+  subject: SubjectInfo;
+  topic?: Topic;
+  parentSubject?: string;
+  questionFormat?: 'mcq' | 'structured';
+  mixImagesEnabled?: boolean;
+  backTo?: string;
+};
+
 export function ScienceQuizPage() {
-  const { state } = useLocation() as {
-    state?: {
-      question: Question;
-      subject: SubjectInfo;
-      topic?: Topic;
-      parentSubject?: string;
-      questionFormat?: 'mcq' | 'structured';
-      mixImagesEnabled?: boolean;
-      backTo?: string;
-    };
-  };
+  const location = useLocation();
+  const state = location.state as ScienceQuizLocationState | undefined;
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
   const subject = state?.subject ?? { id: 'combined_science', name: 'O Level Science', color: '#00E676' };
@@ -77,7 +78,9 @@ export function ScienceQuizPage() {
 
   const useMathRenderer = isMathRenderSubject(subject?.id);
   const isStructured =
-    question?.question_type === 'structured' && question.structured_question;
+    Boolean(question?.structured_question?.parts?.length) ||
+    (String(question?.question_type).toLowerCase() === 'structured' &&
+      Boolean(question?.structured_question));
   const structParts = question?.structured_question?.parts ?? [];
   const hasStructAnswer = structParts.some(
     (p) => (structuredAnswers[p.label] ?? '').trim().length > 0
@@ -89,6 +92,21 @@ export function ScienceQuizPage() {
     : hasOptions
       ? !!selectedAnswer
       : !!textAnswer.trim() || !!answerImage;
+
+  // Re-apply question when navigating here with new location state (e.g. topic hub → quiz).
+  // useState(initial) only runs on first mount; without this, a reused route instance can stay empty.
+  useEffect(() => {
+    const s = location.state as ScienceQuizLocationState | undefined;
+    const q = s?.question;
+    if (!q || typeof q !== 'object') return;
+    setQuestion(q);
+    setResult(null);
+    setSelectedAnswer('');
+    setTextAnswer('');
+    setStructuredAnswers({});
+    setAnswerImage(null);
+    questionStartTime.current = Date.now();
+  }, [location.key]);
 
   // Cleanup media streams on unmount
   useEffect(() => {

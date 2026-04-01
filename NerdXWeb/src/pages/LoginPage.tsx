@@ -4,6 +4,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, BookOpen, GraduationCap } from 'lu
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/api/authApi';
 import { supabase } from '../services/supabase';
+import { getPublicSiteOrigin } from '../services/api/config';
 
 export function LoginPage() {
   const [searchParams] = useSearchParams();
@@ -71,7 +72,7 @@ export function LoginPage() {
     try {
       const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` }
+        options: { redirectTo: `${getPublicSiteOrigin()}/auth/callback` }
       });
 
       if (oauthError) throw oauthError;

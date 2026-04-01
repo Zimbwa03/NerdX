@@ -64,7 +64,7 @@ export function CompassBearingLab({ simulation }: { simulation: SimulationMetada
                   E (90°)
                 </text>
                 <g transform="translate(210,110)">
-                  <line x1="0" y1="-70" x2="0" y2="-18" stroke="#7C4DFF" strokeWidth="6" />
+                  <line x1="0" y1="-70" x2="0" y2="-18" stroke="#10B981" strokeWidth="6" />
                   <circle cx="0" cy="0" r="10" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" />
                   <circle cx="0" cy="0" r="2" fill="rgba(255,255,255,0.7)" />
                   <line x1="-14" y1="0" x2="-8" y2="0" stroke="rgba(255,255,255,0.7)" strokeWidth="2" />
@@ -93,7 +93,7 @@ export function CompassBearingLab({ simulation }: { simulation: SimulationMetada
                 <text x="300" y="75" textAnchor="middle" fill="#fff" fontSize="13" fontWeight="900">
                   B
                 </text>
-                <line x1="122" y1="152" x2="288" y2="78" stroke="#7C4DFF" strokeWidth="4" />
+                <line x1="122" y1="152" x2="288" y2="78" stroke="#10B981" strokeWidth="4" />
               </svg>
             </div>
 

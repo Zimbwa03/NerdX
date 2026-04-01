@@ -22,6 +22,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { AILoadingOverlay } from '../../components/AILoadingOverlay';
+import { MaicClassroomFeatureCard } from '../../components/MaicClassroomFeatureCard';
+import { MaicTopicClassroomLink } from '../../components/MaicTopicClassroomLink';
 import { aLevelChemistryTopics, type ALevelChemistryTopic } from '../../data/aLevelChemistry';
 import '../sciences/ScienceUniverse.css';
 
@@ -251,12 +253,19 @@ export function ALevelChemistryTopicsPage() {
               })
             }
           >
-            <div className="feature-icon-box" style={{ background: 'rgba(124, 77, 255, 0.15)' }}>
-              <MessageSquare size={28} color="#B388FF" />
+            <div className="feature-icon-box" style={{ background: 'rgba(16, 185, 129, 0.15)' }}>
+              <MessageSquare size={28} color="#34D399" />
             </div>
             <h3 className="feature-card-title">AI Chemistry Tutor</h3>
             <p className="feature-card-desc">Interactive tutoring aligned to A-Level chemistry objectives.</p>
           </div>
+
+          <MaicClassroomFeatureCard
+            navigate={navigate}
+            subject="A Level Chemistry"
+            gradeLevel="AS Level - A2 Level"
+            accent="rgba(20, 184, 166, 0.2)"
+          />
 
           <div className="science-feature-card" onClick={() => navigate('/app/virtual-lab?subject=chemistry')}>
             <div className="feature-icon-box" style={{ background: 'rgba(245, 158, 11, 0.2)' }}>
@@ -326,9 +335,23 @@ export function ALevelChemistryTopicsPage() {
             {filteredTopics.map((topic) => {
               const TopicIcon = CATEGORY_ICONS[topic.category] ?? Circle;
               return (
-                <div key={topic.id} className="science-topic-card" onClick={() => openStartQuiz(topic)}>
-                  <div className="topic-icon-small">
-                    <TopicIcon size={20} />
+                <div
+                  key={topic.id}
+                  className="science-topic-card"
+                  onClick={() =>
+                    navigate(`/app/a-level-chemistry/topic/${encodeURIComponent(topic.id)}`)
+                  }
+                >
+                  <div className="science-topic-card__row">
+                    <div className="topic-icon-small">
+                      <TopicIcon size={20} />
+                    </div>
+                    <MaicTopicClassroomLink
+                      navigate={navigate}
+                      subject="A Level Chemistry"
+                      gradeLevel="AS Level - A2 Level"
+                      topicName={topic.name}
+                    />
                   </div>
                   <span className="topic-card-name">{topic.name}</span>
                   <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>

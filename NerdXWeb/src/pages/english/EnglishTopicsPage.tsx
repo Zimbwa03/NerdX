@@ -12,6 +12,7 @@ import {
 } from '../../utils/creditCalculator';
 import { ArrowLeft, BookOpen, PenLine, MessageSquare, ClipboardList, GraduationCap } from 'lucide-react';
 import { AILoadingOverlay } from '../../components/AILoadingOverlay';
+import { MaicTopicClassroomLink } from '../../components/MaicTopicClassroomLink';
 import { useAuth } from '../../context/AuthContext';
 
 const ENGLISH_TOPICS_FALLBACK: Topic[] = [
@@ -172,7 +173,7 @@ export function EnglishTopicsPage() {
                 className="feature-card-v2"
                 onClick={() => navigate('/app/english/essay')}
               >
-                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #7C4DFF, #651FFF)' }}>
+                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}>
                   <PenLine size={24} />
                 </div>
                 <div className="feature-card-text">
@@ -193,6 +194,25 @@ export function EnglishTopicsPage() {
                 <div className="feature-card-text">
                   <h3>AI English Tutor</h3>
                   <p>Interactive Socratic tutoring for grammar & writing</p>
+                </div>
+                <span className="feature-arrow">→</span>
+              </button>
+
+              <button
+                type="button"
+                className="feature-card-v2"
+                onClick={() =>
+                  navigate('/app/ai-classroom', {
+                    state: { subject: 'English', formLevel: 'Form 3-4 (O-Level)', topic: '' },
+                  })
+                }
+              >
+                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #34d399, #059669)' }}>
+                  <GraduationCap size={24} />
+                </div>
+                <div className="feature-card-text">
+                  <h3>AI Classroom</h3>
+                  <p>Structured multi-agent lesson with Mr. Moyo, classmate prompts, and a quiz</p>
                 </div>
                 <span className="feature-arrow">→</span>
               </button>
@@ -233,17 +253,36 @@ export function EnglishTopicsPage() {
             ) : (
               <div className="topics-grid-v2">
                 {displayTopics.map((topic) => (
-                  <button
+                  <div
                     key={topic.id}
-                    type="button"
+                    role="button"
+                    tabIndex={0}
                     className="topic-card-v2"
-                    onClick={() => openStartQuiz(topic)}
+                    onClick={() =>
+                      navigate(`/app/english/topic/${encodeURIComponent(topic.id)}`)
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        navigate(`/app/english/topic/${encodeURIComponent(topic.id)}`);
+                      }
+                    }}
                   >
-                    <div className="topic-card-icon" style={{ background: 'linear-gradient(135deg, #FF9100, #FF6D00)' }}>
-                      <GraduationCap size={18} />
+                    <div className="topic-card-v2__row">
+                      <div className="topic-card-v2__lead">
+                        <div className="topic-card-icon" style={{ background: 'linear-gradient(135deg, #FF9100, #FF6D00)' }}>
+                          <GraduationCap size={18} />
+                        </div>
+                        <span className="topic-card-name">{topic.name}</span>
+                      </div>
+                      <MaicTopicClassroomLink
+                        navigate={navigate}
+                        subject="English"
+                        gradeLevel="Form 3-4 (O-Level)"
+                        topicName={topic.name}
+                      />
                     </div>
-                    <span className="topic-card-name">{topic.name}</span>
-                  </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -303,7 +342,7 @@ export function EnglishTopicsPage() {
         isVisible={generating}
         title="Generating Question"
         subtitle="Creating your practice question"
-        accentColor="#667eea"
+        accentColor="#10B981"
         variant="fullscreen"
       />
     </div>

@@ -112,7 +112,7 @@ export function MathNotesPage() {
                   <VideoPlayer
                     src={section.videoUrl}
                     title={`Video: ${section.title}`}
-                    accentColor="#7C4DFF"
+                    accentColor="#10B981"
                     locked={isVideoLocked(topicIndex)}
                   />
                 )}

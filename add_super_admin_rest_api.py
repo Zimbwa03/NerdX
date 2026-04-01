@@ -201,7 +201,7 @@ def main():
         print("   Password: Ngoni2003")
         print("   Role: super_admin")
         print("\nNext steps:")
-        print("   1. Go to https://nerdx.onrender.com/login")
+        print("   1. Go to https://nerdx.co.zw/login")
         print("   2. Login with the credentials above")
         print("   3. You can now add other admins from the dashboard")
         print("   4. Navigate to Admin Users section to manage admins")

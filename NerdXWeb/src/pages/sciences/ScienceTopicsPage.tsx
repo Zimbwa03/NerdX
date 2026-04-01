@@ -8,8 +8,9 @@ import {
   getMinimumCreditsForQuiz,
 } from '../../utils/creditCalculator';
 import { scienceTopics } from '../../data/scienceNotes';
-import { ArrowLeft, Atom, FlaskConical, Leaf, MessageCircle, Sparkles } from 'lucide-react';
+import { ArrowLeft, Atom, FlaskConical, GraduationCap, Leaf, MessageCircle, Sparkles } from 'lucide-react';
 import { AILoadingOverlay } from '../../components/AILoadingOverlay';
+import { MaicTopicClassroomLink } from '../../components/MaicTopicClassroomLink';
 
 type ScienceSubject = 'Biology' | 'Chemistry' | 'Physics';
 
@@ -269,6 +270,29 @@ export function ScienceTopicsPage() {
               type="button"
               className="science-feature-card"
               onClick={() =>
+                navigate('/app/ai-classroom', {
+                  state: {
+                    subject: activeTab,
+                    formLevel: 'Form 3-4 (O-Level)',
+                    topic: '',
+                  },
+                })
+              }
+            >
+              <div className="science-feature-icon" style={{ color: subjectMeta.accent }}>
+                <GraduationCap size={26} />
+              </div>
+              <div className="science-feature-content">
+                <h3>AI Classroom</h3>
+                <p>Multi-agent lesson flow for {activeTab} (intro, concepts, quiz)</p>
+              </div>
+              <span className="science-feature-arrow">-&gt;</span>
+            </button>
+
+            <button
+              type="button"
+              className="science-feature-card"
+              onClick={() =>
                 navigate('/app/exam/setup', {
                   state: {
                     subject: 'combined_science',
@@ -313,14 +337,29 @@ export function ScienceTopicsPage() {
             ) : (
               <div className="science-topics-grid">
                 {displayTopics.map((topic) => (
-                  <button
+                  <div
                     key={topic.id}
-                    type="button"
+                    role="button"
+                    tabIndex={0}
                     className="science-topic-card"
                     onClick={() => openStartQuiz(topic)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openStartQuiz(topic);
+                      }
+                    }}
                   >
-                    <span className="science-topic-name">{topic.name}</span>
-                  </button>
+                    <div className="science-topic-card__row">
+                      <span className="science-topic-name">{topic.name}</span>
+                      <MaicTopicClassroomLink
+                        navigate={navigate}
+                        subject={activeTab}
+                        gradeLevel="Form 3-4 (O-Level)"
+                        topicName={topic.name}
+                      />
+                    </div>
+                  </div>
                 ))}
               </div>
             )}

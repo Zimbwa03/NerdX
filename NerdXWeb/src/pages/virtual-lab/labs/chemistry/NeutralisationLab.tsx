@@ -66,7 +66,7 @@ export function NeutralisationLab({ simulation }: { simulation: SimulationMetada
                             <svg className="vl-sim-svg" viewBox="0 0 300 260" role="img" aria-label="Neutralisation simulation">
                                 {/* pH Scale */}
                                 {Array.from({ length: 15 }).map((_, i) => {
-                                    const colors = ['#FF1744', '#FF5252', '#FF6E40', '#FF9100', '#FFD600', '#FFEB3B', '#C6FF00', '#76FF03', '#00E676', '#1DE9B6', '#00BCD4', '#29B6F6', '#448AFF', '#7C4DFF', '#AA00FF'];
+                                    const colors = ['#FF1744', '#FF5252', '#FF6E40', '#FF9100', '#FFD600', '#FFEB3B', '#C6FF00', '#76FF03', '#00E676', '#1DE9B6', '#00BCD4', '#29B6F6', '#448AFF', '#10B981', '#AA00FF'];
                                     return (
                                         <g key={i}>
                                             <rect x={20 + i * 18} y="10" width="16" height="24" rx="3" fill={colors[i]} opacity={i === pH ? 1 : 0.4}

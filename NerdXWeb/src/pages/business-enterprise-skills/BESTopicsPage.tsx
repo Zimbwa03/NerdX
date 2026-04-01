@@ -23,6 +23,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { AILoadingOverlay } from '../../components/AILoadingOverlay';
+import { MaicClassroomFeatureCard } from '../../components/MaicClassroomFeatureCard';
+import { MaicTopicClassroomLink } from '../../components/MaicTopicClassroomLink';
 import { oLevelBESTopics } from '../../data/oLevelBES/topics';
 import '../sciences/ScienceUniverse.css';
 
@@ -174,12 +176,19 @@ export function BESTopicsPage() {
             className="science-feature-card"
             onClick={() => navigate('/app/teacher', { state: { subject: 'Business Enterprise and Skills', gradeLevel: 'Form 3-4 (O-Level)' } })}
           >
-            <div className="feature-icon-box" style={{ background: 'rgba(124, 77, 255, 0.15)' }}>
-              <MessageSquare size={28} color="#B388FF" />
+            <div className="feature-icon-box" style={{ background: 'rgba(16, 185, 129, 0.15)' }}>
+              <MessageSquare size={28} color="#34D399" />
             </div>
             <h3 className="feature-card-title">AI BES Tutor</h3>
             <p className="feature-card-desc">Ask BES questions and get syllabus-aligned guidance instantly.</p>
           </div>
+
+          <MaicClassroomFeatureCard
+            navigate={navigate}
+            subject="Business Enterprise and Skills"
+            gradeLevel="Form 3-4 (O-Level)"
+            accent="rgba(46, 125, 50, 0.2)"
+          />
 
           <div
             className="science-feature-card"
@@ -241,10 +250,20 @@ export function BESTopicsPage() {
                 <div
                   key={topic.id}
                   className="science-topic-card"
-                  onClick={() => openStartQuiz(topic)}
+                  onClick={() =>
+                    navigate(`/app/business-enterprise-skills/topic/${encodeURIComponent(topic.id)}`)
+                  }
                 >
-                  <div className="topic-icon-small">
-                    <TopicIcon size={20} />
+                  <div className="science-topic-card__row">
+                    <div className="topic-icon-small">
+                      <TopicIcon size={20} />
+                    </div>
+                    <MaicTopicClassroomLink
+                      navigate={navigate}
+                      subject="Business Enterprise and Skills"
+                      gradeLevel="Form 3-4 (O-Level)"
+                      topicName={topic.name}
+                    />
                   </div>
                   <span className="topic-card-name">{topic.name}</span>
                 </div>

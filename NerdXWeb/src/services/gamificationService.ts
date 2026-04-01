@@ -324,7 +324,7 @@ export const gamificationService = {
     getDefaultSubjectData: (): SubjectMasteryData[] => [
         { subject: 'mathematics', displayName: 'Mathematics', icon: '📐', color: '#3B82F6', mastery: 0, skillsCount: 0, masteredSkills: 0 },
         { subject: 'biology', displayName: 'Biology', icon: '🧬', color: '#22C55E', mastery: 0, skillsCount: 0, masteredSkills: 0 },
-        { subject: 'chemistry', displayName: 'Chemistry', icon: '⚗️', color: '#8B5CF6', mastery: 0, skillsCount: 0, masteredSkills: 0 },
+        { subject: 'chemistry', displayName: 'Chemistry', icon: '⚗️', color: '#10B981', mastery: 0, skillsCount: 0, masteredSkills: 0 },
         { subject: 'physics', displayName: 'Physics', icon: '⚡', color: '#F59E0B', mastery: 0, skillsCount: 0, masteredSkills: 0 },
         { subject: 'english', displayName: 'English', icon: '📝', color: '#EC4899', mastery: 0, skillsCount: 0, masteredSkills: 0 },
         { subject: 'geography', displayName: 'Geography', icon: '🌍', color: '#14B8A6', mastery: 0, skillsCount: 0, masteredSkills: 0 },

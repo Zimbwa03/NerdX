@@ -1,13 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { type Topic } from '../../services/api/quizApi';
 import {
-  formatCreditCost,
-  getMinimumCreditsForQuiz,
-} from '../../utils/creditCalculator';
-import {
-  ArrowLeft, BookOpen, MessageSquare, Play, Scroll, Info, X, FileText,
+  ArrowLeft, BookOpen, MessageSquare, Play, Scroll, FileText,
   Archive, Layers, Landmark, Globe, Mountain, Building, Anchor,
   Flag, Shield, Users, Target, Crown, Flame, Heart, Scale,
   Swords, AlertTriangle, ShieldCheck, Link2, Map, Bookmark,
@@ -16,19 +11,14 @@ import {
   Sparkles,
   type LucideIcon,
 } from 'lucide-react';
-import { AILoadingOverlay } from '../../components/AILoadingOverlay';
+import { MaicClassroomFeatureCard } from '../../components/MaicClassroomFeatureCard';
+import { MaicTopicClassroomLink } from '../../components/MaicTopicClassroomLink';
 import {
   historyFormLevels,
   getHistoryTopicsByForm,
   type HistoryFormLevel,
 } from '../../data/historyNotes';
 import '../sciences/ScienceUniverse.css';
-
-const SUBJECT = {
-  id: 'history',
-  name: 'O Level History',
-  color: '#5D4037',
-};
 
 /** Every history topic gets its own unique icon, keyed by topic ID. */
 const HISTORY_TOPIC_ICONS: Record<string, LucideIcon> = {
@@ -80,55 +70,10 @@ const HISTORY_TOPIC_ICONS: Record<string, LucideIcon> = {
 
 export function HistoryTopicsPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [selectedForm, setSelectedForm] = useState<HistoryFormLevel>('Form 1');
-
-  const [startQuizModalOpen, setStartQuizModalOpen] = useState(false);
-  const [pendingTopic, setPendingTopic] = useState<Topic | null>(null);
-  const [generating, setGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const formTopics = getHistoryTopicsByForm(selectedForm);
   const displayTopics = formTopics.map((t) => ({ id: t.id, name: t.name, subject: 'history' } as Topic));
-
-  const openStartQuiz = (topic: Topic) => {
-    setPendingTopic(topic);
-    setError(null);
-    setStartQuizModalOpen(true);
-  };
-
-  const minCredits = getMinimumCreditsForQuiz({
-    subject: 'history',
-    questionType: 'topical',
-    questionFormat: 'essay',
-  });
-
-  const userCredits = user?.credits ?? 0;
-  const hasEnoughCredits = userCredits >= minCredits;
-
-  const handleStartQuiz = async () => {
-    if (!pendingTopic) return;
-    if (!hasEnoughCredits) {
-      setError(`You need at least ${formatCreditCost(minCredits)} credits to start. Please top up.`);
-      return;
-    }
-
-    setGenerating(true);
-    setStartQuizModalOpen(false);
-    setError(null);
-
-    setTimeout(() => {
-      navigate('/app/history/essay', {
-        state: {
-          topic: { id: pendingTopic.id, name: pendingTopic.name },
-          subject: { id: SUBJECT.id, name: SUBJECT.name, color: SUBJECT.color },
-          formLevel: selectedForm,
-          backTo: '/app/history',
-        },
-      });
-      setGenerating(false);
-    }, 1200);
-  };
 
   const notesTopics = getHistoryTopicsByForm(selectedForm).filter((t) => t.hasNotes);
 
@@ -193,6 +138,13 @@ export function HistoryTopicsPage() {
             <p className="feature-card-desc">Ask any history question. Get instant, detailed explanations.</p>
           </div>
 
+          <MaicClassroomFeatureCard
+            navigate={navigate}
+            subject="History"
+            gradeLevel={selectedForm}
+            accent="rgba(141, 110, 99, 0.25)"
+          />
+
           <div
             className="science-feature-card"
             onClick={() => navigate('/app/exam/setup', { state: { subject: 'history', backTo: '/app/history', subjectLabel: 'History' } })}
@@ -208,21 +160,15 @@ export function HistoryTopicsPage() {
         <div className="science-topics-col">
           <div className="topics-section-title" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
             <Play size={24} style={{ color: '#8D6E63' }} />
-            <span style={{ fontSize: 24, fontWeight: 700 }}>Essay Practice – {selectedForm}</span>
+            <span style={{ fontSize: 24, fontWeight: 700 }}>Topics – {selectedForm}</span>
             <span className="topics-count-badge" style={{ fontSize: 12, background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: 12 }}>
               {displayTopics.length} Topics
             </span>
           </div>
 
           <p style={{ marginBottom: 20, opacity: 0.7 }}>
-            Select a topic to practice <strong>Paper 1 Essay</strong> questions (3-part ZIMSEC format). Each topic generates standard ZIMSEC-aligned questions that are marked with detailed feedback.
+            Open a topic for essay practice, notes, tutor, AI Classroom, exam setup, and labs in one place.
           </p>
-
-          {!hasEnoughCredits && (
-            <div style={{ padding: 12, background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 12, marginBottom: 20, color: '#FCA5A5', fontSize: 14 }}>
-              You need at least {formatCreditCost(minCredits)} to generate a question.
-            </div>
-          )}
 
           <div className="science-topics-grid">
             {displayTopics.map((topic) => {
@@ -231,10 +177,20 @@ export function HistoryTopicsPage() {
                 <div
                   key={topic.id}
                   className="science-topic-card"
-                  onClick={() => openStartQuiz(topic)}
+                  onClick={() =>
+                    navigate(`/app/history/topic/${encodeURIComponent(topic.id)}`)
+                  }
                 >
-                  <div className="topic-icon-small">
-                    <TopicIcon size={20} />
+                  <div className="science-topic-card__row">
+                    <div className="topic-icon-small">
+                      <TopicIcon size={20} />
+                    </div>
+                    <MaicTopicClassroomLink
+                      navigate={navigate}
+                      subject="History"
+                      gradeLevel={selectedForm}
+                      topicName={topic.name}
+                    />
                   </div>
                   <span className="topic-card-name">{topic.name}</span>
                 </div>
@@ -251,7 +207,7 @@ export function HistoryTopicsPage() {
             {notesTopics.map((topic) => (
               <Link
                 key={topic.id}
-                to={`/app/history/notes/${topic.id}`}
+                to={`/app/history/topic/${encodeURIComponent(topic.id)}`}
                 style={{
                   display: 'inline-block',
                   padding: '10px 16px',
@@ -271,72 +227,6 @@ export function HistoryTopicsPage() {
         </div>
       </div>
 
-      {startQuizModalOpen && pendingTopic && (
-        <div className="modal-overlay" style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
-          zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <div className="modal-content" style={{
-            background: '#0F172A', border: '1px solid rgba(255,255,255,0.1)',
-            width: '90%', maxWidth: '450px', borderRadius: 24, padding: 32,
-            position: 'relative',
-          }}>
-            <button
-              onClick={() => setStartQuizModalOpen(false)}
-              style={{ position: 'absolute', top: 20, right: 20, background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
-            >
-              <X size={24} />
-            </button>
-
-            <div style={{ textAlign: 'center', marginBottom: 24 }}>
-              <div style={{
-                width: 60, height: 60, background: 'rgba(93, 64, 55, 0.25)',
-                borderRadius: 16, margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#8D6E63',
-              }}>
-                <Scroll size={32} />
-              </div>
-              <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>{pendingTopic.name}</h2>
-              <p style={{ opacity: 0.7, marginTop: 8 }}>Paper 1 Essay – 3-part ZIMSEC Format</p>
-              <p style={{ opacity: 0.5, marginTop: 4, fontSize: 13 }}>{selectedForm}</p>
-            </div>
-
-            {error && (
-              <div style={{ padding: 12, background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: 12, marginBottom: 20, color: '#FCA5A5', fontSize: 14 }}>
-                {error}
-              </div>
-            )}
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 24, fontSize: 14, opacity: 0.8 }}>
-              <Info size={16} />
-              <span>Cost: <strong>{minCredits} credits</strong></span>
-            </div>
-
-            <button
-              onClick={handleStartQuiz}
-              disabled={generating}
-              style={{
-                width: '100%', padding: '16px', borderRadius: 16,
-                background: 'linear-gradient(135deg, #5D4037, #795548)',
-                border: 'none', color: '#fff', fontSize: 16, fontWeight: 700,
-                cursor: generating ? 'wait' : 'pointer',
-                opacity: generating ? 0.7 : 1,
-              }}
-            >
-              {generating ? 'Starting...' : 'Start Essay Practice'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      <AILoadingOverlay
-        isVisible={generating}
-        title="Generating Question"
-        subtitle={`Preparing a ${selectedForm} ZIMSEC essay question on ${pendingTopic?.name ?? 'this topic'}...`}
-        accentColor={SUBJECT.color}
-        variant="fullscreen"
-      />
     </div>
   );
 }

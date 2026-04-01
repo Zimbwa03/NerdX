@@ -1,17 +1,15 @@
 """
 A Level Pure Mathematics Question Generator.
-Uses Vertex AI as primary with DeepSeek fallback.
+Uses Vertex AI (Gemini) for all AI-generated items.
 Supports MCQ, structured questions, and worked solutions.
 """
 
 import json
 import logging
-import requests
 import os
 import re
 from typing import Dict, Optional, List
 from constants import A_LEVEL_PURE_MATH_TOPICS, A_LEVEL_PURE_MATH_ALL_TOPICS
-from utils.deepseek import get_deepseek_chat_model
 from utils.vertex_ai_helper import try_vertex_json
 
 _ALEVEL_EXPANDED = {}
@@ -222,22 +220,10 @@ A_LEVEL_PURE_MATH_TOPIC_DETAILS = {
 
 
 class ALevelPureMathGenerator:
-    """Generator for A Level Pure Mathematics questions using DeepSeek AI"""
-    
+    """Generator for A Level Pure Mathematics questions using Vertex AI (Gemini)."""
+
     def __init__(self):
-        self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
-        self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
-        self.deepseek_model = get_deepseek_chat_model()
-        self.max_retries = 4  # Increased from 2 to 4 for better reliability
-        self.timeout = 35  # Increased timeout for better reliability
-        self.connect_timeout = 10  # Connection timeout
-        
-        # Create a session for connection pooling and reuse
-        self.session = requests.Session()
-        self.session.headers.update({
-            'Content-Type': 'application/json',
-            'User-Agent': 'NerdX-Education/1.0'
-        })
+        self.max_retries = int(os.environ.get("A_LEVEL_PURE_MATH_VERTEX_RETRIES", "4"))
         self.graph_service = None  # Lazy init to avoid heavy imports unless needed
     
 
@@ -298,16 +284,18 @@ class ALevelPureMathGenerator:
             context = f"a_level_pure_math:{question_type}:{topic_name}:{difficulty}"
             vertex_prompt = f"{self._system_prompt()}\n\n{prompt}"
 
-            logger.info(f"Trying Vertex AI (primary) for {context}")
-            question_data = try_vertex_json(vertex_prompt, logger=logger, context=context)
-            if question_data and not _is_valid_candidate(question_data):
-                logger.warning(f"Vertex AI returned invalid structure for {context}")
-                question_data = None
-
-            if not question_data:
-                provider = "deepseek_fallback"
-                logger.info(f"Falling back to DeepSeek for {context}")
-                question_data = self._call_deepseek(prompt, question_type)
+            question_data = None
+            for attempt in range(self.max_retries):
+                logger.info("Vertex AI attempt %s/%s for %s", attempt + 1, self.max_retries, context)
+                raw = try_vertex_json(vertex_prompt, logger=logger, context=context, max_attempts=2)
+                if raw:
+                    candidate = self._normalize_question_data(raw)
+                    if _is_valid_candidate(candidate):
+                        question_data = candidate
+                        break
+                    logger.warning("Vertex AI returned invalid structure for %s (attempt %s)", context, attempt + 1)
+                else:
+                    logger.warning("Vertex AI returned no JSON for %s (attempt %s)", context, attempt + 1)
 
             if question_data:
                 question_data = self._maybe_attach_visualization(question_data, topic_name)
@@ -745,7 +733,7 @@ Generate ONE A Level Pure Mathematics structured question now:"""
 
 
     def _system_prompt(self) -> str:
-        """System prompt shared by Vertex AI and DeepSeek."""
+        """System prompt for Vertex AI generation."""
         return """You are an expert A Level Pure Mathematics examiner for ZIMSEC examinations.
 Generate questions with clear solutions.
 
@@ -756,354 +744,145 @@ CRITICAL: Use standard LaTeX for mathematical notation:
 
 Keep explanations concise (2-3 sentences). Always respond with valid, complete JSON only."""
 
-    def _call_deepseek(self, prompt: str, question_type: str = "mcq") -> Optional[Dict]:
-        """Call DeepSeek API to generate question with retries"""
-        
-        for attempt in range(self.max_retries):
-            try:
-                if not self.deepseek_api_key:
-                    logger.error("DeepSeek API key not found")
-                    return None
-                
-                headers = {
-                    "Authorization": f"Bearer {self.deepseek_api_key}",
-                    "Content-Type": "application/json"
-                }
-                
-                payload = {
-                    "model": self.deepseek_model,
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": self._system_prompt()
-                        },
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
-                    ],
-                    "temperature": 0.7,
-                    "max_tokens": 1500 if question_type == "structured" else 1000  # Reduced for faster responses
-                }
-                
-                timeout = self.timeout + (attempt * 5)  # Progressive timeout increase
-                logger.info(f"DeepSeek Pure Math {question_type} attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
-                
-                # Exponential backoff with jitter
-                if attempt > 0:
-                    import random
-                    backoff_delay = 1 * (2 ** (attempt - 1)) + random.uniform(0, 1)
-                    logger.info(f"Waiting {backoff_delay:.2f}s before retry {attempt + 1}/{self.max_retries}")
-                    time.sleep(backoff_delay)
-                
-                # Use session for connection pooling
-                self.session.headers.update(headers)
-                response = self.session.post(
-                    self.deepseek_url,
-                    json=payload,
-                    timeout=(self.connect_timeout, timeout)
-                )
-                
-                if response.status_code == 429:
-                    # Rate limit
-                    retry_after = int(response.headers.get('Retry-After', 10))
-                    logger.warning(f"DeepSeek rate limit hit (429), waiting {retry_after}s")
-                    if attempt < self.max_retries - 1:
-                        time.sleep(retry_after)
-                        continue
-                elif response.status_code == 503:
-                    # Service unavailable
-                    logger.warning(f"DeepSeek service unavailable (503)")
-                    if attempt < self.max_retries - 1:
-                        continue
-                elif response.status_code != 200:
-                    logger.error(f"DeepSeek API error: {response.status_code} - {response.text[:200]}")
-                    if attempt < self.max_retries - 1:
-                        continue
-                
-                result = response.json()
-                content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
-                
-                # Parse JSON from response
-                question_data = self._parse_question_response(content)
-                if question_data:
-                    return question_data
-                    
-            except requests.Timeout:
-                logger.warning(f"DeepSeek timeout on attempt {attempt + 1}/{self.max_retries}")
-                continue
-            except Exception as e:
-                logger.error(f"Error calling DeepSeek API on attempt {attempt + 1}: {e}")
-                continue
-        
-        logger.error("All DeepSeek retry attempts failed for Pure Math question, trying Vertex AI fallback")
-        
-        # FALLBACK: Try Vertex AI when DeepSeek fails (same prompt as DeepSeek: system + user)
-        try:
-            from services.vertex_service import vertex_service
-            
-            if vertex_service.is_available():
-                logger.info(f"🔄 Falling back to Vertex AI for Pure Math {question_type}")
-                full_prompt = f"{self._system_prompt()}\n\n{prompt}"
-                result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
-                
-                if result and result.get('success'):
-                    text = result['text']
-                    question_data = self._parse_question_response(text)
-                    if question_data:
-                        logger.info(f"✅ Successfully generated Pure Math {question_type} with Vertex AI fallback")
-                        return question_data
-            else:
-                logger.warning("Vertex AI not available for fallback")
-        except Exception as e:
-            logger.error(f"Error in Vertex AI fallback: {e}")
-        
-        return None
-
     def _maybe_attach_visualization(self, question_data: Dict, topic_name: str) -> Dict:
         """
         Use matplotlib (via GraphService) to generate a visual aid when the AI
         indicates a sketch/graph is needed or when topic heuristics suggest it.
         """
         try:
-            viz_request = question_data.get('visualization') if isinstance(question_data, dict) else None
+            viz_request = question_data.get("visualization") if isinstance(question_data, dict) else None
             visual_type = None
             expression = None
             shape_params = None
             argand_points = None
             highlight_region = None
 
-            # AI-provided instructions take priority
             if isinstance(viz_request, dict):
-                needs_visual = bool(viz_request.get('needed') or viz_request.get('need_graph') or viz_request.get('require_diagram'))
-                visual_type = viz_request.get('type') or viz_request.get('visual_type')
-                expression = viz_request.get('expression') or viz_request.get('function')
-                shape_params = viz_request.get('parameters') or viz_request.get('shape')
-                argand_points = viz_request.get('points')
-                highlight_region = viz_request.get('region') or viz_request.get('quadrant')
+                needs_visual = bool(
+                    viz_request.get("needed")
+                    or viz_request.get("need_graph")
+                    or viz_request.get("require_diagram")
+                )
+                visual_type = viz_request.get("type") or viz_request.get("visual_type")
+                expression = viz_request.get("expression") or viz_request.get("function")
+                shape_params = viz_request.get("parameters") or viz_request.get("shape")
+                argand_points = viz_request.get("points")
+                highlight_region = viz_request.get("region") or viz_request.get("quadrant")
             else:
                 needs_visual = False
 
-            # Heuristic detection for topics that often need sketches
             graph_topics = {
-                'Rational Functions', 'Quadratic Functions', 'Functions', 'Coordinate Geometry',
-                'Trigonometry (Identities & Equations)', 'Further Trigonometry',
-                'Complex Numbers', 'Vectors in 3D', 'Differentiation', 'Applications of Differentiation',
-                'Integration', 'Further Integration Techniques', 'Numerical Methods'
+                "Rational Functions",
+                "Quadratic Functions",
+                "Functions",
+                "Coordinate Geometry",
+                "Trigonometry (Identities & Equations)",
+                "Further Trigonometry",
+                "Complex Numbers",
+                "Vectors in 3D",
+                "Differentiation",
+                "Applications of Differentiation",
+                "Integration",
+                "Further Integration Techniques",
+                "Numerical Methods",
             }
 
-            question_text = (question_data.get('question') or '').lower()
+            question_text = (question_data.get("question") or "").lower()
             needs_visual = needs_visual or any(
-                keyword in question_text for keyword in [
-                    'sketch', 'draw', 'graph', 'plot', 'diagram', 'locus', 'argand', 'quadrant'
+                keyword in question_text
+                for keyword in [
+                    "sketch",
+                    "draw",
+                    "graph",
+                    "plot",
+                    "diagram",
+                    "locus",
+                    "argand",
+                    "quadrant",
                 ]
             ) or topic_name in graph_topics
 
             if not needs_visual:
                 return question_data
 
-            # Determine visualization type and expression/params
             if not visual_type:
-                if 'argand' in question_text or 'complex' in topic_name.lower():
-                    visual_type = 'argand'
-                elif any(word in question_text for word in ['circle', 'triangle', 'rectangle', 'shape']):
-                    visual_type = 'shape'
+                if "argand" in question_text or "complex" in topic_name.lower():
+                    visual_type = "argand"
+                elif any(word in question_text for word in ["circle", "triangle", "rectangle", "shape"]):
+                    visual_type = "shape"
                 else:
-                    visual_type = 'graph'
+                    visual_type = "graph"
 
             if not expression:
                 expression = self._extract_expression(question_data)
 
-            # Lazy init GraphService
             if self.graph_service is None:
                 try:
                     from services.graph_service import GraphService
+
                     self.graph_service = GraphService()
                 except Exception as import_error:
-                    logger.error(f"Unable to load GraphService for visualization: {import_error}")
+                    logger.error("Unable to load GraphService for visualization: %s", import_error)
                     return question_data
 
             image_path = None
 
-            if visual_type in ['graph', 'function', 'function_graph']:
+            if visual_type in ["graph", "function", "function_graph"]:
                 if expression:
                     image_path = self.graph_service.create_advanced_function_graph(
                         expression,
-                        title=f"{topic_name} graph"
+                        title=f"{topic_name} graph",
                     )
-            elif visual_type in ['shape', 'geometry', 'diagram']:
-                # Default to triangle if not specified
-                shape_type = 'triangle'
+            elif visual_type in ["shape", "geometry", "diagram"]:
+                shape_type = "triangle"
                 if isinstance(shape_params, dict):
-                    shape_type = shape_params.get('shape_type') or shape_params.get('type') or shape_type
-                elif 'circle' in question_text:
-                    shape_type = 'circle'
-                elif 'rectangle' in question_text:
-                    shape_type = 'rectangle'
+                    shape_type = shape_params.get("shape_type") or shape_params.get("type") or shape_type
+                elif "circle" in question_text:
+                    shape_type = "circle"
+                elif "rectangle" in question_text:
+                    shape_type = "rectangle"
                 image_path = self.graph_service.create_geometry_diagram(shape_type, shape_params or {})
-            elif visual_type in ['argand', 'complex', 'complex_plane']:
+            elif visual_type in ["argand", "complex", "complex_plane"]:
                 image_path = self.graph_service.generate_argand_diagram(
                     points=argand_points if isinstance(argand_points, list) else None,
                     highlight_region=highlight_region,
-                    title="Argand Diagram"
+                    title="Argand Diagram",
                 )
 
             if image_path:
-                question_data['graph_image_path'] = image_path
-                question_data['graph_image_type'] = visual_type
+                question_data["graph_image_path"] = image_path
+                question_data["graph_image_type"] = visual_type
 
             return question_data
 
         except Exception as viz_error:
-            logger.error(f"Error attaching visualization: {viz_error}")
+            logger.error("Error attaching visualization: %s", viz_error)
             return question_data
 
     def _extract_expression(self, question_data: Dict) -> Optional[str]:
         """Best-effort extraction of a plot-able expression from question text."""
         try:
             text_candidates = [
-                question_data.get('question', '') or '',
-                question_data.get('stem', '') or '',
-                question_data.get('solution', '') or ''
+                question_data.get("question", "") or "",
+                question_data.get("stem", "") or "",
+                question_data.get("solution", "") or "",
             ]
             patterns = [
                 r"y\s*=\s*([^\n;,]+)",
                 r"f\(x\)\s*=\s*([^\n;,]+)",
                 r"show\s+the\s+graph\s+of\s+([^\n;,]+)",
-                r"equation\s+of\s+the\s+curve\s*([^\n;,]+)"
+                r"equation\s+of\s+the\s+curve\s*([^\n;,]+)",
             ]
             for text in text_candidates:
                 for pat in patterns:
                     match = re.search(pat, text, re.IGNORECASE)
                     if match:
                         expr = match.group(1).strip()
-                        return expr.rstrip('.;, ')
+                        return expr.rstrip(".;, ")
             return None
         except Exception:
             return None
-    
-    def _parse_question_response(self, content: str) -> Optional[Dict]:
-        """Parse the JSON response from DeepSeek with truncation recovery"""
-        try:
-            content = content.strip()
-            
-            # Remove markdown code block if present
-            if '```json' in content:
-                start = content.find('```json') + 7
-                end = content.find('```', start)
-                if end > start:
-                    content = content[start:end].strip()
-                else:
-                    content = content[start:].strip()
-            elif '```' in content:
-                start = content.find('```') + 3
-                end = content.find('```', start)
-                if end > start:
-                    content = content[start:end].strip()
-                else:
-                    content = content[start:].strip()
-            
-            # Clean any leading/trailing whitespace or newlines
-            content = content.strip()
-            
-            # Try to parse JSON, with recovery for truncated responses
-            try:
-                question_data = json.loads(content)
-            except json.JSONDecodeError as e:
-                logger.warning(f"Initial JSON parse failed: {e}")
-                # Attempt to recover truncated JSON
-                question_data = self._recover_truncated_json(content)
-                if not question_data:
-                    return None
-            
-            # Validate required fields for MCQ
-            if 'options' in question_data:
-                required_fields = ['question', 'options', 'correct_answer', 'solution']
-                for field in required_fields:
-                    if field not in question_data:
-                        logger.error(f"Missing required field: {field}")
-                        return None
-                
-                # Validate options
-                if not isinstance(question_data['options'], dict):
-                    logger.error("Options must be a dictionary")
-                    return None
-                
-                if len(question_data['options']) < 4:
-                    logger.error("Must have at least 4 options")
-                    return None
-            
-            # Validate required fields for structured
-            elif 'parts' in question_data:
-                if not isinstance(question_data['parts'], list) or len(question_data['parts']) < 2:
-                    logger.error("Structured question must have at least 2 parts")
-                    return None
-            
-            # Preserve LaTeX notation for frontend MathRenderer/KaTeX
-            question_data = self._normalize_question_data(question_data)
-            
-            return question_data
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse JSON response: {e}")
-            logger.error(f"Content preview: {content[:500]}...")
-            # Try to recover truncated JSON
-            recovered = self._recover_truncated_json(content)
-            if recovered:
-                return recovered
-            return None
-        except Exception as e:
-            logger.error(f"Error parsing question response: {e}")
-            return None
-    
-    def _recover_truncated_json(self, content: str) -> Optional[Dict]:
-        """Attempt to recover data from a truncated JSON response"""
-        try:
-            # Find where JSON starts
-            json_start = content.find('{')
-            if json_start == -1:
-                return None
-            
-            content = content[json_start:]
-            
-            # Try to extract key fields even from incomplete JSON
-            import re
-            
-            # Extract question
-            question_match = re.search(r'"question"\s*:\s*"([^"]+)"', content)
-            question = question_match.group(1) if question_match else None
-            
-            if not question:
-                return None
-            
-            # Extract options
-            options = {}
-            for letter in ['A', 'B', 'C', 'D']:
-                opt_match = re.search(rf'"{letter}"\s*:\s*"([^"]+)"', content)
-                if opt_match:
-                    options[letter] = opt_match.group(1)
-            
-            # Extract correct answer
-            answer_match = re.search(r'"correct_answer"\s*:\s*"([ABCD])"', content)
-            correct_answer = answer_match.group(1) if answer_match else 'A'
-            
-            # If we have enough data, construct a valid response
-            if question and len(options) >= 4:
-                logger.info("Successfully recovered truncated JSON response")
-                return {
-                    "question": question,
-                    "options": options,
-                    "correct_answer": correct_answer,
-                    "explanation": "Solution: Work through the problem step by step using the relevant mathematical techniques.",
-                    "solution": "See the worked solution above."
-                }
-            
-            return None
-            
-        except Exception as e:
-            logger.error(f"Failed to recover truncated JSON: {e}")
-            return None
-    
+
     def _normalize_question_data(self, question_data: Dict) -> Dict:
         """Preserve LaTeX from model output and only apply light whitespace cleanup."""
         def normalize(obj):

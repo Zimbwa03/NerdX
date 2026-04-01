@@ -100,7 +100,7 @@ class GeminiImageGenerator:
             
             # Use Gemini model for image generation
             response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-2.5-flash-image",
                 contents=prompt,
                 config={
                     "response_modalities": ["IMAGE"],

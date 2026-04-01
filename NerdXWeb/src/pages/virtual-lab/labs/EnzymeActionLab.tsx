@@ -216,7 +216,7 @@ export function EnzymeActionLab({ simulation }: { simulation: SimulationMetadata
                 </text>
 
                 {/* Current temperature marker */}
-                <circle cx={30 + (temperature / 80) * 480} cy="160" r="6" fill="#7C4DFF" />
+                <circle cx={30 + (temperature / 80) * 480} cy="160" r="6" fill="#10B981" />
               </svg>
             </div>
           </div>

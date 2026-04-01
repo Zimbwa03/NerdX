@@ -1035,6 +1035,468 @@ def api_school_verify_payment(pk, payment_id):
         return jsonify({"error": str(e)}), 500
 
 
+# ─── SCHOOL ECOSYSTEM (Admin Endpoints) ──────────────────────────────────────
+
+def _get_school_code(pk):
+    """Get the school_id (code like FN0XXN) from the DB PK."""
+    rows = make_supabase_request("GET", "schools", select="school_id", filters={"id": f"eq.{pk}"}, use_service_role=True)
+    if rows and len(rows) > 0:
+        return rows[0].get("school_id")
+    return None
+
+
+def _get_school_full(pk):
+    """Get full school row from DB PK."""
+    rows = make_supabase_request("GET", "schools", select="*", filters={"id": f"eq.{pk}"}, use_service_role=True)
+    return rows[0] if rows else None
+
+
+def _resolve_school_code(pk):
+    """Get school code, using ?code= query param override if present (for sub-school scoping)."""
+    override = request.args.get("code")
+    if override:
+        return override.strip()
+    return _get_school_code(pk)
+
+
+# ─── GROUP SCHOOL MANAGEMENT ─────────────────────────────────────────────────
+
+@schools_bp.route("/schools/<int:pk>/api/group-info", methods=["GET"])
+@login_required
+def api_school_group_info(pk):
+    """Check if this school is a group parent and return group info + sub-schools."""
+    try:
+        school = _get_school_full(pk)
+        if not school:
+            return jsonify({"error": "School not found"}), 404
+
+        school_code = school.get("school_id")
+        group_id = school.get("group_id")
+
+        group_school = None
+        if group_id:
+            gs_rows = make_supabase_request("GET", "group_schools", select="*", filters={"group_id": f"eq.{group_id}"}, use_service_role=True)
+            group_school = gs_rows[0] if gs_rows else None
+
+        sub_schools = []
+        if group_id:
+            sub_rows = make_supabase_request("GET", "schools", select="*", filters={"group_id": f"eq.{group_id}"}, use_service_role=True) or []
+            for s in sub_rows:
+                if s.get("id") == pk:
+                    continue
+                stu_count = len(make_supabase_request("GET", "school_students", select="id", filters={"sub_school_id": f"eq.{s.get('school_id')}"}, use_service_role=True) or [])
+                tch_count = len(make_supabase_request("GET", "school_teachers", select="id", filters={"sub_school_id": f"eq.{s.get('school_id')}"}, use_service_role=True) or [])
+                sub_schools.append({
+                    "id": s.get("id"),
+                    "school_id": s.get("school_id"),
+                    "name": s.get("name"),
+                    "slug": s.get("slug"),
+                    "campus_name": s.get("campus_name"),
+                    "location": s.get("location"),
+                    "city": s.get("city"),
+                    "phone": s.get("phone"),
+                    "email": s.get("email"),
+                    "contact_person": s.get("contact_person"),
+                    "logo_url": s.get("logo_url"),
+                    "created_at": s.get("created_at"),
+                    "is_active": _school_subscription_status(s.get("subscription_expires_at"))[0],
+                    "student_count": stu_count,
+                    "teacher_count": tch_count,
+                })
+
+        return jsonify({
+            "is_group": bool(group_id and group_school),
+            "group_id": group_id,
+            "group_school": group_school,
+            "sub_schools": sub_schools,
+            "total_sub_schools": len(sub_schools),
+        })
+    except Exception as e:
+        logger.error(f"Group info error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@schools_bp.route("/schools/<int:pk>/api/make-group", methods=["POST"])
+@login_required
+def api_school_make_group(pk):
+    """Convert a school into a group school parent."""
+    try:
+        school = _get_school_full(pk)
+        if not school:
+            return jsonify({"error": "School not found"}), 404
+
+        if school.get("group_id"):
+            gs_rows = make_supabase_request("GET", "group_schools", select="*", filters={"group_id": f"eq.{school['group_id']}"}, use_service_role=True)
+            if gs_rows:
+                return jsonify({"success": True, "group_school": gs_rows[0], "message": "Already a group school"})
+
+        group_id = "GRP-" + (school.get("school_id") or "".join(random.choices(string.ascii_uppercase, k=6)))
+
+        gs_payload = {
+            "group_id": group_id,
+            "name": school.get("name"),
+            "logo_url": school.get("logo_url"),
+            "admin_email": school.get("email"),
+            "phone": school.get("phone"),
+            "country": "Zimbabwe",
+        }
+        gs_result = make_supabase_request("POST", "group_schools", gs_payload, use_service_role=True)
+        gs_row = gs_result[0] if isinstance(gs_result, list) and gs_result else gs_result
+
+        make_supabase_request("PATCH", "schools", {"group_id": group_id}, filters={"id": f"eq.{pk}"}, use_service_role=True)
+
+        return jsonify({"success": True, "group_school": gs_row, "group_id": group_id})
+    except Exception as e:
+        logger.error(f"Make group error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@schools_bp.route("/schools/<int:pk>/api/sub-schools", methods=["POST"])
+@login_required
+def api_school_add_sub_school(pk):
+    """Add a new sub-school under this group."""
+    try:
+        school = _get_school_full(pk)
+        if not school:
+            return jsonify({"error": "School not found"}), 404
+
+        group_id = school.get("group_id")
+        if not group_id:
+            return jsonify({"error": "This school is not a group school. Convert it first."}), 400
+
+        data = request.get_json() or {}
+        name = (data.get("name") or "").strip()
+        if not name:
+            return jsonify({"error": "School name is required"}), 400
+
+        sub_school_id = generate_school_id()
+        slug = re.sub(r'[^a-z0-9]+', '_', name.lower()).strip('_')
+        existing_slug = make_supabase_request("GET", "schools", select="id", filters={"slug": f"eq.{slug}"}, use_service_role=True)
+        if existing_slug:
+            slug = f"{slug}_{sub_school_id.lower()}"
+
+        parent_expires = school.get("subscription_expires_at")
+
+        sub_payload = {
+            "school_id": sub_school_id,
+            "name": name,
+            "slug": slug,
+            "group_id": group_id,
+            "campus_name": (data.get("campus_name") or "").strip() or None,
+            "location": (data.get("location") or "").strip() or None,
+            "city": (data.get("city") or "").strip() or None,
+            "phone": (data.get("phone") or "").strip() or None,
+            "email": (data.get("email") or "").strip() or None,
+            "contact_person": (data.get("contact_person") or "").strip() or None,
+            "address": (data.get("address") or "").strip() or None,
+            "subscription_type": school.get("subscription_type") or "term",
+            "subscription_months": school.get("subscription_months") or 3,
+            "subscription_started_at": school.get("subscription_started_at"),
+            "subscription_expires_at": parent_expires,
+        }
+        result = make_supabase_request("POST", "schools", sub_payload, use_service_role=True)
+        if not result:
+            return jsonify({"error": "Failed to create sub-school"}), 500
+
+        sub_school = result[0] if isinstance(result, list) else result
+        return jsonify({
+            "success": True,
+            "sub_school": sub_school,
+            "school_id": sub_school_id,
+            "slug": slug,
+        })
+    except Exception as e:
+        logger.error(f"Add sub-school error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@schools_bp.route("/schools/<int:pk>/api/ecosystem", methods=["GET"])
+@login_required
+def api_school_ecosystem(pk):
+    """Admin: get full ecosystem overview for a school (or a sub-school via ?code=XXX)."""
+    try:
+        school_code = _resolve_school_code(pk)
+        if not school_code:
+            return jsonify({"error": "School not found"}), 404
+
+        academic_years = make_supabase_request("GET", "academic_years", select="*", filters={"sub_school_id": f"eq.{school_code}"}, use_service_role=True) or []
+        forms = make_supabase_request("GET", "school_forms", select="*", filters={"sub_school_id": f"eq.{school_code}"}, use_service_role=True) or []
+        classes = make_supabase_request("GET", "school_classes", select="*", filters={"sub_school_id": f"eq.{school_code}"}, use_service_role=True) or []
+        subjects = make_supabase_request("GET", "school_subjects", select="*", filters={"sub_school_id": f"eq.{school_code}"}, use_service_role=True) or []
+        teachers = make_supabase_request("GET", "school_teachers", select="*", filters={"sub_school_id": f"eq.{school_code}"}, use_service_role=True) or []
+        students = make_supabase_request("GET", "school_students", select="*", filters={"sub_school_id": f"eq.{school_code}"}, use_service_role=True) or []
+
+        class_ids = [c["id"] for c in classes if c.get("id")]
+        class_subjects = []
+        classrooms = []
+        if class_ids:
+            for cid in class_ids:
+                cs_rows = make_supabase_request("GET", "class_subjects", select="*", filters={"class_id": f"eq.{cid}"}, use_service_role=True) or []
+                class_subjects.extend(cs_rows)
+            cs_ids = [cs["id"] for cs in class_subjects if cs.get("id")]
+            for csid in cs_ids:
+                cr_rows = make_supabase_request("GET", "ai_classrooms", select="*", filters={"class_subject_id": f"eq.{csid}"}, use_service_role=True) or []
+                classrooms.extend(cr_rows)
+
+        return jsonify({
+            "school_code": school_code,
+            "academic_years": academic_years,
+            "forms": forms,
+            "classes": classes,
+            "subjects": subjects,
+            "teachers": teachers,
+            "students": students,
+            "class_subjects": class_subjects,
+            "classrooms": classrooms,
+        })
+    except Exception as e:
+        logger.error(f"Ecosystem overview error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@schools_bp.route("/schools/<int:pk>/api/ecosystem/academic-years", methods=["POST"])
+@login_required
+def api_eco_create_academic_year(pk):
+    """Admin: create an academic year."""
+    try:
+        school_code = _resolve_school_code(pk)
+        if not school_code:
+            return jsonify({"error": "School not found"}), 404
+        data = request.get_json() or {}
+        year_label = (data.get("year_label") or "").strip()
+        if not year_label:
+            return jsonify({"error": "year_label is required"}), 400
+
+        existing = make_supabase_request("GET", "academic_years", select="id", filters={"sub_school_id": f"eq.{school_code}", "year_label": f"eq.{year_label}"}, use_service_role=True)
+        if existing:
+            return jsonify({"error": "Academic year already exists"}), 400
+
+        payload = {"sub_school_id": school_code, "year_label": year_label, "is_active": data.get("is_active", True)}
+        result = make_supabase_request("POST", "academic_years", payload, use_service_role=True)
+        row = result[0] if isinstance(result, list) and result else result
+        return jsonify({"success": True, "academic_year": row})
+    except Exception as e:
+        logger.error(f"Create academic year error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@schools_bp.route("/schools/<int:pk>/api/ecosystem/forms", methods=["POST"])
+@login_required
+def api_eco_create_form(pk):
+    """Admin: create a form (grade level)."""
+    try:
+        school_code = _resolve_school_code(pk)
+        if not school_code:
+            return jsonify({"error": "School not found"}), 404
+        data = request.get_json() or {}
+        form_number = data.get("form_number")
+        academic_year_id = data.get("academic_year_id")
+        if not form_number or not academic_year_id:
+            return jsonify({"error": "form_number and academic_year_id required"}), 400
+
+        existing = make_supabase_request("GET", "school_forms", select="id", filters={"sub_school_id": f"eq.{school_code}", "form_number": f"eq.{form_number}", "academic_year_id": f"eq.{academic_year_id}"}, use_service_role=True)
+        if existing:
+            return jsonify({"error": f"Form {form_number} already exists for this academic year"}), 400
+
+        payload = {
+            "sub_school_id": school_code,
+            "academic_year_id": academic_year_id,
+            "form_number": int(form_number),
+            "label": data.get("label") or f"Form {form_number}",
+        }
+        result = make_supabase_request("POST", "school_forms", payload, use_service_role=True)
+        row = result[0] if isinstance(result, list) and result else result
+        return jsonify({"success": True, "form": row})
+    except Exception as e:
+        logger.error(f"Create form error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@schools_bp.route("/schools/<int:pk>/api/ecosystem/classes", methods=["POST"])
+@login_required
+def api_eco_create_class(pk):
+    """Admin: create a class under a form."""
+    try:
+        school_code = _resolve_school_code(pk)
+        if not school_code:
+            return jsonify({"error": "School not found"}), 404
+        data = request.get_json() or {}
+        form_id = data.get("form_id")
+        class_name = (data.get("class_name") or "").strip()
+        if not form_id or not class_name:
+            return jsonify({"error": "form_id and class_name required"}), 400
+
+        form_rows = make_supabase_request("GET", "school_forms", select="form_number", filters={"id": f"eq.{form_id}"}, use_service_role=True)
+        form_number = form_rows[0]["form_number"] if form_rows else "?"
+
+        payload = {
+            "sub_school_id": school_code,
+            "form_id": int(form_id),
+            "class_name": class_name,
+            "display_name": f"Form {form_number} {class_name}",
+            "capacity": int(data.get("capacity") or 40),
+        }
+        result = make_supabase_request("POST", "school_classes", payload, use_service_role=True)
+        row = result[0] if isinstance(result, list) and result else result
+        return jsonify({"success": True, "school_class": row})
+    except Exception as e:
+        logger.error(f"Create class error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@schools_bp.route("/schools/<int:pk>/api/ecosystem/subjects", methods=["POST"])
+@login_required
+def api_eco_create_subject(pk):
+    """Admin: create a subject."""
+    try:
+        school_code = _resolve_school_code(pk)
+        if not school_code:
+            return jsonify({"error": "School not found"}), 404
+        data = request.get_json() or {}
+        name = (data.get("name") or "").strip()
+        if not name:
+            return jsonify({"error": "name is required"}), 400
+
+        payload = {
+            "sub_school_id": school_code,
+            "name": name,
+            "form_id": data.get("form_id"),
+            "zimsec_code": (data.get("zimsec_code") or "").strip() or None,
+            "is_compulsory": data.get("is_compulsory", False),
+            "description": (data.get("description") or "").strip() or None,
+        }
+        result = make_supabase_request("POST", "school_subjects", payload, use_service_role=True)
+        row = result[0] if isinstance(result, list) and result else result
+        return jsonify({"success": True, "subject": row})
+    except Exception as e:
+        logger.error(f"Create subject error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@schools_bp.route("/schools/<int:pk>/api/ecosystem/teachers", methods=["POST"])
+@login_required
+def api_eco_register_teacher(pk):
+    """Admin: register a teacher."""
+    try:
+        school_code = _resolve_school_code(pk)
+        if not school_code:
+            return jsonify({"error": "School not found"}), 404
+        data = request.get_json() or {}
+        first_name = (data.get("first_name") or "").strip()
+        last_name = (data.get("last_name") or "").strip()
+        if not first_name or not last_name:
+            return jsonify({"error": "first_name and last_name required"}), 400
+
+        login_code = "TCH-" + "".join(random.choices(string.digits, k=5))
+        for _ in range(50):
+            existing = make_supabase_request("GET", "school_teachers", select="id", filters={"login_code": f"eq.{login_code}", "sub_school_id": f"eq.{school_code}"}, use_service_role=True)
+            if not existing:
+                break
+            login_code = "TCH-" + "".join(random.choices(string.digits, k=5))
+
+        payload = {
+            "sub_school_id": school_code,
+            "first_name": first_name,
+            "last_name": last_name,
+            "login_code": login_code,
+            "email": (data.get("email") or "").strip() or None,
+            "phone": (data.get("phone") or "").strip() or None,
+            "specialisation": (data.get("specialisation") or "").strip() or None,
+            "status": "active",
+        }
+        result = make_supabase_request("POST", "school_teachers", payload, use_service_role=True)
+        row = result[0] if isinstance(result, list) and result else result
+        return jsonify({"success": True, "teacher": row})
+    except Exception as e:
+        logger.error(f"Register teacher error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@schools_bp.route("/schools/<int:pk>/api/ecosystem/students-v2", methods=["POST"])
+@login_required
+def api_eco_register_student(pk):
+    """Admin: register a student (v2 ecosystem)."""
+    try:
+        school_code = _resolve_school_code(pk)
+        if not school_code:
+            return jsonify({"error": "School not found"}), 404
+        data = request.get_json() or {}
+        first_name = (data.get("first_name") or "").strip()
+        last_name = (data.get("last_name") or "").strip()
+        class_id = data.get("class_id")
+        dob = data.get("date_of_birth") or data.get("dob") or "2000-01-01"
+        if not first_name or not last_name or not class_id:
+            return jsonify({"error": "first_name, last_name, and class_id required"}), 400
+
+        student_code = "STU-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        for _ in range(50):
+            existing = make_supabase_request("GET", "school_students", select="id", filters={"student_code": f"eq.{student_code}"}, use_service_role=True)
+            if not existing:
+                break
+            student_code = "STU-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+        payload = {
+            "sub_school_id": school_code,
+            "class_id": int(class_id),
+            "first_name": first_name,
+            "last_name": last_name,
+            "student_code": student_code,
+            "date_of_birth": dob,
+            "gender": (data.get("gender") or "").strip() or None,
+            "guardian_name": (data.get("guardian_name") or "").strip() or None,
+            "guardian_phone": (data.get("guardian_phone") or "").strip() or None,
+            "status": "active",
+        }
+        result = make_supabase_request("POST", "school_students", payload, use_service_role=True)
+        row = result[0] if isinstance(result, list) and result else result
+        return jsonify({"success": True, "student": row})
+    except Exception as e:
+        logger.error(f"Register student v2 error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@schools_bp.route("/schools/<int:pk>/api/ecosystem/assign-teacher", methods=["POST"])
+@login_required
+def api_eco_assign_teacher(pk):
+    """Admin: assign a teacher to a class+subject combination."""
+    try:
+        school_code = _resolve_school_code(pk)
+        if not school_code:
+            return jsonify({"error": "School not found"}), 404
+        data = request.get_json() or {}
+        class_id = data.get("class_id")
+        subject_id = data.get("subject_id")
+        teacher_id = data.get("teacher_id")
+        academic_year_id = data.get("academic_year_id")
+        if not class_id or not subject_id or not teacher_id:
+            return jsonify({"error": "class_id, subject_id, teacher_id required"}), 400
+
+        cs_payload = {
+            "class_id": int(class_id),
+            "subject_id": int(subject_id),
+            "teacher_id": int(teacher_id),
+            "academic_year_id": int(academic_year_id) if academic_year_id else None,
+        }
+        cs_result = make_supabase_request("POST", "class_subjects", cs_payload, use_service_role=True)
+        cs_row = cs_result[0] if isinstance(cs_result, list) and cs_result else cs_result
+
+        teacher_rows = make_supabase_request("GET", "school_teachers", select="first_name,last_name", filters={"id": f"eq.{teacher_id}"}, use_service_role=True)
+        teacher_name = f"{teacher_rows[0]['first_name']} {teacher_rows[0]['last_name']}" if teacher_rows else "Teacher"
+        subject_rows = make_supabase_request("GET", "school_subjects", select="name", filters={"id": f"eq.{subject_id}"}, use_service_role=True)
+        subject_name = subject_rows[0]["name"] if subject_rows else "Subject"
+
+        classroom_name = f"{teacher_name}'s {subject_name} Classroom"
+        cs_id = cs_row.get("id") if isinstance(cs_row, dict) else None
+        if cs_id:
+            cr_payload = {"class_subject_id": cs_id, "name": classroom_name, "is_active": True}
+            make_supabase_request("POST", "ai_classrooms", cr_payload, use_service_role=True)
+
+        return jsonify({"success": True, "class_subject": cs_row, "classroom_name": classroom_name})
+    except Exception as e:
+        logger.error(f"Assign teacher error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
 @schools_bp.route("/schools/<int:pk>/api/logo", methods=["POST"])
 @login_required
 def api_school_upload_logo(pk):

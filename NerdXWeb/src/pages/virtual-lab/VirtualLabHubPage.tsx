@@ -1,10 +1,15 @@
 import { type ElementType, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Atom, Beaker, BookOpen, Brain, Calculator, Code, Database, Globe, Leaf, Lock, Zap } from 'lucide-react';
-import { FloatingParticles } from '../../components/FloatingParticles';
 import { useAuth } from '../../context/AuthContext';
 import { useContentAccess } from '../../hooks/useContentAccess';
-import type { SimulationMetadata, Subject } from '../../data/virtualLab';
+import type { SimulationMetadata, Subject } from '../../data/virtualLab/simulationTypes';
+import {
+  CATEGORY_ICON_STYLES,
+  HOW_IT_WORKS_ICONS,
+  VIRTUAL_LAB_HUB_HEADER_ICON,
+  labAccentIconStyle,
+} from './virtualLabTheme';
 
 type FilterOption = 'all' | 'science' | Subject;
 
@@ -53,7 +58,7 @@ function subjectIcon(subject: Subject): ElementType {
   return BookOpen;
 }
 
-export function VirtualLabHubPage() {
+function VirtualLabHubPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
@@ -165,8 +170,6 @@ export function VirtualLabHubPage() {
 
   return (
     <div className="subject-page-v2 virtual-lab-page">
-      <FloatingParticles count={14} />
-
       {toast && (
         <div className="notifications-toast" role="status">
           {toast}
@@ -189,7 +192,7 @@ export function VirtualLabHubPage() {
         </div>
       </header>
 
-      <div className="subject-content-grid">
+      <div className="subject-content-grid virtual-lab-hub-body">
         <div className="subject-features-col">
           <section className="subject-section-v2">
             <h2>How It Works</h2>
@@ -199,8 +202,8 @@ export function VirtualLabHubPage() {
                 className="feature-card-v2 feature-card-highlight"
                 onClick={() => navigate('/app/teacher/chat', { state: { subject: 'Combined Science', gradeLevel: 'Form 3-4 (O-Level)', prefillMessage: 'I want to learn using Virtual Labs. Recommend the best lab for my weak topic and give me a short plan.' } })}
               >
-                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #7C4DFF, #00E676)' }}>
-                  <Brain size={24} />
+                <div className="feature-card-icon" style={HOW_IT_WORKS_ICONS.askAi}>
+                  <Brain size={24} strokeWidth={1.75} />
                 </div>
                 <div className="feature-card-text">
                   <h3>Ask AI Which Lab</h3>
@@ -214,8 +217,8 @@ export function VirtualLabHubPage() {
                 className="feature-card-v2"
                 onClick={() => navigate('/app/credits')}
               >
-                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #FFD93D, #F59E0B)' }}>
-                  <Zap size={24} />
+                <div className="feature-card-icon" style={HOW_IT_WORKS_ICONS.unlock}>
+                  <Zap size={24} strokeWidth={1.75} />
                 </div>
                 <div className="feature-card-text">
                   <h3>{isSchoolStudentActive ? 'School Access' : 'Unlock Labs'}</h3>
@@ -237,8 +240,8 @@ export function VirtualLabHubPage() {
                 className="feature-card-v2"
                 onClick={() => navigate('/app/agents')}
               >
-                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #00BCD4, #0097A7)' }}>
-                  <BookOpen size={24} />
+                <div className="feature-card-icon" style={HOW_IT_WORKS_ICONS.agents}>
+                  <BookOpen size={24} strokeWidth={1.75} />
                 </div>
                 <div className="feature-card-text">
                   <h3>Agent Hub</h3>
@@ -253,8 +256,8 @@ export function VirtualLabHubPage() {
             <h2>Categories</h2>
             <div className="feature-cards-v2">
               <button type="button" className="feature-card-v2" onClick={() => navigate('/app/virtual-lab?subject=science')}>
-                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #10B981, #06B6D4)' }}>
-                  <Beaker size={24} />
+                <div className="feature-card-icon" style={CATEGORY_ICON_STYLES.science}>
+                  <Beaker size={24} strokeWidth={1.75} />
                 </div>
                 <div className="feature-card-text">
                   <h3>Science</h3>
@@ -263,8 +266,8 @@ export function VirtualLabHubPage() {
                 <span className="feature-arrow">&rarr;</span>
               </button>
               <button type="button" className="feature-card-v2" onClick={() => navigate('/app/virtual-lab?subject=mathematics')}>
-                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #2979FF, #7C4DFF)' }}>
-                  <Calculator size={24} />
+                <div className="feature-card-icon" style={CATEGORY_ICON_STYLES.mathematics}>
+                  <Calculator size={24} strokeWidth={1.75} />
                 </div>
                 <div className="feature-card-text">
                   <h3>Mathematics</h3>
@@ -273,8 +276,8 @@ export function VirtualLabHubPage() {
                 <span className="feature-arrow">&rarr;</span>
               </button>
               <button type="button" className="feature-card-v2" onClick={() => navigate('/app/virtual-lab?subject=geography')}>
-                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #2E7D32, #1B5E20)' }}>
-                  <Globe size={24} />
+                <div className="feature-card-icon" style={CATEGORY_ICON_STYLES.geography}>
+                  <Globe size={24} strokeWidth={1.75} />
                 </div>
                 <div className="feature-card-text">
                   <h3>Geography</h3>
@@ -283,8 +286,8 @@ export function VirtualLabHubPage() {
                 <span className="feature-arrow">&rarr;</span>
               </button>
               <button type="button" className="feature-card-v2" onClick={() => navigate('/app/virtual-lab?subject=computer_science')}>
-                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #111827, #374151)' }}>
-                  <Code size={24} />
+                <div className="feature-card-icon" style={CATEGORY_ICON_STYLES.computer_science}>
+                  <Code size={24} strokeWidth={1.75} />
                 </div>
                 <div className="feature-card-text">
                   <h3>Programming and IT</h3>
@@ -296,7 +299,7 @@ export function VirtualLabHubPage() {
           </section>
         </div>
 
-        <div className="subject-topics-col">
+        <div className="subject-topics-col virtual-lab-scroll-col">
           <section className="subject-section-v2">
             <h2>Browse Simulations</h2>
             <p className="section-subtitle">Filter by subject, then open a simulation to start.</p>
@@ -315,7 +318,10 @@ export function VirtualLabHubPage() {
             </div>
 
             {loading ? (
-              <div className="vl-card">Loading simulations...</div>
+              <div className="vl-card vl-card--muted virtual-lab-loading-card" role="status" aria-live="polite">
+                <span className="virtual-lab-loading-dot" aria-hidden />
+                Loading simulations…
+              </div>
             ) : (
               <div className="feature-cards-v2">
                 {filteredSimulations.map((sim) => {
@@ -328,8 +334,8 @@ export function VirtualLabHubPage() {
                       className={`feature-card-v2 vl-sim-card ${locked ? 'vl-sim-locked' : ''}`}
                       onClick={() => openSimulation(sim)}
                     >
-                      <div className="feature-card-icon" style={{ background: `linear-gradient(135deg, ${sim.color}, #7C4DFF)` }}>
-                        <Icon size={24} />
+                      <div className="feature-card-icon" style={labAccentIconStyle(sim.color)}>
+                        <Icon size={24} strokeWidth={1.75} />
                       </div>
                       <div className="feature-card-text">
                         <div className="feature-badge-row">
@@ -356,3 +362,6 @@ export function VirtualLabHubPage() {
     </div>
   );
 }
+
+export default VirtualLabHubPage;
+export { VirtualLabHubPage };

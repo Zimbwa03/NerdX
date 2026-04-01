@@ -3,7 +3,7 @@
 
 /* --- Base Variables --- */
 :root {
-    --science-bg-depth: #050510;
+    --science-bg-depth: #0A0A0A;
     --science-glass-border: rgba(255, 255, 255, 0.1);
     --science-glass-bg: rgba(255, 255, 255, 0.03);
 
@@ -14,7 +14,7 @@
 
     /* Chemistry Theme (Orange/Purple) */
     --chem-primary: #F59E0B;
-    --chem-accent: #8B5CF6;
+    --chem-accent: #10B981;
     --chem-glow: rgba(245, 158, 11, 0.4);
 
     /* Physics Theme (Cyan/Blue) */
@@ -28,9 +28,9 @@
     --hist-glow: rgba(93, 64, 55, 0.4);
 
     /* Mathematics Theme (Blue) */
-    --math-primary: #2979FF;
+    --math-primary: #10B981;
     --math-accent: #82B1FF;
-    --math-glow: rgba(41, 121, 255, 0.4);
+    --math-glow: rgba(16, 185, 129, 0.4);
 
     /* Geography Theme (Green) */
     --geo-primary: #2E7D32;
@@ -54,15 +54,17 @@
 }
 
 .science-universe-page {
-    font-family: 'Outfit', sans-serif;
-    min-height: calc(100vh - var(--app-header-height, 64px) - 36px);
-    min-height: calc(100svh - var(--app-header-height, 64px) - 36px);
+    font-family: var(--font-sans);
+    /* Height follows content; fixed .science-universe-bg still fills the viewport.
+       Avoid min-height: 100vh + flex:1 children — that created a tall empty tail below flashcards/notes. */
+    min-height: 0;
     background: var(--science-bg-depth);
     color: #fff;
     position: relative;
     overflow-x: clip;
     padding-bottom: 20px;
-    flex: 1;
+    flex: 0 1 auto;
+    align-self: flex-start;
     display: flex;
     flex-direction: column;
 
@@ -76,10 +78,6 @@
 }
 
 @supports (height: 100dvh) {
-    .science-universe-page {
-        min-height: calc(100dvh - var(--app-header-height, 64px) - 36px);
-    }
-
     .science-universe-page.loading-screen {
         min-height: 100dvh;
     }
@@ -107,7 +105,7 @@
 .chem-bg {
     background:
         radial-gradient(circle at 15% 50%, rgba(245, 158, 11, 0.08) 0%, transparent 35%),
-        radial-gradient(circle at 85% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 35%);
+        radial-gradient(circle at 85% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 35%);
 }
 
 /* Physics Background */
@@ -127,7 +125,7 @@
 /* Mathematics Background */
 .math-bg {
     background:
-        radial-gradient(circle at 10% 30%, rgba(41, 121, 255, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 10% 30%, rgba(16, 185, 129, 0.1) 0%, transparent 40%),
         radial-gradient(circle at 85% 70%, rgba(68, 138, 255, 0.08) 0%, transparent 40%);
 }
 
@@ -256,7 +254,7 @@
 }
 
 .chem-title {
-    background-image: linear-gradient(135deg, #fff 0%, #F59E0B 50%, #8B5CF6 100%);
+    background-image: linear-gradient(135deg, #fff 0%, #F59E0B 50%, #10B981 100%);
     text-shadow: 0 0 40px rgba(245, 158, 11, 0.3);
 }
 
@@ -337,8 +335,8 @@
 }
 
 .math .science-feature-card:hover {
-    box-shadow: 0 10px 40px rgba(41, 121, 255, 0.15);
-    border-color: rgba(41, 121, 255, 0.4);
+    box-shadow: 0 10px 40px rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.4);
 }
 
 .cs .science-feature-card:hover {
@@ -437,6 +435,18 @@
     overflow: hidden;
 }
 
+/* Top row: topic icon + embedded AI Classroom chip (above title) */
+.science-topic-card__row {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    position: relative;
+    z-index: 2;
+}
+
 /* Shimmer pseudo-element (hidden until hover) */
 .science-topic-card::before {
     content: '';
@@ -471,15 +481,15 @@
 
 /* Mathematics */
 .math .science-topic-card {
-    background: linear-gradient(135deg, rgba(41, 121, 255, 0.12) 0%, rgba(41, 121, 255, 0.04) 100%);
-    border-color: rgba(41, 121, 255, 0.15);
-    box-shadow: 0 2px 12px rgba(41, 121, 255, 0.06), inset 0 1px 0 rgba(130, 177, 255, 0.08);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.04) 100%);
+    border-color: rgba(16, 185, 129, 0.15);
+    box-shadow: 0 2px 12px rgba(16, 185, 129, 0.06), inset 0 1px 0 rgba(130, 177, 255, 0.08);
 }
 
 .math .science-topic-card:hover {
-    background: linear-gradient(135deg, rgba(41, 121, 255, 0.22) 0%, rgba(41, 121, 255, 0.10) 100%);
-    border-color: rgba(41, 121, 255, 0.4);
-    box-shadow: 0 12px 40px rgba(41, 121, 255, 0.2), 0 0 20px rgba(41, 121, 255, 0.08);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0.10) 100%);
+    border-color: rgba(16, 185, 129, 0.4);
+    box-shadow: 0 12px 40px rgba(16, 185, 129, 0.2), 0 0 20px rgba(16, 185, 129, 0.08);
 }
 
 /* Biology */
@@ -596,12 +606,12 @@
 /* Mathematics icon */
 .math .topic-icon-small {
     color: var(--math-accent);
-    background: rgba(41, 121, 255, 0.15);
+    background: rgba(16, 185, 129, 0.15);
 }
 
 .math .science-topic-card:hover .topic-icon-small {
-    background: rgba(41, 121, 255, 0.28);
-    box-shadow: 0 0 16px rgba(41, 121, 255, 0.25);
+    background: rgba(16, 185, 129, 0.28);
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
 }
 
 /* Biology icon */
@@ -904,6 +914,12 @@
 }
 
 @media (max-width: 1024px) {
+    /* Math topics: keep intro copy clear of fixed back control */
+    .science-universe-page.math .science-topics-col > .topics-section-title,
+    .science-universe-page.math .science-topics-col > p {
+        padding-left: 52px;
+    }
+
     .science-universe-page .super-back-btn {
         left: 12px;
         top: calc(var(--app-header-height, 64px) + 10px);
@@ -1000,7 +1016,7 @@
     max-width: 1280px;
     margin: 0 auto;
     padding: 0 24px 16px;
-    flex: 1;
+    flex: 0 1 auto;
     display: flex;
     flex-direction: column;
 }

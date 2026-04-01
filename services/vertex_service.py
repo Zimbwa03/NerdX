@@ -7,7 +7,7 @@ import json
 import base64
 import logging
 import uuid
-from typing import Dict, Optional, Any, List, Tuple
+from typing import Dict, Optional, Any, List, Tuple, Iterator
 
 logger = logging.getLogger(__name__)
 
@@ -202,14 +202,25 @@ class VertexService:
             logger.error(f"❌ Image generation failed: {e}")
             return {'success': False, 'error': str(e)}
     
-    def generate_text(self, prompt: str, model: str = "gemini-2.5-flash") -> Optional[Dict[str, Any]]:
+    def generate_text(
+        self,
+        prompt: str,
+        model: str = "gemini-2.5-flash",
+        *,
+        json_mode: bool = False,
+        temperature: Optional[float] = None,
+        max_output_tokens: Optional[int] = None,
+    ) -> Optional[Dict[str, Any]]:
         """
         Generate text using Vertex AI Gemini model.
-        
+
         Args:
             prompt: Text prompt for generation
             model: Gemini model to use
-        
+            json_mode: If True, request application/json output (fewer malformed JSON payloads)
+            temperature: Optional sampling temperature
+            max_output_tokens: Optional cap on output tokens
+
         Returns:
             Dict with 'success', 'text' or 'error'
         """
@@ -218,11 +229,19 @@ class VertexService:
         
         try:
             logger.info(f"📝 Generating text with model {model}...")
-            
-            response = self.client.models.generate_content(
-                model=model,
-                contents=prompt,
-            )
+            config: Dict[str, Any] = {}
+            if json_mode:
+                config["response_mime_type"] = "application/json"
+            if temperature is not None:
+                config["temperature"] = temperature
+            if max_output_tokens is not None:
+                config["max_output_tokens"] = max_output_tokens
+
+            kwargs: Dict[str, Any] = {"model": model, "contents": prompt}
+            if config:
+                kwargs["config"] = config
+
+            response = self.client.models.generate_content(**kwargs)
             
             if response and response.text:
                 logger.info("✅ Text generated successfully")
@@ -236,6 +255,27 @@ class VertexService:
         except Exception as e:
             logger.error(f"❌ Text generation failed: {e}")
             return {'success': False, 'error': str(e)}
+    
+    def generate_text_stream(self, prompt: str, model: str = "gemini-2.5-flash") -> Iterator[str]:
+        """
+        Stream text tokens/chunks from Vertex AI Gemini (for MAIC classroom SSE).
+        Yields zero or more non-empty text fragments; on error, logs and stops.
+        """
+        if not self.is_available():
+            logger.warning("generate_text_stream: Vertex AI not available")
+            yield from ()
+            return
+        try:
+            stream = self.client.models.generate_content_stream(
+                model=model,
+                contents=prompt,
+            )
+            for chunk in stream:
+                t = getattr(chunk, "text", None) or ""
+                if t:
+                    yield t
+        except Exception as e:
+            logger.error(f"❌ Text streaming failed: {e}", exc_info=True)
     
     def analyze_image(
         self, 

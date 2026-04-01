@@ -46,6 +46,8 @@ import {
   type ALevelPureMathTopic,
 } from '../../data/aLevelPureMath/topics';
 import { AILoadingOverlay } from '../../components/AILoadingOverlay';
+import { MaicClassroomFeatureCard } from '../../components/MaicClassroomFeatureCard';
+import { MaicTopicClassroomLink } from '../../components/MaicTopicClassroomLink';
 import '../sciences/ScienceUniverse.css';
 import './ALevelPureMathPage.css';
 
@@ -181,7 +183,7 @@ export function ALevelPureMathPage() {
             id: SUBJECT_ID,
             name: 'A Level Pure Mathematics',
             icon: 'Calculator',
-            color: '#8B5CF6',
+            color: '#10B981',
           },
           topic: topicToPass,
           formLevel: selectedLevel,
@@ -243,8 +245,8 @@ export function ALevelPureMathPage() {
       <div className="science-content-grid">
         <div className="science-features-col">
           <button type="button" className="science-feature-card" onClick={() => navigate('/app/pure-math/notes')}>
-            <div className="feature-icon-box" style={{ background: 'rgba(139, 92, 246, 0.2)' }}>
-              <BookOpen size={28} color="#A78BFA" />
+            <div className="feature-icon-box" style={{ background: 'rgba(16, 185, 129, 0.2)' }}>
+              <BookOpen size={28} color="#34D399" />
             </div>
             <h3 className="feature-card-title">Topic Notes</h3>
             <p className="feature-card-desc">Book-style expanded notes with worked examples and topic diagrams.</p>
@@ -257,6 +259,13 @@ export function ALevelPureMathPage() {
             <h3 className="feature-card-title">AI Tutor</h3>
             <p className="feature-card-desc">Interactive A-Level tutor aligned to pure mathematics objectives.</p>
           </button>
+
+          <MaicClassroomFeatureCard
+            navigate={navigate}
+            subject="A Level Pure Mathematics"
+            gradeLevel={selectedLevel}
+            accent="rgba(16, 185, 129, 0.22)"
+          />
 
           <button type="button" className="science-feature-card" onClick={() => navigate('/app/formula-sheet')}>
             <div className="feature-icon-box" style={{ background: 'rgba(59, 130, 246, 0.2)' }}>
@@ -290,9 +299,9 @@ export function ALevelPureMathPage() {
         <div className="science-topics-col">
           <div className="alevel-topics-toolbar">
             <div className="topics-section-title" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Play size={24} style={{ color: '#A78BFA' }} />
+              <Play size={24} style={{ color: '#34D399' }} />
               <span style={{ fontSize: 24, fontWeight: 700 }}>{selectedLevel} Topics</span>
-              <span className="topics-count-badge" style={{ fontSize: 12, background: 'rgba(139,92,246,0.2)', padding: '4px 10px', borderRadius: 12 }}>
+              <span className="topics-count-badge" style={{ fontSize: 12, background: 'rgba(16,185,129,0.2)', padding: '4px 10px', borderRadius: 12 }}>
                 {filteredTopics.length} showing
               </span>
             </div>
@@ -340,14 +349,31 @@ export function ALevelPureMathPage() {
 
           <div className="science-topics-grid">
             {filteredTopics.map((topic) => (
-              <button
-                type="button"
+              <div
                 key={topic.id}
+                role="button"
+                tabIndex={0}
                 className="science-topic-card alevel-topic-card"
-                onClick={() => openStartQuiz(topic)}
+                onClick={() =>
+                  navigate(`/app/pure-math/topic/${encodeURIComponent(topic.id)}`)
+                }
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    navigate(`/app/pure-math/topic/${encodeURIComponent(topic.id)}`);
+                  }
+                }}
               >
-                <div className="topic-icon-small">
-                  {(() => { const I = ALEVEL_MATH_ICONS[topic.id] ?? Sigma; return <I size={18} />; })()}
+                <div className="science-topic-card__row">
+                  <div className="topic-icon-small">
+                    {(() => { const I = ALEVEL_MATH_ICONS[topic.id] ?? Sigma; return <I size={18} />; })()}
+                  </div>
+                  <MaicTopicClassroomLink
+                    navigate={navigate}
+                    subject="A Level Pure Mathematics"
+                    gradeLevel={selectedLevel}
+                    topicName={topic.name}
+                  />
                 </div>
                 <span className="topic-card-name">{topic.name}</span>
                 <div className="alevel-topic-meta-row">
@@ -355,7 +381,7 @@ export function ALevelPureMathPage() {
                   <span className="alevel-topic-chip muted">{topic.learningObjectives.length} objectives</span>
                 </div>
                 <p className="alevel-topic-desc">{topic.description}</p>
-              </button>
+              </div>
             ))}
           </div>
         </div>
@@ -423,7 +449,7 @@ export function ALevelPureMathPage() {
         isVisible={generating}
         title="Generating Pure Math Question"
         subtitle={`Preparing a ${questionFormat.toUpperCase()} question for ${pendingTopic?.name ?? 'selected topic'}...`}
-        accentColor="#8B5CF6"
+        accentColor="#10B981"
         variant="fullscreen"
       />
     </div>

@@ -11,7 +11,7 @@ interface GlassCardProps {
     onClick?: () => void;
 }
 
-export function GlassCard({ children, className = '', glowColor = '#7C4DFF', onClick }: GlassCardProps) {
+export function GlassCard({ children, className = '', glowColor = '#10B981', onClick }: GlassCardProps) {
     const isButton = !!onClick;
     const Component = isButton ? 'button' : 'div';
 

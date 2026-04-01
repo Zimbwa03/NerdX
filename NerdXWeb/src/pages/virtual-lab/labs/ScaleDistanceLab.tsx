@@ -88,7 +88,7 @@ export function ScaleDistanceLab({ simulation }: { simulation: SimulationMetadat
                 <text x="390" y="90" textAnchor="middle" fill="#fff" fontSize="14" fontWeight="900">
                   B
                 </text>
-                <line x1="188" y1="85" x2="372" y2="85" stroke="#7C4DFF" strokeWidth="6" />
+                <line x1="188" y1="85" x2="372" y2="85" stroke="#10B981" strokeWidth="6" />
                 <text x="280" y="120" textAnchor="middle" fill="rgba(255,255,255,0.75)" fontSize="12" fontWeight="900">
                   {LINE_CM} cm on map
                 </text>

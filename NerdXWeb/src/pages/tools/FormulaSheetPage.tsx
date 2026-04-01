@@ -63,7 +63,7 @@ export function FormulaSheetPage() {
           <span>Back</span>
         </Link>
         <div className="subject-header-content">
-          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #2979FF, #7C4DFF)' }}>
+          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #2979FF, #10B981)' }}>
             <Sigma size={28} />
           </div>
           <div>

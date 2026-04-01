@@ -1,10 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 .hist-essay-page {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-sans);
   min-height: calc(100vh - var(--app-header-height, 64px) - 36px);
   min-height: calc(100svh - var(--app-header-height, 64px) - 36px);
-  background: #050510;
+  background: #0A0A0A;
   color: #fff;
   position: relative;
   overflow-x: clip;
@@ -173,7 +173,7 @@
   width: 100%; min-height: 140px; padding: 16px 24px;
   background: transparent; border: none; outline: none;
   color: #fff; font-size: 15px; line-height: 1.7;
-  font-family: 'Outfit', sans-serif; resize: vertical;
+  font-family: var(--font-sans); resize: vertical;
 }
 .hist-essay-textarea::placeholder {
   color: rgba(255,255,255,0.25);

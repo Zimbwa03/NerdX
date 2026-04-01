@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -49,7 +49,7 @@ export function TeacherSetupPage() {
     return availableTopics.filter((topic) => topic.toLowerCase().includes(query));
   }, [availableTopics, topicSearch]);
 
-  const subjectColor = selectedSubject ? SUBJECT_COLORS[selectedSubject] ?? '#667eea' : '#667eea';
+  const subjectColor = selectedSubject ? SUBJECT_COLORS[selectedSubject] ?? '#10B981' : '#10B981';
 
   const subjectFallback = selectedSubject
     ? selectedSubject
@@ -61,6 +61,10 @@ export function TeacherSetupPage() {
     : 'AI';
 
   const canStart = Boolean(selectedSubject && selectedGradeLevel);
+
+  useEffect(() => {
+    void import('./TeacherChatPage');
+  }, []);
 
   const handleStart = () => {
     if (!selectedSubject || !selectedGradeLevel) {
@@ -136,7 +140,7 @@ export function TeacherSetupPage() {
             <div className="teacher-setup-subject-grid-v3">
               {TEACHER_SUBJECTS.map((subjectItem) => {
                 const isActive = selectedSubject === subjectItem;
-                const color = SUBJECT_COLORS[subjectItem] ?? '#667eea';
+                const color = SUBJECT_COLORS[subjectItem] ?? '#10B981';
 
                 return (
                   <button

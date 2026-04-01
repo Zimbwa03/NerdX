@@ -1,5 +1,5 @@
 .alevel-notes-page .subject-header-v2 {
-  border-color: rgba(167, 139, 250, 0.35);
+  border-color: rgba(52, 211, 153, 0.35);
 }
 
 .alevel-notes-layout {
@@ -37,9 +37,9 @@
 }
 
 .alevel-notes-pill.active.lower {
-  background: rgba(139, 92, 246, 0.35);
-  border-color: rgba(196, 181, 253, 0.5);
-  color: #ede9fe;
+  background: rgba(16, 185, 129, 0.35);
+  border-color: rgba(110, 231, 183, 0.5);
+  color: #ecfdf5;
 }
 
 .alevel-notes-pill.active.upper {
@@ -75,8 +75,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  border: 1px solid rgba(196, 181, 253, 0.3);
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(168, 85, 247, 0.13));
+  border: 1px solid rgba(110, 231, 183, 0.3);
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.2), rgba(16, 185, 129, 0.13));
   border-radius: 14px;
   padding: 14px;
 }
@@ -88,7 +88,7 @@
   display: grid;
   place-items: center;
   background: rgba(255, 255, 255, 0.2);
-  color: #ede9fe;
+  color: #ecfdf5;
 }
 
 .alevel-notes-starter-content {
@@ -125,7 +125,7 @@
 .alevel-notes-topic-card {
   text-decoration: none;
   border-radius: 14px;
-  border: 1px solid rgba(167, 139, 250, 0.25);
+  border: 1px solid rgba(52, 211, 153, 0.25);
   background: rgba(255, 255, 255, 0.04);
   padding: 14px;
   color: #fff;
@@ -134,7 +134,7 @@
 
 .alevel-notes-topic-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(196, 181, 253, 0.65);
+  border-color: rgba(110, 231, 183, 0.65);
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -150,7 +150,7 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #ddd6fe;
+  color: #a7f3d0;
   font-weight: 700;
 }
 
@@ -193,17 +193,17 @@
   font-size: 12px;
   padding: 5px 9px;
   border-radius: 999px;
-  background: rgba(167, 139, 250, 0.2);
-  border: 1px solid rgba(196, 181, 253, 0.3);
+  background: rgba(52, 211, 153, 0.2);
+  border: 1px solid rgba(110, 231, 183, 0.3);
 }
 
 .alevel-section-index {
-  color: #c4b5fd;
+  color: #6ee7b7;
   margin-right: 2px;
 }
 
 .alevel-visual-card {
-  border-left: 4px solid #a855f7;
+  border-left: 4px solid #10B981;
 }
 
 .alevel-diagram-grid {
@@ -251,7 +251,7 @@
 }
 
 .alevel-diagram-card .curve.one {
-  stroke: #a78bfa;
+  stroke: #34d399;
 }
 
 .alevel-diagram-card .curve.two {
@@ -281,7 +281,7 @@
 }
 
 .alevel-diagram-card .curve.seven {
-  stroke: #a78bfa;
+  stroke: #34d399;
   fill: none;
   stroke-width: 2.2;
 }
@@ -539,7 +539,7 @@
 }
 
 .alevel-diagram-card .diag-mirror {
-  stroke: rgba(196, 181, 253, 0.8);
+  stroke: rgba(110, 231, 183, 0.8);
   stroke-width: 1.4;
   stroke-dasharray: 4 4;
 }
@@ -549,7 +549,7 @@
 }
 
 .alevel-diagram-card .vertex-mark {
-  fill: #a78bfa;
+  fill: #34d399;
 }
 
 .alevel-diagram-card .vertex-mark.alt {
@@ -612,7 +612,7 @@
 }
 
 .alevel-next-topic-card {
-  border-left: 4px solid #8b5cf6;
+  border-left: 4px solid #10B981;
 }
 
 .alevel-back-to-index-link {
@@ -621,7 +621,7 @@
   text-decoration: none;
   font-size: 13px;
   font-weight: 700;
-  color: #ddd6fe;
+  color: #a7f3d0;
 }
 
 @media (max-width: 768px) {
@@ -672,7 +672,7 @@
 
 /* Light mode overrides */
 [data-theme="light"] .alevel-notes-page .subject-header-v2 {
-  border-color: rgba(124, 77, 255, 0.2);
+  border-color: rgba(16, 185, 129, 0.2);
 }
 
 [data-theme="light"] .alevel-notes-pill-row {
@@ -686,8 +686,8 @@
 
 [data-theme="light"] .alevel-notes-pill.active.lower,
 [data-theme="light"] .alevel-notes-pill.active.upper {
-  background: rgba(124, 77, 255, 0.14);
-  border-color: rgba(124, 77, 255, 0.35);
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.35);
   color: var(--text-primary);
 }
 
@@ -706,11 +706,11 @@
 
 [data-theme="light"] .alevel-notes-starter {
   background: #f8f9fc;
-  border-color: rgba(124, 77, 255, 0.2);
+  border-color: rgba(16, 185, 129, 0.2);
 }
 
 [data-theme="light"] .alevel-notes-starter-icon {
-  background: rgba(124, 77, 255, 0.12);
+  background: rgba(16, 185, 129, 0.12);
   color: var(--text-primary);
 }
 
@@ -723,13 +723,13 @@
 }
 
 [data-theme="light"] .alevel-notes-starter-link {
-  background: rgba(124, 77, 255, 0.14);
+  background: rgba(16, 185, 129, 0.14);
   color: var(--text-primary);
 }
 
 [data-theme="light"] .alevel-notes-topic-card {
   background: #ffffff;
-  border-color: rgba(124, 77, 255, 0.2);
+  border-color: rgba(16, 185, 129, 0.2);
   color: var(--text-primary);
 }
 
@@ -738,7 +738,7 @@
 }
 
 [data-theme="light"] .alevel-notes-topic-num {
-  color: #4c1d95;
+  color: #064e3b;
 }
 
 [data-theme="light"] .alevel-notes-topic-paper {
@@ -746,13 +746,13 @@
 }
 
 [data-theme="light"] .alevel-topic-meta-strip span {
-  background: rgba(124, 77, 255, 0.12);
-  border-color: rgba(124, 77, 255, 0.25);
-  color: #4c1d95;
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.25);
+  color: #064e3b;
 }
 
 [data-theme="light"] .alevel-section-index {
-  color: #4c1d95;
+  color: #064e3b;
 }
 
 [data-theme="light"] .alevel-diagram-card {
@@ -779,5 +779,5 @@
 }
 
 [data-theme="light"] .alevel-back-to-index-link {
-  color: #4c1d95;
+  color: #064e3b;
 }

@@ -291,7 +291,7 @@ _VERTEX_CTX = _init_vertex_env()
 GEMINI_MODEL = os.getenv('GEMINI_LIVE_MODEL', 'gemini-live-2.5-flash-native-audio')
 
 # Fallback model if the primary isn't available in region/project.
-GEMINI_MODEL_FALLBACK = os.getenv('GEMINI_LIVE_MODEL_FALLBACK', 'gemini-live-2.5-flash-preview-native-audio-09-2025')
+GEMINI_MODEL_FALLBACK = os.getenv('GEMINI_LIVE_MODEL_FALLBACK', 'gemini-live-2.5-flash-native-audio')
 
 # Live session controls
 ENABLE_TRANSCRIPTION = _bool_env("GEMINI_LIVE_TRANSCRIPTION", False)
@@ -938,8 +938,6 @@ class TransparentGeminiPipe:
                 GEMINI_MODEL,
                 os.getenv("GEMINI_LIVE_MODEL_FALLBACK"),
                 GEMINI_MODEL_FALLBACK,
-                "gemini-live-2.5-flash-preview-native-audio-09-2025",
-                "gemini-2.0-flash-live-001",
             ]:
                 if m and m not in model_candidates:
                     model_candidates.append(m)
@@ -1036,7 +1034,6 @@ class TransparentGeminiPipe:
             for m in [
                 GEMINI_MODEL,
                 GEMINI_MODEL_FALLBACK,
-                "gemini-2.0-flash-live-001",
             ]:
                 if m and m not in model_candidates:
                     model_candidates.append(m)

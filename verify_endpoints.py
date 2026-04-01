@@ -4,7 +4,7 @@ import sys
 
 # Configuration
 # BASE_URL = 'http://127.0.0.1:5000' # Local
-BASE_URL = 'https://nerdx.onrender.com' # Production
+BASE_URL = 'https://nerdx.co.zw'  # Production
 TEST_EMAIL = 'test_essay@nerdx.com'
 TEST_PASSWORD = 'password123'
 

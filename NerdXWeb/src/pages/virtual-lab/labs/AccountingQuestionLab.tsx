@@ -132,7 +132,7 @@ export function AccountingQuestionLab({ simulation, fallbackQuestion, fetchQuest
           <span>Back</span>
         </Link>
         <div className="subject-header-content">
-          <div className="subject-icon-v2" style={{ background: `linear-gradient(135deg, ${simulation.color}, #7C4DFF)` }}>
+          <div className="subject-icon-v2" style={{ background: `linear-gradient(135deg, ${simulation.color}, #10B981)` }}>
             <Calculator size={28} />
           </div>
           <div>

@@ -69,7 +69,7 @@ export const MATH_SIMULATIONS: SimulationMetadata[] = [
         xpReward: 250,
         estimatedTime: '20-25 mins',
         icon: 'layers',
-        color: '#7C4DFF',
+        color: '#10B981',
         learningObjectives: [
             { id: 'il-1', text: 'Understand integration as the accumulation of area' },
             { id: 'il-2', text: 'Compare left, right, and midpoint Riemann sums' },

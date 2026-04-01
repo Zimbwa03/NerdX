@@ -122,7 +122,7 @@ if __name__ == "__main__":
         print("Email: neezykidngoni@gmail.com")
         print("Password: Ngoni2003")
         print("Role: super_admin")
-        print("\nYou can now login at: https://nerdx.onrender.com/login")
+        print("\nYou can now login at: https://nerdx.co.zw/login")
         print("=" * 70)
     else:
         print("\n" + "=" * 70)

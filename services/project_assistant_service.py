@@ -1,6 +1,6 @@
 """
 ZIMSEC Project Assistant Service - Conversational AI Version
-A ChatGPT-style chatbot where Vertex AI (Gemini) is primary and DeepSeek is fallback,
+A ChatGPT-style chatbot where Vertex AI (Gemini) is primary with optional consumer Gemini API fallback,
 guiding students through their ZIMSEC School-Based Projects.
 """
 
@@ -16,14 +16,9 @@ from services.whatsapp_service import WhatsAppService
 from database.external_db import make_supabase_request, get_user_credits, deduct_credits, save_project_chat_message
 from utils.credit_units import format_credits, units_to_credits
 from services.advanced_credit_service import advanced_credit_service
-from utils.deepseek import get_deepseek_chat_model
-from utils.vertex_ai_helper import extract_json_object
+from utils.vertex_ai_helper import extract_json_object, try_gemini_text, try_gemini_json
 
 logger = logging.getLogger(__name__)
-DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
-
-# Import requests for DeepSeek API
-import requests
 
 # Import Google GenAI SDK for Vertex AI (primary for conversational text)
 try:
@@ -60,12 +55,7 @@ class ProjectAssistantService:
     
     def __init__(self):
         self.whatsapp_service = WhatsAppService()
-        
-        # Initialize DeepSeek AI as FALLBACK provider
-        self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
-        self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
-        self._is_deepseek_configured = bool(self.deepseek_api_key)
-        
+
         # Initialize Gemini via Vertex AI as PRIMARY provider
         self.gemini_client = None
         self._is_gemini_configured = False
@@ -85,10 +75,8 @@ class ProjectAssistantService:
         
         if self._is_gemini_configured:
             logger.info("✅ Project Assistant initialized with Gemini via Vertex AI (primary)")
-        elif self._is_deepseek_configured:
-            logger.warning("Gemini not available - using DeepSeek as primary")
         else:
-            logger.warning("No AI services available")
+            logger.warning("Vertex/Gemini client not configured; chat may use consumer Gemini API key only or fallbacks")
     
     def _init_gemini_client(self):
         """Initialize Gemini client with Vertex AI or API key."""
@@ -1257,7 +1245,7 @@ Remember: The 6-stage SBP structure applies, but adapt the deliverables and evid
             else:
                 # No active project
                 menu_text += "Welcome to your AI Research Assistant! 🤖\n\n"
-                menu_text += "I'm powered by DeepSeek AI and I'll help you create an excellent ZIMSEC School-Based Project.\n\n"
+                menu_text += "I'm powered by NerdX AI (Vertex Gemini) and I'll help you create an excellent ZIMSEC School-Based Project.\n\n"
                 menu_text += "💡 *I can help you with:*\n"
                 menu_text += "• Research on any topic\n"
                 menu_text += "• Writing project titles, statements & content\n"
@@ -1580,7 +1568,7 @@ Credits are deducted per AI response.
         project_data: dict,
         image_context_block: str = "",
     ) -> str:
-        """Get intelligent response from Gemini AI (primary) with DeepSeek fallback"""
+        """Get intelligent response from Gemini via Vertex (primary), then optional consumer Gemini API."""
         try:
             # Build context
             student_name = project_data.get('student_name', 'Student')
@@ -1637,34 +1625,18 @@ Credits are deducted per AI response.
                         return ai_text
                 except Exception as gemini_error:
                     logger.error(f"Gemini API error for {user_id}: {gemini_error}", exc_info=True)
-            
-            # Try DeepSeek as fallback
-            if self._is_deepseek_configured:
-                try:
-                    response = requests.post(
-                        self.deepseek_api_url,
-                        headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
-                        json={
-                            'model': DEEPSEEK_CHAT_MODEL,
-                            'messages': [
-                                {'role': 'system', 'content': system_prompt},
-                                {'role': 'user', 'content': full_prompt}
-                            ],
-                            'temperature': 0.7,
-                            'max_tokens': 2000
-                        },
-                        timeout=30
-                    )
-                    if response.status_code == 200:
-                        data = response.json()
-                        if 'choices' in data and len(data['choices']) > 0:
-                            ai_text = data['choices'][0]['message']['content'].strip()
-                            ai_text = self._clean_markdown(ai_text)
-                            logger.info(f"✅ DeepSeek AI fallback generated response for {user_id}")
-                            return ai_text
-                except Exception as deepseek_error:
-                    logger.error(f"DeepSeek fallback error for {user_id}: {deepseek_error}")
-            
+
+            api_fallback = try_gemini_text(
+                full_prompt,
+                logger=logger,
+                context=f"project_assistant_chat:{user_id}",
+                max_output_tokens=2000,
+            )
+            if api_fallback:
+                ai_text = self._clean_markdown(api_fallback.strip())
+                logger.info("Consumer Gemini API generated project assistant response for %s", user_id)
+                return ai_text
+
             # Return fallback response
             return self._get_fallback_response(message_text, project_data)
             
@@ -3172,7 +3144,6 @@ Please provide accurate, current information with sources where possible. Focus 
     def generate_project_document(self, user_id: str, project_id: int) -> dict:
         """Generate a complete ZIMSEC project document as PDF with Vertex AI primary."""
         try:
-            import requests
             from utils.project_pdf_generator import ProjectDocumentGenerator
             
             # Get project details from database
@@ -3190,7 +3161,7 @@ Please provide accurate, current information with sources where possible. Focus 
             project_title = project.get('project_title', 'Untitled Project')
             subject = project.get('subject', 'Not specified')
             
-            # Use Vertex AI (Gemini) primary with DeepSeek fallback
+            # Use Vertex AI (Gemini) primary with optional consumer Gemini JSON fallback
             enhanced_data = self._generate_project_content_with_ai(
                 project_title, subject, conversation_history, project_data
             )
@@ -3225,7 +3196,7 @@ Please provide accurate, current information with sources where possible. Focus 
     def _generate_project_content_with_ai(self, title: str, subject: str,
                                            conversation_history: list,
                                            existing_data: dict) -> dict:
-        """Generate comprehensive project content with Vertex AI primary and DeepSeek fallback."""
+        """Generate comprehensive project content with Vertex AI primary and optional Gemini API fallback."""
 
         # Build context from conversation history
         conversation_text = ""
@@ -3284,44 +3255,14 @@ Please provide accurate, current information with sources where possible. Focus 
             except Exception as gemini_error:
                 logger.error(f"Vertex/Gemini project content generation failed: {gemini_error}")
 
-        # DeepSeek fallback
-        if self.deepseek_api_key:
-            try:
-                response = requests.post(
-                    "https://api.deepseek.com/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {self.deepseek_api_key}",
-                        "Content-Type": "application/json",
-                    },
-                    json={
-                        "model": DEEPSEEK_CHAT_MODEL,
-                        "messages": [
-                            {
-                                "role": "system",
-                                "content": "You are a ZIMSEC project document writer. Generate professional, detailed content for school-based projects.",
-                            },
-                            {"role": "user", "content": prompt},
-                        ],
-                        "temperature": 0.7,
-                        "max_tokens": 4000,
-                    },
-                    timeout=60,
-                )
-
-                if response.status_code == 200:
-                    result = response.json()
-                    content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-                    parsed = extract_json_object(
-                        content,
-                        logger=logger,
-                        context="project_assistant:document:deepseek",
-                    )
-                    if parsed:
-                        logger.info("Generated project content using DeepSeek fallback")
-                        return parsed
-
-            except Exception as e:
-                logger.error(f"DeepSeek project content generation failed: {e}")
+        doc_prompt = (
+            "You are a ZIMSEC project document writer. Generate professional, detailed content for school-based projects.\n\n"
+            + prompt
+        )
+        parsed = try_gemini_json(doc_prompt, logger=logger, context="project_assistant:document:gemini_api")
+        if parsed:
+            logger.info("Generated project content using consumer Gemini API fallback")
+            return parsed
 
         # Fallback content if AI fails
         logger.warning("Using fallback project content")

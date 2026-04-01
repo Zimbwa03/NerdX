@@ -1,22 +1,70 @@
 import { useEffect, useState } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { Bell, Sun, Moon, Search, Calendar } from 'lucide-react';
-import { getUnreadCount, subscribeToNotifications } from '../services/notifications';
-import { getSupabaseAuthUserId } from '../services/supabase';
 import { appUpdateApi, type AppUpdateInfo } from '../services/api/appUpdateApi';
+import { useUnreadNotificationCount } from '../hooks/useUnreadNotificationCount';
+import { Topbar } from './dashboard/Topbar';
+
+/** Full-bleed experiences that ship their own chrome (no outer AppLayout top bar). */
+const IMMERSIVE_APP_PREFIXES = [
+  '/app/project-assistant',
+  '/app/teacher/chat',
+  '/app/offline',
+  '/app/nerdx-live',
+  '/app/ai-classroom',
+] as const;
+
+function isImmersiveAppPath(pathname: string): boolean {
+  return IMMERSIVE_APP_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
 
 export function AppLayout() {
   const { user, isSupabaseAuthReady } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
-  const initial = (user?.name || 'N')[0].toUpperCase();
-  const [unreadCount, setUnreadCount] = useState(0);
+  const unreadCount = useUnreadNotificationCount(isSupabaseAuthReady);
   const [updateInfo, setUpdateInfo] = useState<AppUpdateInfo | null>(null);
   const [softDismissed, setSoftDismissed] = useState(false);
 
-  const showHeader = location.pathname === '/app' || location.pathname === '/app/';
+  const isDashboardHome = location.pathname === '/app' || location.pathname === '/app/';
+  const immersive = isImmersiveAppPath(location.pathname);
+  /** Premium Topbar for most /app routes; dashboard home has its own shell; immersive pages are full-bleed. */
+  const showAppTopChrome = !isDashboardHome && !immersive;
+
+  const softUpdateBanner =
+    updateInfo?.soft_update && !updateInfo.update_required && !softDismissed ? (
+      <div
+        className={`update-banner${isDashboardHome || showAppTopChrome ? ' update-banner--flush-top' : ''}`}
+        role="status"
+      >
+        <span className="update-banner-text">
+          {updateInfo.update_message || 'A new version of NerdX is available.'}
+        </span>
+        <div className="update-banner-actions">
+          {updateInfo.update_url ? (
+            <a className="update-banner-btn" href={updateInfo.update_url} target="_blank" rel="noreferrer">
+              Update
+            </a>
+          ) : null}
+          <button
+            type="button"
+            className="update-banner-btn secondary"
+            onClick={() => {
+              setSoftDismissed(true);
+              try {
+                localStorage.setItem(
+                  'nerdx_soft_update_dismissed_v1',
+                  JSON.stringify({ latest: updateInfo.latest_version, at: new Date().toISOString() }),
+                );
+              } catch {
+                // ignore
+              }
+            }}
+          >
+            Dismiss
+          </button>
+        </div>
+      </div>
+    ) : null;
 
   useEffect(() => {
     let active = true;
@@ -43,114 +91,32 @@ export function AppLayout() {
     };
   }, []);
 
-  useEffect(() => {
-    let active = true;
-    let unsubscribe: (() => void) | undefined;
-
-    const refreshUnread = async () => {
-      const count = await getUnreadCount();
-      if (!active) return;
-      setUnreadCount(count);
-    };
-
-    if (!isSupabaseAuthReady) {
-      setUnreadCount(0);
-      return () => {
-        active = false;
-      };
-    }
-
-    void refreshUnread();
-
-    (async () => {
-      const supabaseUserId = await getSupabaseAuthUserId();
-      if (!active || !supabaseUserId) return;
-      unsubscribe = subscribeToNotifications(
-        supabaseUserId,
-        () => void refreshUnread(),
-        () => void refreshUnread()
-      );
-    })();
-
-    return () => {
-      active = false;
-      if (unsubscribe) unsubscribe();
-    };
-  }, [isSupabaseAuthReady]);
-
   return (
-    <div className="app-layout">
-      {showHeader && (
-        <header className="dashboard-header">
-          <div className="header-inner">
-            <Link to="/app" className="header-logo">
-              <img src="/logo.png" alt="" className="header-logo-img" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-              <span>NerdX</span>
-            </Link>
-            <div className="header-actions">
-              <Link to="/app/marketplace" className="icon-btn header-marketplace" aria-label="Find a Teacher" title="Find a Teacher">
-                <Search size={20} />
-              </Link>
-              <Link to="/app/my-lessons" className="icon-btn header-marketplace" aria-label="My Lessons" title="My Lessons">
-                <Calendar size={20} />
-              </Link>
-              <button
-                type="button"
-                className="icon-btn theme-toggle"
-                onClick={toggleTheme}
-                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-                title={isDark ? 'Light mode' : 'Dark mode'}
-              >
-                {isDark ? <Sun size={20} /> : <Moon size={20} />}
-              </button>
-              <Link to="/app/notifications" className="icon-btn header-notifications" aria-label="Notifications" title="Notifications">
-                <Bell size={20} />
-                {unreadCount > 0 && (
-                  <span className="header-notifications-badge" aria-label={`${unreadCount} unread notifications`}>
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </Link>
-              <Link to="/app/account" className="profile-btn" aria-label="Account">
-                <span className="profile-initial">{initial}</span>
-              </Link>
-            </div>
-          </div>
-        </header>
-      )}
-
-      {showHeader && updateInfo?.soft_update && !updateInfo.update_required && !softDismissed && (
-        <div className="update-banner" role="status">
-          <span className="update-banner-text">
-            {updateInfo.update_message || 'A new version of NerdX is available.'}
-          </span>
-          <div className="update-banner-actions">
-            {updateInfo.update_url ? (
-              <a className="update-banner-btn" href={updateInfo.update_url} target="_blank" rel="noreferrer">
-                Update
-              </a>
-            ) : null}
-            <button
-              type="button"
-              className="update-banner-btn secondary"
-              onClick={() => {
-                setSoftDismissed(true);
-                try {
-                  localStorage.setItem('nerdx_soft_update_dismissed_v1', JSON.stringify({ latest: updateInfo.latest_version, at: new Date().toISOString() }));
-                } catch {
-                  // ignore
-                }
-              }}
-            >
-              Dismiss
-            </button>
-          </div>
+    <div
+      className={`app-layout${isDashboardHome ? ' app-layout--dashboard-home' : ''}${immersive ? ' app-layout--immersive' : ''}`}
+    >
+      {showAppTopChrome ? (
+        <div className="dashboard-premium-shell flex min-h-screen flex-col bg-[var(--bg-base)] text-[var(--text-primary)] antialiased">
+          <Topbar
+            userInitial={(user?.name || 'S').slice(0, 1)}
+            hasUnreadNotifications={unreadCount > 0}
+            showMobileMenu={false}
+          />
+          {softUpdateBanner}
+          <main className="app-main app-main--premium-chrome min-h-0 flex-1">
+            <Outlet />
+          </main>
         </div>
+      ) : (
+        <>
+          {softUpdateBanner}
+          <main
+            className={`app-main${isDashboardHome ? ' app-main--dashboard-fullbleed' : ''}${immersive ? ' app-main--immersive' : ''}`}
+          >
+            <Outlet />
+          </main>
+        </>
       )}
-
-      <main className="app-main">
-        <Outlet />
-      </main>
 
       {updateInfo?.update_required && (
         <div className="update-required-overlay" role="dialog" aria-label="Update required">

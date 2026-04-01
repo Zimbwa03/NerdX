@@ -19,12 +19,11 @@ class Config:
     CREDIT_UNITS_PER_CREDIT = 10
 
     # Environment variables
-    # AI priority: Vertex AI (Gemini) is PRIMARY; DeepSeek is SECONDARY fallback across all features.
-    # Set GOOGLE_APPLICATION_CREDENTIALS or GOOGLE_SERVICE_ACCOUNT_JSON for Vertex.
+    # AI: Vertex AI (Gemini) is the supported path for generation. Optional legacy env vars may remain in .env.
     DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
-    # DeepSeek model aliases (fallback when Vertex unavailable)
     DEEPSEEK_CHAT_MODEL = os.getenv('DEEPSEEK_CHAT_MODEL', 'deepseek-chat')
     DEEPSEEK_REASONER_MODEL = os.getenv('DEEPSEEK_REASONER_MODEL', 'deepseek-reasoner')
+    VERTEX_GEMINI_TEXT_MODEL = os.getenv('VERTEX_GEMINI_TEXT_MODEL', 'gemini-2.5-flash')
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
     DESMOS_API_KEY = os.getenv('DESMOS_API_KEY')
 
@@ -105,6 +104,12 @@ class Config:
         # AI Teacher Mode – 0.1 credit per message
         'teacher_mode_start': 1,
         'teacher_mode_followup': 1,
+
+        # MAIC AI Classroom (per segment / interaction)
+        'maic_classroom_start': 1,
+        'maic_classroom_stream': 1,
+        'maic_classroom_message': 1,
+        'maic_classroom_quiz': 2,
 
         # Project Assistant (Basic) – 0.2 credit per message
         'project_assistant_start': 2,
@@ -211,11 +216,11 @@ class Config:
     AI_REQUEST_TIMEOUT = [30, 45, 60]
     AI_MAX_RETRIES = 3
 
-    # Enhanced Learning Features
-    # All subjects now use DeepSeek AI (DeepSeek-V3) for better performance
-    SCIENCE_AI_MODEL = os.getenv('SCIENCE_AI_MODEL', DEEPSEEK_CHAT_MODEL)
-    ENGLISH_AI_MODEL = os.getenv('ENGLISH_AI_MODEL', DEEPSEEK_CHAT_MODEL)
-    MATHEMATICS_AI_MODEL = os.getenv('MATHEMATICS_AI_MODEL', DEEPSEEK_CHAT_MODEL)
+    # Enhanced Learning Features — default subject AI model IDs refer to Gemini on Vertex
+    _vertex_text = os.getenv('VERTEX_GEMINI_TEXT_MODEL', 'gemini-2.5-flash')
+    SCIENCE_AI_MODEL = os.getenv('SCIENCE_AI_MODEL', _vertex_text)
+    ENGLISH_AI_MODEL = os.getenv('ENGLISH_AI_MODEL', _vertex_text)
+    MATHEMATICS_AI_MODEL = os.getenv('MATHEMATICS_AI_MODEL', _vertex_text)
 
     # Audio Processing
     AUDIO_MODEL = os.getenv('AUDIO_MODEL', 'whisper-1')
@@ -236,10 +241,9 @@ class Config:
     def validate_config(cls):
         """Validate required configuration"""
         required_vars = [
-            'DEEPSEEK_API_KEY',
             'TWILIO_ACCOUNT_SID',
             'TWILIO_AUTH_TOKEN',
-            'TWILIO_PHONE_NUMBER'
+            'TWILIO_PHONE_NUMBER',
         ]
 
         missing_vars = []

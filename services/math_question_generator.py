@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
 """
-Mathematics Question Generator using Vertex AI (primary) with DeepSeek fallback.
+Mathematics Question Generator using Vertex AI (Gemini).
 Generates ZIMSEC-style mathematics questions with step-by-step solutions.
 """
 
 import logging
 import os
 import json
-import requests
 import time
 import random
 import re
 from typing import Dict, List, Optional
 from datetime import datetime
-from utils.deepseek import get_deepseek_chat_model, get_deepseek_reasoner_model
-from utils.vertex_ai_helper import try_vertex_json
+from utils.vertex_ai_helper import try_vertex_json, extract_json_object
 
 logger = logging.getLogger(__name__)
 
@@ -63,11 +61,11 @@ except ImportError:
     genai = None
     HttpOptions = None
     GENAI_AVAILABLE = False
-    logger.warning("google-genai SDK not available, Vertex AI may be limited; DeepSeek fallback will be used")
+    logger.warning("google-genai SDK not available; direct Gemini client paths in this module will be disabled")
 
 
 class MathQuestionGenerator:
-    """Vertex AI mathematics question generator with DeepSeek fallback."""
+    """Mathematics question generator using Vertex AI (Gemini) only."""
     # Form-scoped rollout map (mirrors History style). Form 1 populated now.
     FORM_TOPIC_MAP = {
         "Form 1": [
@@ -1009,53 +1007,22 @@ class MathQuestionGenerator:
         return []
 
     def __init__(self):
-        # DeepSeek configuration (fallback)
-        self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
-        self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
-        self.deepseek_chat_model = get_deepseek_chat_model()
-        self.deepseek_reasoner_model = get_deepseek_reasoner_model()
-        
-        # Vertex AI / Gemini configuration (primary - higher rate limits)
+        # Vertex AI / Gemini (all generation goes through vertex_service / try_vertex_json)
         self.project_id = os.environ.get('GOOGLE_CLOUD_PROJECT', 'gen-lang-client-0303273462')
         self.use_vertex_ai = os.environ.get('GOOGLE_GENAI_USE_VERTEXAI', 'True').lower() == 'true'
         self.gemini_api_key = os.environ.get('GEMINI_API_KEY')
         self._gemini_configured = False
         self._gemini_client = None
-        
-        # Gemini client initialization is disabled here; Vertex AI is used via vertex_service.
-        # DeepSeek remains available as a fallback.
-        # To re-enable direct Gemini client usage, uncomment the following lines:
-        # if GENAI_AVAILABLE:
-        #     self._init_gemini_client()
-        
-        if self.deepseek_api_key:
-            logger.info("DeepSeek AI configured as fallback provider")
-        
-        # Legacy compatibility
-        self.api_key = self.deepseek_api_key
-        self.api_url = self.deepseek_api_url
 
-        # Progressive timeout parameters to handle DeepSeek API delays
-        # Support environment variables for timeout configuration
-        self.base_timeout = int(os.environ.get("DEEPSEEK_TIMEOUT_SECONDS", "30"))
-        self.connect_timeout = int(os.environ.get("DEEPSEEK_CONNECT_TIMEOUT_SECONDS", "5"))
-        self.max_retries = 4  # Increased from 3 to 4 for better reliability
-        # Progressive timeouts based on base_timeout: 1x, 1.5x, 2x, 2.5x
+        # Budget hints for callers (e.g. mobile API); Vertex retries are cheap vs extra HTTP providers
+        self.base_timeout = int(os.environ.get("MATH_GENERATION_TIMEOUT_SECONDS", "45"))
+        self.max_retries = int(os.environ.get("VERTEX_MATH_MAX_ATTEMPTS", "3"))
         self.timeouts = [
             self.base_timeout,
+            int(self.base_timeout * 1.25),
             int(self.base_timeout * 1.5),
-            self.base_timeout * 2,
-            int(self.base_timeout * 2.5)
         ]
-        self.retry_delay = 2   # Base delay between retries (seconds)
-        self.connect_timeout = 10  # Connection timeout
-        
-        # Create a session for connection pooling and reuse
-        self.session = requests.Session()
-        self.session.headers.update({
-            'Content-Type': 'application/json',
-            'User-Agent': 'NerdX-Education/1.0'
-        })
+        self.retry_delay = 1
     
     def _init_gemini_client(self):
         """Initialize Gemini client with Vertex AI or API key."""
@@ -1111,8 +1078,8 @@ class MathQuestionGenerator:
         student_name: Optional[str] = None,
     ) -> Optional[Dict]:
         """
-        Generate a question with Vertex AI as primary and DeepSeek as fallback.
-        The prompt and validation logic remain identical across providers.
+        Generate a question with Vertex AI (Gemini) only.
+        Retries a few times on parse/validation failure (new sample each attempt).
         """
         try:
             recent_topics = set()
@@ -1129,84 +1096,56 @@ class MathQuestionGenerator:
                     recent_topics = set()
                     recent_subtopics = []
 
-            prompt = self._create_question_prompt(
-                subject,
-                topic,
-                difficulty,
-                recent_topics,
-                recent_subtopics,
-                form_level=form_level,
-                student_name=student_name,
-            )
             context = f"{subject}/{topic}"
+            attempts = self.max_retries if timeout_seconds is None else min(self.max_retries, 4)
 
-            logger.info(f"Trying Vertex AI (primary) for {context} on platform={platform}")
-            vertex_response = try_vertex_json(prompt, logger=logger, context=context)
-            if vertex_response:
+            for attempt in range(attempts):
+                prompt = self._create_question_prompt(
+                    subject,
+                    topic,
+                    difficulty,
+                    recent_topics,
+                    recent_subtopics,
+                    form_level=form_level,
+                    student_name=student_name,
+                )
+                if not prompt or not prompt.strip():
+                    logger.error("Empty prompt for Vertex math generation (%s)", context)
+                    return None
+
+                logger.info(
+                    "Vertex AI math generation attempt %s/%s for %s (platform=%s)",
+                    attempt + 1,
+                    attempts,
+                    context,
+                    platform,
+                )
+                vertex_response = try_vertex_json(
+                    prompt,
+                    logger=logger,
+                    context=context,
+                    max_attempts=2,
+                )
+                if not vertex_response:
+                    if attempt < attempts - 1:
+                        time.sleep(self.retry_delay)
+                    continue
+
                 question_data = self._validate_and_format_question(
                     vertex_response, subject, topic, difficulty, user_id, student_name=student_name
                 )
                 if question_data:
-                    question_data['source'] = 'vertex_ai'
-                    question_data['form_level'] = self._normalize_form_level(form_level)
-                    logger.info(f"Vertex AI generated question for {context}")
+                    question_data["source"] = "vertex_ai"
+                    question_data["form_level"] = self._normalize_form_level(form_level)
+                    logger.info("Vertex AI generated question for %s", context)
                     self._record_math_subtopic(user_id, topic)
                     return question_data
-                logger.warning(f"Vertex AI response validation failed for {context}")
 
-            if not self.deepseek_api_key:
-                logger.error(f"DeepSeek API key not configured - cannot fallback for {context}")
-                return None
+                logger.warning("Vertex AI response validation failed for %s (attempt %s)", context, attempt + 1)
+                if attempt < attempts - 1:
+                    time.sleep(self.retry_delay)
 
-            logger.info(f"Falling back to DeepSeek for {context}")
-
-            base_timeouts = self.timeouts.copy()
-            if timeout_seconds is not None:
-                base_timeouts = [max(5, int(min(t, timeout_seconds))) for t in base_timeouts]
-
-            for attempt in range(self.max_retries):
-                timeout = base_timeouts[min(attempt, len(base_timeouts) - 1)]
-                logger.info(f"DeepSeek fallback attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s) for {context}")
-
-                try:
-                    if not prompt or len(prompt.strip()) == 0:
-                        logger.error("Empty prompt provided to DeepSeek API")
-                        continue
-
-                    response = self._send_api_request(prompt, timeout=timeout)
-                    if response:
-                        question_data = self._validate_and_format_question(
-                            response, subject, topic, difficulty, user_id, student_name=student_name
-                        )
-                        if question_data:
-                            question_data['source'] = 'deepseek_ai_fallback'
-                            question_data['form_level'] = self._normalize_form_level(form_level)
-                            logger.info(f"DeepSeek fallback generated question for {context} on attempt {attempt + 1}")
-                            self._record_math_subtopic(user_id, topic)
-                            return question_data
-                        logger.warning(f"DeepSeek fallback validation failed for {context} on attempt {attempt + 1}")
-                    else:
-                        logger.warning(f"Empty response from DeepSeek fallback for {context} on attempt {attempt + 1}")
-
-                except requests.exceptions.Timeout:
-                    logger.warning(f"DeepSeek fallback timeout on attempt {attempt + 1}/{self.max_retries} for {context}")
-                    if attempt < self.max_retries - 1:
-                        time.sleep(self.retry_delay)
-                    continue
-
-                except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
-                    logger.warning(f"DeepSeek fallback connection error on attempt {attempt + 1}/{self.max_retries} for {context}: {e}")
-                    if attempt < self.max_retries - 1:
-                        time.sleep(self.retry_delay)
-                    continue
-
-                except Exception as e:
-                    logger.error(f"DeepSeek fallback error on attempt {attempt + 1}/{self.max_retries} for {context}: {e}", exc_info=True)
-                    if attempt < self.max_retries - 1:
-                        time.sleep(self.retry_delay)
-                    continue
-
-            logger.error(f"Failed to generate question for {context} after Vertex primary and DeepSeek fallback")
+            logger.error("Failed to generate question for %s after Vertex AI retries", context)
             return None
 
         except Exception as e:
@@ -1272,75 +1211,39 @@ class MathQuestionGenerator:
 
     def generate_graph_question(self, equation: str, graph_type: str, difficulty: str = 'medium', user_id: str = None, timeout_seconds: Optional[float] = None) -> Optional[Dict]:
         """
-        Generate a question specifically about the displayed graph equation.
-        Uses Vertex AI as primary and DeepSeek as fallback.
-        Ensures the question is directly related to the graph shown to the student.
+        Generate a question specifically about the displayed graph equation (Vertex AI only).
         """
         try:
             prompt = self._create_graph_question_prompt(equation, graph_type, difficulty)
             context = f"graph_{equation}_{graph_type}"
             logger.info(f"Generating graph question for equation: {equation}")
-            
-            # Primary: Vertex AI
-            vertex_response = try_vertex_json(prompt, logger=logger, context=context)
-            if vertex_response:
-                question_data = self._validate_and_format_question(
-                    vertex_response, 'Mathematics', f'Graph - {graph_type.title()}', difficulty, user_id
-                )
-                if question_data:
-                    question_data['source'] = 'vertex_ai'
-                    question_data['equation'] = equation
-                    logger.info(f"Vertex AI generated graph question for {equation}")
-                    return question_data
-                logger.warning("Vertex AI graph question validation failed")
-            
-            # Fallback: DeepSeek
-            if not self.deepseek_api_key:
-                logger.warning("DeepSeek API key not configured, using fallback graph question")
-                return self._generate_fallback_graph_question(equation, graph_type, difficulty)
-            
-            logger.info(f"Falling back to DeepSeek for graph question ({equation})")
-            base_timeouts = self.timeouts.copy()
-            if timeout_seconds is not None:
-                base_timeouts = [max(5, int(min(t, timeout_seconds))) for t in base_timeouts]
-            
+
             for attempt in range(self.max_retries):
-                timeout = base_timeouts[min(attempt, len(base_timeouts) - 1)]
-                logger.info(f"DeepSeek fallback graph question attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
-                
-                try:
-                    response = self._send_api_request(prompt, timeout=timeout)
-                    if response:
-                        question_data = self._validate_and_format_question(
-                            response, 'Mathematics', f'Graph - {graph_type.title()}', difficulty, user_id
-                        )
-                        if question_data:
-                            question_data['source'] = 'deepseek_ai_fallback'
-                            question_data['equation'] = equation
-                            logger.info(f"DeepSeek fallback generated graph question for {equation} on attempt {attempt + 1}")
-                            return question_data
-                    
-                except requests.exceptions.Timeout:
-                    logger.warning(f"DeepSeek fallback timeout for graph question on attempt {attempt + 1}/{self.max_retries} (waited {timeout}s)")
-                    if attempt < self.max_retries - 1:
-                        time.sleep(self.retry_delay)
-                    continue
-                
-                except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
-                    logger.warning(f"DeepSeek fallback connection error for graph question on attempt {attempt + 1}/{self.max_retries}: {e}")
-                    if attempt < self.max_retries - 1:
-                        time.sleep(self.retry_delay)
-                    continue
-                
-                except Exception as e:
-                    logger.warning(f"DeepSeek fallback error for graph question on attempt {attempt + 1}/{self.max_retries}: {e}")
-                    if attempt < self.max_retries - 1:
-                        time.sleep(self.retry_delay)
-                    continue
-            
-            logger.warning(f"AI failed after Vertex primary and DeepSeek fallback, using fallback graph question for {equation}")
+                vertex_response = try_vertex_json(
+                    prompt, logger=logger, context=context, max_attempts=2
+                )
+                if vertex_response:
+                    question_data = self._validate_and_format_question(
+                        vertex_response,
+                        "Mathematics",
+                        f"Graph - {graph_type.title()}",
+                        difficulty,
+                        user_id,
+                    )
+                    if question_data:
+                        question_data["source"] = "vertex_ai"
+                        question_data["equation"] = equation
+                        logger.info("Vertex AI generated graph question for %s", equation)
+                        return question_data
+                    logger.warning(
+                        "Vertex AI graph question validation failed (attempt %s)", attempt + 1
+                    )
+                if attempt < self.max_retries - 1:
+                    time.sleep(self.retry_delay)
+
+            logger.warning("Vertex AI graph generation failed for %s, using template fallback", equation)
             return self._generate_fallback_graph_question(equation, graph_type, difficulty)
-        
+
         except Exception as e:
             logger.error(f"Critical error generating graph question: {e}", exc_info=True)
             return self._generate_fallback_graph_question(equation, graph_type, difficulty)
@@ -1354,67 +1257,31 @@ class MathQuestionGenerator:
         template_solution: str,
     ) -> Optional[Dict]:
         """
-        Generate a graph practice question using DeepSeek AI, guided by the template structure.
-        The template tells the AI what kind of question to generate (structure, parts (a)(b)(c), style).
-        Returns {"question": str, "solution": str} or None if DeepSeek fails.
+        Generate a graph practice question using Vertex AI, guided by the template structure.
+        Returns {"question": str, "solution": str} or None if generation fails.
         """
         prompt = self._create_template_guided_graph_prompt(
             equation_display, graph_type, level, template_question, template_solution
         )
         context = f"graph_template_{graph_type}_{level}"
-        logger.info("Generating graph question from template (DeepSeek AI) for equation: %s", equation_display[:50])
-        
-        # Use DeepSeek AI for question generation
-        try:
-            from utils.deepseek import call_deepseek_chat, get_deepseek_chat_model
-            
-            response_text = call_deepseek_chat(
-                model=get_deepseek_chat_model(),
-                system_prompt="You are a ZIMSEC/Cambridge mathematics examiner. Generate exam-style questions in valid JSON format only.",
-                user_prompt=prompt,
-                temperature=0.7,
-                max_tokens=1500,
-                timeout=45,
-                retries=2
-            )
-            
-            if not response_text:
-                logger.warning("DeepSeek returned empty response for graph question (%s)", context)
-                return None
-            
-            # Parse JSON from response
-            json_start = response_text.find('{')
-            json_end = response_text.rfind('}') + 1
-            
-            if json_start >= 0 and json_end > json_start:
-                json_str = response_text[json_start:json_end]
-                try:
-                    deepseek_response = json.loads(json_str)
-                except json.JSONDecodeError as e:
-                    logger.warning("DeepSeek JSON parse error for graph question (%s): %s", context, e)
-                    return None
-            else:
-                logger.warning("No JSON object found in DeepSeek response for graph question (%s)", context)
-                return None
-            
-            if not deepseek_response or not isinstance(deepseek_response, dict):
-                return None
-            
-            question = (deepseek_response.get("question") or "").strip()
-            solution = (deepseek_response.get("solution") or "").strip()
-            
-            if not question:
-                logger.warning("DeepSeek returned empty question for graph template (%s)", context)
-                return None
-            if not solution:
-                solution = template_solution
-            
-            logger.info("DeepSeek AI generated graph question for %s (%s)", equation_display[:30], context)
-            return {"question": question, "solution": solution, "source": "deepseek_ai_template"}
-            
-        except Exception as e:
-            logger.warning("DeepSeek graph question generation failed (%s): %s", context, e)
+        logger.info("Generating graph question from template (Vertex AI) for equation: %s", equation_display[:50])
+
+        full_prompt = (
+            "You are a ZIMSEC/Cambridge mathematics examiner. Generate exam-style questions in valid JSON only.\n\n"
+            + prompt
+        )
+        data = try_vertex_json(full_prompt, logger=logger, context=context, max_attempts=2)
+        if not data or not isinstance(data, dict):
             return None
+        question = (data.get("question") or "").strip()
+        solution = (data.get("solution") or "").strip()
+        if not question:
+            logger.warning("Vertex returned empty question for graph template (%s)", context)
+            return None
+        if not solution:
+            solution = template_solution
+        logger.info("Vertex AI generated graph question for %s (%s)", equation_display[:30], context)
+        return {"question": question, "solution": solution, "source": "vertex_ai_template"}
 
     def _create_template_guided_graph_prompt(
         self,
@@ -1925,141 +1792,35 @@ Generate the question now:"""
         return prompt
 
     def _generate_with_vertex_ai(self, prompt: str, timeout_seconds: Optional[float] = None) -> Optional[Dict]:
-        """
-        Generate question using Vertex AI (for WhatsApp bot)
-        
-        Args:
-            prompt: The prompt for question generation
-            timeout_seconds: Optional timeout override
-        
-        Returns:
-            Dict with question data or None
-        """
+        """Generate question JSON using Vertex AI (non-streaming)."""
+        del timeout_seconds  # Vertex SDK timeout is configured server-side / HTTP client defaults
         try:
             from services.vertex_service import vertex_service
-            
+
             if not vertex_service.is_available():
-                logger.warning("Vertex AI not available, will fallback to DeepSeek")
+                logger.warning("Vertex AI not available")
                 return None
-            
-            logger.info("Using Vertex AI for question generation")
-            result = vertex_service.generate_text(prompt=prompt, model="gemini-2.5-flash")
-            
-            if result and result.get('success'):
-                text = result['text']
-                logger.info(f"Raw Vertex AI response: {text[:200]}...")
-                
-                # Extract JSON from response (same logic as DeepSeek)
-                json_start = text.find('{')
-                json_end = text.rfind('}') + 1
-                
-                if json_start >= 0 and json_end > json_start:
-                    json_str = text[json_start:json_end]
-                    try:
-                        question_data = json.loads(json_str)
-                        logger.info(f"Successfully generated question with Vertex AI: {question_data.get('question', '')[:100]}...")
-                        return question_data
-                    except json.JSONDecodeError as e:
-                        logger.error(f"JSON parsing failed from Vertex AI: {e}. Raw JSON: {json_str[:200]}...")
-                        return None
-                else:
-                    logger.error(f"No valid JSON found in Vertex AI response. Content: {text[:500]}...")
-                    return None
-            else:
-                logger.warning(f"Vertex AI generation failed: {result.get('error', 'Unknown error')}")
-                return None
-                
-        except Exception as e:
-            logger.error(f"Error generating with Vertex AI: {e}")
-            return None
 
-    def _send_api_request(self, prompt: str, timeout: int = 30) -> Optional[Dict]:
-        """Send request to DeepSeek API with configurable timeout (used by mobile app and as fallback)
-        
-        Enhanced with:
-        - Connection pooling via session reuse
-        - Better error handling for rate limits
-        - Pre-flight validation
-        """
-
-        # Pre-flight validation
-        if not self.api_key:
-            logger.error("DeepSeek API key not configured")
-            return None
-        
-        if not prompt or len(prompt.strip()) == 0:
-            logger.error("Empty prompt provided to DeepSeek API")
-            return None
-
-        headers = {
-            'Authorization': f'Bearer {self.api_key}'
-        }
-
-        data = {
-            'model': self.deepseek_chat_model,  # Fast mode for non-streaming
-            'messages': [{'role': 'user', 'content': prompt}],
-            'max_tokens': 2000,  # Reduced to speed up response time
-            'temperature': 0.85  # Increased for more creative variation and diversity
-        }
-
-        try:
-            # Use session for connection pooling and reuse
-            self.session.headers.update(headers)
-            response = self.session.post(
-                self.api_url,
-                json=data,
-                timeout=(self.connect_timeout, timeout)
+            result = vertex_service.generate_text(
+                prompt=prompt,
+                model=os.environ.get("VERTEX_GEMINI_TEXT_MODEL", "gemini-2.5-flash"),
+                json_mode=True,
+                temperature=0.75,
+                max_output_tokens=8192,
             )
-
-            if response.status_code == 200:
-                result = response.json()
-                if 'choices' not in result or len(result['choices']) == 0:
-                    logger.error(f"Invalid API response format: {result}")
-                    return None
-                    
-                content = result['choices'][0]['message']['content']
-                logger.info(f"Raw DeepSeek response: {content[:200]}...")
-
-                # Extract JSON from response with better error handling
-                json_start = content.find('{')
-                json_end = content.rfind('}') + 1
-
-                if json_start >= 0 and json_end > json_start:
-                    json_str = content[json_start:json_end]
-                    try:
-                        question_data = json.loads(json_str)
-                        logger.info(f"Successfully generated question: {question_data.get('question', '')[:100]}...")
-                        return question_data
-                    except json.JSONDecodeError as e:
-                        logger.error(f"JSON parsing failed: {e}. Raw JSON: {json_str[:200]}...")
-                        return None
-                else:
-                    logger.error(f"No valid JSON found in AI response. Content: {content[:500]}...")
-                    return None
-            elif response.status_code == 429:
-                # Rate limit - return special indicator for retry logic
-                retry_after = int(response.headers.get('Retry-After', 10))
-                logger.warning(f"DeepSeek rate limit hit (429), should wait {retry_after}s")
+            if not result or not result.get("success"):
+                logger.warning("Vertex AI generation failed: %s", result.get("error", "Unknown error"))
                 return None
-            elif response.status_code == 503:
-                # Service unavailable - return None for retry
-                logger.warning(f"DeepSeek service unavailable (503)")
-                return None
-            else:
-                logger.error(f"AI API error: {response.status_code} - {response.text[:200]}")
-                return None
-
-        except requests.exceptions.Timeout:
-            logger.warning(f"AI API request timed out after {timeout}s (connect timeout {self.connect_timeout}s)")
-            return None
-        except requests.exceptions.ConnectionError as e:
-            logger.warning(f"AI API connection error: {e}")
-            return None
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse JSON from AI response: {e}")
-            return None
+            text = (result.get("text") or "").strip()
+            question_data = extract_json_object(text, logger=logger, context="whatsapp_math")
+            if question_data:
+                logger.info(
+                    "Successfully generated question with Vertex AI: %s...",
+                    (question_data.get("question") or "")[:100],
+                )
+            return question_data
         except Exception as e:
-            logger.error(f"An unexpected error occurred during AI API request: {e}")
+            logger.error("Error generating with Vertex AI: %s", e)
             return None
 
     def generate_question_stream(
@@ -2072,19 +1833,15 @@ Generate the question now:"""
         student_name: Optional[str] = None,
     ):
         """
-        Generate a math question using deepseek-reasoner with streaming.
-        Yields thinking updates for real-time UI, then final question.
-        
-        Uses DeepSeek Reasoner (V3.2 CoT) for step-by-step thinking.
-        
-        Yields:
-            dict: Either {'type': 'thinking', 'content': '...'} or {'type': 'question', 'data': {...}}
+        Stream tokens from Vertex AI while building the final JSON question.
+        Yields lightweight progress updates, then the validated question payload.
         """
-        if not self.api_key:
-            yield {'type': 'error', 'message': 'DeepSeek API key not configured'}
+        from services.vertex_service import vertex_service
+
+        if not vertex_service.is_available():
+            yield {"type": "error", "message": "Vertex AI is not configured"}
             return
-            
-        # Build the prompt
+
         prompt = self._create_question_prompt(
             subject,
             topic,
@@ -2092,105 +1849,83 @@ Generate the question now:"""
             form_level=form_level,
             student_name=student_name,
         )
-        
-        headers = {
-            'Authorization': f'Bearer {self.api_key}',
-            'Content-Type': 'application/json'
-        }
+        if not prompt or not prompt.strip():
+            yield {"type": "error", "message": "Empty generation prompt"}
+            return
 
-        # Use deepseek-reasoner for Chain-of-Thought reasoning
-        data = {
-            'model': self.deepseek_reasoner_model,  # Reasoning model (latest alias)
-            'messages': [{'role': 'user', 'content': prompt}],
-            'max_tokens': 3000,
-            'temperature': 0.7,
-            'stream': True  # Enable streaming
-        }
+        thinking_messages = [
+            "🧠 Analyzing topic…",
+            "📐 Drafting working…",
+            "✨ Finalizing JSON…",
+        ]
+        yield {"type": "thinking", "content": thinking_messages[0], "stage": 1, "total_stages": len(thinking_messages)}
 
         try:
-            # Yield initial thinking status
-            yield {'type': 'thinking', 'content': '🧠 Analyzing topic...', 'stage': 1}
-            
-            response = requests.post(
-                self.api_url,
-                headers=headers,
-                json=data,
-                timeout=(self.connect_timeout, max(self.base_timeout, 20)),
-                stream=True
-            )
-            
-            if response.status_code != 200:
-                logger.error(f"DeepSeek Reasoner error: {response.status_code}")
-                yield {'type': 'error', 'message': 'AI service temporarily unavailable'}
-                return
-            
-            # Process streaming response
             full_content = ""
-            reasoning_content = ""
             stage = 1
-            thinking_messages = [
-                '📐 Setting up problem...',
-                '✨ Crafting solution steps...',
-                '🔢 Calculating values...',
-                '✅ Finalizing question...'
-            ]
-            
-            for line in response.iter_lines():
-                if line:
-                    line_str = line.decode('utf-8')
-                    if line_str.startswith('data: '):
-                        data_str = line_str[6:]
-                        if data_str == '[DONE]':
-                            break
-                        try:
-                            chunk = json.loads(data_str)
-                            
-                            # Check for reasoning_content (CoT thinking)
-                            if 'choices' in chunk and len(chunk['choices']) > 0:
-                                delta = chunk['choices'][0].get('delta', {})
-                                
-                                # Extract reasoning content (thinking process)
-                                if 'reasoning_content' in delta and delta['reasoning_content'] is not None:
-                                    reasoning_content += str(delta['reasoning_content'])
-                                    # Update thinking stage based on content length
-                                    new_stage = min(len(reasoning_content) // 200 + 1, len(thinking_messages))
-                                    if new_stage > stage:
-                                        stage = new_stage
-                                        yield {
-                                            'type': 'thinking', 
-                                            'content': thinking_messages[stage - 1],
-                                            'stage': stage,
-                                            'total_stages': len(thinking_messages)
-                                        }
-                                
-                                # Extract actual content
-                                if 'content' in delta and delta['content'] is not None:
-                                    full_content += str(delta['content'])
-                                    
-                        except json.JSONDecodeError:
-                            continue
-            
-            # Parse the final content
-            if full_content:
-                json_start = full_content.find('{')
-                json_end = full_content.rfind('}') + 1
-                
-                if json_start >= 0 and json_end > json_start:
-                    json_str = full_content[json_start:json_end]
-                    try:
-                        question_data = json.loads(json_str)
-                        formatted = self._validate_and_format_question(
-                            question_data, subject, topic, difficulty, user_id, student_name=student_name
-                        )
-                        if formatted:
-                            formatted['source'] = 'deepseek_reasoner'
-                            yield {'type': 'question', 'data': formatted}
-                            return
-                    except json.JSONDecodeError as e:
-                        logger.error(f"Failed to parse reasoner response: {e}")
-            
-            # Fallback to regular generation if streaming fails
-            logger.warning("Streaming failed, falling back to regular generation")
+            stream = vertex_service.client.models.generate_content_stream(
+                model=os.environ.get("VERTEX_GEMINI_TEXT_MODEL", "gemini-2.5-flash"),
+                contents=prompt,
+                config={
+                    "response_mime_type": "application/json",
+                    "temperature": 0.75,
+                    "max_output_tokens": 8192,
+                },
+            )
+            for chunk in stream:
+                t = getattr(chunk, "text", None) or ""
+                if not t:
+                    continue
+                full_content += t
+                new_stage = min(len(full_content) // 400 + 1, len(thinking_messages))
+                if new_stage > stage:
+                    stage = new_stage
+                    yield {
+                        "type": "thinking",
+                        "content": thinking_messages[stage - 1],
+                        "stage": stage,
+                        "total_stages": len(thinking_messages),
+                    }
+
+            raw = full_content.strip()
+            question_data = extract_json_object(raw, logger=logger, context=f"stream/{subject}/{topic}")
+            if not question_data:
+                logger.warning("Stream parse failed, using non-stream Vertex retry")
+                question = self.generate_question(
+                    subject,
+                    topic,
+                    difficulty,
+                    user_id,
+                    form_level=form_level,
+                    student_name=student_name,
+                )
+                if question:
+                    yield {"type": "question", "data": question}
+                else:
+                    yield {"type": "error", "message": "Failed to generate question"}
+                return
+
+            formatted = self._validate_and_format_question(
+                question_data, subject, topic, difficulty, user_id, student_name=student_name
+            )
+            if formatted:
+                formatted["source"] = "vertex_ai_stream"
+                yield {"type": "question", "data": formatted}
+            else:
+                question = self.generate_question(
+                    subject,
+                    topic,
+                    difficulty,
+                    user_id,
+                    form_level=form_level,
+                    student_name=student_name,
+                )
+                if question:
+                    yield {"type": "question", "data": question}
+                else:
+                    yield {"type": "error", "message": "Failed to generate question"}
+        except Exception as e:
+            logger.error("Error in Vertex streaming generation: %s", e, exc_info=True)
             question = self.generate_question(
                 subject,
                 topic,
@@ -2200,16 +1935,9 @@ Generate the question now:"""
                 student_name=student_name,
             )
             if question:
-                yield {'type': 'question', 'data': question}
+                yield {"type": "question", "data": question}
             else:
-                yield {'type': 'error', 'message': 'Failed to generate question'}
-                
-        except requests.exceptions.Timeout:
-            logger.warning("DeepSeek Reasoner request timed out")
-            yield {'type': 'error', 'message': 'Request timed out, please try again'}
-        except Exception as e:
-            logger.error(f"Error in streaming generation: {e}")
-            yield {'type': 'error', 'message': 'An error occurred'}
+                yield {"type": "error", "message": "An error occurred during generation"}
 
     @staticmethod
     def _ensure_stepwise_solution(solution_text: str) -> str:
@@ -2312,7 +2040,7 @@ Generate the question now:"""
                 'topic': topic,
                 'subject': subject,
                 'generated_at': datetime.now().isoformat(),
-                'source': 'deepseek_ai'
+                'source': 'vertex_ai'
             }
 
             # Add to history service if user provided and question was successfully generated
@@ -2342,7 +2070,7 @@ Generate the question now:"""
             return self._generate_fallback_question(subject, topic, difficulty)
 
     def _generate_fallback_question(self, subject: str, topic: str, difficulty: str) -> Dict:
-        """Generate fallback questions when DeepSeek API fails"""
+        """Generate fallback questions when Vertex AI generation fails"""
 
         fallback_questions = {
             "Sets": {

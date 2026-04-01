@@ -5,6 +5,32 @@ from config import Config
 
 logger = logging.getLogger(__name__)
 
+# Canonical production web origin (share links, referrals, school portal URLs).
+DEFAULT_PUBLIC_ORIGIN = "https://nerdx.co.zw"
+
+
+def get_public_web_origin() -> str:
+    """User-facing web app origin (register, school/teacher links, referrals).
+    Prefer WEB_URL / APP_URL; otherwise default to the production domain."""
+    for key in ("WEB_URL", "APP_URL"):
+        v = (os.environ.get(key) or "").strip().rstrip("/")
+        if v:
+            return v
+    return DEFAULT_PUBLIC_ORIGIN
+
+
+def get_api_public_base_url() -> str:
+    """Base URL where this Flask app serves API + static files (graphs, media)."""
+    base_url = getattr(Config, "BASE_URL", None) or os.environ.get("BASE_URL")
+    if base_url:
+        return str(base_url).strip().rstrip("/")
+    for key in ("RENDER_EXTERNAL_URL", "APP_URL", "WEB_URL"):
+        v = (os.environ.get(key) or "").strip().rstrip("/")
+        if v:
+            return v
+    return DEFAULT_PUBLIC_ORIGIN
+
+
 def convert_local_path_to_public_url(local_path: str) -> str:
     """Convert a local file path to a public URL accessible by WhatsApp for Render deployment"""
     try:
@@ -18,22 +44,7 @@ def convert_local_path_to_public_url(local_path: str) -> str:
             # Remove leading slash for relative path
             local_path = local_path[1:]
 
-        # Get the base URL from config or environment for Render
-        base_url = getattr(Config, 'BASE_URL', None)
-        if not base_url:
-            # Try to get the Render URL from environment variables
-            render_url = os.environ.get('RENDER_EXTERNAL_URL')
-            if render_url:
-                base_url = render_url.rstrip('/')
-            else:
-                # Try alternative environment variables
-                app_url = os.environ.get('APP_URL') or os.environ.get('WEB_URL')
-                if app_url:
-                    base_url = app_url.rstrip('/')
-                else:
-                    # Fallback: assume standard naming convention
-                    app_name = os.environ.get('RENDER_SERVICE_NAME', 'nerdx')
-                    base_url = f"https://{app_name}.onrender.com"
+        base_url = get_api_public_base_url()
 
         # Construct the full public URL
         public_url = f"{base_url}/{local_path}"
@@ -49,7 +60,7 @@ def convert_local_path_to_public_url(local_path: str) -> str:
 def get_static_file_url(filename: str, subfolder: str = '') -> str:
     """Get a public URL for a static file"""
     try:
-        base_url = getattr(Config, 'BASE_URL', 'https://your-app-name.replit.app')
+        base_url = getattr(Config, 'BASE_URL', None) or get_api_public_base_url()
 
         if subfolder:
             url = f"{base_url}/static/{subfolder}/{filename}"

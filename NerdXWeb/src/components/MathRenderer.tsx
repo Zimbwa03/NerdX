@@ -1,4 +1,4 @@
-/**
+﻿/**
  * MathRenderer - Renders Markdown-ish text with LaTeX math using KaTeX.
  * Matches mobile MathRenderer behavior for O-Level Mathematics notes.
  * Normalizes naked LaTeX (e.g. \frac{1}{2}, \cap) so it renders as math.
@@ -95,12 +95,11 @@ function processContent(content: string): string {
     .replace(/\n### ([^\n]+)/g, '</p><h4>$1</h4><p>')
     .replace(/\n## ([^\n]+)/g, '</p><h3>$1</h3><p>')
     .replace(/\n# ([^\n]+)/g, '</p><h2>$1</h2><p>')
-    .replace(/\n- /g, '</p><p class="md-list-item">• ')
+    .replace(/\n- /g, '</p><p class="md-list-item">&bull; ')
     .replace(/\n(\d+)\. /g, '</p><p class="md-list-item">$1. ')
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br/>');
-
-  // Restore math blocks AFTER markdown — render directly to KaTeX HTML
+  // Restore math blocks AFTER markdown - render directly to KaTeX HTML.
   // (This avoids KaTeX's complex HTML being corrupted by markdown regexes)
   mathBlocks.forEach((block, idx) => {
     const placeholder = `${MATH_PLACEHOLDER}${idx}${MATH_PLACEHOLDER}`;
@@ -186,3 +185,4 @@ export function MathRenderer({ content, fontSize = 16, className = '' }: MathRen
     />
   );
 }
+

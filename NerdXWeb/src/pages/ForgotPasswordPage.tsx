@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Send } from 'lucide-react';
 import { supabase } from '../services/supabase';
+import { getPublicSiteOrigin } from '../services/api/config';
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -27,7 +28,7 @@ export function ForgotPasswordPage() {
 
     setIsLoading(true);
     try {
-      const redirectUrl = `${window.location.origin}/reset-password`;
+      const redirectUrl = `${getPublicSiteOrigin()}/reset-password`;
 
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
         redirectTo: redirectUrl,

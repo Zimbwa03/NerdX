@@ -14,15 +14,10 @@ from database.external_db import make_supabase_request, get_user_credits, deduct
 from utils.credit_units import format_credits
 from services.advanced_credit_service import advanced_credit_service
 from services.vertex_service import vertex_service
-from utils.deepseek import get_deepseek_chat_model
 
 logger = logging.getLogger(__name__)
-DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
 
-# Import requests for DeepSeek API
-import requests
-
-# Import Google Gemini AI (fallback only)
+# Import Google Gemini AI (API-key fallback when Vertex unavailable)
 try:
     import google.generativeai as genai
     GENAI_AVAILABLE = True
@@ -40,16 +35,9 @@ class MathematicsTeacherService:
     def __init__(self):
         self.whatsapp_service = WhatsAppService()
 
-        # Teacher Mode Mathematics MUST use Vertex AI (Gemini via Vertex) when available.
-        # DeepSeek remains a fallback only (DeepSeek is intended for individual/other flows).
         self._is_vertex_configured = bool(vertex_service and vertex_service.is_available())
-        
-        # Initialize DeepSeek AI as fallback provider
-        self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
-        self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
-        self._is_deepseek_configured = bool(self.deepseek_api_key)
-        
-        # Initialize Gemini AI as fallback
+
+        # Optional Gemini API (non-Vertex) when Vertex is not configured
         self.gemini_model = None
         self._is_gemini_configured = False
         try:
@@ -57,19 +45,17 @@ class MathematicsTeacherService:
                 api_key = os.getenv('GEMINI_API_KEY')
                 if api_key and genai:
                     genai.configure(api_key=api_key)
-                    self.gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
+                    self.gemini_model = genai.GenerativeModel('gemini-2.5-flash')
                     self._is_gemini_configured = True
         except Exception as e:
             logger.error(f"Error initializing Gemini fallback: {e}")
         
         if self._is_vertex_configured:
             logger.info("✅ Mathematics Teacher initialized with Vertex AI Gemini (primary)")
-        elif self._is_deepseek_configured:
-            logger.warning("Vertex AI not available - using DeepSeek as fallback")
         elif self._is_gemini_configured:
-            logger.warning("Vertex/DeepSeek not available - using Gemini (non-Vertex) as fallback")
+            logger.warning("Vertex AI not available - using Gemini API key client as fallback")
         else:
-            logger.warning("No AI services available")
+            logger.warning("No AI services available (configure Vertex or GEMINI_API_KEY)")
     
     # Subject-specific teaching guidelines
     SUBJECT_SPECIFIC_GUIDELINES = {
@@ -367,7 +353,7 @@ Current conversation context will be provided with each message."""
             session_manager.set_data(user_id, 'math_teacher', session_data)
             
             # Generate initial teaching message using Vertex AI Gemini (primary)
-            if (self._is_vertex_configured or self._is_deepseek_configured or self._is_gemini_configured) and topic:
+            if (self._is_vertex_configured or self._is_gemini_configured) and topic:
                 initial_prompt = f"Start teaching {topic} to a {grade_level} Mathematics student. Begin with a warm greeting, ask about their current understanding, and introduce the topic clearly."
                 initial_message = self._get_teaching_response(user_id, initial_prompt, session_data)
             elif topic:
@@ -556,32 +542,6 @@ Current conversation context will be provided with each message."""
                 except Exception as vertex_error:
                     logger.error(f"Vertex AI error: {vertex_error}", exc_info=True)
 
-            # FALLBACK: DeepSeek (only if Vertex is unavailable/fails)
-            if self._is_deepseek_configured:
-                try:
-                    response = requests.post(
-                        self.deepseek_api_url,
-                        headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
-                        json={
-                            'model': DEEPSEEK_CHAT_MODEL,
-                            'messages': [
-                                {'role': 'system', 'content': system_prompt},
-                                {'role': 'user', 'content': full_prompt}
-                            ],
-                            'temperature': 0.7,
-                            'max_tokens': 2000
-                        },
-                        timeout=60
-                    )
-                    if response.status_code == 200:
-                        data = response.json()
-                        if 'choices' in data and len(data['choices']) > 0:
-                            response_text = data['choices'][0]['message']['content'].strip()
-                            # Convert any plain math expressions to LaTeX
-                            return self._convert_math_to_latex(response_text)
-                except Exception as deepseek_error:
-                    logger.error(f"DeepSeek error: {deepseek_error}", exc_info=True)
-            
             # FALLBACK: Gemini (non-Vertex) if configured
             if self._is_gemini_configured and self.gemini_model:
                 try:
@@ -781,7 +741,7 @@ Current conversation context will be provided with each message."""
                 }
             
             # Generate notes using Vertex AI Gemini (primary) with fallbacks
-            if self._is_vertex_configured or self._is_deepseek_configured or self._is_gemini_configured:
+            if self._is_vertex_configured or self._is_gemini_configured:
                 subject = session_data.get('subject', 'Mathematics')
                 grade_level = session_data.get('grade_level', 'O-Level')
                 conversation_history = session_data.get('conversation_history', [])
@@ -815,39 +775,7 @@ Current conversation context will be provided with each message."""
                                     'session_ended': False
                                 }
 
-                    # FALLBACK: DeepSeek
-                    if self._is_deepseek_configured:
-                        response = requests.post(
-                            self.deepseek_api_url,
-                            headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
-                            json={
-                                'model': DEEPSEEK_CHAT_MODEL,
-                                'messages': [
-                                    {'role': 'system', 'content': system_prompt},
-                                    {'role': 'user', 'content': prompt}
-                                ],
-                                'temperature': 0.7,
-                                'max_tokens': 3000
-                            },
-                            timeout=45
-                        )
-                        if response.status_code == 200:
-                            data = response.json()
-                            if 'choices' in data and len(data['choices']) > 0:
-                                response_text = data['choices'][0]['message']['content'].strip()
-                                notes_data = self._parse_notes_response(response_text)
-                                if notes_data:
-                                    from utils.math_notes_pdf_generator import MathNotesPDFGenerator
-                                    pdf_generator = MathNotesPDFGenerator()
-                                    pdf_path = pdf_generator.generate_notes_pdf(notes_data, user_id)
-                                    return {
-                                        'success': True,
-                                        'pdf_url': pdf_path,
-                                        'response': f'✅ Your Mathematics notes on {topic} have been generated!',
-                                        'session_ended': False
-                                    }
-                    
-                    # FALLBACK: Gemini (non-Vertex) if DeepSeek/Vertex fails
+                    # FALLBACK: Gemini (non-Vertex) if Vertex fails
                     if self._is_gemini_configured and self.gemini_model:
                         response = self.gemini_model.generate_content(f"{system_prompt}\n\n{prompt}")
                         notes_data = self._parse_notes_response(getattr(response, "text", "") or "")

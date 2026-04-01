@@ -14,6 +14,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { AILoadingOverlay } from '../../components/AILoadingOverlay';
+import { MaicClassroomFeatureCard } from '../../components/MaicClassroomFeatureCard';
+import { MaicTopicClassroomLink } from '../../components/MaicTopicClassroomLink';
 import { computerScienceTopicNames } from '../../data/computerScienceNotes/notes';
 import '../sciences/ScienceUniverse.css';
 
@@ -241,6 +243,13 @@ export function ComputerScienceTopicsPage() {
             <p className="feature-card-desc">Interactive tutoring. Ask any Computer Science question and get instant guidance.</p>
           </div>
 
+          <MaicClassroomFeatureCard
+            navigate={navigate}
+            subject="Computer Science"
+            gradeLevel="Form 3-4 (O-Level)"
+            accent="rgba(2, 136, 209, 0.2)"
+          />
+
           <div
             className="science-feature-card"
             onClick={() => navigate('/app/virtual-lab?subject=computer_science')}
@@ -256,8 +265,8 @@ export function ComputerScienceTopicsPage() {
             className="science-feature-card"
             onClick={() => navigate('/app/exam/setup', { state: { subject: 'computer_science', backTo: '/app/computer-science', subjectLabel: 'Computer Science' } })}
           >
-            <div className="feature-icon-box" style={{ background: 'linear-gradient(135deg, rgba(124, 77, 255, 0.3), rgba(101, 31, 255, 0.3))' }}>
-              <FileText size={28} color="#B388FF" />
+            <div className="feature-icon-box" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3))' }}>
+              <FileText size={28} color="#34D399" />
             </div>
             <h3 className="feature-card-title">Simulated Exam</h3>
             <p className="feature-card-desc">Full timed exam conditions with mixed questions from all topics.</p>
@@ -291,10 +300,22 @@ export function ComputerScienceTopicsPage() {
                 <div
                   key={topic.id}
                   className="science-topic-card"
-                  onClick={() => openStartQuiz(topic)}
+                  onClick={() =>
+                    navigate(
+                      `/app/computer-science/topic/${encodeURIComponent(topic.id)}?board=${board}`,
+                    )
+                  }
                 >
-                  <div className="topic-icon-small">
-                    <TopicIcon size={20} />
+                  <div className="science-topic-card__row">
+                    <div className="topic-icon-small">
+                      <TopicIcon size={20} />
+                    </div>
+                    <MaicTopicClassroomLink
+                      navigate={navigate}
+                      subject="Computer Science"
+                      gradeLevel="Form 3-4 (O-Level)"
+                      topicName={topic.name}
+                    />
                   </div>
                   <span className="topic-card-name">{topic.name}</span>
                 </div>

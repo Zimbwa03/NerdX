@@ -2,17 +2,13 @@
 Professional Computer Science Question Generator.
 - ZIMSEC O-Level (7014) and A-Level (6023); Cambridge O-Level (2210) and AS & A Level (9618).
 - Theory: Paper 1 (MCQ), Paper 2 (structured), essay.
-- AI: Vertex AI (primary), DeepSeek (fallback). Always try Vertex first; use DeepSeek only if Vertex is unavailable or returns no valid JSON.
+- AI: Vertex AI (primary), optional consumer Gemini API (fallback JSON).
 """
-import os
 import json
-import requests
-import time
 import logging
 import random
 from typing import Dict, List, Optional, Any, Tuple
-from utils.deepseek import get_deepseek_chat_model
-from utils.vertex_ai_helper import try_vertex_json
+from utils.vertex_ai_helper import try_vertex_json, try_gemini_json
 
 try:
     from services.zimsec_cs_syllabus import (
@@ -78,21 +74,6 @@ class ComputerScienceGenerator:
     """Professional O-Level Computer Science generator with Vertex primary."""
     
     def __init__(self):
-        self.api_key = os.environ.get('DEEPSEEK_API_KEY')
-        self.api_url = "https://api.deepseek.com/v1/chat/completions"
-        self.model = get_deepseek_chat_model()
-        self.max_retries = 4  # Increased retries for better reliability
-        self.timeouts = [30, 45, 60, 75]  # Progressive timeouts
-        self.retry_delay = 2
-        self.connect_timeout = 10  # Connection timeout
-        
-        # Create a session for connection pooling and reuse
-        self.session = requests.Session()
-        self.session.headers.update({
-            'Content-Type': 'application/json',
-            'User-Agent': 'NerdX-Education/1.0'
-        })
-        
         # ZIMSEC O-Level Computer Science 7014 — 11 topics (theory-only; practical in Virtual Labs)
         self.topics = dict(ZIMSEC_CS_TOPIC_OBJECTIVES) if ZIMSEC_CS_TOPIC_OBJECTIVES else {}
         if not self.topics:
@@ -340,10 +321,10 @@ class ComputerScienceGenerator:
             if vertex_response and 'question' in vertex_response:
                 return self._validate_and_enhance_question(vertex_response, topic, difficulty, user_id, source='vertex_ai')
 
-            logger.info(f"Falling back to DeepSeek for {context}")
-            response = self._call_deepseek_api(prompt, "mcq")
+            logger.info(f"Falling back to Gemini API for {context}")
+            response = try_gemini_json(vertex_prompt, logger=logger, context=context)
             if response and 'question' in response:
-                return self._validate_and_enhance_question(response, topic, difficulty, user_id, source='deepseek_fallback')
+                return self._validate_and_enhance_question(response, topic, difficulty, user_id, source='gemini_fallback')
 
             return self._get_fallback_mcq_question(topic, difficulty, user_id)
 
@@ -369,10 +350,10 @@ class ComputerScienceGenerator:
             if vertex_response:
                 return self._validate_and_enhance_structured_question(vertex_response, topic, difficulty, user_id, source='vertex_ai')
 
-            logger.info(f"Falling back to DeepSeek for {context}")
-            response = self._call_deepseek_api(prompt, "structured")
+            logger.info(f"Falling back to Gemini API for {context}")
+            response = try_gemini_json(vertex_prompt, logger=logger, context=context)
             if response:
-                return self._validate_and_enhance_structured_question(response, topic, difficulty, user_id, source='deepseek_fallback')
+                return self._validate_and_enhance_structured_question(response, topic, difficulty, user_id, source='gemini_fallback')
 
             return self._get_fallback_structured_question(topic, difficulty, user_id)
 
@@ -398,10 +379,10 @@ class ComputerScienceGenerator:
             if vertex_response:
                 return self._validate_and_enhance_essay_question(vertex_response, topic, difficulty, user_id, source='vertex_ai')
 
-            logger.info(f"Falling back to DeepSeek for {context}")
-            response = self._call_deepseek_api(prompt, "essay")
+            logger.info(f"Falling back to Gemini API for {context}")
+            response = try_gemini_json(vertex_prompt, logger=logger, context=context)
             if response:
-                return self._validate_and_enhance_essay_question(response, topic, difficulty, user_id, source='deepseek_fallback')
+                return self._validate_and_enhance_essay_question(response, topic, difficulty, user_id, source='gemini_fallback')
 
             return self._get_fallback_essay_question(topic, difficulty, user_id)
 
@@ -628,162 +609,16 @@ Generate a structured question now:"""
 
 Generate an essay question now:"""
 
-    def _call_deepseek_api(self, prompt: str, generation_type: str) -> Optional[Dict]:
-        """Call DeepSeek API with appropriate settings and retries"""
-        if not self.api_key:
-            logger.error("DeepSeek API key not configured")
-            return None
-        
-        # Pre-flight validation
-        if not prompt or len(prompt.strip()) == 0:
-            logger.error("Empty prompt provided to DeepSeek API")
-            return None
-        
-        headers = {
-            "Authorization": f"Bearer {self.api_key}"
-        }
-        
-        payload = {
-            "model": self.model,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": CS_SYSTEM_MESSAGE
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            "temperature": 0.7,
-            "max_tokens": 2000
-        }
-        
-        # Retry with progressive timeouts
-        for attempt in range(self.max_retries):
-            timeout = self.timeouts[min(attempt, len(self.timeouts) - 1)]
-            
-            # Exponential backoff with jitter
-            if attempt > 0:
-                import random
-                backoff_delay = self.retry_delay * (2 ** (attempt - 1)) + random.uniform(0, 1)
-                logger.info(f"Waiting {backoff_delay:.2f}s before retry {attempt + 1}/{self.max_retries}")
-                time.sleep(backoff_delay)
-            
-            try:
-                logger.info(f"DeepSeek CS {generation_type} attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s)")
-                
-                # Use session for connection pooling
-                self.session.headers.update(headers)
-                response = self.session.post(
-                    self.api_url,
-                    json=payload,
-                    timeout=(self.connect_timeout, timeout)
-                )
-                
-                if response.status_code == 200:
-                    result = response.json()
-                    content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
-                    
-                    # Parse JSON from response
-                    try:
-                        # Try to extract JSON from the response
-                        if '```json' in content:
-                            json_str = content.split('```json')[1].split('```')[0].strip()
-                        elif '```' in content:
-                            json_str = content.split('```')[1].split('```')[0].strip()
-                        else:
-                            json_str = content.strip()
-                        
-                        logger.info(f"✅ Successfully generated CS {generation_type} on attempt {attempt + 1}")
-                        return json.loads(json_str)
-                    except json.JSONDecodeError as e:
-                        logger.error(f"Failed to parse JSON response: {e}")
-                        if attempt < self.max_retries - 1:
-                            continue
-                        break
-                        
-                elif response.status_code == 429:
-                    # Rate limit
-                    retry_after = int(response.headers.get('Retry-After', 10))
-                    logger.warning(f"DeepSeek rate limit hit (429), waiting {retry_after}s")
-                    if attempt < self.max_retries - 1:
-                        time.sleep(retry_after)
-                        continue
-                elif response.status_code == 503:
-                    # Service unavailable
-                    logger.warning(f"DeepSeek service unavailable (503)")
-                    if attempt < self.max_retries - 1:
-                        continue
-                else:
-                    logger.error(f"DeepSeek API error: {response.status_code}")
-                    if attempt < self.max_retries - 1:
-                        continue
-                        
-            except requests.exceptions.Timeout:
-                logger.warning(f"DeepSeek timeout on attempt {attempt + 1}/{self.max_retries}")
-                if attempt < self.max_retries - 1:
-                    continue
-            except requests.exceptions.ConnectionError as e:
-                logger.error(f"DeepSeek connection error on attempt {attempt + 1}: {e}")
-                if attempt < self.max_retries - 1:
-                    import random
-                    wait_time = min(2 ** attempt, 5) + random.uniform(0, 1)
-                    time.sleep(wait_time)
-                    continue
-            except Exception as e:
-                logger.error(f"Error calling DeepSeek API on attempt {attempt + 1}: {e}")
-                if attempt < self.max_retries - 1:
-                    continue
-        
-        # FALLBACK: Try Vertex AI when DeepSeek fails
-        logger.error(f"DeepSeek failed for {generation_type}, trying Vertex AI fallback")
-        try:
-            from services.vertex_service import vertex_service
-            
-            if vertex_service.is_available():
-                logger.info(f"🔄 Falling back to Vertex AI for Computer Science {generation_type}")
-                
-                # Create system message for Vertex AI
-                system_message = "You are an expert O-Level Computer Science examiner. Generate educational questions in valid JSON format only."
-                full_prompt = f"{system_message}\n\n{prompt}"
-                
-                result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
-                
-                if result and result.get('success'):
-                    text = result['text']
-                    logger.info(f"Raw Vertex AI response for {generation_type}: {text[:200]}...")
-                    
-                    # Extract JSON from response
-                    try:
-                        if '```json' in text:
-                            json_str = text.split('```json')[1].split('```')[0].strip()
-                        elif '```' in text:
-                            json_str = text.split('```')[1].split('```')[0].strip()
-                        else:
-                            json_start = text.find('{')
-                            json_end = text.rfind('}') + 1
-                            if json_start != -1 and json_end > json_start:
-                                json_str = text[json_start:json_end]
-                            else:
-                                json_str = text.strip()
-                        
-                        question_data = json.loads(json_str)
-                        logger.info(f"✅ Successfully generated Computer Science {generation_type} with Vertex AI fallback")
-                        return question_data
-                    except json.JSONDecodeError as e:
-                        logger.error(f"JSON parsing failed from Vertex AI for {generation_type}: {e}")
-                else:
-                    logger.error(f"Vertex AI fallback failed: {result.get('error', 'Unknown error') if result else 'No result'}")
-            else:
-                logger.warning("Vertex AI not available for fallback")
-        except Exception as e:
-            logger.error(f"Error in Vertex AI fallback: {e}")
-        
-        return None
-    
+    def _evaluate_with_vertex_or_gemini(self, user_prompt: str, context: str) -> Optional[Dict]:
+        """Shared JSON evaluation: Vertex then optional Gemini API."""
+        full = f"{CS_SYSTEM_MESSAGE}\n\n{user_prompt}"
+        out = try_vertex_json(full, logger=logger, context=context)
+        if out:
+            return out
+        return try_gemini_json(full, logger=logger, context=context)
+
     def _validate_and_enhance_question(self, question_data: Dict, topic: str, 
-                                       difficulty: str, user_id: str = None, source: str = "deepseek") -> Dict:
+                                       difficulty: str, user_id: str = None, source: str = "vertex_ai") -> Dict:
         """Validate and enhance MCQ question."""
         return {
             "question": question_data.get('question', ''),
@@ -800,7 +635,7 @@ Generate an essay question now:"""
         }
 
     def _validate_and_enhance_structured_question(self, question_data: Dict, topic: str,
-                                                  difficulty: str, user_id: str = None, source: str = "deepseek") -> Dict:
+                                                  difficulty: str, user_id: str = None, source: str = "vertex_ai") -> Dict:
         """Validate and enhance structured question."""
         return {
             "question_type": "structured",
@@ -817,7 +652,7 @@ Generate an essay question now:"""
         }
 
     def _validate_and_enhance_essay_question(self, question_data: Dict, topic: str,
-                                             difficulty: str, user_id: str = None, source: str = "deepseek") -> Dict:
+                                             difficulty: str, user_id: str = None, source: str = "vertex_ai") -> Dict:
         """Validate and enhance essay question."""
         return {
             "question_type": "essay",
@@ -1083,7 +918,7 @@ Provide evaluation in JSON format:
     "missing_points": ["list of missing points"]
 }}"""
             
-            response = self._call_deepseek_api(prompt, "evaluation")
+            response = self._evaluate_with_vertex_or_gemini(prompt, "cs:structured_evaluation")
             
             if response:
                 return {
@@ -1150,7 +985,7 @@ Provide evaluation in JSON format:
     "areas_for_improvement": ["list of areas to improve"]
 }}"""
             
-            response = self._call_deepseek_api(prompt, "evaluation")
+            response = self._evaluate_with_vertex_or_gemini(prompt, "cs:essay_evaluation")
             
             if response:
                 return response

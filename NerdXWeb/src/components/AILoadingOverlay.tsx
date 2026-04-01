@@ -34,7 +34,7 @@ export function AILoadingOverlay({
   title = 'AI is Working',
   subtitle = 'Generating your content...',
   progress,
-  accentColor = '#667eea',
+  accentColor = '#10B981',
   variant = 'inline',
 }: AILoadingOverlayProps) {
   const [currentStage, setCurrentStage] = useState(0);

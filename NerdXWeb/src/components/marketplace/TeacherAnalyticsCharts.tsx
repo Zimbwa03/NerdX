@@ -14,7 +14,7 @@ interface TeacherAnalyticsChartsProps {
   loading?: boolean;
 }
 
-const CHART_COLORS = ['#7C4DFF', '#00E5FF', '#FF6B6B', '#FFAB00', '#00E676', '#FF4081', '#536DFE'];
+const CHART_COLORS = ['#10B981', '#00E5FF', '#FF6B6B', '#FFAB00', '#00E676', '#FF4081', '#536DFE'];
 
 const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; name: string; color: string }>; label?: string }) => {
   if (!active || !payload?.length) return null;
@@ -99,7 +99,7 @@ export function TeacherAnalyticsCharts({
               <XAxis dataKey="day" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="lessons" fill="#7C4DFF" radius={[6, 6, 0, 0]} name="Lessons" />
+              <Bar dataKey="lessons" fill="#10B981" radius={[6, 6, 0, 0]} name="Lessons" />
             </BarChart>
           </ResponsiveContainer>
         </div>

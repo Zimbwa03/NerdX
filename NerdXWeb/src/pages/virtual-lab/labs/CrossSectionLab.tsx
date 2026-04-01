@@ -58,7 +58,7 @@ export function CrossSectionLab({ simulation }: { simulation: SimulationMetadata
                 <path
                   d="M80 166 C 150 70, 220 70, 260 166 S 360 210, 420 120 S 470 90, 500 110"
                   fill="none"
-                  stroke="#7C4DFF"
+                  stroke="#10B981"
                   strokeWidth="4"
                 />
                 <circle cx="260" cy="166" r="4" fill="#00E676" />

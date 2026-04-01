@@ -1,18 +1,15 @@
 """
 Flashcard Generation Service
-Generates AI-powered educational flashcards using Vertex AI as primary and DeepSeek as fallback for all subjects (O-Level and A-Level).
+Generates AI-powered educational flashcards using Vertex AI (Gemini) for all subjects (O-Level and A-Level).
 """
 
 import os
 import json
 import logging
-import requests
 from typing import List, Dict, Optional
 from dataclasses import dataclass, asdict
-from utils.deepseek import get_deepseek_chat_model
 
 logger = logging.getLogger(__name__)
-DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
 
 @dataclass
 class Flashcard:
@@ -27,7 +24,7 @@ class Flashcard:
 
 class FlashcardService:
     """
-    Service for generating educational flashcards using Vertex AI as primary and DeepSeek as fallback for all subjects.
+    Service for generating educational flashcards using Vertex AI (Gemini).
     
     Supports two modes:
     - Batch mode: Generate up to 100 cards at once
@@ -35,25 +32,19 @@ class FlashcardService:
     """
     
     def __init__(self):
-        self.api_key = os.environ.get('DEEPSEEK_API_KEY')
-        self.api_url = 'https://api.deepseek.com/chat/completions'
         self.max_batch_size = 100
         self.timeout = 60  # seconds
-        
-        # Vertex AI service (primary for all subjects)
+
         self.vertex_service = None
         try:
             from services.vertex_service import vertex_service
             self.vertex_service = vertex_service
             if self.vertex_service.is_available():
-                logger.info("✅ Vertex AI service available for flashcards (primary)")
+                logger.info("Vertex AI service available for flashcards")
             else:
-                logger.warning("⚠️ Vertex AI service not available - flashcards will use DeepSeek fallback")
+                logger.warning("Vertex AI service not available - flashcards will use static fallbacks")
         except Exception as e:
-            logger.warning(f"⚠️ Could not initialize Vertex AI service: {e}")
-        
-        if not self.api_key:
-            logger.warning("DEEPSEEK_API_KEY not configured - DeepSeek fallback will be unavailable")
+            logger.warning("Could not initialize Vertex AI service: %s", e)
     
     def _is_a_level_subject(self, subject: str) -> bool:
         """Check if subject is an A-level subject"""
@@ -79,9 +70,8 @@ class FlashcardService:
         Returns:
             List of flashcard dictionaries
         """
-        # Require at least one provider (Vertex primary or DeepSeek fallback)
-        if not (self.vertex_service and self.vertex_service.is_available()) and not self.api_key:
-            logger.error("Neither Vertex AI nor DEEPSEEK_API_KEY available")
+        if not (self.vertex_service and self.vertex_service.is_available()):
+            logger.error("Vertex AI not available for flashcards")
             return self._generate_fallback_flashcards(topic, count)
         
         # Limit batch size
@@ -90,17 +80,12 @@ class FlashcardService:
         try:
             prompt = self._create_batch_prompt(subject, topic, notes_content, actual_count)
             
-            # Primary: Vertex AI for all subjects
             response = None
             if self.vertex_service and self.vertex_service.is_available():
                 response = self._send_vertex_ai_request(prompt)
                 if response:
-                    logger.info(f"Generated flashcards for {topic} via Vertex AI (primary)")
-            # Fallback: DeepSeek
-            if not response and self.api_key:
-                logger.info(f"Falling back to DeepSeek for flashcards ({topic})")
-                response = self._send_api_request(prompt)
-            
+                    logger.info("Generated flashcards for %s via Vertex AI", topic)
+
             if response:
                 flashcards = self._parse_flashcards_response(response, actual_count)
                 logger.info(f"✅ Generated {len(flashcards)} flashcards for {topic} ({subject})")
@@ -134,24 +119,18 @@ class FlashcardService:
         Returns:
             Single flashcard dictionary or None
         """
-        # Require at least one provider (Vertex primary or DeepSeek fallback)
-        if not (self.vertex_service and self.vertex_service.is_available()) and not self.api_key:
+        if not (self.vertex_service and self.vertex_service.is_available()):
             return self._generate_single_fallback(topic, index)
         
         try:
             prompt = self._create_single_prompt(subject, topic, notes_content, index, previous_questions)
             
-            # Primary: Vertex AI for all subjects
             response = None
             if self.vertex_service and self.vertex_service.is_available():
                 response = self._send_vertex_ai_request(prompt)
                 if response:
-                    logger.info(f"Generated single flashcard for {topic} via Vertex AI (primary)")
-            # Fallback: DeepSeek
-            if not response and self.api_key:
-                logger.info(f"Falling back to DeepSeek for single flashcard ({topic})")
-                response = self._send_api_request(prompt, timeout=30)
-            
+                    logger.info("Generated single flashcard for %s via Vertex AI", topic)
+
             if response:
                 flashcard = self._parse_single_flashcard(response, index)
                 return flashcard
@@ -350,48 +329,6 @@ Generate ONE flashcard in this exact JSON format:
 
 Generate the flashcard now (JSON only):"""
 
-    def _send_api_request(self, prompt: str, timeout: int = None) -> Optional[str]:
-        """Send request to DeepSeek API"""
-        
-        if timeout is None:
-            timeout = self.timeout
-        
-        headers = {
-            'Authorization': f'Bearer {self.api_key}',
-            'Content-Type': 'application/json'
-        }
-        
-        data = {
-            'model': DEEPSEEK_CHAT_MODEL,
-            'messages': [{'role': 'user', 'content': prompt}],
-            'max_tokens': 4000,
-            'temperature': 0.7
-        }
-        
-        try:
-            response = requests.post(
-                self.api_url,
-                headers=headers,
-                json=data,
-                timeout=timeout
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                if 'choices' in result and len(result['choices']) > 0:
-                    return result['choices'][0]['message']['content'].strip()
-            else:
-                logger.error(f"DeepSeek API error: {response.status_code} - {response.text[:200]}")
-                
-        except requests.exceptions.Timeout:
-            logger.warning(f"DeepSeek API timeout after {timeout}s")
-        except requests.exceptions.ConnectionError as e:
-            logger.error(f"DeepSeek connection error: {e}")
-        except Exception as e:
-            logger.error(f"DeepSeek API error: {e}")
-        
-        return None
-    
     def _send_vertex_ai_request(self, prompt: str) -> Optional[str]:
         """Send request to Vertex AI Gemini (primary for all subjects)."""
         
@@ -401,7 +338,8 @@ Generate the flashcard now (JSON only):"""
         
         try:
             logger.info("📝 Generating flashcards using Vertex AI Gemini...")
-            result = self.vertex_service.generate_text(prompt, model="gemini-2.5-flash")
+            model = os.environ.get("VERTEX_GEMINI_TEXT_MODEL", "gemini-2.5-flash")
+            result = self.vertex_service.generate_text(prompt, model=model)
             
             if result and result.get('success'):
                 text = result.get('text', '').strip()

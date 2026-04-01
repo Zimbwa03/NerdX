@@ -5,18 +5,13 @@ Paper 2: Essay questions (20 marks style).
 
 AI stack:
 - Vertex AI (Gemini) as PRIMARY JSON generator via try_vertex_json.
-- DeepSeek chat completion as FALLBACK.
+- Optional consumer Gemini API as FALLBACK.
 """
 
-import os
-import json
-import requests
 import logging
-import random
 from typing import Dict, Optional, Any
 
-from utils.deepseek import get_deepseek_chat_model
-from utils.vertex_ai_helper import try_vertex_json
+from utils.vertex_ai_helper import try_vertex_json, try_gemini_json
 
 logger = logging.getLogger(__name__)
 
@@ -44,23 +39,6 @@ BES_SYSTEM_MESSAGE = (
 class BESGenerator:
     """ZIMSEC O-Level Business Enterprise and Skills generator – Paper 1 MCQs, Paper 2 Essays."""
 
-    def __init__(self) -> None:
-        self.api_key = os.environ.get("DEEPSEEK_API_KEY")
-        self.api_url = "https://api.deepseek.com/v1/chat/completions"
-        self.model = get_deepseek_chat_model()
-        self.max_retries = 3
-        self.timeouts = [30, 45, 60]
-        self.retry_delay = 2
-        self.connect_timeout = 10
-
-        self.session = requests.Session()
-        self.session.headers.update(
-            {
-                "Content-Type": "application/json",
-                "User-Agent": "NerdX-Education/1.0",
-            }
-        )
-
     def generate_topical_question(
         self,
         topic: str,
@@ -78,10 +56,10 @@ class BESGenerator:
             if vertex_response and vertex_response.get("question"):
                 return self._validate_and_enhance_mcq(vertex_response, topic, difficulty, user_id, source="vertex_ai")
 
-            logger.info("Falling back to DeepSeek for %s", context)
-            response = self._call_deepseek_api(prompt, "mcq")
+            logger.info("Falling back to Gemini API for %s", context)
+            response = try_gemini_json(vertex_prompt, logger=logger, context=context)
             if response and response.get("question"):
-                return self._validate_and_enhance_mcq(response, topic, difficulty, user_id, source="deepseek_fallback")
+                return self._validate_and_enhance_mcq(response, topic, difficulty, user_id, source="gemini_fallback")
 
             return self._get_fallback_mcq_question(topic, difficulty, user_id)
         except Exception as exc:
@@ -105,10 +83,10 @@ class BESGenerator:
             if vertex_response:
                 return self._validate_and_enhance_essay(vertex_response, topic, difficulty, user_id, source="vertex_ai")
 
-            logger.info("Falling back to DeepSeek for %s", context)
-            response = self._call_deepseek_api(prompt, "essay")
+            logger.info("Falling back to Gemini API for %s", context)
+            response = try_gemini_json(vertex_prompt, logger=logger, context=context)
             if response:
-                return self._validate_and_enhance_essay(response, topic, difficulty, user_id, source="deepseek_fallback")
+                return self._validate_and_enhance_essay(response, topic, difficulty, user_id, source="gemini_fallback")
 
             return self._get_fallback_essay_question(topic, difficulty, user_id)
         except Exception as exc:
@@ -201,68 +179,6 @@ Generate ONE high-quality MCQ now."""
 }}
 
 Generate ONE high-quality essay question now."""
-
-    def _call_deepseek_api(self, prompt: str, generation_type: str) -> Optional[Dict]:
-        """Call DeepSeek API with retries; return parsed JSON dict or None."""
-        if not self.api_key:
-            logger.error("DeepSeek API key not configured for BESGenerator")
-            return None
-
-        if not prompt or not prompt.strip():
-            logger.error("Empty prompt provided to DeepSeek BES generator")
-            return None
-
-        headers = {"Authorization": f"Bearer {self.api_key}"}
-        payload = {
-            "model": self.model,
-            "messages": [
-                {"role": "system", "content": BES_SYSTEM_MESSAGE},
-                {"role": "user", "content": prompt},
-            ],
-            "temperature": 0.7,
-            "max_tokens": 2000,
-        }
-
-        for attempt in range(self.max_retries):
-            timeout = self.timeouts[min(attempt, len(self.timeouts) - 1)]
-            if attempt > 0:
-                import time as _time
-                backoff = self.retry_delay * (2 ** (attempt - 1)) + random.uniform(0, 1)
-                logger.info("DeepSeek BES %s retry %s/%s", generation_type, attempt + 1, self.max_retries)
-                _time.sleep(backoff)
-
-            try:
-                self.session.headers.update(headers)
-                response = self.session.post(
-                    self.api_url,
-                    json=payload,
-                    timeout=(self.connect_timeout, timeout),
-                )
-                if response.status_code != 200:
-                    logger.warning("DeepSeek BES %s HTTP %s", generation_type, response.status_code)
-                    continue
-
-                body = response.json()
-                choice = body.get("choices", [{}])[0]
-                content = (choice.get("message") or {}).get("content", "")
-                if not content:
-                    continue
-
-                if "```json" in content:
-                    json_str = content.split("```json")[1].split("```")[0].strip()
-                elif "```" in content:
-                    json_str = content.split("```")[1].split("```")[0].strip()
-                else:
-                    json_str = content.strip()
-                parsed = json.loads(json_str)
-                if isinstance(parsed, dict):
-                    return parsed
-            except (json.JSONDecodeError, KeyError, IndexError) as e:
-                logger.warning("DeepSeek BES parse error: %s", e)
-            except Exception as e:
-                logger.warning("DeepSeek BES request error: %s", e)
-
-        return None
 
     def _validate_and_enhance_mcq(
         self,

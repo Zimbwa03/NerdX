@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, GraduationCap, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { PageLoadingView } from '../../components/PageLoadingView';
 import {
   projectAssistantApi,
   type ProjectLevel,
@@ -221,7 +222,7 @@ export function ProjectAssistantHubPage() {
         {error && <div className="project-assistant-error">{error}</div>}
 
         {loading ? (
-          <div className="project-assistant-loading">Loading projects...</div>
+          <PageLoadingView title="Loading projects" subtitle="Fetching your saved work…" className="min-h-[220px] py-8" />
         ) : projects.length === 0 ? (
           <p className="project-assistant-empty">No projects yet. Create one above to get started.</p>
         ) : (

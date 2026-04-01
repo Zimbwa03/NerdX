@@ -7,7 +7,7 @@ interface SubjectBadgeProps {
 }
 
 export function SubjectBadge({ subject, level, size = 'sm' }: SubjectBadgeProps) {
-  const color = MARKETPLACE_SUBJECT_COLORS[subject] || '#667eea';
+  const color = MARKETPLACE_SUBJECT_COLORS[subject] || '#10B981';
 
   return (
     <span

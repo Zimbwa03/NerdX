@@ -51,7 +51,7 @@ export const biologyQuestionTypes: BiologyQuestionTypeInfo[] = [
         name: 'Essay Questions',
         description: 'In-depth essays demonstrating comprehensive understanding',
         icon: 'file-document-edit-outline',
-        color: '#8B5CF6',
+        color: '#10B981',
         marks: '20-25 marks',
         timeGuide: '~30-40 min per essay'
     }

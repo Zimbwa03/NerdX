@@ -4,6 +4,21 @@
 
 {% block extra_head %}
 <style>
+/* ── Sub-School Context Bar ── */
+#subSchoolContextBar {
+    background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(6,182,212,0.08)) !important;
+    border: 1px solid rgba(99,102,241,0.25) !important;
+    color: #e2e8f0 !important;
+    border-radius: 10px;
+}
+#subSchoolContextBar code {
+    background: rgba(99,102,241,0.15);
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: #a5b4fc;
+    font-size: 0.8rem;
+}
+
 /* ── AI Chat Panel ── Premium Chat UI ──────────────────────────────────── */
 .ai-chat-panel {
     border: 1px solid rgba(124,77,255,0.35);
@@ -513,13 +528,68 @@
     <!-- Tabs -->
     <ul class="nav nav-tabs mb-4" id="schoolTabs">
         <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tabOverview">Overview</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabStudents">Students</a></li>
+        <li class="nav-item" id="tabSubSchoolsItem"><a class="nav-link" data-bs-toggle="tab" href="#tabSubSchools"><i class="fas fa-school me-1"></i> Sub-Schools</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabStructure"><i class="fas fa-sitemap me-1"></i> Structure</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabTeachers"><i class="fas fa-chalkboard-teacher me-1"></i> Teachers</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabStudentsV2"><i class="fas fa-user-graduate me-1"></i> Students v2</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabSubjects"><i class="fas fa-book me-1"></i> Subjects</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabStudents">NerdX Students</a></li>
         <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabFinance"><i class="fas fa-dollar-sign me-1"></i> Finance</a></li>
     </ul>
+
+    <!-- Sub-School Context Bar (shown when a sub-school is selected) -->
+    <div id="subSchoolContextBar" class="alert alert-info d-flex align-items-center justify-content-between mb-3" style="display:none !important;">
+        <div>
+            <i class="fas fa-school me-2"></i>
+            <strong>Managing:</strong> <span id="contextSchoolName">—</span>
+            <code class="ms-2" id="contextSchoolCode">—</code>
+        </div>
+        <button class="btn btn-sm btn-outline-info" id="btnClearContext"><i class="fas fa-times me-1"></i> Back to Group</button>
+    </div>
 
     <div class="tab-content">
     <!-- Overview Tab -->
     <div class="tab-pane fade show active" id="tabOverview">
+
+    <!-- Ecosystem Quick Stats -->
+    <div class="row mb-4" id="ecoQuickStats" style="display:none;">
+        <div class="col-12">
+            <div class="card shadow border-primary">
+                <div class="card-header" style="background:linear-gradient(135deg,rgba(99,102,241,0.12),rgba(139,92,246,0.08));border-bottom-color:rgba(99,102,241,0.15);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="fas fa-sitemap me-2 text-primary"></i>School Ecosystem</h6>
+                        <a href="#" class="btn btn-sm btn-outline-primary" id="ecoGoToStructure"><i class="fas fa-arrow-right me-1"></i> Manage</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col"><h4 class="text-primary mb-0" id="ecoFormCount">0</h4><small class="text-muted">Forms</small></div>
+                        <div class="col"><h4 class="text-info mb-0" id="ecoClassCount">0</h4><small class="text-muted">Classes</small></div>
+                        <div class="col"><h4 class="text-warning mb-0" id="ecoTeacherCount">0</h4><small class="text-muted">Teachers</small></div>
+                        <div class="col"><h4 class="text-success mb-0" id="ecoStudentCount">0</h4><small class="text-muted">Students (v2)</small></div>
+                        <div class="col"><h4 class="text-secondary mb-0" id="ecoSubjectCount">0</h4><small class="text-muted">Subjects</small></div>
+                        <div class="col"><h4 class="text-danger mb-0" id="ecoClassroomCount">0</h4><small class="text-muted">Classrooms</small></div>
+                    </div>
+                    <hr class="my-2">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">Teacher Login URL:</small>
+                            <div style="background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.15);border-radius:6px;padding:6px 10px;margin-top:4px;word-break:break-all;">
+                                <code id="ecoTeacherLoginUrl" style="font-size:0.78rem;color:#22d3ee;"></code>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">School Code:</small>
+                            <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.15);border-radius:6px;padding:6px 10px;margin-top:4px;">
+                                <code id="ecoSchoolCode" style="font-size:0.85rem;color:#a5b4fc;"></code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card shadow h-100">
@@ -573,7 +643,322 @@
     </div>
     </div>
 
-    <!-- Students Tab -->
+    <!-- ═══ SUB-SCHOOLS TAB ═══ -->
+    <div class="tab-pane fade" id="tabSubSchools">
+        <div id="groupSetupArea" style="display:none;">
+            <div class="card shadow border-warning mb-4">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-building fa-3x text-warning mb-3"></i>
+                    <h4>Enable Group School Management</h4>
+                    <p class="text-muted mb-3">Convert this school into a Group School to manage multiple sub-schools (branches) under one network.</p>
+                    <button class="btn btn-warning btn-lg" id="btnMakeGroup"><i class="fas fa-plus-circle me-2"></i> Enable Group School</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="groupManageArea" style="display:none;">
+            <!-- Group Header Stats -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card shadow border-primary h-100">
+                        <div class="card-body text-center">
+                            <h2 class="text-primary mb-0" id="totalSubSchoolCount">0</h2>
+                            <small class="text-muted">Sub-Schools</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow border-success h-100">
+                        <div class="card-body text-center">
+                            <h2 class="text-success mb-0" id="totalGroupStudents">0</h2>
+                            <small class="text-muted">Total Students</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow border-warning h-100">
+                        <div class="card-body text-center">
+                            <h2 class="text-warning mb-0" id="totalGroupTeachers">0</h2>
+                            <small class="text-muted">Total Teachers</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow border-info h-100">
+                        <div class="card-body text-center">
+                            <code class="text-info" style="font-size:0.85rem;" id="groupIdDisplay">—</code>
+                            <br><small class="text-muted">Group ID</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Sub-School Form -->
+            <div class="card shadow mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-school me-2"></i>Sub-Schools</h5>
+                    <button class="btn btn-primary btn-sm" id="btnShowAddSubSchool"><i class="fas fa-plus me-1"></i> Add Sub-School</button>
+                </div>
+                <div class="card-body">
+                    <div id="addSubSchoolForm" style="display:none;">
+                        <div id="subSchoolAlert" class="alert d-none mb-3"></div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">School Name <span class="text-danger">*</span></label>
+                                <input class="form-control" id="ssName" placeholder="e.g. Herentals Masvingo Branch">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Campus / Branch Name</label>
+                                <input class="form-control" id="ssCampus" placeholder="e.g. Masvingo Campus">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">City / Town</label>
+                                <input class="form-control" id="ssCity" placeholder="e.g. Masvingo">
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Location / Address</label>
+                                <input class="form-control" id="ssLocation" placeholder="e.g. 45 Robertson St">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Contact Person</label>
+                                <input class="form-control" id="ssContact" placeholder="Principal name">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Phone</label>
+                                <input class="form-control" id="ssPhone" placeholder="0771234567">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Email</label>
+                                <input class="form-control" id="ssEmail" placeholder="school@email.com">
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-success" id="btnSaveSubSchool"><i class="fas fa-check me-1"></i> Create Sub-School</button>
+                            <button class="btn btn-outline-secondary" id="btnCancelSubSchool">Cancel</button>
+                        </div>
+                    </div>
+
+                    <!-- Sub-Schools Grid -->
+                    <div id="subSchoolsGrid" class="row g-3 mt-2">
+                        <div class="col-12 text-center text-muted py-4">
+                            <i class="fas fa-spinner fa-spin me-1"></i> Loading sub-schools...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STRUCTURE TAB ═══ -->
+    <div class="tab-pane fade" id="tabStructure">
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Academic Years</h5>
+                        <button class="btn btn-primary btn-sm" id="btnShowAddYear"><i class="fas fa-plus me-1"></i> Add Year</button>
+                    </div>
+                    <div class="card-body">
+                        <div id="addYearForm" class="mb-3" style="display:none;">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="newYearLabel" placeholder="e.g. 2026 Academic Year">
+                                <button class="btn btn-success" id="btnSaveYear"><i class="fas fa-check me-1"></i> Save</button>
+                                <button class="btn btn-outline-secondary" id="btnCancelYear">Cancel</button>
+                            </div>
+                        </div>
+                        <div id="yearsContainer" class="d-flex flex-wrap gap-2">
+                            <span class="text-muted">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-layer-group me-2"></i>Forms & Classes</h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary btn-sm" id="btnShowAddForm"><i class="fas fa-plus me-1"></i> Add Form</button>
+                            <button class="btn btn-outline-primary btn-sm" id="btnShowAddClass"><i class="fas fa-plus me-1"></i> Add Class</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="addFormArea" class="mb-3" style="display:none;">
+                            <div class="input-group mb-2">
+                                <select class="form-select" id="newFormNumber" style="max-width:160px;">
+                                    <option value="1">Form 1</option><option value="2">Form 2</option><option value="3">Form 3</option><option value="4">Form 4</option><option value="5">Form 5</option><option value="6">Form 6</option>
+                                </select>
+                                <button class="btn btn-success" id="btnSaveForm"><i class="fas fa-check me-1"></i> Save</button>
+                                <button class="btn btn-outline-secondary" id="btnCancelForm">Cancel</button>
+                            </div>
+                        </div>
+                        <div id="addClassArea" class="mb-3" style="display:none;">
+                            <div class="input-group mb-2">
+                                <select class="form-select" id="classFormSelect" style="max-width:160px;">
+                                    <option value="">Select Form</option>
+                                </select>
+                                <input type="text" class="form-control" id="newClassName" placeholder="Class name (e.g. Red, Blue)">
+                                <button class="btn btn-success" id="btnSaveClass"><i class="fas fa-check me-1"></i> Save</button>
+                                <button class="btn btn-outline-secondary" id="btnCancelClass">Cancel</button>
+                            </div>
+                        </div>
+                        <div id="formsContainer" class="row g-3">
+                            <span class="text-muted">Select an academic year above.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ TEACHERS TAB ═══ -->
+    <div class="tab-pane fade" id="tabTeachers">
+        <div class="card shadow">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-chalkboard-teacher me-2"></i>Teachers</h5>
+                <button class="btn btn-primary btn-sm" id="btnShowAddTeacher"><i class="fas fa-plus me-1"></i> Register Teacher</button>
+            </div>
+            <div class="card-body">
+                <div id="addTeacherForm" class="mb-3" style="display:none;">
+                    <div id="teacherCreatedAlert" class="alert alert-success d-none mb-2"></div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-3"><input class="form-control" id="tFirstName" placeholder="First Name *"></div>
+                        <div class="col-md-3"><input class="form-control" id="tLastName" placeholder="Last Name *"></div>
+                        <div class="col-md-2"><input class="form-control" id="tEmail" placeholder="Email"></div>
+                        <div class="col-md-2"><input class="form-control" id="tPhone" placeholder="Phone"></div>
+                        <div class="col-md-2"><input class="form-control" id="tSpec" placeholder="Specialisation"></div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success btn-sm" id="btnSaveTeacher"><i class="fas fa-check me-1"></i> Register</button>
+                        <button class="btn btn-outline-secondary btn-sm" id="btnCancelTeacher">Cancel</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover" id="teachersTable">
+                        <thead><tr><th>Name</th><th>Login Code</th><th>Specialisation</th><th>Email</th><th>Phone</th><th>Status</th></tr></thead>
+                        <tbody id="teachersBody"><tr><td colspan="6" class="text-center text-muted">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STUDENTS V2 TAB ═══ -->
+    <div class="tab-pane fade" id="tabStudentsV2">
+        <div class="card shadow">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-user-graduate me-2"></i>Enrolled Students (Ecosystem v2)</h5>
+                <button class="btn btn-primary btn-sm" id="btnShowAddStudentV2"><i class="fas fa-plus me-1"></i> Enroll Student</button>
+            </div>
+            <div class="card-body">
+                <div id="addStudentV2Form" class="mb-3" style="display:none;">
+                    <div id="studentCreatedAlert" class="alert alert-success d-none mb-2"></div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-2"><input class="form-control" id="sFirstName" placeholder="First Name *"></div>
+                        <div class="col-md-2"><input class="form-control" id="sLastName" placeholder="Last Name *"></div>
+                        <div class="col-md-2"><input class="form-control" type="date" id="sDob" placeholder="DOB"></div>
+                        <div class="col-md-1">
+                            <select class="form-select" id="sGender"><option value="">Gender</option><option value="male">M</option><option value="female">F</option></select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="sClassId"><option value="">Class *</option></select>
+                        </div>
+                        <div class="col-md-2"><input class="form-control" id="sGuardian" placeholder="Guardian Name"></div>
+                        <div class="col-md-1"><input class="form-control" id="sGuardianPhone" placeholder="Phone"></div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success btn-sm" id="btnSaveStudentV2"><i class="fas fa-check me-1"></i> Enroll</button>
+                        <button class="btn btn-outline-secondary btn-sm" id="btnCancelStudentV2">Cancel</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover" id="studentsV2Table">
+                        <thead><tr><th>Name</th><th>Student Code</th><th>Class</th><th>Gender</th><th>DOB</th><th>Guardian</th></tr></thead>
+                        <tbody id="studentsV2Body"><tr><td colspan="6" class="text-center text-muted">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SUBJECTS TAB ═══ -->
+    <div class="tab-pane fade" id="tabSubjects">
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-book me-2"></i>Subjects</h5>
+                        <button class="btn btn-primary btn-sm" id="btnShowAddSubject"><i class="fas fa-plus me-1"></i> Add Subject</button>
+                    </div>
+                    <div class="card-body">
+                        <div id="addSubjectForm" class="mb-3" style="display:none;">
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-3">
+                                    <select class="form-select" id="subjectFormSelect"><option value="">Select Form</option></select>
+                                </div>
+                                <div class="col-md-3"><input class="form-control" id="subjectName" placeholder="Subject name *"></div>
+                                <div class="col-md-2"><input class="form-control" id="subjectCode" placeholder="ZIMSEC Code"></div>
+                                <div class="col-md-2 d-flex align-items-center">
+                                    <div class="form-check"><input class="form-check-input" type="checkbox" id="subjectCompulsory"><label class="form-check-label" for="subjectCompulsory">Compulsory</label></div>
+                                </div>
+                                <div class="col-md-2 d-flex gap-1">
+                                    <button class="btn btn-success btn-sm" id="btnSaveSubject"><i class="fas fa-check"></i></button>
+                                    <button class="btn btn-outline-secondary btn-sm" id="btnCancelSubject">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="subjectsTable">
+                                <thead><tr><th>Subject</th><th>ZIMSEC Code</th><th>Form</th><th>Compulsory</th></tr></thead>
+                                <tbody id="subjectsBody"><tr><td colspan="4" class="text-center text-muted">Loading...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow border-info">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-link me-2"></i>Assign Teacher to Subject+Class</h5>
+                        <button class="btn btn-info btn-sm" id="btnShowAssign"><i class="fas fa-plus me-1"></i> Assign</button>
+                    </div>
+                    <div class="card-body">
+                        <div id="assignForm" class="mb-3" style="display:none;">
+                            <div id="assignAlert" class="alert d-none mb-2"></div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-3">
+                                    <select class="form-select" id="assignClass"><option value="">Select Class</option></select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="assignSubject"><option value="">Select Subject</option></select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="assignTeacher"><option value="">Select Teacher</option></select>
+                                </div>
+                                <div class="col-md-3 d-flex gap-1">
+                                    <button class="btn btn-success btn-sm" id="btnSaveAssign"><i class="fas fa-check me-1"></i> Assign</button>
+                                    <button class="btn btn-outline-secondary btn-sm" id="btnCancelAssign">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="classroomsTable">
+                                <thead><tr><th>Classroom</th><th>Teacher</th><th>Subject</th><th>Class</th><th>Status</th></tr></thead>
+                                <tbody id="classroomsBody"><tr><td colspan="5" class="text-center text-muted">Loading...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Students Tab (original NerdX) -->
     <div class="tab-pane fade" id="tabStudents">
 
     <div class="row">
@@ -765,6 +1150,7 @@
 {% block scripts %}
 <script>
 (function() {
+    const NERDX_PUBLIC_WEB_ORIGIN = 'https://nerdx.co.zw';
     const detailUrl = '{{ url_for("schools.api_school_detail", school_pk=school_id) }}';
     const studentsUrl = '{{ url_for("schools.api_school_students_list", school_pk=school_id) }}';
     const updateUrl = '{{ url_for("schools.api_school_update", school_pk=school_id) }}';
@@ -818,8 +1204,7 @@
                 // Slug / Dashboard URL
                 if (data.slug) {
                     document.getElementById('schoolSlugDisplay').textContent = '/' + data.slug;
-                    const prodBase = 'https://nerdx.onrender.com';
-                    const dashUrl = prodBase + '/school/' + data.slug;
+                    const dashUrl = NERDX_PUBLIC_WEB_ORIGIN + '/school/' + data.slug;
                     document.getElementById('dashboardUrlDisplay').textContent = dashUrl;
                     document.getElementById('dashboardLinkSection').style.display = 'block';
                     document.getElementById('dashboardLinkPlaceholder').style.display = 'none';
@@ -1197,6 +1582,616 @@
 
     // Load finance when tab is shown
     document.querySelector('a[href="#tabFinance"]').addEventListener('shown.bs.tab', loadFinance);
+
+    // ═══ GROUP / SUB-SCHOOLS LOGIC ═══════════════════════════════════════════════
+    const groupInfoUrl = '/admin/schools/{{ school_id }}/api/group-info';
+    const makeGroupUrl = '/admin/schools/{{ school_id }}/api/make-group';
+    const subSchoolsUrl = '/admin/schools/{{ school_id }}/api/sub-schools';
+    let groupData = null;
+    let activeSubSchoolCode = null;
+    let activeSubSchoolName = null;
+
+    function loadGroupInfo() {
+        fetch(groupInfoUrl, { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) return;
+                groupData = data;
+                if (data.is_group) {
+                    document.getElementById('groupSetupArea').style.display = 'none';
+                    document.getElementById('groupManageArea').style.display = '';
+                    renderSubSchools(data);
+                } else {
+                    document.getElementById('groupSetupArea').style.display = '';
+                    document.getElementById('groupManageArea').style.display = 'none';
+                }
+            })
+            .catch(function() {});
+    }
+
+    function renderSubSchools(data) {
+        var subs = data.sub_schools || [];
+        document.getElementById('totalSubSchoolCount').textContent = subs.length;
+        document.getElementById('groupIdDisplay').textContent = data.group_id || '—';
+
+        var totalStu = 0, totalTch = 0;
+        subs.forEach(function(s) { totalStu += (s.student_count || 0); totalTch += (s.teacher_count || 0); });
+        document.getElementById('totalGroupStudents').textContent = totalStu;
+        document.getElementById('totalGroupTeachers').textContent = totalTch;
+
+        var grid = document.getElementById('subSchoolsGrid');
+        if (subs.length === 0) {
+            grid.innerHTML = '<div class="col-12 text-center text-muted py-4"><i class="fas fa-school fa-2x mb-2 d-block"></i>No sub-schools yet. Click "Add Sub-School" to register the first branch.</div>';
+            return;
+        }
+        grid.innerHTML = subs.map(function(s) {
+            var statusBadge = s.is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Expired</span>';
+            return '<div class="col-md-4">'
+                + '<div class="card h-100 shadow-sm border-start border-4 ' + (s.is_active ? 'border-success' : 'border-danger') + '">'
+                + '<div class="card-body">'
+                + '<div class="d-flex justify-content-between align-items-start mb-2">'
+                + '<h6 class="card-title mb-0">' + escapeHtml(s.name) + '</h6>'
+                + statusBadge
+                + '</div>'
+                + '<p class="text-muted small mb-1"><i class="fas fa-id-badge me-1"></i>ID: <code>' + escapeHtml(s.school_id) + '</code></p>'
+                + (s.campus_name ? '<p class="text-muted small mb-1"><i class="fas fa-building me-1"></i>' + escapeHtml(s.campus_name) + '</p>' : '')
+                + (s.city ? '<p class="text-muted small mb-1"><i class="fas fa-map-marker-alt me-1"></i>' + escapeHtml(s.city) + (s.location ? ', ' + escapeHtml(s.location) : '') + '</p>' : '')
+                + (s.contact_person ? '<p class="text-muted small mb-1"><i class="fas fa-user me-1"></i>' + escapeHtml(s.contact_person) + '</p>' : '')
+                + '<hr class="my-2">'
+                + '<div class="d-flex justify-content-between small">'
+                + '<span><i class="fas fa-user-graduate text-success me-1"></i><strong>' + (s.student_count || 0) + '</strong> students</span>'
+                + '<span><i class="fas fa-chalkboard-teacher text-warning me-1"></i><strong>' + (s.teacher_count || 0) + '</strong> teachers</span>'
+                + '</div>'
+                + '</div>'
+                + '<div class="card-footer bg-transparent d-flex gap-2">'
+                + '<button class="btn btn-primary btn-sm flex-fill btn-view-sub" data-code="' + escapeHtml(s.school_id) + '" data-name="' + escapeHtml(s.name) + '"><i class="fas fa-eye me-1"></i> View & Manage</button>'
+                + '</div>'
+                + '</div></div>';
+        }).join('');
+
+        grid.querySelectorAll('.btn-view-sub').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var code = this.getAttribute('data-code');
+                var name = this.getAttribute('data-name');
+                selectSubSchool(code, name);
+            });
+        });
+    }
+
+    function selectSubSchool(code, name) {
+        activeSubSchoolCode = code;
+        activeSubSchoolName = name;
+        document.getElementById('contextSchoolName').textContent = name;
+        document.getElementById('contextSchoolCode').textContent = code;
+        document.getElementById('subSchoolContextBar').style.display = '';
+        document.getElementById('subSchoolContextBar').style.cssText = '';
+        ecoData = null;
+        loadEcosystem();
+        var tabEl = document.querySelector('a[href="#tabStructure"]');
+        if (tabEl) new bootstrap.Tab(tabEl).show();
+    }
+
+    function clearSubSchoolContext() {
+        activeSubSchoolCode = null;
+        activeSubSchoolName = null;
+        document.getElementById('subSchoolContextBar').style.display = 'none !important';
+        document.getElementById('subSchoolContextBar').style.cssText = 'display:none !important;';
+        ecoData = null;
+    }
+
+    document.getElementById('btnClearContext').addEventListener('click', function() {
+        clearSubSchoolContext();
+        var tabEl = document.querySelector('a[href="#tabSubSchools"]');
+        if (tabEl) new bootstrap.Tab(tabEl).show();
+    });
+
+    document.getElementById('btnMakeGroup').addEventListener('click', function() {
+        if (!confirm('Enable Group School management for this school? This will allow you to add and manage sub-schools (branches).')) return;
+        this.disabled = true;
+        var self = this;
+        fetch(makeGroupUrl, { method: 'POST', headers: {'Content-Type':'application/json'}, credentials: 'same-origin', body: '{}' })
+            .then(r => r.json())
+            .then(data => {
+                self.disabled = false;
+                if (data.success || data.group_school) { loadGroupInfo(); }
+                else { alert(data.error || 'Failed'); }
+            }).catch(function() { self.disabled = false; });
+    });
+
+    document.getElementById('btnShowAddSubSchool').addEventListener('click', function() {
+        document.getElementById('addSubSchoolForm').style.display = '';
+        document.getElementById('subSchoolAlert').classList.add('d-none');
+    });
+    document.getElementById('btnCancelSubSchool').addEventListener('click', function() {
+        document.getElementById('addSubSchoolForm').style.display = 'none';
+    });
+
+    document.getElementById('btnSaveSubSchool').addEventListener('click', function() {
+        var name = document.getElementById('ssName').value.trim();
+        if (!name) { alert('School name is required.'); return; }
+        this.disabled = true;
+        var self = this;
+        var alertEl = document.getElementById('subSchoolAlert');
+        fetch(subSchoolsUrl, { method: 'POST', headers: {'Content-Type':'application/json'}, credentials: 'same-origin', body: JSON.stringify({
+            name: name,
+            campus_name: document.getElementById('ssCampus').value.trim() || undefined,
+            city: document.getElementById('ssCity').value.trim() || undefined,
+            location: document.getElementById('ssLocation').value.trim() || undefined,
+            contact_person: document.getElementById('ssContact').value.trim() || undefined,
+            phone: document.getElementById('ssPhone').value.trim() || undefined,
+            email: document.getElementById('ssEmail').value.trim() || undefined,
+        }) })
+            .then(r => r.json())
+            .then(data => {
+                self.disabled = false;
+                if (data.success) {
+                    alertEl.className = 'alert alert-success mb-3';
+                    alertEl.innerHTML = '<i class="fas fa-check-circle me-1"></i> Sub-school <strong>' + escapeHtml(name) + '</strong> created! School ID: <code>' + escapeHtml(data.school_id || '') + '</code>';
+                    alertEl.classList.remove('d-none');
+                    document.getElementById('ssName').value = '';
+                    document.getElementById('ssCampus').value = '';
+                    document.getElementById('ssCity').value = '';
+                    document.getElementById('ssLocation').value = '';
+                    document.getElementById('ssContact').value = '';
+                    document.getElementById('ssPhone').value = '';
+                    document.getElementById('ssEmail').value = '';
+                    loadGroupInfo();
+                } else {
+                    alertEl.className = 'alert alert-danger mb-3';
+                    alertEl.textContent = data.error || 'Failed to create sub-school';
+                    alertEl.classList.remove('d-none');
+                }
+            }).catch(function() { self.disabled = false; });
+    });
+
+    document.querySelector('a[href="#tabSubSchools"]').addEventListener('shown.bs.tab', function() {
+        if (!groupData) loadGroupInfo();
+    });
+
+    loadGroupInfo();
+
+    // ═══ ECOSYSTEM TAB LOGIC ═══════════════════════════════════════════════════
+    const baseEcoUrl = '/admin/schools/{{ school_id }}/api/ecosystem';
+    let ecoData = null;
+    let selectedYearId = null;
+
+    function getEcoUrl(path) {
+        var base = baseEcoUrl + (path || '');
+        if (activeSubSchoolCode) {
+            base += (base.includes('?') ? '&' : '?') + 'code=' + encodeURIComponent(activeSubSchoolCode);
+        }
+        return base;
+    }
+
+    function loadEcosystem() {
+        fetch(getEcoUrl(''), { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) { console.error(data.error); return; }
+                ecoData = data;
+                renderYears();
+                renderTeachers();
+                renderStudentsV2();
+                renderSubjects();
+                renderClassrooms();
+                populateFormSelects();
+                populateClassSelect();
+                populateAssignSelects();
+            })
+            .catch(e => console.error('Ecosystem load error:', e));
+    }
+
+    function renderYears() {
+        const c = document.getElementById('yearsContainer');
+        if (!ecoData || !ecoData.academic_years || ecoData.academic_years.length === 0) {
+            c.innerHTML = '<span class="text-muted">No academic years. Add one to get started.</span>';
+            return;
+        }
+        const activeYear = ecoData.academic_years.find(y => y.is_active);
+        if (!selectedYearId && activeYear) selectedYearId = activeYear.id;
+        c.innerHTML = ecoData.academic_years.map(y => {
+            const isActive = y.id === selectedYearId;
+            return '<button class="btn btn-sm ' + (isActive ? 'btn-primary' : 'btn-outline-primary') + ' eco-year-btn" data-id="' + y.id + '">'
+                + escapeHtml(y.year_label) + (y.is_active ? ' <span class="badge bg-success ms-1">Active</span>' : '')
+                + '</button>';
+        }).join('');
+        c.querySelectorAll('.eco-year-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                selectedYearId = parseInt(this.getAttribute('data-id'));
+                renderYears();
+                renderForms();
+            });
+        });
+        renderForms();
+    }
+
+    function renderForms() {
+        const c = document.getElementById('formsContainer');
+        if (!ecoData || !selectedYearId) { c.innerHTML = '<span class="text-muted">Select an academic year above.</span>'; return; }
+        const forms = (ecoData.forms || []).filter(f => f.academic_year_id === selectedYearId);
+        if (forms.length === 0) { c.innerHTML = '<span class="text-muted">No forms for this year. Click "Add Form" to create one.</span>'; return; }
+        c.innerHTML = forms.map(function(f) {
+            const fClasses = (ecoData.classes || []).filter(cl => cl.form_id === f.id);
+            const classChips = fClasses.map(cl =>
+                '<span class="badge bg-secondary me-1 mb-1">' + escapeHtml(cl.class_name) + ' <small class="opacity-75">(cap:' + (cl.capacity || 40) + ')</small></span>'
+            ).join('') || '<span class="text-muted small">No classes</span>';
+            return '<div class="col-md-4"><div class="card h-100 border-primary">'
+                + '<div class="card-body">'
+                + '<h6 class="card-title"><i class="fas fa-layer-group me-1 text-primary"></i> Form ' + f.form_number + '</h6>'
+                + '<div class="mb-2">' + classChips + '</div>'
+                + '<small class="text-muted">' + fClasses.length + ' class(es)</small>'
+                + '</div></div></div>';
+        }).join('');
+    }
+
+    function renderTeachers() {
+        const tbody = document.getElementById('teachersBody');
+        if (!ecoData || !ecoData.teachers || ecoData.teachers.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No teachers registered yet.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = ecoData.teachers.map(function(t) {
+            return '<tr>'
+                + '<td><strong>' + escapeHtml(t.first_name + ' ' + t.last_name) + '</strong></td>'
+                + '<td><code class="text-info">' + escapeHtml(t.login_code || '') + '</code></td>'
+                + '<td>' + escapeHtml(t.specialisation || '\u2014') + '</td>'
+                + '<td>' + escapeHtml(t.email || '\u2014') + '</td>'
+                + '<td>' + escapeHtml(t.phone || '\u2014') + '</td>'
+                + '<td><span class="badge bg-' + (t.status === 'active' ? 'success' : 'secondary') + '">' + escapeHtml(t.status || 'active') + '</span></td>'
+                + '</tr>';
+        }).join('');
+    }
+
+    function renderStudentsV2() {
+        const tbody = document.getElementById('studentsV2Body');
+        if (!ecoData || !ecoData.students || ecoData.students.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No students enrolled yet.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = ecoData.students.map(function(s) {
+            const cls = (ecoData.classes || []).find(c => c.id === s.class_id);
+            const frm = cls ? (ecoData.forms || []).find(f => f.id === cls.form_id) : null;
+            const className = (frm ? 'Form ' + frm.form_number + ' ' : '') + (cls ? cls.class_name : '\u2014');
+            return '<tr>'
+                + '<td><strong>' + escapeHtml(s.first_name + ' ' + s.last_name) + '</strong></td>'
+                + '<td><code class="text-info">' + escapeHtml(s.student_code || '') + '</code></td>'
+                + '<td>' + escapeHtml(className) + '</td>'
+                + '<td>' + escapeHtml(s.gender || '\u2014') + '</td>'
+                + '<td>' + escapeHtml(s.date_of_birth || '\u2014') + '</td>'
+                + '<td>' + escapeHtml(s.guardian_name || '\u2014') + '</td>'
+                + '</tr>';
+        }).join('');
+    }
+
+    function renderSubjects() {
+        const tbody = document.getElementById('subjectsBody');
+        if (!ecoData || !ecoData.subjects || ecoData.subjects.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No subjects created yet.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = ecoData.subjects.map(function(s) {
+            const frm = s.form_id ? (ecoData.forms || []).find(f => f.id === s.form_id) : null;
+            return '<tr>'
+                + '<td><strong>' + escapeHtml(s.name) + '</strong></td>'
+                + '<td>' + escapeHtml(s.zimsec_code || '\u2014') + '</td>'
+                + '<td>' + (frm ? 'Form ' + frm.form_number : '\u2014') + '</td>'
+                + '<td>' + (s.is_compulsory ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>') + '</td>'
+                + '</tr>';
+        }).join('');
+    }
+
+    function renderClassrooms() {
+        const tbody = document.getElementById('classroomsBody');
+        if (!ecoData || !ecoData.classrooms || ecoData.classrooms.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No classrooms assigned yet. Assign a teacher to a subject+class above.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = ecoData.classrooms.map(function(cr) {
+            const cs = (ecoData.class_subjects || []).find(x => x.id === cr.class_subject_id);
+            const teacher = cs ? (ecoData.teachers || []).find(t => t.id === cs.teacher_id) : null;
+            const subject = cs ? (ecoData.subjects || []).find(s => s.id === cs.subject_id) : null;
+            const cls = cs ? (ecoData.classes || []).find(c => c.id === cs.class_id) : null;
+            const frm = cls ? (ecoData.forms || []).find(f => f.id === cls.form_id) : null;
+            return '<tr>'
+                + '<td><strong>' + escapeHtml(cr.name || 'Classroom') + '</strong></td>'
+                + '<td>' + (teacher ? escapeHtml(teacher.first_name + ' ' + teacher.last_name) : '\u2014') + '</td>'
+                + '<td>' + (subject ? escapeHtml(subject.name) : '\u2014') + '</td>'
+                + '<td>' + (frm ? 'Form ' + frm.form_number + ' ' : '') + (cls ? escapeHtml(cls.class_name) : '\u2014') + '</td>'
+                + '<td>' + (cr.is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>') + '</td>'
+                + '</tr>';
+        }).join('');
+    }
+
+    function populateFormSelects() {
+        if (!ecoData) return;
+        const forms = (ecoData.forms || []).filter(f => !selectedYearId || f.academic_year_id === selectedYearId);
+        var opts = '<option value="">Select Form</option>' + forms.map(f => '<option value="' + f.id + '">Form ' + f.form_number + '</option>').join('');
+        ['classFormSelect', 'subjectFormSelect'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.innerHTML = opts;
+        });
+    }
+
+    function populateClassSelect() {
+        if (!ecoData) return;
+        var opts = '<option value="">Class *</option>';
+        (ecoData.classes || []).forEach(function(c) {
+            var frm = (ecoData.forms || []).find(f => f.id === c.form_id);
+            opts += '<option value="' + c.id + '">' + (frm ? 'Form ' + frm.form_number + ' — ' : '') + escapeHtml(c.class_name) + '</option>';
+        });
+        var el = document.getElementById('sClassId');
+        if (el) el.innerHTML = opts;
+    }
+
+    function populateAssignSelects() {
+        if (!ecoData) return;
+        var classOpts = '<option value="">Select Class</option>';
+        (ecoData.classes || []).forEach(function(c) {
+            var frm = (ecoData.forms || []).find(f => f.id === c.form_id);
+            classOpts += '<option value="' + c.id + '">' + (frm ? 'Form ' + frm.form_number + ' — ' : '') + escapeHtml(c.class_name) + '</option>';
+        });
+        document.getElementById('assignClass').innerHTML = classOpts;
+
+        var subOpts = '<option value="">Select Subject</option>';
+        (ecoData.subjects || []).forEach(function(s) {
+            var frm = s.form_id ? (ecoData.forms || []).find(f => f.id === s.form_id) : null;
+            subOpts += '<option value="' + s.id + '">' + escapeHtml(s.name) + (frm ? ' (Form ' + frm.form_number + ')' : '') + '</option>';
+        });
+        document.getElementById('assignSubject').innerHTML = subOpts;
+
+        var tOpts = '<option value="">Select Teacher</option>';
+        (ecoData.teachers || []).forEach(function(t) {
+            tOpts += '<option value="' + t.id + '">' + escapeHtml(t.first_name + ' ' + t.last_name) + '</option>';
+        });
+        document.getElementById('assignTeacher').innerHTML = tOpts;
+    }
+
+    // ── Show/Hide forms ──
+    document.getElementById('btnShowAddYear').addEventListener('click', function() { document.getElementById('addYearForm').style.display = ''; });
+    document.getElementById('btnCancelYear').addEventListener('click', function() { document.getElementById('addYearForm').style.display = 'none'; });
+    document.getElementById('btnShowAddForm').addEventListener('click', function() { document.getElementById('addFormArea').style.display = ''; });
+    document.getElementById('btnCancelForm').addEventListener('click', function() { document.getElementById('addFormArea').style.display = 'none'; });
+    document.getElementById('btnShowAddClass').addEventListener('click', function() { document.getElementById('addClassArea').style.display = ''; });
+    document.getElementById('btnCancelClass').addEventListener('click', function() { document.getElementById('addClassArea').style.display = 'none'; });
+    document.getElementById('btnShowAddTeacher').addEventListener('click', function() {
+        document.getElementById('addTeacherForm').style.display = '';
+        document.getElementById('teacherCreatedAlert').classList.add('d-none');
+    });
+    document.getElementById('btnCancelTeacher').addEventListener('click', function() { document.getElementById('addTeacherForm').style.display = 'none'; });
+    document.getElementById('btnShowAddStudentV2').addEventListener('click', function() {
+        document.getElementById('addStudentV2Form').style.display = '';
+        document.getElementById('studentCreatedAlert').classList.add('d-none');
+        populateClassSelect();
+    });
+    document.getElementById('btnCancelStudentV2').addEventListener('click', function() { document.getElementById('addStudentV2Form').style.display = 'none'; });
+    document.getElementById('btnShowAddSubject').addEventListener('click', function() { document.getElementById('addSubjectForm').style.display = ''; populateFormSelects(); });
+    document.getElementById('btnCancelSubject').addEventListener('click', function() { document.getElementById('addSubjectForm').style.display = 'none'; });
+    document.getElementById('btnShowAssign').addEventListener('click', function() { document.getElementById('assignForm').style.display = ''; populateAssignSelects(); });
+    document.getElementById('btnCancelAssign').addEventListener('click', function() { document.getElementById('assignForm').style.display = 'none'; });
+
+    // ── Save Academic Year ──
+    document.getElementById('btnSaveYear').addEventListener('click', function() {
+        var label = document.getElementById('newYearLabel').value.trim();
+        if (!label) return;
+        this.disabled = true;
+        var self = this;
+        fetch(getEcoUrl('/academic-years'), { method: 'POST', headers: {'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({ year_label: label }) })
+            .then(r => r.json())
+            .then(data => {
+                self.disabled = false;
+                if (data.success && data.academic_year) {
+                    if (!ecoData.academic_years) ecoData.academic_years = [];
+                    ecoData.academic_years.push(data.academic_year);
+                    selectedYearId = data.academic_year.id;
+                    renderYears();
+                    document.getElementById('newYearLabel').value = '';
+                    document.getElementById('addYearForm').style.display = 'none';
+                } else { alert(data.error || 'Failed'); }
+            }).catch(function() { self.disabled = false; });
+    });
+
+    // ── Save Form ──
+    document.getElementById('btnSaveForm').addEventListener('click', function() {
+        if (!selectedYearId) { alert('Select an academic year first.'); return; }
+        var num = parseInt(document.getElementById('newFormNumber').value);
+        this.disabled = true;
+        var self = this;
+        fetch(getEcoUrl('/forms'), { method: 'POST', headers: {'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({ form_number: num, academic_year_id: selectedYearId }) })
+            .then(r => r.json())
+            .then(data => {
+                self.disabled = false;
+                if (data.success && data.form) {
+                    if (!ecoData.forms) ecoData.forms = [];
+                    ecoData.forms.push(data.form);
+                    renderForms();
+                    populateFormSelects();
+                    document.getElementById('addFormArea').style.display = 'none';
+                } else { alert(data.error || 'Failed'); }
+            }).catch(function() { self.disabled = false; });
+    });
+
+    // ── Save Class ──
+    document.getElementById('btnSaveClass').addEventListener('click', function() {
+        var formId = parseInt(document.getElementById('classFormSelect').value);
+        var name = document.getElementById('newClassName').value.trim();
+        if (!formId || !name) { alert('Select a form and enter class name.'); return; }
+        this.disabled = true;
+        var self = this;
+        fetch(getEcoUrl('/classes'), { method: 'POST', headers: {'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({ form_id: formId, class_name: name }) })
+            .then(r => r.json())
+            .then(data => {
+                self.disabled = false;
+                if (data.success && data.school_class) {
+                    if (!ecoData.classes) ecoData.classes = [];
+                    ecoData.classes.push(data.school_class);
+                    renderForms();
+                    populateClassSelect();
+                    populateAssignSelects();
+                    document.getElementById('newClassName').value = '';
+                    document.getElementById('addClassArea').style.display = 'none';
+                } else { alert(data.error || 'Failed'); }
+            }).catch(function() { self.disabled = false; });
+    });
+
+    // ── Save Teacher ──
+    document.getElementById('btnSaveTeacher').addEventListener('click', function() {
+        var fn = document.getElementById('tFirstName').value.trim();
+        var ln = document.getElementById('tLastName').value.trim();
+        if (!fn || !ln) { alert('First and Last name required.'); return; }
+        this.disabled = true;
+        var self = this;
+        fetch(getEcoUrl('/teachers'), { method: 'POST', headers: {'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({
+            first_name: fn, last_name: ln,
+            email: document.getElementById('tEmail').value.trim() || undefined,
+            phone: document.getElementById('tPhone').value.trim() || undefined,
+            specialisation: document.getElementById('tSpec').value.trim() || undefined
+        }) })
+            .then(r => r.json())
+            .then(data => {
+                self.disabled = false;
+                if (data.success && data.teacher) {
+                    if (!ecoData.teachers) ecoData.teachers = [];
+                    ecoData.teachers.push(data.teacher);
+                    renderTeachers();
+                    populateAssignSelects();
+                    var tAlert = document.getElementById('teacherCreatedAlert');
+                    tAlert.innerHTML = '<i class="fas fa-check-circle me-1"></i> Teacher registered! Login Code: <strong>' + escapeHtml(data.teacher.login_code) + '</strong>';
+                    tAlert.classList.remove('d-none');
+                    document.getElementById('tFirstName').value = '';
+                    document.getElementById('tLastName').value = '';
+                    document.getElementById('tEmail').value = '';
+                    document.getElementById('tPhone').value = '';
+                    document.getElementById('tSpec').value = '';
+                } else { alert(data.error || 'Failed'); }
+            }).catch(function() { self.disabled = false; });
+    });
+
+    // ── Save Student V2 ──
+    document.getElementById('btnSaveStudentV2').addEventListener('click', function() {
+        var fn = document.getElementById('sFirstName').value.trim();
+        var ln = document.getElementById('sLastName').value.trim();
+        var classId = parseInt(document.getElementById('sClassId').value);
+        if (!fn || !ln || !classId) { alert('First name, Last name, and Class are required.'); return; }
+        this.disabled = true;
+        var self = this;
+        fetch(getEcoUrl('/students-v2'), { method: 'POST', headers: {'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({
+            first_name: fn, last_name: ln, class_id: classId,
+            date_of_birth: document.getElementById('sDob').value || undefined,
+            gender: document.getElementById('sGender').value || undefined,
+            guardian_name: document.getElementById('sGuardian').value.trim() || undefined,
+            guardian_phone: document.getElementById('sGuardianPhone').value.trim() || undefined
+        }) })
+            .then(r => r.json())
+            .then(data => {
+                self.disabled = false;
+                if (data.success && data.student) {
+                    if (!ecoData.students) ecoData.students = [];
+                    ecoData.students.push(data.student);
+                    renderStudentsV2();
+                    var alertEl = document.getElementById('studentCreatedAlert');
+                    alertEl.innerHTML = '<i class="fas fa-check-circle me-1"></i> Student enrolled! Student Code: <strong>' + escapeHtml(data.student.student_code) + '</strong>';
+                    alertEl.classList.remove('d-none');
+                    document.getElementById('sFirstName').value = '';
+                    document.getElementById('sLastName').value = '';
+                    document.getElementById('sDob').value = '';
+                    document.getElementById('sGender').value = '';
+                    document.getElementById('sGuardian').value = '';
+                    document.getElementById('sGuardianPhone').value = '';
+                } else { alert(data.error || 'Failed'); }
+            }).catch(function() { self.disabled = false; });
+    });
+
+    // ── Save Subject ──
+    document.getElementById('btnSaveSubject').addEventListener('click', function() {
+        var name = document.getElementById('subjectName').value.trim();
+        var formId = parseInt(document.getElementById('subjectFormSelect').value);
+        if (!name) { alert('Subject name is required.'); return; }
+        this.disabled = true;
+        var self = this;
+        fetch(getEcoUrl('/subjects'), { method: 'POST', headers: {'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({
+            name: name, form_id: formId || undefined,
+            zimsec_code: document.getElementById('subjectCode').value.trim() || undefined,
+            is_compulsory: document.getElementById('subjectCompulsory').checked
+        }) })
+            .then(r => r.json())
+            .then(data => {
+                self.disabled = false;
+                if (data.success && data.subject) {
+                    if (!ecoData.subjects) ecoData.subjects = [];
+                    ecoData.subjects.push(data.subject);
+                    renderSubjects();
+                    populateAssignSelects();
+                    document.getElementById('subjectName').value = '';
+                    document.getElementById('subjectCode').value = '';
+                    document.getElementById('subjectCompulsory').checked = false;
+                    document.getElementById('addSubjectForm').style.display = 'none';
+                } else { alert(data.error || 'Failed'); }
+            }).catch(function() { self.disabled = false; });
+    });
+
+    // ── Assign Teacher ──
+    document.getElementById('btnSaveAssign').addEventListener('click', function() {
+        var classId = parseInt(document.getElementById('assignClass').value);
+        var subjectId = parseInt(document.getElementById('assignSubject').value);
+        var teacherId = parseInt(document.getElementById('assignTeacher').value);
+        if (!classId || !subjectId || !teacherId) { alert('All three fields are required.'); return; }
+        this.disabled = true;
+        var self = this;
+        fetch(getEcoUrl('/assign-teacher'), { method: 'POST', headers: {'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({
+            class_id: classId, subject_id: subjectId, teacher_id: teacherId, academic_year_id: selectedYearId
+        }) })
+            .then(r => r.json())
+            .then(data => {
+                self.disabled = false;
+                var alertEl = document.getElementById('assignAlert');
+                if (data.success) {
+                    alertEl.className = 'alert alert-success mb-2';
+                    alertEl.innerHTML = '<i class="fas fa-check-circle me-1"></i> Assigned! Classroom: <strong>' + escapeHtml(data.classroom_name || '') + '</strong>';
+                    alertEl.classList.remove('d-none');
+                    loadEcosystem();
+                } else {
+                    alertEl.className = 'alert alert-danger mb-2';
+                    alertEl.innerHTML = data.error || 'Failed';
+                    alertEl.classList.remove('d-none');
+                }
+            }).catch(function() { self.disabled = false; });
+    });
+
+    // Load ecosystem when any ecosystem tab is shown
+    ['#tabStructure', '#tabTeachers', '#tabStudentsV2', '#tabSubjects'].forEach(function(tab) {
+        var tabLink = document.querySelector('a[href="' + tab + '"]');
+        if (tabLink) {
+            tabLink.addEventListener('shown.bs.tab', function() { if (!ecoData) loadEcosystem(); });
+        }
+    });
+
+    // "Manage" link switches to Structure tab
+    document.getElementById('ecoGoToStructure').addEventListener('click', function(e) {
+        e.preventDefault();
+        var tabEl = document.querySelector('a[href="#tabStructure"]');
+        if (tabEl) new bootstrap.Tab(tabEl).show();
+    });
+
+    // Load ecosystem overview stats for the Overview tab
+    function loadEcoOverview() {
+        fetch(getEcoUrl(''), { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) return;
+                ecoData = data;
+                document.getElementById('ecoFormCount').textContent = (data.forms || []).length;
+                document.getElementById('ecoClassCount').textContent = (data.classes || []).length;
+                document.getElementById('ecoTeacherCount').textContent = (data.teachers || []).length;
+                document.getElementById('ecoStudentCount').textContent = (data.students || []).length;
+                document.getElementById('ecoSubjectCount').textContent = (data.subjects || []).length;
+                document.getElementById('ecoClassroomCount').textContent = (data.classrooms || []).length;
+                document.getElementById('ecoSchoolCode').textContent = data.school_code || '';
+                document.getElementById('ecoTeacherLoginUrl').textContent = NERDX_PUBLIC_WEB_ORIGIN + '/school/' + (data.school_code || '') + '/teacher-login';
+                document.getElementById('ecoQuickStats').style.display = '';
+            })
+            .catch(function() {});
+    }
+    loadEcoOverview();
 
     loadSchool();
 })();

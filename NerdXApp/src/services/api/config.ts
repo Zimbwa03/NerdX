@@ -9,7 +9,7 @@ import { logger } from '../../utils/logger';
 // For development: use localhost (Android emulator uses 10.0.2.2 to access host machine's localhost)
 // For production: use your deployed backend URL on Render
 // NOTE: Changed to always use Render server for testing NerdX Live feature
-export const API_BASE_URL = 'https://nerdx.onrender.com';
+export const API_BASE_URL = 'https://nerdx.co.zw';
 
 logger.info(`API Base URL: ${API_BASE_URL}`);
 logger.debug(`Platform: ${Platform.OS}, Dev Mode: ${__DEV__}`);

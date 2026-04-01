@@ -27,7 +27,7 @@ const DEFAULT_AGENT: Omit<CustomAgent, 'id'> = {
   prompt: 'Act as my tutor. Ask me 2 questions to assess my level, then teach step-by-step with short quizzes.',
   sendMode: 'prefill',
   iconKey: 'Sparkles',
-  gradientFrom: '#7C4DFF',
+  gradientFrom: '#10B981',
   gradientTo: '#00E676',
   createdAt: new Date(0).toISOString(),
   updatedAt: new Date(0).toISOString(),

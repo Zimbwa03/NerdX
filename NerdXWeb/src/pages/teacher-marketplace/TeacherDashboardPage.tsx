@@ -823,8 +823,8 @@ export function TeacherDashboardPage() {
                     </div>
                   </div>
                   <div className="td-v2-stat-card">
-                    <div className="td-v2-stat-card__icon" style={{ background: 'rgba(124, 77, 255, 0.15)' }}>
-                      <TrendingUp size={20} style={{ color: '#7C4DFF' }} />
+                    <div className="td-v2-stat-card__icon" style={{ background: 'rgba(16, 185, 129, 0.15)' }}>
+                      <TrendingUp size={20} style={{ color: '#10B981' }} />
                     </div>
                     <div className="td-v2-stat-card__info">
                       <span className="td-v2-stat-card__value">${earningsData.summary.total_earned.toFixed(2)}</span>
@@ -833,7 +833,7 @@ export function TeacherDashboardPage() {
                   </div>
                   <div className="td-v2-stat-card">
                     <div className="td-v2-stat-card__icon" style={{ background: 'rgba(99, 102, 241, 0.15)' }}>
-                      <CheckCircle size={20} style={{ color: '#6366F1' }} />
+                      <CheckCircle size={20} style={{ color: '#10B981' }} />
                     </div>
                     <div className="td-v2-stat-card__info">
                       <span className="td-v2-stat-card__value">${earningsData.summary.total_paid.toFixed(2)}</span>
@@ -845,7 +845,7 @@ export function TeacherDashboardPage() {
                 {/* Rate info */}
                 <div style={{
                   padding: '14px 18px', borderRadius: '10px', marginBottom: '20px',
-                  background: 'rgba(124, 77, 255, 0.08)', border: '1px solid rgba(124, 77, 255, 0.15)',
+                  background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.15)',
                   display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '13px', color: 'rgba(255,255,255,0.7)'
                 }}>
                   <span>Lesson fee: <b>${earningsData.lesson_fee.toFixed(2)}</b></span>
@@ -907,7 +907,7 @@ export function TeacherDashboardPage() {
                                 e.status === 'available' ? 'rgba(99, 102, 241, 0.15)' :
                                 e.status === 'cancelled' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
                               color: e.status === 'paid' ? '#10B981' :
-                                e.status === 'available' ? '#6366F1' :
+                                e.status === 'available' ? '#10B981' :
                                 e.status === 'cancelled' ? '#EF4444' : '#F59E0B',
                               fontWeight: 600, textTransform: 'capitalize'
                             }}>

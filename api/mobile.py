@@ -68,7 +68,7 @@ from services.engagement_notification_service import engagement_notification_ser
 from services.history_generator import generate_question as history_generate_question
 from services.history_marking_service import mark_history_essay
 from services.lesson_payment_service import lesson_payment_service
-from utils.url_utils import convert_local_path_to_public_url
+from utils.url_utils import convert_local_path_to_public_url, get_api_public_base_url, get_public_web_origin
 from utils.credit_units import format_credits, units_to_credits, credits_to_units
 from utils.question_cache import QuestionCacheService
 from utils.latex_converter import LaTeXConverter
@@ -2881,8 +2881,10 @@ def generate_question():
             except Exception as e:
                 logger.warning(f"Spacing normalization in quiz payload failed (non-blocking): {e}")
         
-        # Include structured payload for the app (so it can render parts and resubmit for marking)
-        if subject == 'combined_science' and question_type_mobile == 'structured':
+        # Include structured payload for the app (so it can render parts and resubmit for marking).
+        # Standalone O-Level biology/chemistry/physics use the same generator as combined_science
+        # but previously omitted structured_question, which broke the web quiz UI.
+        if subject in ('combined_science', 'biology', 'chemistry', 'physics') and question_type_mobile == 'structured':
             question['structured_question'] = {
                 'question_type': 'structured',
                 'subject': question_data.get('subject', ''),
@@ -5088,7 +5090,7 @@ def get_user_referral_share():
             return jsonify({'success': False, 'message': 'Could not generate share info'}), 500
 
         referral_code = share_info.get('referral_code', '')
-        web_link = f"https://nerdx.onrender.com/register?ref={referral_code}"
+        web_link = f"{get_public_web_origin()}/register?ref={referral_code}"
 
         return jsonify({
             'success': True,
@@ -5480,8 +5482,8 @@ def generate_math_graph():
         if not graph_url:
             import os
             filename = os.path.basename(graph_path)
-            base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
-            graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
+            base_url = get_api_public_base_url()
+            graph_url = f"{base_url}/static/graphs/{filename}"
         
         credits_remaining = _deduct_credits_or_fail(
             g.current_user_id,
@@ -5519,8 +5521,8 @@ def _generate_graph_and_return(function_text: str):
     if not graph_url:
         import os
         filename = os.path.basename(graph_path)
-        base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
-        graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
+        base_url = get_api_public_base_url()
+        graph_url = f"{base_url}/static/graphs/{filename}"
     credits_remaining = _deduct_credits_or_fail(
         g.current_user_id, int(credit_cost), 'math_graph_practice', 'Math graph generation'
     )
@@ -5559,8 +5561,8 @@ def generate_math_graph_custom():
         if not graph_url:
             import os
             filename = os.path.basename(graph_path)
-            base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
-            graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
+            base_url = get_api_public_base_url()
+            graph_url = f"{base_url}/static/graphs/{filename}"
         credits_remaining = _deduct_credits_or_fail(
             g.current_user_id, int(credit_cost), 'math_graph_practice', 'Math graph (custom equation)'
         )
@@ -5653,8 +5655,8 @@ def generate_math_graph_generate():
         if not graph_url:
             import os
             filename = os.path.basename(graph_path)
-            base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
-            graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
+            base_url = get_api_public_base_url()
+            graph_url = f"{base_url}/static/graphs/{filename}"
         credits_remaining = _deduct_credits_or_fail(
             g.current_user_id, int(credit_cost), 'math_graph_practice', 'Math graph generation'
         )
@@ -5829,8 +5831,8 @@ def generate_linear_programming_graph():
         if not graph_url:
             import os
             filename = os.path.basename(graph_path)
-            base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://nerdx.onrender.com')
-            graph_url = f"{base_url.rstrip('/')}/static/graphs/{filename}"
+            base_url = get_api_public_base_url()
+            graph_url = f"{base_url}/static/graphs/{filename}"
         credits_remaining = _deduct_credits_or_fail(
             g.current_user_id, int(credit_cost), 'math_graph_practice', 'Linear programming graph'
         )
@@ -6602,6 +6604,7 @@ def voice_speak():
     try:
         data = request.get_json() or {}
         text = (data.get('text') or '').strip()
+        voice = (data.get('voice') or 'teacher').strip() or 'teacher'
         if not text:
             return jsonify({'success': False, 'message': 'Text is required'}), 400
         voice_svc = get_voice_service()
@@ -6609,14 +6612,20 @@ def voice_speak():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            result = loop.run_until_complete(voice_svc.text_to_speech(text))
+            result = loop.run_until_complete(voice_svc.text_to_speech(text, voice=voice))
         finally:
             loop.close()
         if result.get('error') or not result.get('audio_path'):
             return jsonify({'success': False, 'message': result.get('error', 'TTS failed')}), 500
         rel_path = result.get('audio_path', '').replace('\\', '/')
         audio_url = ('/static/' + rel_path) if rel_path else ''
-        return jsonify({'success': True, 'audio_url': audio_url}), 200
+        return jsonify({
+            'success': True,
+            'audio_url': audio_url,
+            'provider': result.get('provider'),
+            'model': result.get('model'),
+            'voice': result.get('voice'),
+        }), 200
     except Exception as e:
         logger.error(f"Voice speak error: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -7397,6 +7406,48 @@ def exam_review(session_id):
 # TEACHER MODE ENDPOINTS (Multi-Subject Chatbot - Math, Science, etc.)
 # ============================================================================
 
+def _teacher_mode_vertex_then_gemini(system_prompt: str, full_user_prompt: str, max_tokens: int = 1500) -> str:
+    """Vertex AI (Gemini) first; optional Google AI Gemini API if Vertex fails or returns empty."""
+    import os
+    from services.vertex_service import vertex_service
+
+    model = os.environ.get("VERTEX_GEMINI_TEXT_MODEL", "gemini-2.5-flash")
+    full_prompt = f"{system_prompt}\n\nConversation:\n{full_user_prompt}"
+    try:
+        if vertex_service.is_available():
+            result = vertex_service.generate_text(
+                full_prompt,
+                model=model,
+                max_output_tokens=max_tokens,
+                temperature=0.7,
+            )
+            if result and result.get("success") and (result.get("text") or "").strip():
+                return result["text"].strip()
+    except Exception as e:
+        logger.warning("Teacher mode Vertex AI error (will try Gemini API if configured): %s", e)
+
+    try:
+        import google.generativeai as genai
+        key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
+        if not key:
+            return (
+                "I apologize, but I'm having trouble processing your question right now. "
+                "Please try again in a moment."
+            )
+        genai.configure(api_key=key)
+        model_g = genai.GenerativeModel("gemini-1.5-flash")
+        response = model_g.generate_content(full_prompt)
+        text = (getattr(response, "text", None) or "").strip()
+        if text:
+            return text
+    except Exception as e:
+        logger.error("Teacher mode Gemini API fallback error: %s", e)
+    return (
+        "I apologize, but I'm having trouble processing your question right now. "
+        "Please try again in a moment."
+    )
+
+
 @mobile_bp.route('/teacher/start', methods=['POST'])
 @require_auth
 def start_teacher_mode():
@@ -7575,30 +7626,7 @@ Guidelines:
         user_turn = f"User: {message}"
         full_user_prompt = f"{conv_block}\n{user_turn}\n\nRespond as the tutor:".strip() if conv_block else f"{user_turn}\n\nRespond as the tutor:"
 
-        # Generate AI response: Vertex AI (Gemini) primary, DeepSeek fallback
-        ai_response = None
-        try:
-            from services.vertex_service import vertex_service
-            if vertex_service.is_available():
-                full_prompt = f"{system_prompt}\n\nConversation:\n{full_user_prompt}"
-                result = vertex_service.generate_text(full_prompt, model="gemini-2.5-flash")
-                if result.get("success") and result.get("text"):
-                    ai_response = result["text"].strip()
-        except Exception as e:
-            logger.warning("Teacher mode Vertex AI error (will try DeepSeek fallback): %s", e)
-        if not ai_response:
-            try:
-                from utils.deepseek import call_deepseek_chat
-                ai_response = call_deepseek_chat(
-                    system_prompt=system_prompt,
-                    user_prompt=full_user_prompt,
-                    temperature=0.7,
-                    max_tokens=1500,
-                    timeout=60
-                )
-            except Exception as e:
-                logger.error("Teacher mode AI error: %s", e)
-                ai_response = f"I apologize, but I'm having trouble processing your question right now. Please try again in a moment. Error: {str(e)}"
+        ai_response = _teacher_mode_vertex_then_gemini(system_prompt, full_user_prompt)
         
         # Update conversation history and updated_at
         conversation_history.append({'role': 'user', 'content': message})
@@ -7822,29 +7850,7 @@ Context from images:
                 conv_block = "\n".join(conv_lines) if conv_lines else ""
                 user_turn = f"User: {message}"
                 full_user_prompt = f"{conv_block}\n{user_turn}\n\nRespond as the tutor:".strip() if conv_block else f"{user_turn}\n\nRespond as the tutor:"
-                ai_response = None
-                try:
-                    from services.vertex_service import vertex_service
-                    if vertex_service.is_available():
-                        full_prompt = f"{system_prompt}\n\nConversation:\n{full_user_prompt}"
-                        result = vertex_service.generate_text(full_prompt, model="gemini-2.5-flash")
-                        if result.get("success") and result.get("text"):
-                            ai_response = result["text"].strip()
-                except Exception as e:
-                    logger.warning("Teacher multimodal Vertex AI error (will try DeepSeek): %s", e)
-                if not ai_response:
-                    try:
-                        from utils.deepseek import call_deepseek_chat
-                        ai_response = call_deepseek_chat(
-                            system_prompt=system_prompt,
-                            user_prompt=full_user_prompt,
-                            temperature=0.7,
-                            max_tokens=1500,
-                            timeout=60
-                        )
-                    except Exception as e:
-                        logger.error("Teacher multimodal AI error: %s", e)
-                        ai_response = "I'm having trouble processing that right now. Please try again."
+                ai_response = _teacher_mode_vertex_then_gemini(system_prompt, full_user_prompt)
                 conversation_history.append({'role': 'user', 'content': message})
                 conversation_history.append({'role': 'assistant', 'content': ai_response})
                 session_data['conversation_history'] = conversation_history

@@ -94,7 +94,7 @@ export function IntegrationLab({ simulation }: { simulation: SimulationMetadata 
           <span>Back</span>
         </Link>
         <div className="subject-header-content">
-          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #7C4DFF, #00E676)' }}>
+          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #10B981, #00E676)' }}>
             <Layers size={28} />
           </div>
           <div>

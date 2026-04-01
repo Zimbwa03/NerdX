@@ -15,7 +15,7 @@ export function ALevelPlaceholderPage({ title, fallbackPath }: Props) {
           <span>Back</span>
         </Link>
         <div className="subject-header-content">
-          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #8B5CF6, #2563EB)' }}>
+          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #10B981, #2563EB)' }}>
             <Sparkles size={28} />
           </div>
           <div>
@@ -38,7 +38,7 @@ export function ALevelPlaceholderPage({ title, fallbackPath }: Props) {
             <h2>What you can do</h2>
             <div className="feature-cards-v2">
               <Link to="/app/agents" className="feature-card-v2" style={{ textDecoration: 'none' }}>
-                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #7C4DFF, #00E676)' }}>
+                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #10B981, #00E676)' }}>
                   <Sparkles size={24} />
                 </div>
                 <div className="feature-card-text">

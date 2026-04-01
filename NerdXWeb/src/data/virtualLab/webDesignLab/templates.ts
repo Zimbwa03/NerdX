@@ -20,7 +20,7 @@ export const WEB_DESIGN_TEMPLATES: WebTemplate[] = [
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #0b1020;
+      background-color: #0A0A0A;
       color: #f5f5f5;
       margin: 0;
       padding: 40px;
@@ -57,7 +57,7 @@ export const WEB_DESIGN_TEMPLATES: WebTemplate[] = [
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      background-color: #050816;
+      background-color: #0A0A0A;
       color: #f3f4f6;
     }
     header {
@@ -72,13 +72,13 @@ export const WEB_DESIGN_TEMPLATES: WebTemplate[] = [
     }
     .left-column {
       flex: 2;
-      background-color: #020617;
+      background-color: #0A0A0A;
       padding: 16px;
       border-radius: 8px;
     }
     .right-column {
       flex: 1;
-      background-color: #020617;
+      background-color: #0A0A0A;
       padding: 16px;
       border-radius: 8px;
     }
@@ -125,7 +125,7 @@ export const WEB_DESIGN_TEMPLATES: WebTemplate[] = [
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: radial-gradient(circle at top, #1d4ed8 0, #020617 55%);
+      background: radial-gradient(circle at top, #1d4ed8 0, #0A0A0A 55%);
       color: #e5e7eb;
     }
     nav {
@@ -165,7 +165,7 @@ export const WEB_DESIGN_TEMPLATES: WebTemplate[] = [
       border-radius: 999px;
       border: none;
       background-color: #22c55e;
-      color: #020617;
+      color: #0A0A0A;
       font-weight: bold;
       cursor: pointer;
     }
@@ -209,12 +209,12 @@ export const WEB_DESIGN_TEMPLATES: WebTemplate[] = [
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #0f172a, #1e293b);
+      background: linear-gradient(135deg, #0A0A0A, #141414);
       font-family: Arial, sans-serif;
     }
     .card {
       width: 320px;
-      background-color: #020617;
+      background-color: #0A0A0A;
       border-radius: 12px;
       padding: 24px;
       box-shadow: 0 12px 30px rgba(15, 23, 42, 0.8);
@@ -225,7 +225,7 @@ export const WEB_DESIGN_TEMPLATES: WebTemplate[] = [
       width: 96px;
       height: 96px;
       border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, #a855f7, #1d4ed8);
+      background: radial-gradient(circle at 30% 30%, #10B981, #1d4ed8);
       margin: 0 auto 16px;
     }
     h1 {
@@ -303,7 +303,7 @@ export const WEB_DESIGN_TEMPLATES: WebTemplate[] = [
 </html>
 `,
         css: `:root {
-  --bg: #0f172a;
+  --bg: #0A0A0A;
   --card: #111827;
   --accent: #22c55e;
   --text: #f8fafc;
@@ -458,7 +458,7 @@ button {
         css: `body {
   margin: 0;
   font-family: 'Trebuchet MS', Arial, sans-serif;
-  background: #0b1020;
+  background: #0A0A0A;
   color: #f8fafc;
   padding: 32px;
 }

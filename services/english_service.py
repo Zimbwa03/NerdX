@@ -11,9 +11,6 @@ import os
 import uuid
 from typing import Optional, Dict, List
 
-import requests
-from utils.deepseek import get_deepseek_chat_model
-
 # Try to import google-genai SDK (Vertex AI)
 try:
     from google import genai
@@ -27,16 +24,14 @@ except ImportError:
 from config import Config
 
 logger = logging.getLogger(__name__)
-DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
+
 
 class EnglishService:
     def __init__(self):
         """Initialize Enhanced ZIMSEC English Service with AI capabilities"""
         self.client = None
         self._is_configured = False
-        self.deepseek_api_key = Config.DEEPSEEK_API_KEY
-        self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
-        
+
         # Vertex AI configuration (preferred - higher rate limits)
         self.project_id = os.environ.get('GOOGLE_CLOUD_PROJECT', 'gen-lang-client-0303273462')
         self.use_vertex_ai = os.environ.get('GOOGLE_GENAI_USE_VERTEXAI', 'True').lower() == 'true'
@@ -45,7 +40,7 @@ class EnglishService:
         if GENAI_AVAILABLE:
             self._init_gemini_client()
         else:
-            logger.info("google-genai SDK not available - using DeepSeek only")
+            logger.info("google-genai SDK not available - English AI features need Vertex/Gemini client")
     
     def _init_gemini_client(self):
         """Initialize Gemini client with Vertex AI or API key."""
@@ -458,147 +453,10 @@ CRITICAL: Return valid JSON only. Use \\n for line breaks inside string values; 
 
         return None
 
-    def generate_deepseek_grammar_question(self, last_question_type: Optional[str] = None) -> Optional[Dict]:
-        """Generate grammar question using DeepSeek as fallback"""
-        if not self.deepseek_api_key:
-            logger.warning("DeepSeek API key not configured - skipping DeepSeek grammar generation")
-            return None
-
-        try:
-            question_types = [
-                "Sentence Transformation",
-                "Error Correction",
-                "Gap Filling",
-                "Multiple Choice",
-                "Register/Contextual"
-            ]
-
-            available_types = question_types.copy()
-            if last_question_type and last_question_type in available_types and len(available_types) > 1:
-                available_types.remove(last_question_type)
-
-            selected_type = random.choice(available_types)
-
-            grammar_focus_areas = [
-                "Subject-Verb Agreement",
-                "Tense Consistency",
-                "Active and Passive Voice",
-                "Direct and Indirect Speech",
-                "Phrasal Verbs",
-                "Clauses and Sentence Structure",
-                "Register and Formality",
-                "Word Formation",
-                "Prepositions and Conjunctions",
-                "Determiners and Articles"
-            ]
-
-            selected_focus = random.choice(grammar_focus_areas)
-
-            system_prompt = (
-                "You are a professional ZIMSEC O-Level English Tutor. Maintain an encouraging, precise, and authoritative tone "
-                "while creating grammar and usage questions that reflect the ZIMSEC syllabus (Forms 1-4)."
-            )
-
-            user_prompt = f"""
-Goal: Generate a single ZIMSEC O-Level English grammar question.
-
-Question Type: {selected_type}
-Grammar Focus: {selected_focus}
-
-Requirements:
-- Align with Paper 2 Language Structures expectations.
-- Connect the concept to real examination contexts and register demands.
-- Provide high-quality hints and explanations following the tutoring protocol.
-- Use Zimbabwean contexts where helpful.
-
-Return ONLY valid JSON strictly using this structure (no markdown fences or commentary):
-{{
-  "question_type": "{selected_type}",
-  "topic_area": "{selected_focus}",
-  "question": "...",
-  "instructions": "...",
-  "options": ["..."] or [],
-  "acceptable_answers": ["..."],
-  "hint_sequence": [
-    {{"level": 1, "text": "Concept identification hint"}},
-    {{"level": 2, "text": "Rule reminder hint"}},
-    {{"level": 3, "text": "Contextual application hint"}}
-  ],
-  "explanation": {{
-    "correction": "Model answer or correction.",
-    "rule": "Exact grammar rule applied.",
-    "error_analysis": "Why wrong answers fail.",
-    "zimsec_importance": "Why this matters for ZIMSEC exams.",
-    "examples": ["Example sentence 1", "Example sentence 2"]
-  }},
-  "register_context": "Describe formality/audience if relevant, else null.",
-  "difficulty": "easy/medium/hard",
-  "question_reference": "Unique reference ID"
-}}
-"""
-
-            headers = {
-                'Authorization': f'Bearer {self.deepseek_api_key}',
-                'Content-Type': 'application/json'
-            }
-
-            payload = {
-                'model': DEEPSEEK_CHAT_MODEL,
-                'messages': [
-                    {'role': 'system', 'content': system_prompt},
-                    {'role': 'user', 'content': user_prompt}
-                ],
-                'temperature': 0.6,
-                'max_tokens': 1200
-            }
-
-            response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=45)
-            if response.status_code != 200:
-                logger.error(f"DeepSeek grammar generation failed: {response.status_code} - {response.text}")
-                return None
-
-            data = response.json()
-            choices = data.get('choices') or []
-            if not choices:
-                logger.warning("DeepSeek grammar response missing choices")
-                return None
-
-            content = choices[0].get('message', {}).get('content', '')
-            if not content:
-                logger.warning("DeepSeek grammar response missing content")
-                return None
-
-            try:
-                clean_text = self._clean_json_block(content)
-                payload = json.loads(clean_text)
-                normalized = self._normalize_ai_grammar_payload(payload)
-                if normalized:
-                    normalized['source'] = 'deepseek'
-                    logger.info(
-                        "Generated DeepSeek grammar question - Type: %s | Focus: %s",
-                        normalized.get('question_type'),
-                        normalized.get('topic_area')
-                    )
-                    return {
-                        'success': True,
-                        'question_data': normalized
-                    }
-                logger.warning("DeepSeek grammar payload missing required fields")
-            except json.JSONDecodeError as e:
-                logger.error(f"DeepSeek grammar JSON decode error: {e}")
-            except Exception as error:
-                logger.error(f"Error normalizing DeepSeek grammar payload: {error}")
-
-        except requests.RequestException as e:
-            logger.error(f"DeepSeek grammar request error: {e}")
-        except Exception as e:
-            logger.error(f"Error generating DeepSeek grammar question: {e}")
-
-        return None
 
     def generate_grammar_question(self, last_question_type: Optional[str] = None, platform: str = 'mobile') -> Optional[Dict]:
         """
-        Retrieve grammar questions with Vertex/Gemini primary and DeepSeek fallback.
+        Retrieve grammar questions with Vertex/Gemini primary, then database/static fallbacks.
 
         Args:
             last_question_type: Last question type to avoid repetition.
@@ -608,11 +466,6 @@ Return ONLY valid JSON strictly using this structure (no markdown fences or comm
         gemini_response = self.generate_ai_grammar_question(last_question_type=last_question_type)
         if gemini_response and gemini_response.get('success'):
             return gemini_response
-
-        # DeepSeek fallback
-        deepseek_response = self.generate_deepseek_grammar_question(last_question_type=last_question_type)
-        if deepseek_response and deepseek_response.get('success'):
-            return deepseek_response
 
         # Database question
         try:
@@ -770,119 +623,6 @@ Return ONLY valid JSON (no markdown fences or commentary):
             logger.error(f"Error generating AI vocabulary question: {e}")
             return None
     
-    def generate_deepseek_vocabulary_question(self, last_question_type: Optional[str] = None) -> Optional[Dict]:
-        """Generate vocabulary question using DeepSeek as fallback"""
-        if not self.deepseek_api_key:
-            logger.warning("DeepSeek API key not configured - skipping DeepSeek vocabulary generation")
-            return None
-        
-        try:
-            import random
-            
-            # Select question type with variety
-            question_types = [
-                "Multiple Choice", "Contextual Cloze", "Synonym Matching", 
-                "Sentence Construction", "Usage Correction"
-            ]
-            available_types = question_types.copy()
-            if last_question_type and last_question_type in available_types and len(available_types) > 1:
-                available_types.remove(last_question_type)
-            selected_type = random.choice(available_types)
-            
-            # Select vocabulary focus
-            vocabulary_categories = [
-                ("Register", ["Emotions/Feelings", "Attitude/Character", "Manner/Tone/Mood"]),
-                ("Contextual", ["Synonyms/Antonyms", "Phrasal Verbs/Idioms", "Homophones/Confusables"])
-            ]
-            category, focus_areas = random.choice(vocabulary_categories)
-            focus_area = random.choice(focus_areas)
-            
-            system_prompt = (
-                "You are a professional ZIMSEC O-Level English Vocabulary Expert. "
-                "Create vocabulary questions that expand students' dictionary knowledge and contextual word usage."
-            )
-            
-            user_prompt = f"""
-Generate a ZIMSEC O-Level vocabulary question.
-
-Question Type: {selected_type}
-Category: {category} - {focus_area}
-Difficulty: {random.choice(["easy", "medium", "hard"])}
-
-Requirements:
-- Test precise vocabulary understanding
-- Focus on register, connotation, and contextual usage
-- Provide graduated hints and comprehensive explanations
-
-Return ONLY valid JSON:
-{{
-  "question_type": "{selected_type}",
-  "vocabulary_category": "{category}",
-  "focus_area": "{focus_area}",
-  "question": "...",
-  "instructions": "...",
-  "options": [...] or [],
-  "acceptable_answers": [...],
-  "hint_sequence": [
-    {{"level": 1, "text": "Category hint"}},
-    {{"level": 2, "text": "Context clue"}},
-    {{"level": 3, "text": "Etymology hint"}}
-  ],
-  "explanation": {{
-    "correction": "...",
-    "definition": "...",
-    "contextual_nuance": "...",
-    "etymology": "...",
-    "zimsec_importance": "...",
-    "examples": [...]
-  }},
-  "difficulty": "easy/medium/hard"
-}}
-"""
-            
-            headers = {
-                'Authorization': f'Bearer {self.deepseek_api_key}',
-                'Content-Type': 'application/json'
-            }
-            
-            payload = {
-                'model': DEEPSEEK_CHAT_MODEL,
-                'messages': [
-                    {'role': 'system', 'content': system_prompt},
-                    {'role': 'user', 'content': user_prompt}
-                ],
-                'temperature': 0.7,
-                'max_tokens': 1500
-            }
-            
-            response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=45)
-            
-            if response.status_code == 200:
-                response_data = response.json()
-                content = response_data.get('choices', [{}])[0].get('message', {}).get('content', '')
-                
-                if content:
-                    try:
-                        cleaned_text = self._clean_json_block(content.strip())
-                        question_data = json.loads(cleaned_text)
-                        normalized = self._normalize_ai_vocabulary_payload(question_data)
-                        normalized['source'] = 'deepseek'
-                        
-                        logger.info(f"DeepSeek vocabulary question generated - Type: {selected_type}")
-                        return {
-                            'success': True,
-                            'question_data': normalized
-                        }
-                    except json.JSONDecodeError as e:
-                        logger.error(f"Failed to parse DeepSeek vocabulary response: {e}")
-                        return None
-            else:
-                logger.error(f"DeepSeek API error: {response.status_code}")
-                return None
-                
-        except Exception as e:
-            logger.error(f"Error generating DeepSeek vocabulary question: {e}")
-            return None
     
     def _normalize_ai_vocabulary_payload(self, ai_response: Dict) -> Dict:
         """Normalize AI vocabulary response to standard format"""
@@ -1074,16 +814,11 @@ Return ONLY valid JSON:
             return f"✅ Correct answer: {correct_answer}\n💡 {explanation_data.get('definition', 'Keep expanding your vocabulary!')}"
     
     def generate_vocabulary_question(self, last_question_type: Optional[str] = None) -> Optional[Dict]:
-        """Generate vocabulary questions using Gemini AI first with DeepSeek fallback"""
+        """Generate vocabulary questions using Vertex/Gemini."""
         # Primary: Gemini AI generation
         gemini_response = self.generate_ai_vocabulary_question(last_question_type=last_question_type)
         if gemini_response and gemini_response.get('success'):
             return gemini_response
-        
-        # Secondary: DeepSeek AI fallback
-        deepseek_response = self.generate_deepseek_vocabulary_question(last_question_type=last_question_type)
-        if deepseek_response and deepseek_response.get('success'):
-            return deepseek_response
         
         # Tertiary: Database question
         try:
@@ -1165,7 +900,7 @@ You MUST return exactly 10 items in the "questions" array. The passage MUST be 9
         try:
             prompt = self._build_comprehension_prompt(theme, form_level)
             response = self.client.models.generate_content(
-                model="gemini-2.0-flash-exp",
+                model="gemini-2.5-flash",
                 contents=prompt,
                 config={
                     "response_mime_type": "application/json",
@@ -1185,7 +920,7 @@ You MUST return exactly 10 items in the "questions" array. The passage MUST be 9
 
     def generate_comprehension(self, theme: str = None, form_level: int = 4, platform: str = 'mobile') -> Dict:
         """
-        Generate a comprehension passage with Vertex/Gemini primary and DeepSeek fallback.
+        Generate a comprehension passage with Vertex/Gemini primary, then static fallback.
         """
         # Select random theme if not provided
         if not theme:
@@ -1214,7 +949,7 @@ You MUST return exactly 10 items in the "questions" array. The passage MUST be 9
                     logger.info("Generated comprehension using Vertex AI")
                     return vertex_result
         except Exception as e:
-            logger.warning(f"Vertex comprehension generation failed, trying Gemini/DeepSeek: {e}")
+            logger.warning(f"Vertex comprehension generation failed, trying Gemini client: {e}")
 
         # Gemini client (Vertex-backed when use_vertex_ai, or API key)
         gemini_result = self.generate_gemini_comprehension_passage(theme, form_level)
@@ -1222,124 +957,10 @@ You MUST return exactly 10 items in the "questions" array. The passage MUST be 9
             logger.info("Generated comprehension using Vertex/Gemini AI")
             return gemini_result
 
-        # DeepSeek fallback
-        if self.deepseek_api_key:
-            try:
-                deepseek_result = self._generate_deepseek_comprehension(theme, form_level)
-                if deepseek_result:
-                    logger.info("Generated comprehension using DeepSeek fallback")
-                    return deepseek_result
-            except Exception as e:
-                logger.warning(f"DeepSeek comprehension generation failed: {e}")
-
         # Final fallback
         logger.info("Using fallback comprehension passage")
         return self._get_fallback_comprehension()
 
-    def _generate_deepseek_comprehension(self, theme: str, form_level: int = 4) -> Optional[Dict]:
-        """Generate comprehension passage using DeepSeek AI"""
-        if not self.deepseek_api_key:
-            return None
-            
-        try:
-            import requests
-            
-            prompt = f"""You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience setting professional comprehension exercises for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
-
-ROLE: EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER & TEACHER
-
-CORE PRINCIPLES (NON-NEGOTIABLE):
-1. STRICT ZIMSEC ALIGNMENT
-   - Use ONLY ZIMSEC O-Level English Language Paper 2 Comprehension format
-   - Do NOT introduce external systems (IELTS, Cambridge IGCSE variations, foreign rubrics)
-   - Focus on ZIMSEC Paper 2 structure and marking schemes only
-
-2. EXAMINER-FOCUSED
-   - Generate comprehension exercises that test exactly what ZIMSEC examiners look for
-   - Highlight how marks are awarded and lost
-   - Emphasize literal understanding, inference, vocabulary in context, and critical analysis
-   - Reference ZIMSEC marking criteria and common examiner comments
-
-3. PAPER-BASED THINKING
-   - This comprehension exercise aligns with ZIMSEC Paper 2 Section A (Comprehension)
-   - Consider time allocation and mark distribution per question type
-   - Ensure questions test examinable skills only
-
-4. ZIMBABWE CONTEXT
-   - Use local, culturally relevant contexts (schools, communities, daily life in Zimbabwe)
-   - Maintain formal exam-appropriate English register
-   - Include Zimbabwean names, places, and situations
-   - Authentic Zimbabwe setting, characters, and cultural references
-
-SUBJECT: English Language (ZIMSEC O-Level - Paper 2 Section A: Comprehension)
-THEME: {theme}
-LEVEL: Form {form_level} (Age 15-17, O-Level Zimbabwe)
-
-ZIMSEC FORMAT REQUIREMENTS:
-- Length: 900-1200 words (a full, substantial story - this MUST be an extremely long passage, not a short excerpt). Write a rich, engaging narrative that feels like a complete story or extended article.
-- Level: Form {form_level} (O-Level Zimbabwe)
-- Include exactly 10 comprehension questions (mix of literal and inferential)
-- Include model answers for grading with ZIMSEC marking criteria
-- Use Zimbabwean context where appropriate
-
-QUESTION DISTRIBUTION (Must sum to 10):
-- Literal (Direct Recall): 4-5 questions - Test information directly stated in the text
-- Inferential (Reading between lines): 5-6 questions - Test ability to draw conclusions from implied information
-
-EXPERT EXAMINER GUIDELINES:
-- Literal questions: Should test direct recall of facts, details, and information explicitly stated
-- Inferential questions: Should require students to read between lines, understand implied meaning, make connections
-- Mark allocation: Typically 2 marks per question (total 20 marks for this exercise)
-- Ensure questions progress from easier (literal) to more challenging (inferential)
-- Questions should feel like professional ZIMSEC exam questions, not generic textbook exercises
-
-FRESHNESS REQUIREMENTS:
-- Use unique scenarios NOT commonly found in typical textbook passages
-- Vary contexts: school situations, community events, everyday life in Zimbabwe, cultural references
-- Create engaging, age-appropriate content that resonates with Zimbabwean students
-- Ensure passage feels professionally crafted like a real ZIMSEC exam passage
-
-Return ONLY valid JSON in this exact format (NO markdown formatting, NO additional text):
-{{
-    "title": "Passage Title Relevant to {theme}",
-    "passage": "The full passage text with authentic Zimbabwean context (900-1200 words - a long, complete story or article)...",
-    "zimsec_paper_reference": "Paper 2 Section A (Comprehension)",
-    "questions": [
-        {{"question": "Clear ZIMSEC exam-style question", "answer": "Model answer with evidence from passage", "type": "literal", "marks": 2, "explanation": "Why this answer is correct with reference to passage"}},
-        {{"question": "Clear ZIMSEC exam-style question", "answer": "Model answer with evidence from passage", "type": "inferential", "marks": 2, "explanation": "Why this answer is correct with reference to passage"}}
-    ]
-}}
-You MUST return exactly 10 items in the "questions" array. The passage MUST be 900-1200 words long."""
-            
-            response = requests.post(
-                "https://api.deepseek.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.deepseek_api_key}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": DEEPSEEK_CHAT_MODEL,
-                    "messages": [
-                        {"role": "system", "content": "You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience. You create professional ZIMSEC-aligned comprehension exercises for Zimbabwean students. Strictly ZIMSEC format only - no foreign syllabus contamination. Always produce passages of 900-1200 words and exactly 10 questions."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    "temperature": 0.7,
-                    "max_tokens": 8000
-                },
-                timeout=60
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-                if content:
-                    clean_content = self._clean_json_block(content)
-                    return json.loads(clean_content)
-                    
-        except Exception as e:
-            logger.error(f"DeepSeek comprehension generation error: {e}")
-            
-        return None
 
     def _get_fallback_comprehension(self) -> Dict:
         """Fallback comprehension passage when AI fails"""
@@ -1377,7 +998,7 @@ You MUST return exactly 10 items in the "questions" array. The passage MUST be 9
         }
 
     def generate_essay_marking(self, marking_prompt: str) -> Optional[str]:
-        """Generate essay marking with Vertex AI primary and DeepSeek fallback."""
+        """Generate essay marking with Vertex/Gemini, then static fallback."""
         # Enhanced marking prompt for better scoring
         enhanced_prompt = f"""
 {marking_prompt}
@@ -1420,55 +1041,10 @@ Return valid JSON with the exact format requested (no markdown, no code blocks, 
             except Exception as e:
                 logger.error(f"Error generating essay marking with Vertex/Gemini: {e}")
 
-        # DeepSeek fallback
-        if not self.deepseek_api_key:
-            logger.warning("DeepSeek API key not configured for essay marking fallback")
-            return self._generate_fallback_essay_marking()
-
-        try:
-            headers = {
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {self.deepseek_api_key}',
-            }
-
-            payload = {
-                'model': DEEPSEEK_CHAT_MODEL,
-                'messages': [{'role': 'user', 'content': enhanced_prompt}],
-                'max_tokens': 2500,
-                'temperature': 0.3
-            }
-
-            response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=60)
-
-            if response.status_code == 200:
-                data = response.json()
-                if 'choices' in data and len(data['choices']) > 0:
-                    content = data['choices'][0].get('message', {}).get('content', '')
-                    if content and content.strip():
-                        clean_text = self._clean_json_block(content)
-                        # Validate JSON before returning string
-                        json.loads(clean_text)
-                        logger.info("Essay marking completed successfully using DeepSeek fallback")
-                        return clean_text
-                    logger.error("Empty response from DeepSeek essay marking")
-                else:
-                    logger.warning("DeepSeek essay marking response missing choices")
-            else:
-                logger.error(
-                    "DeepSeek API error for essay marking: %s - %s",
-                    response.status_code,
-                    response.text,
-                )
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"DeepSeek essay marking request error: {e}")
-        except Exception as e:
-            logger.error(f"Error in DeepSeek essay marking: {e}")
-
         return self._generate_fallback_essay_marking()
 
     def grade_comprehension_answers(self, passage: str, questions: List[Dict], user_answers: Dict[str, str]) -> Dict:
-        """Grade comprehension answers with Vertex AI primary and DeepSeek fallback."""
+        """Grade comprehension answers with Vertex/Gemini, then keyword fallback."""
         try:
             prompt = f"""Grade these ZIMSEC O-Level English comprehension answers.
 
@@ -1532,31 +1108,6 @@ Return ONLY valid JSON:
                 except Exception as e:
                     logger.error(f"Error grading comprehension with Vertex/Gemini: {e}")
 
-            # DeepSeek fallback
-            if self.deepseek_api_key:
-                try:
-                    headers = {
-                        'Content-Type': 'application/json',
-                        'Authorization': f'Bearer {self.deepseek_api_key}',
-                    }
-
-                    payload = {
-                        'model': DEEPSEEK_CHAT_MODEL,
-                        'messages': [{'role': 'user', 'content': prompt}],
-                        'max_tokens': 2000,
-                        'temperature': 0.3
-                    }
-
-                    response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=60)
-                    if response.status_code == 200:
-                        content = response.json()['choices'][0]['message']['content']
-                        clean_text = self._clean_json_block(content)
-                        data = json.loads(clean_text)
-                        data.setdefault('ai_model', 'deepseek_fallback')
-                        return data
-                except Exception as e:
-                    logger.error(f"Error grading comprehension with DeepSeek fallback: {e}")
-
         except Exception as e:
             logger.error(f"Error preparing comprehension grading: {e}")
 
@@ -1601,7 +1152,7 @@ Return ONLY valid JSON:
         }
 
     def grade_summary(self, passage: str, summary_prompt: str, user_summary: str) -> Dict:
-        """Grade summary writing with Vertex AI primary and DeepSeek fallback."""
+        """Grade summary writing with Vertex/Gemini."""
         try:
             prompt = f"""You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience marking professional summary exercises for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
 
@@ -1689,31 +1240,6 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
                 except Exception as e:
                     logger.error(f"Error grading summary with Vertex/Gemini: {e}")
 
-            # DeepSeek fallback
-            if self.deepseek_api_key:
-                try:
-                    headers = {
-                        'Content-Type': 'application/json',
-                        'Authorization': f'Bearer {self.deepseek_api_key}',
-                    }
-
-                    payload = {
-                        'model': DEEPSEEK_CHAT_MODEL,
-                        'messages': [{'role': 'user', 'content': prompt}],
-                        'max_tokens': 1500,
-                        'temperature': 0.3
-                    }
-
-                    response = requests.post(self.deepseek_api_url, headers=headers, json=payload, timeout=60)
-                    if response.status_code == 200:
-                        content = response.json()['choices'][0]['message']['content']
-                        clean_text = self._clean_json_block(content)
-                        data = json.loads(clean_text)
-                        data.setdefault('ai_model', 'deepseek_fallback')
-                        return data
-                except Exception as e:
-                    logger.error(f"Error grading summary with DeepSeek fallback: {e}")
-
         except Exception as e:
             logger.error(f"Error grading summary: {e}")
 
@@ -1776,69 +1302,23 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
             return "U"
 
     def generate_long_comprehension_passage(self, theme: str, form_level: int = 4) -> Optional[Dict]:
-        """Generate long comprehensive passage with Gemini first, DeepSeek fallback"""
-        # Primary: Gemini AI generation
+        """Generate long comprehensive passage with Vertex/Gemini (EnglishService client)."""
         gemini_result = self.generate_gemini_comprehension_passage(theme, form_level)
         if gemini_result:
             return gemini_result
-        
-        # Secondary: DeepSeek AI fallback
-        try:
-            from standalone_english_comprehension_generator import standalone_english_comprehension_generator
-            
-            logger.info(f"Gemini failed, trying DeepSeek V3.1 for theme: {theme}, form: {form_level}")
-            result = standalone_english_comprehension_generator.generate_long_comprehension_passage(theme, form_level)
-            
-            if result:
-                logger.info(f"✅ Successfully generated long comprehension passage using DeepSeek V3.1")
-                return result
-            else:
-                logger.warning("DeepSeek long comprehension generation also failed, using fallback")
-                
-        except Exception as e:
-            logger.error(f"Error in DeepSeek long comprehension generation: {e}")
-        
-        # Final fallback
         logger.warning("Using fallback long comprehension passage")
         return self._get_fallback_long_comprehension(theme)
 
     def generate_long_comprehension_passage_fast(self, theme: str, form_level: int = 4) -> Optional[Dict]:
-        """Fast comprehension generation with Gemini first, DeepSeek fallback with reduced timeouts"""
-        # Primary: Gemini AI generation (faster than DeepSeek)
+        """Fast comprehension generation with Vertex/Gemini, then static fallback."""
         gemini_result = self.generate_gemini_comprehension_passage(theme, form_level)
         if gemini_result:
-            logger.info(f"✅ Fast generation successful using Gemini 2.0 Flash Exp")
+            logger.info("Fast generation successful using Vertex/Gemini")
             return gemini_result
-        
-        # Secondary: DeepSeek AI fallback with reduced timeouts
-        try:
-            from standalone_english_comprehension_generator import standalone_english_comprehension_generator
-            
-            logger.info(f"Gemini failed, trying fast DeepSeek V3.1 for theme: {theme}, form: {form_level}")
-            
-            # Create a fast generator instance with reduced timeouts
-            fast_generator = standalone_english_comprehension_generator.__class__()
-            fast_generator.api_key = standalone_english_comprehension_generator.api_key
-            fast_generator.api_url = standalone_english_comprehension_generator.api_url
-            fast_generator.max_retries = 2  # Reduced from 3
-            fast_generator.timeouts = [15, 25]  # Reduced from [30, 45, 60]
-            fast_generator.retry_delay = 1  # Reduced from 2
-            
-            result = fast_generator.generate_long_comprehension_passage(theme, form_level)
-            
-            if result:
-                logger.info(f"✅ Fast generation successful using DeepSeek V3.1")
-                return result
-            else:
-                logger.warning("Fast DeepSeek generation also failed, using fallback immediately")
-                
-        except Exception as e:
-            logger.error(f"Error in fast DeepSeek generation: {e}")
-            
         return self._get_fallback_long_comprehension(theme)
 
     def generate_free_response_topics(self) -> Optional[Dict]:
-        """Generate free response topics with Vertex AI primary and DeepSeek fallback."""
+        """Generate free response topics with Vertex/Gemini, then static fallback."""
         prompt = """You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience setting professional free response composition topics for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
 
 ROLE: EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER & TEACHER
@@ -1900,109 +1380,8 @@ Return ONLY valid JSON (no markdown fences):
             except Exception as e:
                 logger.error(f"Vertex/Gemini free response topics error: {e}")
 
-        # DeepSeek fallback
-        if self.deepseek_api_key:
-            try:
-                deepseek_result = self._generate_deepseek_free_response_topics()
-                if deepseek_result:
-                    logger.info("Generated free response topics using DeepSeek fallback")
-                    deepseek_result.setdefault('ai_model', 'deepseek_fallback')
-                    return deepseek_result
-            except Exception as e:
-                logger.warning(f"DeepSeek free response topics failed: {e}")
-
         return self._get_fallback_free_response_topics()
 
-    def _generate_deepseek_free_response_topics(self) -> Optional[Dict]:
-        """Generate free response topics using DeepSeek AI"""
-        if not self.deepseek_api_key:
-            return None
-            
-        try:
-            import requests
-            
-            prompt = """You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience setting professional free response composition topics for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
-
-ROLE: EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER & TEACHER
-
-CORE PRINCIPLES (NON-NEGOTIABLE):
-1. STRICT ZIMSEC ALIGNMENT - Use ONLY ZIMSEC O-Level English Language Paper 1 Section A (Free Response) format. Do NOT introduce external systems (IELTS, Cambridge IGCSE variations, foreign rubrics).
-2. EXAMINER-FOCUSED - Generate topics that test exactly what ZIMSEC examiners look for: creativity, structure, language use, relevance.
-3. PAPER-BASED THINKING - This aligns with ZIMSEC Paper 1 Section A (Free Response), typically 30 marks total.
-4. ZIMBABWE CONTEXT - Use local, culturally relevant topics that resonate with Zimbabwean students.
-
-SUBJECT: English Language (ZIMSEC O-Level - Paper 1 Section A: Free Response Composition)
-
-Generate 7 diverse essay topics suitable for O-Level students (15-17 years old) in Zimbabwe.
-Include a mix of ZIMSEC-examinable types:
-- Narrative (story telling with plot, setting, characters)
-- Descriptive (describing person, place, event with vivid imagery)
-- Expository (factual, explanatory writing)
-- Argumentative/Discursive (persuasive writing with clear thesis)
-
-EXPERT EXAMINER GUIDELINES:
-- Topics should be appropriate for 15-17 year old Zimbabwean students (Forms 1-4)
-- Topics should allow students to demonstrate: creativity, structure, language use, relevance
-- Suggested length: 350-450 words (appropriate for ZIMSEC O-Level)
-- Topics should be engaging and allow for personal expression
-- Ensure topics feel professionally crafted like real ZIMSEC exam topics
-
-FRESHNESS REQUIREMENTS:
-- Use unique topics NOT commonly found in typical textbook prompts
-- Vary contexts: school situations, community events, everyday life in Zimbabwe, cultural references
-- Create engaging, age-appropriate topics that resonate with Zimbabwean students
-
-For each topic provide:
-1. Title (clear and engaging)
-2. Brief description/prompt (1-2 sentences setting context)
-3. Type (narrative, descriptive, expository, argumentative)
-4. Suggested length (350-450 words)
-
-Return ONLY valid JSON:
-{
-  "topics": [
-    {
-      "title": "A Day I Will Never Forget",
-      "description": "Write about a memorable day in your life that left a lasting impression on you.",
-      "type": "narrative",
-      "suggested_length": "350-450 words"
-    }
-  ]
-}"""
-            
-            response = requests.post(
-                "https://api.deepseek.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.deepseek_api_key}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": DEEPSEEK_CHAT_MODEL,
-                    "messages": [
-                        {"role": "system", "content": "You are a ZIMSEC English examiner."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    "temperature": 0.8,
-                    "max_tokens": 2000
-                },
-                timeout=30
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-                if content:
-                    clean_content = self._clean_json_block(content)
-                    data = json.loads(clean_content)
-                    return {
-                        'success': True,
-                        'topics': data.get('topics', [])
-                    }
-                    
-        except Exception as e:
-            logger.error(f"DeepSeek free response topics error: {e}")
-            
-        return None
 
     def _get_fallback_free_response_topics(self) -> Dict:
         """Fallback free response topics when AI fails"""
@@ -2055,7 +1434,7 @@ Return ONLY valid JSON:
         }
 
     def generate_guided_composition_prompt(self) -> Optional[Dict]:
-        """Generate guided composition prompt with Vertex AI primary and DeepSeek fallback."""
+        """Generate guided composition prompt with Vertex/Gemini, then static fallback."""
         prompt = """You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience setting professional guided composition prompts for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
 
 ROLE: EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER & TEACHER
@@ -2151,109 +1530,8 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
             except Exception as e:
                 logger.error(f"Vertex/Gemini guided composition error: {e}")
 
-        # DeepSeek fallback
-        if self.deepseek_api_key:
-            try:
-                deepseek_result = self._generate_deepseek_guided_composition()
-                if deepseek_result:
-                    logger.info("Generated guided composition prompt using DeepSeek fallback")
-                    deepseek_result.setdefault('ai_model', 'deepseek_fallback')
-                    return deepseek_result
-            except Exception as e:
-                logger.warning(f"DeepSeek guided composition failed: {e}")
-
         return self._get_fallback_guided_composition()
 
-    def _generate_deepseek_guided_composition(self) -> Optional[Dict]:
-        """Generate guided composition prompt using DeepSeek AI"""
-        if not self.deepseek_api_key:
-            return None
-            
-        try:
-            import requests
-            
-            prompt = """You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience setting professional guided composition prompts for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
-
-ROLE: EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER & TEACHER
-
-CORE PRINCIPLES (NON-NEGOTIABLE):
-1. STRICT ZIMSEC ALIGNMENT - Use ONLY ZIMSEC O-Level English Language Paper 1 Section B (Guided Composition) format. Do NOT introduce external systems (IELTS, Cambridge IGCSE variations, foreign rubrics).
-2. EXAMINER-FOCUSED - Generate prompts that test exactly what ZIMSEC examiners look for: structure, register, relevance, accuracy.
-3. PAPER-BASED THINKING - This prompt aligns with ZIMSEC Paper 1 Section B (Guided Composition), typically 20 marks.
-4. ZIMBABWE CONTEXT - Use local, culturally relevant contexts (schools, communities, daily life in Zimbabwe).
-
-SUBJECT: English Language (ZIMSEC O-Level - Paper 1 Section B: Guided Composition)
-
-Generate ONE guided composition prompt. Choose randomly from these ZIMSEC-examinable formats:
-- Formal letter (to headmaster, council, newspaper editor, government official)
-- Informal letter (to friend, relative)
-- Speech (for school assembly, debate, ceremony, community event)
-- Report (school event, community project, field trip)
-- Magazine article (for school magazine, youth publication)
-- Memorandum/Notice (if syllabus-supported)
-
-EXPERT EXAMINER GUIDELINES:
-- Prompt should be appropriate for 15-17 year old Zimbabwean students (Forms 1-4)
-- Include clear context and situation relevant to Zimbabwean students
-- Provide 4-6 key points to guide the composition (these are what examiners look for)
-- Specify the format clearly (formal/informal letter, speech, report, article)
-- Suggested length: 250-350 words (appropriate for ZIMSEC O-Level)
-- Format requirements: Specify exact format expectations
-
-FRESHNESS REQUIREMENTS:
-- Use unique scenarios NOT commonly found in typical textbook prompts
-- Vary contexts: school situations, community events, everyday life in Zimbabwe, cultural references
-- Create engaging, age-appropriate prompts that resonate with Zimbabwean students
-
-Return ONLY valid JSON (NO markdown formatting, NO additional text):
-{
-  "title": "Appropriate Title for the Composition",
-  "format": "formal_letter/informal_letter/speech/report/article/memo",
-  "context": "Clear, detailed context and situation relevant to Zimbabwean students (1-2 sentences)",
-  "key_points": [
-    "First key point examiners will look for (4-6 points total)",
-    "Second key point",
-    "Third key point",
-    "Fourth key point"
-  ],
-  "suggested_length": "250-350 words",
-  "format_requirements": "Specific format requirements",
-  "zimsec_paper_reference": "Paper 1 Section B (Guided Composition)"
-}"""
-            
-            response = requests.post(
-                "https://api.deepseek.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.deepseek_api_key}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": DEEPSEEK_CHAT_MODEL,
-                    "messages": [
-                        {"role": "system", "content": "You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience. You create professional ZIMSEC-aligned guided composition prompts for Zimbabwean students. Strictly ZIMSEC format only - no foreign syllabus contamination."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    "temperature": 0.8,
-                    "max_tokens": 1500
-                },
-                timeout=30
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-                if content:
-                    clean_content = self._clean_json_block(content)
-                    data = json.loads(clean_content)
-                    return {
-                        'success': True,
-                        'prompt': data
-                    }
-                    
-        except Exception as e:
-            logger.error(f"DeepSeek guided composition error: {e}")
-            
-        return None
     
     def _get_fallback_guided_composition(self) -> Dict:
         """Fallback guided composition when AI fails"""
@@ -2277,7 +1555,7 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
 
     def mark_free_response_essay(self, student_name: str, student_surname: str,
                                  essay_text: str, topic: Dict) -> Optional[Dict]:
-        """Mark free response essays with Vertex AI primary and DeepSeek fallback."""
+        """Mark free response essays with Vertex/Gemini, then static fallback."""
         # Vertex AI primary via Gemini client
         if self._is_configured and self.client:
             try:
@@ -2397,150 +1675,8 @@ Return ONLY valid JSON (no markdown fences):
             except Exception as e:
                 logger.error(f"Error marking free response essay with Vertex/Gemini: {e}")
 
-        # DeepSeek fallback
-        if self.deepseek_api_key:
-            try:
-                deepseek_result = self._mark_deepseek_free_response_essay(
-                    student_name,
-                    student_surname,
-                    essay_text,
-                    topic,
-                )
-                if deepseek_result:
-                    logger.info("Marked free response essay using DeepSeek fallback")
-                    deepseek_result.setdefault('ai_model', 'deepseek_fallback')
-                    return deepseek_result
-            except Exception as e:
-                logger.warning(f"DeepSeek free response marking failed: {e}")
-
         return self._fallback_free_marking(student_name, student_surname)
 
-    def _mark_deepseek_free_response_essay(self, student_name: str, student_surname: str, 
-                                 essay_text: str, topic: Dict) -> Optional[Dict]:
-        """Mark free response essay using DeepSeek AI"""
-        if not self.deepseek_api_key:
-            return None
-            
-        import requests
-        
-        try:
-            prompt_intro = f"""You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience marking professional free response compositions for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
-
-ROLE: EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER & MARKER
-
-CORE PRINCIPLES (NON-NEGOTIABLE):
-1. STRICT ZIMSEC ALIGNMENT - Use ONLY ZIMSEC O-Level English Language Paper 1 Section A (Free Response) marking criteria. Do NOT use external systems (IELTS, Cambridge IGCSE variations, foreign rubrics).
-2. EXAMINER-FOCUSED - Mark exactly as ZIMSEC examiners do. Highlight how marks are awarded and lost.
-3. PAPER-BASED THINKING - This composition aligns with ZIMSEC Paper 1 Section A (Free Response), typically 30 marks total.
-4. ZIMBABWE CONTEXT - Consider appropriateness of content for Zimbabwean students and contexts.
-
-STUDENT INFORMATION:
-Name: {student_name} {student_surname}
-
-ESSAY TOPIC:
-Title: {topic.get('title', '')}
-Description: {topic.get('description', '')}
-
-STUDENT ESSAY:
-{essay_text}
-
-"""
-            
-            prompt_criteria = """ZIMSEC MARKING CRITERIA (Total: 30 marks) - Use EXACTLY these criteria as a ZIMSEC examiner would:
-
-1. CONTENT (15 marks):
-   - Relevance to topic (addresses the topic directly and fully) - 4 marks
-   - Introduction and Conclusion (clear, engaging introduction; strong conclusion) - 3 marks
-   - Use of examples/details (specific, relevant examples and details) - 4 marks
-   - Development of ideas (sufficient depth and explanation) - 4 marks
-
-2. LANGUAGE (10 marks):
-   - Grammar, Spelling, Punctuation (accuracy throughout) - 4 marks
-   - Vocabulary (appropriate, varied vocabulary) - 3 marks
-   - Sentence structure (variety and correctness) - 3 marks
-
-3. ORGANIZATION (5 marks):
-   - Paragraphing (clear paragraph structure, appropriate length) - 2 marks
-   - Coherence (logical flow, smooth transitions, linking words) - 3 marks
-
-EXAMINER MARKING GUIDELINES:
-- Mark strictly but fairly, as a ZIMSEC examiner would
-- Award marks for what is present, not just deduct for errors
-- Consider the student's level (O-Level, Forms 1-4, ages 15-17)
-- Provide specific feedback on strengths and areas for improvement
-- Reference ZIMSEC marking standards and common examiner comments
-- Be encouraging but honest about the score
-
-COMMON ZIMSEC EXAMINER COMMENTS TO REFERENCE:
-- "Good relevance to topic but needs more development"
-- "Creative ideas but language errors affect clarity"
-- "Well-organized with clear paragraph structure"
-- "Good use of examples but needs better vocabulary"
-- "Needs stronger introduction and conclusion"
-
-Return ONLY valid JSON (NO markdown formatting, NO additional text):
-{
-  "score": 20,
-  "max_score": 30,
-  "breakdown": {
-    "content": 10,
-    "language": 7,
-    "organization": 3
-  },
-  "corrections": [
-    {
-      "wrong": "...",
-      "correct": "...",
-      "type": "grammar",
-      "explanation": "..."
-    }
-  ],
-  "corrected_essay": "Corrected textual version...",
-  "detailed_feedback": "Detailed examiner feedback..."
-}"""
-            
-            response = requests.post(
-                "https://api.deepseek.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.deepseek_api_key}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": DEEPSEEK_CHAT_MODEL,
-                    "messages": [
-                        {"role": "system", "content": "You are a ZIMSEC English examiner."},
-                        {"role": "user", "content": prompt_intro + prompt_criteria}
-                    ],
-                    "temperature": 0.3,
-                    "max_tokens": 3000
-                },
-                timeout=60
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-                if content:
-                    clean_content = self._clean_json_block(content)
-                    data = json.loads(clean_content)
-                    
-                    score = data.get('score', 0)
-                    max_score = data.get('max_score', 30)
-                    if not max_score: max_score = 30
-                    
-                    teacher_comment = self._get_teacher_comment_by_score(score, max_score, student_name)
-                    data['teacher_comment'] = teacher_comment
-                    data['essay_type'] = 'free_response'
-                    
-                    return {
-                        'success': True,
-                        'result': data
-                    }
-                    
-        except Exception as e:
-            logger.error(f"DeepSeek free response marking error: {e}")
-            
-        return None
 
     def _fallback_free_marking(self, student_name: str, student_surname: str) -> Dict:
         """Fallback for free response marking"""
@@ -2560,7 +1696,7 @@ Return ONLY valid JSON (NO markdown formatting, NO additional text):
 
     def mark_guided_composition(self, student_name: str, student_surname: str,
                                essay_text: str, prompt: Dict) -> Optional[Dict]:
-        """Mark guided compositions with Vertex AI primary and DeepSeek fallback."""
+        """Mark guided compositions with Vertex/Gemini, then static fallback."""
         # Vertex AI primary via Gemini client
         if self._is_configured and self.client:
             try:
@@ -2676,148 +1812,8 @@ Return ONLY valid JSON (no markdown fences):
             except Exception as e:
                 logger.error(f"Error marking guided composition with Vertex/Gemini: {e}")
 
-        # DeepSeek fallback
-        if self.deepseek_api_key:
-            try:
-                deepseek_result = self._mark_deepseek_guided_composition(
-                    student_name,
-                    student_surname,
-                    essay_text,
-                    prompt,
-                )
-                if deepseek_result:
-                    logger.info("Marked guided composition using DeepSeek fallback")
-                    deepseek_result.setdefault('ai_model', 'deepseek_fallback')
-                    return deepseek_result
-            except Exception as e:
-                logger.warning(f"DeepSeek guided composition marking failed: {e}")
-
         return self._fallback_guided_marking(student_name, student_surname)
 
-    def _mark_deepseek_guided_composition(self, student_name: str, student_surname: str,
-                                         essay_text: str, prompt_data: Dict) -> Optional[Dict]:
-        """Mark guided composition using DeepSeek AI"""
-        if not self.deepseek_api_key:
-            return None
-            
-        import requests
-        
-        try:
-            prompt_intro = f"""You are Dr. Muzenda, an EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER with 15+ years experience marking professional guided compositions for Zimbabwean students. You have deep knowledge of the ZIMSEC Ordinary Level English Language syllabus and extensive experience as a ZIMSEC examiner and marker.
-
-ROLE: EXPERT ZIMSEC O-LEVEL ENGLISH LANGUAGE EXAMINER & MARKER
-
-CORE PRINCIPLES (NON-NEGOTIABLE):
-1. STRICT ZIMSEC ALIGNMENT - Use ONLY ZIMSEC O-Level English Language Paper 1 Section B (Guided Composition) marking criteria. Do NOT use external systems (IELTS, Cambridge IGCSE variations, foreign rubrics).
-2. EXAMINER-FOCUSED - Mark exactly as ZIMSEC examiners do. Highlight how marks are awarded and lost.
-3. PAPER-BASED THINKING - This composition aligns with ZIMSEC Paper 1 Section B (Guided Composition), typically 20 marks total.
-4. ZIMBABWE CONTEXT - Consider appropriateness of content for Zimbabwean students and contexts.
-
-STUDENT INFORMATION:
-Name: {student_name} {student_surname}
-
-COMPOSITION PROMPT:
-Title: {prompt_data.get('title', '')}
-Context: {prompt_data.get('context', '')}
-Format: {prompt_data.get('format', '')}
-Key Points to Cover: {', '.join(prompt_data.get('key_points', []))}
-
-STUDENT COMPOSITION:
-{essay_text}
-
-"""
-            
-            prompt_criteria = """ZIMSEC MARKING CRITERIA (Total: 20 marks) - Use EXACTLY these criteria as a ZIMSEC examiner would:
-
-1. CONTENT & FORMAT (12 marks):
-   - Adherence to specified format (formal/informal letter, speech, report, article) - 3 marks
-   - Coverage of all key points from the prompt - 4 marks
-   - Relevance and appropriateness to context - 2 marks
-   - Development of ideas with sufficient detail - 3 marks
-
-2. LANGUAGE (8 marks):
-   - Grammar and sentence structure (correct tenses, subject-verb agreement, sentence variety) - 3 marks
-   - Vocabulary and register (appropriate word choice, formal/informal tone as required) - 2 marks
-   - Spelling and punctuation (accuracy throughout) - 2 marks
-   - Clarity and coherence (logical flow, linking words, paragraph structure) - 1 mark
-
-EXAMINER MARKING GUIDELINES:
-- Mark strictly but fairly, as a ZIMSEC examiner would
-- Award marks for what is present, not just deduct for errors
-- Consider the student's level (O-Level, Forms 1-4, ages 15-17)
-- Provide specific feedback on strengths and areas for improvement
-- Reference ZIMSEC marking standards and common examiner comments
-- Be encouraging but honest about the score
-
-COMMON ZIMSEC EXAMINER COMMENTS TO REFERENCE:
-- "Good structure but needs more development of ideas"
-- "All key points covered but format needs improvement"
-- "Appropriate register maintained throughout"
-- "Some grammatical errors but meaning is clear"
-- "Needs better paragraph organization"
-
-Return ONLY valid JSON (NO markdown formatting, NO additional text):
-{
-  "score": 16,
-  "max_score": 20,
-  "breakdown": {
-    "content_and_format": 10,
-    "language": 6
-  },
-  "corrections": [
-    {
-      "wrong": "...",
-      "correct": "...",
-      "type": "format/grammar/spelling",
-      "explanation": "..."
-    }
-  ],
-  "corrected_essay": "Full corrected version...",
-  "detailed_feedback": "Specific feedback..."
-}"""
-            
-            response = requests.post(
-                "https://api.deepseek.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.deepseek_api_key}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": DEEPSEEK_CHAT_MODEL,
-                    "messages": [
-                        {"role": "system", "content": "You are a ZIMSEC English examiner."},
-                        {"role": "user", "content": prompt_intro + prompt_criteria}
-                    ],
-                    "temperature": 0.3,
-                    "max_tokens": 3000
-                },
-                timeout=60
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
-                if content:
-                    clean_content = self._clean_json_block(content)
-                    data = json.loads(clean_content)
-                    
-                    score = data.get('score', 0)
-                    max_score = data.get('max_score', 20)
-                    if not max_score: max_score = 20
-                    
-                    teacher_comment = self._get_teacher_comment_by_score(score, max_score, student_name)
-                    data['teacher_comment'] = teacher_comment
-                    data['essay_type'] = 'guided'
-                    
-                    return {
-                        'success': True,
-                        'result': data
-                    }
-                    
-        except Exception as e:
-            logger.error(f"DeepSeek guided composition marking error: {e}")
-            
-        return None
 
     def _fallback_guided_marking(self, student_name: str, student_surname: str) -> Dict:
         """Provide a fallback result if both AIs fail"""

@@ -132,7 +132,7 @@ export function SchoolProtectedRoute({ children }: { children: ReactNode }) {
 
   if (isLoading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#0f172a', color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 600 }}>
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#0A0A0A', color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 600 }}>
         Loading...
       </div>
     );

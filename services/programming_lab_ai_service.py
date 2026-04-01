@@ -3,16 +3,15 @@ Programming Lab - AI Assistant Service
 
 Uses:
 - Vertex AI (Gemini) as PRIMARY model via vertex_service.generate_text
-- DeepSeek as FALLBACK via utils.deepseek helper
-
-This mirrors the multi-provider pattern already used in ComputerScienceGenerator.
+- Optional consumer Gemini API (GOOGLE_API_KEY / GEMINI_API_KEY) as FALLBACK
 """
 
+import os
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Any
 
 from services.vertex_service import vertex_service
-from utils.deepseek import get_deepseek_chat_model, call_deepseek_chat
+from utils.vertex_ai_helper import try_gemini_text, DEFAULT_VERTEX_TEXT_MODEL
 
 
 @dataclass
@@ -40,9 +39,6 @@ class AIResponse:
 class ProgrammingLabAIService:
     """AI helper for the Programming Lab editor."""
 
-    def __init__(self) -> None:
-        self.deepseek_model = get_deepseek_chat_model()
-
     def process_request(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         req = AIRequest(
             type=payload.get("type") or "general-question",
@@ -60,12 +56,10 @@ class ProgrammingLabAIService:
             if vertex_result:
                 return self._response_to_dict(vertex_result)
         except Exception:
-            # Fall through to DeepSeek
             pass
 
-        # Fallback: DeepSeek
-        deepseek_result = self._call_deepseek(req)
-        return self._response_to_dict(deepseek_result)
+        gemini_result = self._call_gemini_api(req)
+        return self._response_to_dict(gemini_result)
 
     # ------------------------------
     # Provider calls
@@ -76,30 +70,31 @@ class ProgrammingLabAIService:
 
         prompt = self._build_prompt(req)
 
-        result = vertex_service.generate_text(prompt=prompt, model="gemini-2.5-flash")
+        model = os.environ.get("VERTEX_GEMINI_TEXT_MODEL", DEFAULT_VERTEX_TEXT_MODEL)
+        result = vertex_service.generate_text(prompt=prompt, model=model)
         if not result or not result.get("success"):
             return None
 
         text = result.get("text") or ""
         return self._parse_ai_response(text, req)
 
-    def _call_deepseek(self, req: AIRequest) -> AIResponse:
+    def _call_gemini_api(self, req: AIRequest) -> AIResponse:
         prompt = self._build_prompt(req)
         ctx = req.context or {}
         lab = ctx.get("lab") or "programming"
         if lab == "web-design":
             system_prompt = "You are an expert HTML & CSS web design tutor for ZIMSEC and Cambridge Computer Science students."
         elif lab == "database":
-            system_prompt = "You are an expert database and SQL tutor for ZIMSEC and Cambridge Computer Science students (O-Level and A-Level). Focus on database concepts, tables, keys, and SQL (SELECT, INSERT, UPDATE, DELETE, CREATE TABLE)."
+            system_prompt = (
+                "You are an expert database and SQL tutor for ZIMSEC and Cambridge Computer Science students "
+                "(O-Level and A-Level). Focus on database concepts, tables, keys, and SQL "
+                "(SELECT, INSERT, UPDATE, DELETE, CREATE TABLE)."
+            )
         else:
             system_prompt = "You are an expert programming tutor for ZIMSEC and Cambridge students."
 
-        # Use helper that wraps DeepSeek HTTP call similar to ComputerScienceGenerator
-        text = call_deepseek_chat(
-            model=self.deepseek_model,
-            system_prompt=system_prompt,
-            user_prompt=prompt,
-        )
+        full = f"{system_prompt}\n\n{prompt}"
+        text = try_gemini_text(full, context="programming_lab", max_output_tokens=4096) or ""
         return self._parse_ai_response(text, req)
 
     # ------------------------------

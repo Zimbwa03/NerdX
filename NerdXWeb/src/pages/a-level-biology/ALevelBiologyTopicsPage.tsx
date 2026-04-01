@@ -20,6 +20,8 @@ import {
   Circle,
 } from 'lucide-react';
 import { AILoadingOverlay } from '../../components/AILoadingOverlay';
+import { MaicClassroomFeatureCard } from '../../components/MaicClassroomFeatureCard';
+import { MaicTopicClassroomLink } from '../../components/MaicTopicClassroomLink';
 import { aLevelBiologyTopics, type ALevelBiologyTopic } from '../../data/aLevelBiology';
 import '../sciences/ScienceUniverse.css';
 
@@ -243,12 +245,19 @@ export function ALevelBiologyTopicsPage() {
             className="science-feature-card"
             onClick={() => navigate('/app/teacher', { state: { subject: 'A Level Biology', gradeLevel: 'Lower Sixth - Upper Sixth' } })}
           >
-            <div className="feature-icon-box" style={{ background: 'rgba(124, 77, 255, 0.15)' }}>
-              <MessageSquare size={28} color="#B388FF" />
+            <div className="feature-icon-box" style={{ background: 'rgba(16, 185, 129, 0.15)' }}>
+              <MessageSquare size={28} color="#34D399" />
             </div>
             <h3 className="feature-card-title">AI Biology Tutor</h3>
             <p className="feature-card-desc">Interactive tutoring aligned to A-Level biology objectives.</p>
           </div>
+
+          <MaicClassroomFeatureCard
+            navigate={navigate}
+            subject="A Level Biology"
+            gradeLevel="Lower Sixth - Upper Sixth"
+            accent="rgba(16, 185, 129, 0.2)"
+          />
 
           <div
             className="science-feature-card"
@@ -316,10 +325,20 @@ export function ALevelBiologyTopicsPage() {
                 <div
                   key={topic.id}
                   className="science-topic-card"
-                  onClick={() => openStartQuiz(topic)}
+                  onClick={() =>
+                    navigate(`/app/a-level-biology/topic/${encodeURIComponent(topic.id)}`)
+                  }
                 >
-                  <div className="topic-icon-small">
-                    <TopicIcon size={20} />
+                  <div className="science-topic-card__row">
+                    <div className="topic-icon-small">
+                      <TopicIcon size={20} />
+                    </div>
+                    <MaicTopicClassroomLink
+                      navigate={navigate}
+                      subject="A Level Biology"
+                      gradeLevel="Lower Sixth - Upper Sixth"
+                      topicName={topic.name}
+                    />
                   </div>
                   <span className="topic-card-name">{topic.name}</span>
                   <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>

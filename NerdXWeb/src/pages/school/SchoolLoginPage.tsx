@@ -18,7 +18,7 @@ export function SchoolLoginPage() {
 
   useEffect(() => {
     if (isAuthenticated && authSchool?.slug === schoolSlug) {
-      navigate(`/school/${schoolSlug}/dashboard`, { replace: true });
+      navigate(`/school/${schoolSlug}/dashboard/overview`, { replace: true });
     }
   }, [isAuthenticated, authSchool, schoolSlug, navigate]);
 
@@ -42,7 +42,7 @@ export function SchoolLoginPage() {
     setSubmitting(true);
     const result = await login(schoolSlug, schoolId.trim());
     if (result.success) {
-      navigate(`/school/${schoolSlug}/dashboard`, { replace: true });
+      navigate(`/school/${schoolSlug}/dashboard/overview`, { replace: true });
     } else {
       setError(result.error || 'Invalid credentials');
     }

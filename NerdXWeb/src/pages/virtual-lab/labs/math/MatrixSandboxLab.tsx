@@ -110,7 +110,7 @@ export function MatrixSandboxLab({ simulation }: { simulation: SimulationMetadat
           <span>Back</span>
         </Link>
         <div className="subject-header-content">
-          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #2979FF, #7C4DFF)' }}>
+          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #2979FF, #10B981)' }}>
             <Grid3X3 size={28} />
           </div>
           <div>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Copy, Gift, LinkIcon, Share2, Users } from 'lucide-react';
 import { FloatingParticles } from '../../components/FloatingParticles';
 import { accountApi, type ReferralShareLink, type ReferralStats } from '../../services/api/accountApi';
+import { getPublicSiteOrigin } from '../../services/api/config';
 
 function formatDate(dateString: string | null) {
   if (!dateString) return 'N/A';
@@ -14,7 +15,7 @@ function formatDate(dateString: string | null) {
 }
 
 function buildWebLink(code: string): string {
-  return code ? `${window.location.origin}/register?ref=${code}` : '';
+  return code ? `${getPublicSiteOrigin()}/register?ref=${code}` : '';
 }
 
 export function ReferralHubPage() {

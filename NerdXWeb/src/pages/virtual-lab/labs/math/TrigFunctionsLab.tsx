@@ -106,7 +106,7 @@ export function TrigFunctionsLab({ simulation }: { simulation: SimulationMetadat
           <span>Back</span>
         </Link>
         <div className="subject-header-content">
-          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #00BCD4, #7C4DFF)' }}>
+          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #00BCD4, #10B981)' }}>
             <Waves size={28} />
           </div>
           <div>

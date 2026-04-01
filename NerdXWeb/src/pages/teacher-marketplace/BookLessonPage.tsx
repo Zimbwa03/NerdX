@@ -330,7 +330,7 @@ export function BookLessonPage() {
             {/* Lesson payment info */}
             <div className="booking-payment-info" style={{
               margin: '16px 0', padding: '16px', borderRadius: '12px',
-              background: 'rgba(124, 77, 255, 0.08)', border: '1px solid rgba(124, 77, 255, 0.15)'
+              background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.15)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontWeight: 700 }}>
                 <Wallet size={18} /> Lesson Fee
@@ -356,7 +356,7 @@ export function BookLessonPage() {
                   display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px'
                 }}>
                   <AlertTriangle size={16} style={{ color: '#EF4444' }} />
-                  <span>Insufficient balance. <Link to="/app/credits" style={{ color: '#7C4DFF', fontWeight: 600 }}>Top up your wallet</Link> to book this lesson.</span>
+                  <span>Insufficient balance. <Link to="/app/credits" style={{ color: '#10B981', fontWeight: 600 }}>Top up your wallet</Link> to book this lesson.</span>
                 </div>
               )}
               <p style={{ fontSize: '12px', opacity: 0.6, marginTop: '8px' }}>

@@ -1,0 +1,103 @@
+/* Mission-control hero: grid + radial layers (no inline styles). */
+.classroom-hero-shell {
+  position: relative;
+  min-height: 160px;
+  background-color: #080b0f;
+  background-image:
+    radial-gradient(ellipse at 30% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 70%),
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: auto, 40px 40px, 40px 40px;
+  border-bottom: 1px solid #1e2d3d;
+}
+
+.classroom-title-glow {
+  text-shadow: 0 0 40px rgba(16, 185, 129, 0.4);
+}
+
+/* Subject pill hover borders (unselected) */
+.subject-pill--math:not([aria-checked='true']):hover {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+.subject-pill--bio:not([aria-checked='true']):hover {
+  border-color: rgba(16, 185, 129, 0.5);
+}
+.subject-pill--chem:not([aria-checked='true']):hover {
+  border-color: rgba(139, 92, 246, 0.5);
+}
+.subject-pill--phys:not([aria-checked='true']):hover {
+  border-color: rgba(245, 158, 11, 0.5);
+}
+.subject-pill--eng:not([aria-checked='true']):hover {
+  border-color: rgba(236, 72, 153, 0.5);
+}
+.subject-pill--geo:not([aria-checked='true']):hover {
+  border-color: rgba(6, 182, 212, 0.5);
+}
+.subject-pill--acc:not([aria-checked='true']):hover {
+  border-color: rgba(99, 102, 241, 0.5);
+}
+.subject-pill--hist:not([aria-checked='true']):hover {
+  border-color: rgba(249, 115, 22, 0.5);
+}
+
+/* Launch CTA loading shimmer */
+.ac-launch-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.ac-launch-btn--loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.12) 45%,
+    rgba(52, 211, 153, 0.25) 50%,
+    rgba(255, 255, 255, 0.12) 55%,
+    transparent 100%
+  );
+  width: 55%;
+  animation: ac-launch-sweep 1.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ac-launch-sweep {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+/* Recent row icon circle backgrounds (no inline styles) */
+.ac-session-icon--math {
+  background-color: rgba(59, 130, 246, 0.85);
+}
+.ac-session-icon--bio {
+  background-color: rgba(16, 185, 129, 0.85);
+}
+.ac-session-icon--chem {
+  background-color: rgba(139, 92, 246, 0.85);
+}
+.ac-session-icon--phys {
+  background-color: rgba(245, 158, 11, 0.85);
+}
+.ac-session-icon--eng {
+  background-color: rgba(236, 72, 153, 0.85);
+}
+.ac-session-icon--geo {
+  background-color: rgba(6, 182, 212, 0.85);
+}
+.ac-session-icon--acc {
+  background-color: rgba(99, 102, 241, 0.85);
+}
+.ac-session-icon--hist {
+  background-color: rgba(249, 115, 22, 0.85);
+}
+.ac-session-icon--default {
+  background-color: rgba(16, 185, 129, 0.75);
+}

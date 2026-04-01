@@ -14,10 +14,8 @@ from services.whatsapp_service import WhatsAppService
 from database.external_db import make_supabase_request, get_user_credits, deduct_credits, get_user_registration
 from utils.credit_units import format_credits, units_to_credits
 from services.advanced_credit_service import advanced_credit_service
-from utils.deepseek import get_deepseek_chat_model
 
 logger = logging.getLogger(__name__)
-DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
 
 # Import Google GenAI SDK for Vertex AI (primary for conversational text)
 try:
@@ -42,10 +40,6 @@ except ImportError:
     get_gemini_interactions_service = None
     INTERACTIONS_API_AVAILABLE = False
 
-# Import requests for DeepSeek API
-import requests
-
-
 class CombinedScienceTeacherService:
     """
     Professional AI Science Teacher for Biology, Chemistry, and Physics
@@ -54,11 +48,6 @@ class CombinedScienceTeacherService:
     
     def __init__(self):
         self.whatsapp_service = WhatsAppService()
-        
-        # Initialize DeepSeek AI as FALLBACK provider
-        self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
-        self.deepseek_api_url = 'https://api.deepseek.com/chat/completions'
-        self._is_deepseek_configured = bool(self.deepseek_api_key)
         
         # Initialize Gemini via Vertex AI as PRIMARY provider
         self.gemini_client = None
@@ -79,10 +68,8 @@ class CombinedScienceTeacherService:
         
         if self._is_gemini_configured:
             logger.info("✅ Combined Science Teacher initialized with Gemini via Vertex AI (primary)")
-        elif self._is_deepseek_configured:
-            logger.warning("Gemini not available - using DeepSeek as primary")
         else:
-            logger.warning("No AI services available")
+            logger.warning("No AI services available (configure Vertex or GEMINI_API_KEY)")
     
     def _init_gemini_client(self):
         """Initialize Gemini client with Vertex AI or API key."""
@@ -755,23 +742,6 @@ You have 0 credits. Teacher Mode requires credits to use.
                 except Exception as e:
                     logger.error(f"Gemini error picking random topic: {e}")
 
-            # DeepSeek fallback
-            if self._is_deepseek_configured:
-                try:
-                    response = requests.post(
-                        self.deepseek_api_url,
-                        headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
-                        json={'model': DEEPSEEK_CHAT_MODEL, 'messages': [{'role': 'user', 'content': prompt}], 'max_tokens': 100},
-                        timeout=15,
-                    )
-                    if response.status_code == 200:
-                        topic = response.json()['choices'][0]['message']['content'].strip()
-                        if topic:
-                            self.start_teaching_session(user_id, topic)
-                            return
-                except Exception as e:
-                    logger.error(f"DeepSeek fallback error picking random topic: {e}")
-            
             # Fallback to static topics
             fallback_topics = {
                 'Biology': ['Cell Structure', 'Photosynthesis', 'Digestion', 'Respiration'],
@@ -817,23 +787,6 @@ You have 0 credits. Teacher Mode requires credits to use.
                         return
                 except Exception as e:
                     logger.error(f"Gemini error suggesting topics: {e}")
-
-            # DeepSeek fallback
-            if self._is_deepseek_configured:
-                try:
-                    response = requests.post(
-                        self.deepseek_api_url,
-                        headers={'Authorization': f'Bearer {self.deepseek_api_key}', 'Content-Type': 'application/json'},
-                        json={'model': DEEPSEEK_CHAT_MODEL, 'messages': [{'role': 'user', 'content': prompt}], 'max_tokens': 300},
-                        timeout=20,
-                    )
-                    if response.status_code == 200:
-                        suggestions = response.json()['choices'][0]['message']['content'].strip()
-                        if suggestions:
-                            _send_suggestions(suggestions)
-                            return
-                except Exception as e:
-                    logger.error(f"DeepSeek fallback error suggesting topics: {e}")
 
             # Fallback to static topic suggestions
             self._send_fallback_topic_suggestions(user_id, subject, grade_level)
@@ -933,8 +886,8 @@ You have 0 credits. Teacher Mode requires credits to use.
             subject = session_data.get('subject', 'Science')
             grade_level = session_data.get('grade_level', 'O-Level')
             
-            # Get initial teaching from AI (Vertex/Gemini primary, DeepSeek fallback)
-            if self._is_deepseek_configured or self._is_gemini_configured:
+            # Get initial teaching from AI (Vertex/Gemini)
+            if self._is_gemini_configured:
                 initial_message = f"Start teaching {topic} to a {grade_level} student studying {subject}. Begin with a warm greeting and introduction to the topic."
                 
                 response_text = self._get_gemini_teaching_response(user_id, initial_message, session_data)
@@ -1047,8 +1000,8 @@ You have 0 credits. Teacher Mode requires credits to use.
                 'content': message_text
             })
             
-            # Get AI response (Vertex/Gemini primary, DeepSeek fallback)
-            if self._is_deepseek_configured or self._is_gemini_configured:
+            # Get AI response (Vertex/Gemini)
+            if self._is_gemini_configured:
                 response_text = self._get_gemini_teaching_response(user_id, message_text, session_data)
                 
                 # Add AI response to history
@@ -1194,7 +1147,7 @@ You have 0 credits. Teacher Mode requires credits to use.
         return text
     
     def _get_gemini_teaching_response(self, user_id: str, message_text: str, session_data: dict) -> str:
-        """Get teaching response - uses Gemini as primary, DeepSeek as fallback"""
+        """Get teaching response from Gemini (Vertex or API key)."""
         try:
             # Build context
             subject = session_data.get('subject', 'Science')
@@ -1233,89 +1186,11 @@ You have 0 credits. Teacher Mode requires credits to use.
                 except Exception as gemini_error:
                     logger.error(f"Gemini API error for {user_id}: {gemini_error}")
             
-            # Try DeepSeek as fallback ONLY if Gemini fails
-            if self._is_deepseek_configured:
-                try:
-                    response = requests.post(
-                        self.deepseek_api_url,
-                        headers={
-                            'Content-Type': 'application/json',
-                            'Authorization': f'Bearer {self.deepseek_api_key}'
-                        },
-                        json={
-                            'model': DEEPSEEK_CHAT_MODEL,
-                            'messages': [
-                                {'role': 'system', 'content': system_prompt},
-                                {'role': 'user', 'content': full_prompt}
-                            ],
-                            'temperature': 0.7,
-                            'max_tokens': 2000
-                        },
-                        timeout=60
-                    )
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        if 'choices' in data and len(data['choices']) > 0:
-                            ai_text = data['choices'][0]['message']['content'].strip()
-                            logger.info(f"✅ DeepSeek AI fallback generated teaching response for {user_id} (Subject: {subject})")
-                            return ai_text
-                except Exception as deepseek_error:
-                    logger.error(f"DeepSeek API fallback error for {user_id}: {deepseek_error}")
-            
             # Final fallback
             return self._get_fallback_teaching_response(message_text, session_data)
             
         except Exception as e:
             logger.error(f"Error getting AI teaching response: {e}", exc_info=True)
-            return self._get_fallback_teaching_response(message_text, session_data)
-    
-    def _try_deepseek_teaching_fallback(self, user_id: str, message_text: str, session_data: dict, prompt: str) -> str:
-        """Try DeepSeek AI as fallback when Gemini fails"""
-        try:
-            import os
-            import requests
-            deepseek_key = os.getenv('DEEPSEEK_API_KEY')
-            if not deepseek_key:
-                logger.warning("DeepSeek API key not available for fallback")
-                return self._get_fallback_teaching_response(message_text, session_data)
-            
-            # Build dynamic system prompt
-            subject = session_data.get('subject', 'Science')
-            grade_level = session_data.get('grade_level', 'O-Level')
-            topic = session_data.get('topic', 'General Science')
-            system_prompt = self._build_subject_specific_prompt(subject, grade_level, topic)
-            
-            # Call DeepSeek API
-            response = requests.post(
-                'https://api.deepseek.com/chat/completions',
-                headers={
-                    'Content-Type': 'application/json',
-                    'Authorization': f'Bearer {deepseek_key}'
-                },
-                json={
-                    'model': DEEPSEEK_CHAT_MODEL,
-                    'messages': [
-                        {'role': 'system', 'content': system_prompt},
-                        {'role': 'user', 'content': prompt}
-                    ],
-                    'temperature': 0.7,
-                    'max_tokens': 2000
-                },
-                timeout=60
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                if 'choices' in data and len(data['choices']) > 0:
-                    ai_text = data['choices'][0]['message']['content'].strip()
-                    logger.info(f"✅ DeepSeek AI fallback generated teaching response for {user_id} (Subject: {subject})")
-                    return ai_text
-            
-            logger.warning("DeepSeek fallback failed, using basic fallback")
-            return self._get_fallback_teaching_response(message_text, session_data)
-        except Exception as e:
-            logger.error(f"DeepSeek fallback error: {e}")
             return self._get_fallback_teaching_response(message_text, session_data)
     
     def _get_fallback_teaching_response(self, message_text: str, session_data: dict) -> str:
@@ -1392,8 +1267,8 @@ You have 0 credits. Teacher Mode requires credits to use.
                 "📝 Generating your personalized notes... This will take a moment."
             )
             
-            # Request notes from AI (Vertex/Gemini primary, DeepSeek fallback)
-            if self._is_deepseek_configured or self._is_gemini_configured:
+            # Request notes from AI (Vertex/Gemini)
+            if self._is_gemini_configured:
                 subject = session_data.get('subject', 'Science')
                 grade_level = session_data.get('grade_level', 'O-Level')
                 conversation_history = session_data.get('conversation_history', [])
@@ -1439,45 +1314,6 @@ You have 0 credits. Teacher Mode requires credits to use.
                                 )
                     except Exception as gemini_error:
                         logger.error(f"Gemini notes error: {gemini_error}")
-
-                # DeepSeek fallback
-                if not notes_data and self._is_deepseek_configured:
-                    try:
-                        response = requests.post(
-                            self.deepseek_api_url,
-                            headers={
-                                'Content-Type': 'application/json',
-                                'Authorization': f'Bearer {self.deepseek_api_key}'
-                            },
-                            json={
-                                'model': DEEPSEEK_CHAT_MODEL,
-                                'messages': [
-                                    {'role': 'system', 'content': system_prompt},
-                                    {'role': 'user', 'content': (
-                                        f"Subject: {subject}\nGrade Level: {grade_level}\nTopic: {topic}"
-                                        f"{conversation_context}\n\nStudent request: Generate notes\n\n"
-                                        "Provide comprehensive personalized notes in valid JSON format."
-                                    )}
-                                ],
-                                'temperature': 0.7,
-                                'max_tokens': 4000
-                            },
-                            timeout=60,
-                        )
-
-                        if response.status_code == 200:
-                            data = response.json()
-                            if 'choices' in data and len(data['choices']) > 0:
-                                ai_text = data['choices'][0]['message']['content'].strip()
-                                notes_data = self._parse_notes_response(ai_text)
-                                if notes_data:
-                                    logger.info(
-                                        "DeepSeek fallback generated notes for %s (Subject: %s)",
-                                        user_id,
-                                        subject,
-                                    )
-                    except Exception as deepseek_error:
-                        logger.error(f"DeepSeek notes error: {deepseek_error}")
 
                 if notes_data:
                     # Generate PDF using the notes generator

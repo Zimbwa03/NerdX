@@ -1,9 +1,8 @@
 """
 Exam Session Service - CBT-Style Exam Engine
-Handles intelligent time allocation, DeepSeek one-question-at-a-time generation,
+Handles intelligent time allocation, AI one-question-at-a-time generation (Vertex primary),
 marking, grading, and session management.
 """
-import os
 import json
 import uuid
 import logging
@@ -12,10 +11,10 @@ import random
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple
 import requests
-from utils.deepseek import get_deepseek_chat_model
+
+from utils.vertex_ai_helper import try_gemini_json
 
 logger = logging.getLogger(__name__)
-DEEPSEEK_CHAT_MODEL = get_deepseek_chat_model()
 
 # =============================================================================
 # TIME ALLOCATION CONFIGURATION
@@ -75,15 +74,13 @@ class ExamSessionService:
     
     Features:
     - Intelligent time allocation by subject & question type
-    - One-question-at-a-time DeepSeek generation
+    - One-question-at-a-time AI generation (Vertex, optional Gemini API)
     - Per-answer marking with immediate feedback
     - Final grading with topic breakdown
     - Session persistence for resume capability
     """
     
     def __init__(self):
-        self.api_key = os.environ.get('DEEPSEEK_API_KEY')
-        self.api_url = 'https://api.deepseek.com/chat/completions'
         # In-memory session storage (should use Redis/DB in production)
         self._sessions: Dict[str, Dict] = {}
         
@@ -277,7 +274,7 @@ class ExamSessionService:
         platform: str = 'mobile',
     ) -> Optional[Dict]:
         """
-        Generate the next question using Vertex AI primary with DeepSeek fallback.
+        Generate the next question using Vertex AI primary with optional Gemini API fallback.
         One question at a time, no pre-generation.
         
         Args:
@@ -311,7 +308,7 @@ class ExamSessionService:
         target_topic = self._get_topic_for_index(session, idx)
 
         for attempt in range(1, max_attempts + 1):
-            question = self._call_deepseek_generate(session, idx, platform=platform)
+            question = self._generate_exam_question_item(session, idx, platform=platform)
             if not question:
                 continue
 
@@ -351,8 +348,8 @@ class ExamSessionService:
         
         return question
     
-    def _call_deepseek_generate(self, session: Dict, question_index: int, platform: str = 'mobile') -> Optional[Dict]:
-        """Generate a single question with Vertex AI primary and DeepSeek fallback."""
+    def _generate_exam_question_item(self, session: Dict, question_index: int, platform: str = 'mobile') -> Optional[Dict]:
+        """Generate a single question with Vertex AI primary and optional Gemini API fallback."""
         subject_key = (session.get("subject") or "").lower().replace(" ", "_").replace("-", "_")
         if subject_key == "computer_science":
             question_type = self._get_question_type_for_index(session, question_index)
@@ -388,8 +385,7 @@ class ExamSessionService:
             vertex_question.setdefault("question_type", question_type)
             return vertex_question
 
-        # DeepSeek fallback
-        return self._call_deepseek_only(session, question_index, prompt, question_type)
+        return self._call_gemini_exam_fallback(session, question_index, prompt, question_type)
 
     def _generate_cs_exam_question(
         self, session: Dict, question_index: int, question_type: str
@@ -877,99 +873,40 @@ class ExamSessionService:
             "allows_text_input": True,
         }
 
-    def _call_deepseek_only(
+    def _call_gemini_exam_fallback(
         self,
         session: Dict,
         question_index: int,
         prompt: str,
         question_type: str,
     ) -> Optional[Dict]:
-        """DeepSeek-only fallback generation."""
-        if not self.api_key:
-            logger.error("DEEPSEEK_API_KEY not configured")
+        """Consumer Gemini API fallback when Vertex returns nothing."""
+        system_message = (
+            "You are a professional exam question generator for ZIMSEC/Cambridge-style exams. "
+            "Generate exactly one question in the specified JSON format. Be rigorous but fair."
+        )
+        full_prompt = f"{system_message}\n\n{prompt}"
+        ctx = f"exam_session:{session.get('subject', '')}:{question_type}:{question_index}"
+        question_data = try_gemini_json(full_prompt, logger=logger, context=ctx)
+        if not question_data:
             return self._get_fallback_question(session)
 
-        try:
-            response = requests.post(
-                self.api_url,
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": DEEPSEEK_CHAT_MODEL,
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": (
-                                "You are a professional exam question generator for ZIMSEC/Cambridge-style exams. "
-                                "Generate exactly one question in the specified JSON format. Be rigorous but fair."
-                            ),
-                        },
-                        {"role": "user", "content": prompt},
-                    ],
-                    "temperature": 0.7,
-                    "max_tokens": 2000,
-                    "response_format": {"type": "json_object"},
-                },
-                timeout=45,
+        question_data.setdefault("question_type", question_type)
+        question_data["id"] = str(uuid.uuid4())
+        question_data["generated_at"] = datetime.utcnow().isoformat()
+        question_data["question_index"] = question_index
+        question_data.setdefault("ai_model", "gemini_fallback")
+
+        username = session.get("username", "Student")
+        if question_index == 0:
+            question_data["prompt_to_student"] = f"Let's go, {username}! Here's your first question."
+        else:
+            question_data["prompt_to_student"] = (
+                f"Great work, {username}! Here's question {question_index + 1}."
             )
 
-            if response.status_code == 200:
-                data = response.json()
-                content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-
-                # Try to extract JSON from response (handle markdown formatting)
-                try:
-                    if "```json" in content:
-                        start_idx = content.find("```json") + 7
-                        end_idx = content.find("```", start_idx)
-                        if end_idx > start_idx:
-                            content = content[start_idx:end_idx].strip()
-                    elif "```" in content:
-                        start_idx = content.find("```") + 3
-                        end_idx = content.find("```", start_idx)
-                        if end_idx > start_idx:
-                            content = content[start_idx:end_idx].strip()
-
-                    json_start = content.find("{")
-                    json_end = content.rfind("}") + 1
-
-                    if json_start >= 0 and json_end > json_start:
-                        json_str = content[json_start:json_end]
-                        question_data = json.loads(json_str)
-                    else:
-                        question_data = json.loads(content)
-
-                    # Metadata
-                    question_data.setdefault("question_type", question_type)
-                    question_data["id"] = str(uuid.uuid4())
-                    question_data["generated_at"] = datetime.utcnow().isoformat()
-                    question_data["question_index"] = question_index
-                    question_data.setdefault("ai_model", "deepseek_fallback")
-
-                    username = session.get("username", "Student")
-                    if question_index == 0:
-                        question_data["prompt_to_student"] = f"Let's go, {username}! Here's your first question."
-                    else:
-                        question_data["prompt_to_student"] = (
-                            f"Great work, {username}! Here's question {question_index + 1}."
-                        )
-
-                    logger.info("Generated exam question %s with DeepSeek fallback", question_index + 1)
-                    return question_data
-
-                except json.JSONDecodeError as e:
-                    logger.error(f"DeepSeek JSON parsing error: {e}")
-                    logger.debug(f"Raw content: {content[:500]}")
-                    return self._get_fallback_question(session)
-
-            logger.error("DeepSeek API error: %s - %s", response.status_code, response.text)
-            return self._get_fallback_question(session)
-
-        except Exception as e:
-            logger.error(f"DeepSeek API exception: {e}")
-            return self._get_fallback_question(session)
+        logger.info("Generated exam question %s with Gemini API fallback", question_index + 1)
+        return question_data
 
     def _build_question_prompt(self, session: Dict, index: int, question_type: str) -> str:
         """Build the generation prompt for the AI question generator."""

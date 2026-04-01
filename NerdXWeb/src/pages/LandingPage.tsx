@@ -1,60 +1,30 @@
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { FloatingParticles } from '../components/FloatingParticles';
+import { useState, useEffect, useCallback } from 'react';
 import {
-  Sparkles, BookOpen, Brain, Zap, ArrowRight, CheckCircle,
-  FlaskConical, Target, BarChart3, FileText, Users, Award,
-  MessageSquare, GraduationCap, Calculator, Atom,
+  Brain, Zap, ArrowRight, CheckCircle,
+  FlaskConical, Target, BarChart3, FileText,
+  BookOpen, GraduationCap, Calculator, Atom,
   Microscope, Code, ShoppingCart, MapPin, Clock, Landmark,
-  Briefcase, Star, ChevronRight, Menu, X, Twitter, Instagram, Youtube,
-  UserPlus, MousePointerClick, Rocket, Camera,
-  Search, CalendarCheck, ShieldCheck, DollarSign, User, Smartphone, Download
+  Briefcase, Star, Menu, X, MessageSquare,
+  Smartphone, Download
 } from 'lucide-react';
-import { FEATURED_TEACHERS } from '../data/marketplaceConstants';
-
-const studentImages = [
-  { src: '/images/students-learning.png', alt: 'Zimbabwean students studying together with NerdX', caption: 'Students collaborating with NerdX' },
-  { src: '/images/student-phone.png', alt: 'Student using NerdX on smartphone', caption: 'Learning anytime, anywhere' },
-  { src: '/images/students-celebrating.png', alt: 'Students celebrating exam success', caption: 'Celebrating exam victories' },
-  { src: '/images/student-laptop.png', alt: 'Student studying with NerdX on laptop', caption: 'Focused study sessions' },
-];
-
-function useCountUp(end: number, duration: number, start: boolean) {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (!start) return;
-    let startTime: number | null = null;
-    let animationFrame: number;
-    const step = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      setCount(Math.floor(progress * end));
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(step);
-      }
-    };
-    animationFrame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(animationFrame);
-  }, [end, duration, start]);
-  return count;
-}
 
 const features = [
-  { icon: Brain, title: 'AI Personal Tutor', description: 'Get instant, personalized explanations for any topic. Our AI adapts to your learning style and ZIMSEC syllabus.', color: '#7C4DFF' },
-  { icon: Target, title: 'Interactive Quizzes', description: 'Test your knowledge with thousands of ZIMSEC-aligned questions. Get instant feedback and detailed solutions.', color: '#00E676' },
-  { icon: FlaskConical, title: 'Virtual Science Labs', description: 'Conduct realistic experiments in Physics, Chemistry, and Biology right from your device.', color: '#FF6D00' },
-  { icon: FileText, title: 'Exam Practice', description: 'Practice with past papers and AI-generated exam questions. Simulate real exam conditions.', color: '#00B0FF' },
-  { icon: BarChart3, title: 'Progress Tracking', description: 'Monitor your improvement with detailed analytics. Identify weak areas and track your growth.', color: '#FF4081' },
-  { icon: BookOpen, title: 'Instant Notes', description: 'Access comprehensive, exam-ready notes for every subject. Always updated to the latest syllabus.', color: '#FFAB00' },
+  { icon: Brain, title: 'AI Personal Tutor', desc: 'Instant, personalized explanations adapted to your learning style and ZIMSEC syllabus.', color: '#10B981' },
+  { icon: Target, title: 'Interactive Quizzes', desc: 'Thousands of ZIMSEC-aligned questions with instant feedback and detailed solutions.', color: '#00E676' },
+  { icon: FlaskConical, title: 'Virtual Science Labs', desc: 'Realistic Physics, Chemistry, and Biology experiments right from your device.', color: '#FF6D00' },
+  { icon: FileText, title: 'Exam Practice', desc: 'Past papers and AI-generated exam questions that simulate real exam conditions.', color: '#00B0FF' },
+  { icon: BarChart3, title: 'Progress Tracking', desc: 'Detailed analytics to identify weak areas and track your growth over time.', color: '#FF4081' },
+  { icon: BookOpen, title: 'Instant Notes', desc: 'Comprehensive, exam-ready notes for every subject, always up to date.', color: '#FFAB00' },
 ];
 
 const subjects = [
-  { name: 'Mathematics', icon: Calculator, color: '#7C4DFF' },
+  { name: 'Mathematics', icon: Calculator, color: '#10B981' },
   { name: 'Physics', icon: Atom, color: '#00B0FF' },
   { name: 'Chemistry', icon: FlaskConical, color: '#FF6D00' },
   { name: 'Biology', icon: Microscope, color: '#00E676' },
   { name: 'English', icon: BookOpen, color: '#FF4081' },
-  { name: 'Computer Science', icon: Code, color: '#651FFF' },
+  { name: 'Computer Science', icon: Code, color: '#059669' },
   { name: 'Commerce', icon: ShoppingCart, color: '#FFAB00' },
   { name: 'Geography', icon: MapPin, color: '#00BFA5' },
   { name: 'History', icon: Clock, color: '#FF6E40' },
@@ -63,429 +33,220 @@ const subjects = [
 ];
 
 const testimonials = [
-  { quote: "NerdX helped me go from a C to an A in Mathematics. The AI tutor explains things better than any textbook I've ever used.", name: 'Tatenda M.', school: 'Prince Edward School', rating: 5 },
+  { quote: "NerdX helped me go from a C to an A in Mathematics. The AI tutor explains things better than any textbook.", name: 'Tatenda M.', school: 'Prince Edward School', rating: 5 },
   { quote: "The virtual science labs are incredible! I can practice experiments anytime. My Chemistry grade improved dramatically.", name: 'Rudo C.', school: 'Dominican Convent', rating: 5 },
-  { quote: "I love the exam practice feature. It feels like the real thing. NerdX gave me the confidence to ace my O-Levels.", name: 'Kudzai N.', school: 'St Georges College', rating: 5 },
+  { quote: "The exam practice feature feels like the real thing. NerdX gave me the confidence to ace my O-Levels.", name: 'Kudzai N.', school: 'St Georges College', rating: 5 },
 ];
 
 const steps = [
-  { icon: UserPlus, title: 'Sign Up Free', description: 'Create your account in seconds. No credit card required.' },
-  { icon: MousePointerClick, title: 'Choose Your Subjects', description: 'Pick from 10+ ZIMSEC O-Level and A-Level subjects.' },
-  { icon: Search, title: 'Find a Teacher', description: 'Browse verified teachers or use AI tutoring — your choice.' },
-  { icon: Rocket, title: 'Start Learning', description: 'Get lessons, practice exams, and watch your grades soar.' },
-];
-
-const teacherValueProps = [
-  { icon: CalendarCheck, title: 'Set Your Schedule', description: 'Teach on your own terms. Choose the days and hours that work for you.' },
-  { icon: Users, title: 'Reach 5,000+ Students', description: 'Connect with students from 50+ schools across Zimbabwe instantly.' },
-  { icon: ShieldCheck, title: 'Get Verified & Trusted', description: 'Our verification badge builds student confidence in your expertise.' },
-  { icon: DollarSign, title: 'Grow Your Income', description: 'Earn by sharing your knowledge. More students, more opportunities.' },
+  { num: '01', title: 'Create Account', desc: 'Sign up free in seconds — no credit card needed.' },
+  { num: '02', title: 'Pick Subjects', desc: 'Choose from 10+ ZIMSEC O-Level and A-Level subjects.' },
+  { num: '03', title: 'Start Learning', desc: 'Get AI tutoring, practice exams, and watch your grades soar.' },
 ];
 
 const ANDROID_APP_URL = 'https://lzteiewcvxoazqfxfjgg.supabase.co/storage/v1/object/public/Audio_Notes/NerdX_App/NerdX(v3.00).apk';
 
 export function LandingPage() {
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [headerScrolled, setHeaderScrolled] = useState(false);
-  const statsRef = useRef<HTMLDivElement>(null);
-  const [statsVisible, setStatsVisible] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setHeaderScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setStatsVisible(true); },
-      { threshold: 0.3 }
-    );
-    if (statsRef.current) observer.observe(statsRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  const studentsCount = useCountUp(5000, 2000, statsVisible);
-  const questionsCount = useCountUp(50000, 2500, statsVisible);
-  const subjectsCount = useCountUp(10, 1500, statsVisible);
-  const passRateCount = useCountUp(95, 2000, statsVisible);
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [menuOpen]);
 
   const scrollTo = useCallback((id: string) => {
-    setMobileMenuOpen(false);
+    setMenuOpen(false);
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
   return (
-    <div className="lp">
-      <FloatingParticles count={25} />
-
-      <header className={`lp-header${headerScrolled ? ' lp-header--scrolled' : ''}`}>
-        <div className="lp-header__inner">
-          <div className="lp-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <img src="/logo.png" alt="NerdX" className="lp-logo__img" />
+    <div className="lp2">
+      {/* ── Header ── */}
+      <header className={`lp2-header${scrolled ? ' lp2-header--scrolled' : ''}`}>
+        <div className="lp2-header__inner">
+          <div className="lp2-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <img src="/logo.png" alt="NerdX" className="lp2-logo__img" />
             <span>NerdX</span>
           </div>
-          <nav className="lp-nav">
-            <button type="button" className="lp-nav__link" onClick={() => scrollTo('features')}>Features</button>
-            <button type="button" className="lp-nav__link" onClick={() => scrollTo('subjects')}>Subjects</button>
-            <button type="button" className="lp-nav__link" onClick={() => scrollTo('find-teachers')}>Find a Teacher</button>
-            <button type="button" className="lp-nav__link" onClick={() => scrollTo('testimonials')}>Testimonials</button>
-            <button type="button" className="lp-nav__link lp-nav__link--highlight" onClick={() => scrollTo('for-teachers')}>Teach on NerdX</button>
+
+          <nav className="lp2-nav">
+            <button type="button" onClick={() => scrollTo('features')}>Features</button>
+            <button type="button" onClick={() => scrollTo('subjects')}>Subjects</button>
+            <button type="button" onClick={() => scrollTo('how-it-works')}>How It Works</button>
+            <button type="button" onClick={() => scrollTo('testimonials')}>Testimonials</button>
           </nav>
-          <div className="lp-header__actions">
-            <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp-btn lp-btn--download">
-              <Smartphone size={16} /> Get App
-            </a>
-            <button type="button" className="lp-btn lp-btn--ghost" onClick={() => navigate('/login')}>Student Login</button>
-            <button type="button" className="lp-btn lp-btn--ghost lp-btn--teacher" onClick={() => navigate('/login?role=teacher')}>Teacher Login</button>
-            <button type="button" className="lp-btn lp-btn--primary" onClick={() => navigate('/register')}>Get Started</button>
+
+          <div className="lp2-header__actions">
+            <button type="button" className="lp2-btn lp2-btn--ghost" onClick={() => navigate('/login')}>Log In</button>
+            <button type="button" className="lp2-btn lp2-btn--primary" onClick={() => navigate('/register')}>Get Started</button>
           </div>
-          <button type="button" className="lp-mobile-toggle" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+
+          <button type="button" className="lp2-hamburger" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
-        {mobileMenuOpen && (
-          <div className="lp-mobile-menu">
-            <div className="lp-mobile-menu__nav">
+
+        {menuOpen && (
+          <div className="lp2-mobile-menu">
+            <nav className="lp2-mobile-menu__nav">
               <button type="button" onClick={() => scrollTo('features')}>Features</button>
               <button type="button" onClick={() => scrollTo('subjects')}>Subjects</button>
-              <button type="button" onClick={() => scrollTo('find-teachers')}>Find a Teacher</button>
+              <button type="button" onClick={() => scrollTo('how-it-works')}>How It Works</button>
               <button type="button" onClick={() => scrollTo('testimonials')}>Testimonials</button>
-              <button type="button" onClick={() => scrollTo('for-teachers')}>Teach on NerdX</button>
-            </div>
-            <div className="lp-mobile-menu__actions">
-              <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp-btn lp-btn--download lp-btn--full lp-mobile-download">
-                <Smartphone size={16} /> Download Android App <Download size={14} />
-              </a>
-              <div className="lp-mobile-menu__auth">
-                <button type="button" className="lp-btn lp-btn--ghost" onClick={() => navigate('/login')}>Student Login</button>
-                <button type="button" className="lp-btn lp-btn--ghost lp-btn--teacher" onClick={() => navigate('/login?role=teacher')}>Teacher Login</button>
-              </div>
-              <button type="button" className="lp-btn lp-btn--primary lp-btn--full" onClick={() => navigate('/register')}>
-                Get Started Free <ArrowRight size={16} />
+            </nav>
+            <div className="lp2-mobile-menu__actions">
+              <button type="button" className="lp2-btn lp2-btn--ghost lp2-btn--full" onClick={() => navigate('/login')}>Log In</button>
+              <button type="button" className="lp2-btn lp2-btn--primary lp2-btn--full" onClick={() => navigate('/register')}>
+                Get Started <ArrowRight size={16} />
               </button>
             </div>
           </div>
         )}
       </header>
 
-      <section className="lp-hero">
-        <div className="lp-hero__content">
-          <span className="lp-badge">
-            <Zap size={14} />
-            AI-Powered Learning & Teaching Platform
-          </span>
-          <h1 className="lp-hero__title">
-            Learn Smarter. Teach Better.<br />with <span className="gradient-text">NerdX</span>
-          </h1>
-          <p className="lp-hero__subtitle">
-            Zimbabwe's #1 AI learning platform for ZIMSEC & Cambridge students and teachers. Practice exams, get AI tutoring, book live lessons, and grow your teaching career.
-          </p>
-          <div className="lp-trust-badges">
-            <div className="lp-trust-badge">
-              <Users size={18} />
-              <span><strong>5,000+</strong> Students</span>
+      {/* ── Hero ── */}
+      <section className="lp2-hero">
+        <div className="lp2-hero__inner">
+          <div className="lp2-hero__content">
+            <h1 className="lp2-hero__title">
+              Learn Smarter.<br />
+              <span className="lp2-green">Ace Your Exams.</span>
+            </h1>
+            <p className="lp2-hero__sub">
+              Zimbabwe's AI-powered learning platform for ZIMSEC &amp; Cambridge students. Practice exams, get AI tutoring, and connect with verified teachers.
+            </p>
+            <div className="lp2-hero__ctas">
+              <button type="button" className="lp2-btn lp2-btn--primary lp2-btn--lg" onClick={() => navigate('/register')}>
+                Start Learning Free <ArrowRight size={18} />
+              </button>
+              <button type="button" className="lp2-btn lp2-btn--outline lp2-btn--lg" onClick={() => navigate('/register?role=teacher')}>
+                I'm a Teacher <GraduationCap size={18} />
+              </button>
             </div>
-            <div className="lp-trust-badge">
-              <GraduationCap size={18} />
-              <span><strong>50+</strong> Verified Teachers</span>
-            </div>
-            <div className="lp-trust-badge">
-              <Award size={18} />
-              <span><strong>95%</strong> Pass Rate</span>
-            </div>
-            <div className="lp-trust-badge">
-              <BookOpen size={18} />
-              <span><strong>10+</strong> Subjects</span>
+            <div className="lp2-hero__proof">
+              <div className="lp2-proof-item"><CheckCircle size={16} /> <span><strong>5,000+</strong> Students</span></div>
+              <div className="lp2-proof-item"><CheckCircle size={16} /> <span><strong>10+</strong> Subjects</span></div>
+              <div className="lp2-proof-item"><CheckCircle size={16} /> <span><strong>95%</strong> Pass Rate</span></div>
             </div>
           </div>
-          <div className="lp-hero__actions">
-            <button type="button" className="lp-btn lp-btn--primary lp-btn--lg" onClick={() => navigate('/register')}>
-              Start Learning Free <ArrowRight size={18} />
-            </button>
-            <button type="button" className="lp-btn lp-btn--outline lp-btn--lg lp-btn--teacher-cta" onClick={() => navigate('/register?role=teacher')}>
-              Start Teaching <GraduationCap size={18} />
-            </button>
-          </div>
-          <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp-download-hero--compact">
-            <Smartphone size={16} />
-            <span>Also available on <strong>Android App</strong></span>
-            <Download size={14} />
-          </a>
-        </div>
-        <div className="lp-hero__visual">
-          <div className="lp-dashboard-mockup">
-            <div className="lp-mockup__header">
-              <div className="lp-mockup__dots">
+
+          <div className="lp2-hero__visual">
+            <div className="lp2-mockup">
+              <div className="lp2-mockup__bar">
                 <span></span><span></span><span></span>
               </div>
-              <span className="lp-mockup__title">NerdX Dashboard</span>
-            </div>
-            <div className="lp-mockup__body">
-              <div className="lp-mockup__welcome">Welcome back, Student!</div>
-              <div className="lp-mockup__grid">
-                <div className="lp-mockup__card lp-mockup__card--purple">
-                  <BarChart3 size={20} />
-                  <span>Progress</span>
-                  <strong>78%</strong>
-                </div>
-                <div className="lp-mockup__card lp-mockup__card--green">
-                  <CheckCircle size={20} />
-                  <span>Quizzes</span>
-                  <strong>156</strong>
-                </div>
-                <div className="lp-mockup__card lp-mockup__card--blue">
-                  <Brain size={20} />
-                  <span>AI Sessions</span>
-                  <strong>42</strong>
-                </div>
-                <div className="lp-mockup__card lp-mockup__card--orange">
-                  <Star size={20} />
-                  <span>Streak</span>
-                  <strong>12 days</strong>
+              <div className="lp2-mockup__body">
+                <div className="lp2-mockup__greeting">Welcome back, Student!</div>
+                <div className="lp2-mockup__grid">
+                  <div className="lp2-mockup__card" style={{ '--mc': '#10B981' } as React.CSSProperties}>
+                    <BarChart3 size={18} /><span>Progress</span><strong>78%</strong>
+                  </div>
+                  <div className="lp2-mockup__card" style={{ '--mc': '#00B0FF' } as React.CSSProperties}>
+                    <Brain size={18} /><span>AI Sessions</span><strong>42</strong>
+                  </div>
+                  <div className="lp2-mockup__card" style={{ '--mc': '#FF6D00' } as React.CSSProperties}>
+                    <Star size={18} /><span>Streak</span><strong>12 days</strong>
+                  </div>
+                  <div className="lp2-mockup__card" style={{ '--mc': '#FFAB00' } as React.CSSProperties}>
+                    <CheckCircle size={18} /><span>Quizzes</span><strong>156</strong>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <div className="lp-floating-card lp-floating-card--1">
-            <CheckCircle size={16} />
-            <span>Quiz Complete: 92%</span>
-          </div>
-          <div className="lp-floating-card lp-floating-card--2">
-            <Sparkles size={16} />
-            <span>AI Tutor Active</span>
-          </div>
-          <div className="lp-floating-card lp-floating-card--3">
-            <Award size={16} />
-            <span>New Badge Earned!</span>
-          </div>
         </div>
       </section>
 
-      {/* App Download Banner - only shown on non-mobile (mobile already sees download in hero) */}
-      <div className="lp-app-banner lp-app-banner--desktop-only">
-        <div className="lp-app-banner__inner">
-          <div className="lp-app-banner__pulse"></div>
-          <Smartphone size={20} />
-          <span className="lp-app-banner__text">
-            <strong>NerdX is now on Android!</strong> Learn anywhere, anytime on your phone.
-          </span>
-          <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp-app-banner__btn">
-            Download Now <Download size={14} />
-          </a>
-        </div>
-      </div>
-
-      <div className="lp-social-proof">
-        <div className="lp-social-proof__inner">
-          <GraduationCap size={20} />
-          <span>Trusted by students from <strong>50+ schools</strong> across Zimbabwe</span>
-          <span className="lp-social-proof__divider"></span>
-          <span>Prince Edward &bull; Dominican Convent &bull; St Georges &bull; Peterhouse &bull; Arundel &bull; Chisipite &bull; Falcon &bull; Watershed &bull; Hellenic &bull; Gateway</span>
-        </div>
-      </div>
-
-      <section className="lp-section lp-section--gallery">
-        <div className="lp-section__inner">
-          <div className="lp-section__header">
-            <span className="lp-badge"><Camera size={14} /> Students in Action</span>
-            <h2 className="lp-section__title">Real Students, <span className="gradient-text">Real Results</span></h2>
-            <p className="lp-section__subtitle">See how students across Zimbabwe are using NerdX to transform their learning experience.</p>
+      {/* ── Features ── */}
+      <section id="features" className="lp2-section">
+        <div className="lp2-section__inner">
+          <div className="lp2-section__header">
+            <p className="lp2-label"><Zap size={14} /> Powerful Features</p>
+            <h2>Everything You Need to <span className="lp2-green">Excel</span></h2>
           </div>
-          <div className="lp-gallery">
-            {studentImages.map((img, i) => (
-              <div key={img.src} className={`lp-gallery__item${i === 0 ? ' lp-gallery__item--wide' : ''}`}>
-                <img src={img.src} alt={img.alt} className="lp-gallery__img" loading="lazy" />
-                <div className="lp-gallery__overlay">
-                  <span className="lp-gallery__caption">{img.caption}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="features" className="lp-section">
-        <div className="lp-section__inner">
-          <div className="lp-section__header">
-            <span className="lp-badge"><Sparkles size={14} /> Powerful Features</span>
-            <h2 className="lp-section__title">Everything You Need to <span className="gradient-text">Excel</span></h2>
-            <p className="lp-section__subtitle">Our AI-powered platform gives you the tools to master every subject and ace your exams.</p>
-          </div>
-          <div className="lp-features-grid">
+          <div className="lp2-features">
             {features.map((f) => (
-              <div key={f.title} className="lp-feature-card">
-                <div className="lp-feature-card__icon" style={{ '--feature-color': f.color } as React.CSSProperties}>
-                  <f.icon size={28} />
-                </div>
-                <h3 className="lp-feature-card__title">{f.title}</h3>
-                <p className="lp-feature-card__desc">{f.description}</p>
+              <div key={f.title} className="lp2-feature" style={{ '--fc': f.color } as React.CSSProperties}>
+                <div className="lp2-feature__icon"><f.icon size={24} /></div>
+                <h3>{f.title}</h3>
+                <p>{f.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="subjects" className="lp-section lp-section--alt">
-        <div className="lp-section__inner">
-          <div className="lp-section__header">
-            <span className="lp-badge"><BookOpen size={14} /> ZIMSEC Subjects</span>
-            <h2 className="lp-section__title">Every Subject, <span className="gradient-text">Covered</span></h2>
-            <p className="lp-section__subtitle">From Mathematics to Business Enterprise Skills — we've got your entire syllabus.</p>
+      {/* ── Subjects ── */}
+      <section id="subjects" className="lp2-section lp2-section--alt">
+        <div className="lp2-section__inner">
+          <div className="lp2-section__header">
+            <p className="lp2-label"><BookOpen size={14} /> ZIMSEC &amp; Cambridge</p>
+            <h2>Every Subject, <span className="lp2-green">Covered</span></h2>
           </div>
-          <div className="lp-subjects-grid">
+          <div className="lp2-subjects">
             {subjects.map((s) => (
-              <div key={s.name} className="lp-subject-card" style={{ '--subject-color': s.color } as React.CSSProperties}>
-                <div className="lp-subject-card__icon">
-                  <s.icon size={28} />
-                </div>
-                <span className="lp-subject-card__name">{s.name}</span>
+              <div key={s.name} className="lp2-subject" style={{ '--sc': s.color } as React.CSSProperties}>
+                <s.icon size={22} />
+                <span>{s.name}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="find-teachers" className="lp-section">
-        <div className="lp-section__inner">
-          <div className="lp-section__header">
-            <span className="lp-badge"><GraduationCap size={14} /> Teacher Marketplace</span>
-            <h2 className="lp-section__title">Expert Teachers, Ready to <span className="gradient-text">Help You Excel</span></h2>
-            <p className="lp-section__subtitle">Connect with verified, experienced ZIMSEC & Cambridge teachers for personalized one-on-one lessons.</p>
+      {/* ── How It Works ── */}
+      <section id="how-it-works" className="lp2-section">
+        <div className="lp2-section__inner">
+          <div className="lp2-section__header">
+            <p className="lp2-label"><Zap size={14} /> Simple Process</p>
+            <h2>Get Started in <span className="lp2-green">3 Steps</span></h2>
           </div>
-          <div className="lp-teachers-grid">
-            {FEATURED_TEACHERS.map((t) => (
-              <div key={t.id} className="lp-teacher-card">
-                <div className="lp-teacher-card__avatar">
-                  <User size={36} />
-                </div>
-                <div className="lp-teacher-card__body">
-                  <h3 className="lp-teacher-card__name">{t.full_name} {t.surname}</h3>
-                  <div className="lp-teacher-card__rating">
-                    <Star size={14} />
-                    <span>{t.rating}</span>
-                    <span className="lp-teacher-card__reviews">({t.reviews} reviews)</span>
-                  </div>
-                  <p className="lp-teacher-card__bio">{t.bio}</p>
-                  <div className="lp-teacher-card__tags">
-                    {t.subjects.map((s) => (
-                      <span key={s} className="lp-teacher-card__tag">{s}</span>
-                    ))}
-                    <span className="lp-teacher-card__tag lp-teacher-card__tag--level">{t.level}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="lp-teachers-actions">
-            <button type="button" className="lp-btn lp-btn--primary lp-btn--lg" onClick={() => navigate('/register')}>
-              Find a Teacher <Search size={18} />
-            </button>
-            <button type="button" className="lp-btn lp-btn--outline lp-btn--lg" onClick={() => scrollTo('for-teachers')}>
-              Become a Teacher <ArrowRight size={18} />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section className="lp-section">
-        <div className="lp-section__inner">
-          <div className="lp-section__header">
-            <span className="lp-badge"><Zap size={14} /> Simple & Easy</span>
-            <h2 className="lp-section__title">How It <span className="gradient-text">Works</span></h2>
-            <p className="lp-section__subtitle">Get started in minutes and begin your journey to academic excellence.</p>
-          </div>
-          <div className="lp-steps">
+          <div className="lp2-steps">
             {steps.map((s, i) => (
-              <div key={s.title} className="lp-step">
-                <div className="lp-step__number">{i + 1}</div>
-                <div className="lp-step__icon">
-                  <s.icon size={32} />
-                </div>
-                <h3 className="lp-step__title">{s.title}</h3>
-                <p className="lp-step__desc">{s.description}</p>
-                {i < steps.length - 1 && <div className="lp-step__connector"></div>}
+              <div key={s.num} className="lp2-step">
+                <div className="lp2-step__num">{s.num}</div>
+                <h3>{s.title}</h3>
+                <p>{s.desc}</p>
+                {i < steps.length - 1 && <div className="lp2-step__line" />}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="lp-stats" ref={statsRef}>
-        <div className="lp-stats__inner">
-          <div className="lp-stat">
-            <span className="lp-stat__value">{studentsCount.toLocaleString()}+</span>
-            <span className="lp-stat__label">Students</span>
+      {/* ── Testimonials ── */}
+      <section id="testimonials" className="lp2-section lp2-section--alt">
+        <div className="lp2-section__inner">
+          <div className="lp2-section__header">
+            <p className="lp2-label"><MessageSquare size={14} /> Student Stories</p>
+            <h2>Loved by <span className="lp2-green">Students</span></h2>
           </div>
-          <div className="lp-stat">
-            <span className="lp-stat__value">{questionsCount.toLocaleString()}+</span>
-            <span className="lp-stat__label">Questions Answered</span>
-          </div>
-          <div className="lp-stat">
-            <span className="lp-stat__value">{subjectsCount}+</span>
-            <span className="lp-stat__label">Subjects</span>
-          </div>
-          <div className="lp-stat">
-            <span className="lp-stat__value">{passRateCount}%</span>
-            <span className="lp-stat__label">Pass Rate</span>
-          </div>
-        </div>
-      </section>
-
-      {/* For Teachers - placed prominently before testimonials */}
-      <section id="for-teachers" className="lp-section lp-section--teachers">
-        <div className="lp-section__inner">
-          <div className="lp-section__header">
-            <span className="lp-badge"><GraduationCap size={14} /> For Teachers</span>
-            <h2 className="lp-section__title">Share Your Knowledge, <span className="gradient-text">Earn on NerdX</span></h2>
-            <p className="lp-section__subtitle">Join Zimbabwe's fastest-growing learning platform as a verified teacher. Set your schedule, connect with students, and make an impact.</p>
-          </div>
-          <div className="lp-teacher-values">
-            {teacherValueProps.map((v) => (
-              <div key={v.title} className="lp-teacher-value">
-                <div className="lp-teacher-value__icon">
-                  <v.icon size={28} />
-                </div>
-                <h3 className="lp-teacher-value__title">{v.title}</h3>
-                <p className="lp-teacher-value__desc">{v.description}</p>
-              </div>
-            ))}
-          </div>
-          <div className="lp-teachers-actions">
-            <button type="button" className="lp-btn lp-btn--primary lp-btn--lg" onClick={() => navigate('/register?role=teacher')}>
-              Start Teaching on NerdX <ArrowRight size={18} />
-            </button>
-            <button type="button" className="lp-btn lp-btn--outline lp-btn--lg" onClick={() => navigate('/login?role=teacher')}>
-              Teacher Sign In <ArrowRight size={18} />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section id="testimonials" className="lp-section lp-section--alt">
-        <div className="lp-section__inner">
-          <div className="lp-section__header">
-            <span className="lp-badge"><MessageSquare size={14} /> Student Stories</span>
-            <h2 className="lp-section__title">Loved by <span className="gradient-text">Students</span></h2>
-            <p className="lp-section__subtitle">Hear from students who transformed their grades with NerdX.</p>
-          </div>
-          <div className="lp-testimonials">
+          <div className="lp2-testimonials">
             {testimonials.map((t) => (
-              <div key={t.name} className="lp-testimonial">
-                <div className="lp-testimonial__stars">
+              <div key={t.name} className="lp2-testimonial">
+                <div className="lp2-testimonial__stars">
                   {Array.from({ length: t.rating }).map((_, i) => (
-                    <Star key={i} size={16} />
+                    <Star key={i} size={14} />
                   ))}
                 </div>
-                <p className="lp-testimonial__quote">"{t.quote}"</p>
-                <div className="lp-testimonial__author">
-                  <div className="lp-testimonial__avatar">{t.name[0]}</div>
+                <p className="lp2-testimonial__quote">"{t.quote}"</p>
+                <div className="lp2-testimonial__author">
+                  <div className="lp2-testimonial__avatar">{t.name[0]}</div>
                   <div>
-                    <div className="lp-testimonial__name">{t.name}</div>
-                    <div className="lp-testimonial__school">{t.school}</div>
+                    <div className="lp2-testimonial__name">{t.name}</div>
+                    <div className="lp2-testimonial__school">{t.school}</div>
                   </div>
                 </div>
               </div>
@@ -494,72 +255,55 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="lp-final-cta">
-        <div className="lp-final-cta__inner">
-          <h2 className="lp-final-cta__title">Ready to Get Started?</h2>
-          <p className="lp-final-cta__subtitle">Whether you're a student looking to ace your exams or a teacher ready to make an impact — NerdX is your platform.</p>
-          <div className="lp-final-cta__buttons">
-            <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp-btn lp-btn--download-white lp-btn--lg">
-              <Smartphone size={18} /> Download Android App
+      {/* ── Final CTA ── */}
+      <section className="lp2-cta">
+        <div className="lp2-cta__inner">
+          <h2>Ready to Start Learning?</h2>
+          <p>Join thousands of Zimbabwean students already using NerdX to ace their exams.</p>
+          <div className="lp2-cta__buttons">
+            <button type="button" className="lp2-btn lp2-btn--white lp2-btn--lg" onClick={() => navigate('/register')}>
+              Get Started Free <ArrowRight size={18} />
+            </button>
+            <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp2-btn lp2-btn--outline-w lp2-btn--lg">
+              <Smartphone size={18} /> Download App
             </a>
-            <button type="button" className="lp-btn lp-btn--white lp-btn--lg" onClick={() => navigate('/register')}>
-              Start Learning <ArrowRight size={18} />
-            </button>
-            <button type="button" className="lp-btn lp-btn--outline-white lp-btn--lg" onClick={() => navigate('/register?role=teacher')}>
-              Start Teaching <GraduationCap size={18} />
-            </button>
           </div>
-          <p className="lp-final-cta__note">No credit card required. Create your account in seconds.</p>
         </div>
       </section>
 
-      <footer className="lp-footer">
-        <div className="lp-footer__inner">
-          <div className="lp-footer__brand">
-            <div className="lp-logo">
-              <img src="/logo.png" alt="NerdX" className="lp-logo__img lp-logo__img--sm" />
+      {/* ── Footer ── */}
+      <footer className="lp2-footer">
+        <div className="lp2-footer__inner">
+          <div className="lp2-footer__brand">
+            <div className="lp2-logo">
+              <img src="/logo.png" alt="NerdX" className="lp2-logo__img" />
               <span>NerdX</span>
             </div>
-            <p className="lp-footer__tagline">AI-powered learning for ZIMSEC students. Study smarter, not harder.</p>
-            <div className="lp-footer__social">
-              <a href="#" aria-label="Twitter"><Twitter size={18} /></a>
-              <a href="#" aria-label="Instagram"><Instagram size={18} /></a>
-              <a href="#" aria-label="YouTube"><Youtube size={18} /></a>
-            </div>
+            <p>AI-powered learning for ZIMSEC &amp; Cambridge students.</p>
           </div>
-          <div className="lp-footer__links">
-            <div className="lp-footer__col">
+          <div className="lp2-footer__links">
+            <div className="lp2-footer__col">
               <h4>Product</h4>
               <button type="button" onClick={() => scrollTo('features')}>Features</button>
               <button type="button" onClick={() => scrollTo('subjects')}>Subjects</button>
               <button type="button" onClick={() => scrollTo('testimonials')}>Testimonials</button>
             </div>
-            <div className="lp-footer__col">
-              <h4>Company</h4>
-              <button type="button" onClick={() => scrollTo('features')}>About</button>
-              <button type="button" onClick={() => scrollTo('features')}>Contact</button>
-              <button type="button" onClick={() => scrollTo('features')}>Careers</button>
-            </div>
-            <div className="lp-footer__col">
-              <h4>For Teachers</h4>
-              <button type="button" onClick={() => navigate('/register?role=teacher')}>Become a Teacher</button>
-              <button type="button" onClick={() => scrollTo('find-teachers')}>Teacher Marketplace</button>
-              <button type="button" onClick={() => scrollTo('for-teachers')}>Why Teach on NerdX</button>
-            </div>
-            <div className="lp-footer__col">
+            <div className="lp2-footer__col">
               <h4>Get Started</h4>
-              <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp-footer__download">
-                <Smartphone size={14} /> Download Android App
-              </a>
               <button type="button" onClick={() => navigate('/register')}>Student Sign Up</button>
               <button type="button" onClick={() => navigate('/register?role=teacher')}>Teacher Sign Up</button>
-              <button type="button" onClick={() => navigate('/login')}>Student Login</button>
-              <button type="button" onClick={() => navigate('/login?role=teacher')}>Teacher Login</button>
+              <button type="button" onClick={() => navigate('/login')}>Log In</button>
+            </div>
+            <div className="lp2-footer__col">
+              <h4>Download</h4>
+              <a href={ANDROID_APP_URL} target="_blank" rel="noopener noreferrer" className="lp2-footer__app">
+                <Download size={14} /> Android App
+              </a>
             </div>
           </div>
         </div>
-        <div className="lp-footer__bottom">
-          <p>&copy; 2026 NerdX. Made with &#x1F49C; in Zimbabwe</p>
+        <div className="lp2-footer__bottom">
+          <p>&copy; 2026 NerdX. Made in Zimbabwe.</p>
         </div>
       </footer>
     </div>

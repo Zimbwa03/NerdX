@@ -179,8 +179,8 @@ export function AccountingPage() {
             className="science-feature-card"
             onClick={() => navigate('/app/teacher', { state: { subject: 'Principles of Accounting', gradeLevel: 'Form 3-4 (O-Level)' } })}
           >
-            <div className="feature-icon-box" style={{ background: 'rgba(124, 77, 255, 0.15)' }}>
-              <MessageSquare size={28} color="#B388FF" />
+            <div className="feature-icon-box" style={{ background: 'rgba(16, 185, 129, 0.15)' }}>
+              <MessageSquare size={28} color="#34D399" />
             </div>
             <h3 className="feature-card-title">AI Accounting Tutor</h3>
             <p className="feature-card-desc">Ask accounting questions and get structured explanations and marking guidance.</p>
@@ -246,7 +246,9 @@ export function AccountingPage() {
                 <div
                   key={topic.id}
                   className="science-topic-card"
-                  onClick={() => openStartQuiz(topic)}
+                  onClick={() =>
+                    navigate(`/app/accounting/topic/${encodeURIComponent(topic.id)}`)
+                  }
                 >
                   <div className="topic-icon-small">
                     <TopicIcon size={20} />

@@ -1,8 +1,16 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from 'tailwindcss'
+import autoprefixer from 'autoprefixer'
 
 export default defineConfig({
   plugins: [react()],
+  // Ensure Tailwind runs: raw `@tailwind` in CSS is ignored by browsers without PostCSS.
+  css: {
+    postcss: {
+      plugins: [tailwindcss(), autoprefixer()],
+    },
+  },
   build: {
     rollupOptions: {
       output: {
@@ -36,6 +44,11 @@ export default defineConfig({
         changeOrigin: true,
         cookieDomainRewrite: 'localhost',
       },
+      // Used by AdminGatewayPage to detect if Flask is up (same port as admin proxy)
+      '/health': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
       // Proxy /admin/* to the Flask backend which serves the admin dashboard
       '/admin': {
         target: 'http://localhost:5000',
@@ -60,6 +73,14 @@ export default defineConfig({
         changeOrigin: true,
         cookieDomainRewrite: 'localhost',
       },
+    },
+  },
+  preview: {
+    proxy: {
+      '/api': { target: 'http://localhost:5000', changeOrigin: true, cookieDomainRewrite: 'localhost' },
+      '/health': { target: 'http://localhost:5000', changeOrigin: true },
+      '/admin': { target: 'http://localhost:5000', changeOrigin: true, cookieDomainRewrite: 'localhost' },
+      '/logout': { target: 'http://localhost:5000', changeOrigin: true, cookieDomainRewrite: 'localhost' },
     },
   },
 })

@@ -92,9 +92,9 @@ export const A_LEVEL_TOPICS: Record<string, string[]> = {
 };
 
 export const SUBJECT_COLORS: Record<string, string> = {
-  'O Level Mathematics': '#667eea',
+  'O Level Mathematics': '#10B981',
   'Pure Mathematics': '#5A67D8',
-  English: '#8B5CF6',
+  English: '#10B981',
   Biology: '#4CAF50',
   Chemistry: '#FF9800',
   Physics: '#2196F3',

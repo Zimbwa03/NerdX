@@ -53,7 +53,7 @@ class PaynowService:
             self.result_url = env_result_url
             self.return_url = env_return_url
         else:
-            base_url = os.environ.get('BASE_URL', 'https://nerdx.onrender.com')
+            base_url = os.environ.get('BASE_URL', 'https://nerdx.co.zw')
             self.result_url = f'{base_url}/webhook/paynow/result'
             self.return_url = f'{base_url}/webhook/paynow/return'
         

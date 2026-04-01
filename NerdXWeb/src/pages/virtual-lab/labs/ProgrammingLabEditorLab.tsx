@@ -143,7 +143,7 @@ export function ProgrammingLabEditorLab({ simulation }: { simulation: Simulation
             </div>
 
             <div className="vl-row" style={{ marginTop: 12 }}>
-              <button type="button" className="vl-btn" onClick={() => setAiOpen(!aiOpen)} style={{ background: 'linear-gradient(135deg, #651FFF, #7C4DFF)', color: 'white', border: 'none', width: '100%' }}>
+              <button type="button" className="vl-btn" onClick={() => setAiOpen(!aiOpen)} style={{ background: 'linear-gradient(135deg, #059669, #10B981)', color: 'white', border: 'none', width: '100%' }}>
                 <Sparkles size={16} /> Open AI Tutor
               </button>
             </div>

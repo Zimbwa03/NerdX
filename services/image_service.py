@@ -4,21 +4,13 @@ import logging
 import requests
 import base64
 from typing import Dict, Optional
-from config import Config
 
 logger = logging.getLogger(__name__)
 
+
 class ImageService:
-    """Service for handling image processing and math problem solving"""
-    
-    def __init__(self):
-        self.deepseek_api_key = Config.DEEPSEEK_API_KEY
-        self.deepseek_model = Config.DEEPSEEK_CHAT_MODEL
-        
-        if not self.deepseek_api_key:
-            logger.warning("DEEPSEEK_API_KEY not configured - image processing features will be limited")
-            self.client = None
-    
+    """Service for handling image processing and math problem solving (Vertex AI vision)."""
+
     def process_image(self, image_file) -> Optional[Dict]:
         """Process an uploaded image file directly"""
         try:
@@ -50,7 +42,7 @@ class ImageService:
             return None
 
     def solve_math_image(self, image_url: str) -> Optional[Dict]:
-        """Solve mathematical problems from images using DeepSeek Vision API"""
+        """Solve mathematical problems from images using Vertex AI (Gemini vision)."""
         try:
             # Download image and convert to base64
             image_data = self._download_image(image_url)
@@ -129,101 +121,6 @@ Format your response as JSON:
             logger.error(f"Error calling Vertex AI for image solve: {e}")
             return None
 
-    def _solve_with_deepseek(self, base64_image: str) -> Optional[Dict]:
-        """Internal helper to call DeepSeek Vision"""
-        try:
-            prompt = """
-You are an expert mathematics tutor. Analyze this image containing a mathematical problem or graph and provide a complete solution.
-
-Please:
-1. Identify and transcribe the mathematical problem or graph features from the image
-2. Solve the problem step by step with clear explanations
-3. Provide the final answer
-4. If the image is unclear or doesn't contain a math problem, explain what you see
-
-Format your response as JSON:
-{
-    "problem_identified": "The mathematical problem as seen in the image",
-    "solution_steps": "Step 1: ...\nStep 2: ...\nStep 3: ...",
-    "final_answer": "The final numerical or algebraic answer",
-    "confidence": "high/medium/low based on image clarity",
-    "notes": "Any additional observations or clarifications"
-}
-"""
-
-            headers = {
-                'Authorization': f'Bearer {self.deepseek_api_key}',
-                'Content-Type': 'application/json'
-            }
-            
-            data = {
-                'model': self.deepseek_model,
-                'messages': [
-                    {
-                        'role': 'user',
-                        'content': [
-                            {
-                                'type': 'text',
-                                'text': prompt
-                            },
-                            {
-                                'type': 'image_url',
-                                'image_url': {
-                                    'url': f"data:image/jpeg;base64,{base64_image}"
-                                }
-                            }
-                        ]
-                    }
-                ],
-                'max_tokens': 2000,
-                'temperature': 0.1
-            }
-            
-            response = requests.post(
-                'https://api.deepseek.com/chat/completions',
-                headers=headers,
-                json=data,
-                timeout=60
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                content = result['choices'][0]['message']['content']
-                
-                # Extract JSON from response
-                try:
-                    json_start = content.find('{')
-                    json_end = content.rfind('}') + 1
-                    json_str = content[json_start:json_end]
-                    
-                    solution_data = json.loads(json_str)
-                    
-                    # Validate required fields
-                    if all(key in solution_data for key in ['problem_identified', 'solution_steps', 'final_answer']):
-                        logger.info("Successfully solved math image problem")
-                        return solution_data
-                    else:
-                        logger.warning("Incomplete solution data from AI")
-                        return None
-                        
-                except json.JSONDecodeError as e:
-                    logger.error(f"Failed to parse AI response JSON: {e}")
-                    # Return raw content as fallback
-                    return {
-                        'problem_identified': 'Problem analysis available',
-                        'solution_steps': content,
-                        'final_answer': 'See solution steps',
-                        'confidence': 'medium',
-                        'notes': 'Raw AI response due to parsing error'
-                    }
-            else:
-                logger.error(f"DeepSeek Vision API error: {response.status_code} - {response.text}")
-                return None
-                
-        except Exception as e:
-            logger.error(f"Error calling DeepSeek API: {e}")
-            return None
-    
     def _download_image(self, image_url: str) -> Optional[bytes]:
         """Download image from URL"""
         try:

@@ -1,0 +1,65 @@
+/* Embedded "AI Classroom" chip on topic cards (stops click bubbling to parent card). */
+.ma-topic-classroom-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 11px;
+  margin: 0;
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  line-height: 1;
+  text-transform: uppercase;
+  border-radius: 10px;
+  border: 1px solid rgba(110, 231, 183, 0.65);
+  background: linear-gradient(155deg, rgba(16, 185, 129, 0.45) 0%, rgba(5, 150, 105, 0.28) 100%);
+  color: #ecfdf5;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(16, 185, 129, 0.2),
+    0 4px 16px rgba(16, 185, 129, 0.28);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.ma-topic-classroom-btn:hover {
+  transform: scale(1.05);
+  border-color: rgba(167, 243, 208, 0.95);
+  background: linear-gradient(155deg, rgba(52, 211, 153, 0.5) 0%, rgba(16, 185, 129, 0.38) 100%);
+  box-shadow:
+    0 0 0 1px rgba(52, 211, 153, 0.35),
+    0 6px 22px rgba(16, 185, 129, 0.4);
+}
+
+.ma-topic-classroom-btn:active {
+  transform: scale(0.97);
+}
+
+.ma-topic-classroom-btn:focus-visible {
+  outline: 2px solid #6ee7b7;
+  outline-offset: 2px;
+}
+
+.ma-topic-classroom-btn__icon {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+/* Variant for non–science-universe cards (e.g. accounting grid) */
+.ma-topic-classroom-btn--accounting {
+  border-color: rgba(238, 198, 107, 0.55);
+  background: linear-gradient(155deg, rgba(212, 175, 55, 0.35) 0%, rgba(184, 134, 11, 0.22) 100%);
+  color: #fffbeb;
+  box-shadow:
+    0 0 0 1px rgba(212, 175, 55, 0.2),
+    0 4px 14px rgba(184, 134, 11, 0.22);
+}
+
+.ma-topic-classroom-btn--accounting:hover {
+  border-color: rgba(253, 230, 138, 0.85);
+  background: linear-gradient(155deg, rgba(238, 198, 107, 0.45) 0%, rgba(184, 134, 11, 0.32) 100%);
+  box-shadow:
+    0 0 0 1px rgba(238, 198, 107, 0.3),
+    0 6px 20px rgba(184, 134, 11, 0.35);
+}

@@ -55,7 +55,7 @@ export function LessonCalendarWidget({ bookings, loading }: LessonCalendarWidget
 
   // Subject colors
   const subjectColorMap = useMemo(() => {
-    const colors = ['#7C4DFF', '#00E5FF', '#FF6B6B', '#FFAB00', '#00E676', '#FF4081'];
+    const colors = ['#10B981', '#00E5FF', '#FF6B6B', '#FFAB00', '#00E676', '#FF4081'];
     const subjects = [...new Set(bookings.map(b => b.subject))];
     const map = new Map<string, string>();
     subjects.forEach((s, i) => map.set(s, colors[i % colors.length]));
@@ -103,7 +103,7 @@ export function LessonCalendarWidget({ bookings, loading }: LessonCalendarWidget
                     <span
                       key={i}
                       className="td-v2-calendar-day__dot"
-                      style={{ background: subjectColorMap.get(b.subject) || '#7C4DFF' }}
+                      style={{ background: subjectColorMap.get(b.subject) || '#10B981' }}
                     />
                   ))}
                 </div>
@@ -125,7 +125,7 @@ export function LessonCalendarWidget({ bookings, loading }: LessonCalendarWidget
             <div key={b.id} className="td-v2-calendar-lesson">
               <div
                 className="td-v2-calendar-lesson__bar"
-                style={{ background: subjectColorMap.get(b.subject) || '#7C4DFF' }}
+                style={{ background: subjectColorMap.get(b.subject) || '#10B981' }}
               />
               <div className="td-v2-calendar-lesson__info">
                 <span className="td-v2-calendar-lesson__subject">{b.subject}</span>

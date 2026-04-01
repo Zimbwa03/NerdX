@@ -317,7 +317,7 @@ export function EnglishComprehensionPage() {
         isVisible={isGenerating}
         title="Generating Question"
         subtitle="Creating your practice question"
-        accentColor="#667eea"
+        accentColor="#10B981"
         variant="fullscreen"
       />
     </div>

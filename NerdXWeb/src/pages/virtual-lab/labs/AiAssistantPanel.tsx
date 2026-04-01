@@ -57,7 +57,7 @@ export function AiAssistantPanel({
         <div className="vl-ai-panel">
             <div className="vl-ai-header">
                 <div className="vl-row compact">
-                    <div className="subject-icon-v2 small" style={{ background: 'linear-gradient(135deg, #7C4DFF, #651FFF)' }}>
+                    <div className="subject-icon-v2 small" style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}>
                         <Bot size={16} />
                     </div>
                     <span style={{ fontWeight: 'bold' }}>AI Tutor</span>
@@ -121,7 +121,7 @@ export function AiAssistantPanel({
           max-width: 85%; word-wrap: break-word;
         }
         .vl-msg.assistant { background: #2A2D3A; align-self: flex-start; color: #E0E0E0; border-bottom-left-radius: 2px; }
-        .vl-msg.user { background: #651FFF; align-self: flex-end; color: #fff; border-bottom-right-radius: 2px; }
+        .vl-msg.user { background: #059669; align-self: flex-end; color: #fff; border-bottom-right-radius: 2px; }
         .vl-ai-input {
           padding: 12px; border-top: 1px solid #333;
           display: flex; gap: 8px;
@@ -131,10 +131,10 @@ export function AiAssistantPanel({
           border-radius: 20px; padding: 8px 12px; color: #fff;
           outline: none; font-size: 13px;
         }
-        .vl-ai-input input:focus { border-color: #651FFF; }
+        .vl-ai-input input:focus { border-color: #059669; }
         .vl-ai-input button {
           width: 32px; height: 32px; border-radius: 50%;
-          background: #651FFF; color: #fff; border: none;
+          background: #059669; color: #fff; border: none;
           display: flex; align-items: center; justify-content: center;
           cursor: pointer;
         }

@@ -2,10 +2,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 .math-universe-page {
-    font-family: 'Outfit', sans-serif;
+    font-family: var(--font-sans);
     min-height: calc(100vh - var(--app-header-height, 64px) - 36px);
     min-height: calc(100svh - var(--app-header-height, 64px) - 36px);
-    background: #090a1a;
+    background: #0A0A0A;
     /* Deep space dark */
     color: #fff;
     position: relative;
@@ -37,8 +37,8 @@
     z-index: 0;
     pointer-events: none;
     background:
-        radial-gradient(circle at 15% 50%, rgba(41, 121, 255, 0.08) 0%, transparent 25%),
-        radial-gradient(circle at 85% 30%, rgba(124, 77, 255, 0.08) 0%, transparent 25%);
+        radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.08) 0%, transparent 25%);
 }
 
 .math-grid-overlay {
@@ -91,14 +91,14 @@
     align-items: center;
     gap: 8px;
     padding: 6px 16px;
-    background: rgba(41, 121, 255, 0.15);
-    border: 1px solid rgba(41, 121, 255, 0.3);
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
     border-radius: 20px;
     color: #64B5F6;
     font-size: 13px;
     font-weight: 600;
     margin-bottom: 16px;
-    box-shadow: 0 0 15px rgba(41, 121, 255, 0.2);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
 }
 
 .math-hero-title {
@@ -110,7 +110,7 @@
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 40px rgba(41, 121, 255, 0.3);
+    text-shadow: 0 0 40px rgba(16, 185, 129, 0.3);
 }
 
 .math-hero-subtitle {
@@ -139,7 +139,7 @@
 .shape-1 {
     width: 300px;
     height: 300px;
-    background: rgba(41, 121, 255, 0.2);
+    background: rgba(16, 185, 129, 0.2);
     top: -20px;
     right: -20px;
     animation: float 6s ease-in-out infinite;
@@ -148,7 +148,7 @@
 .shape-2 {
     width: 200px;
     height: 200px;
-    background: rgba(124, 77, 255, 0.2);
+    background: rgba(16, 185, 129, 0.2);
     bottom: -20px;
     left: -20px;
     animation: float 8s ease-in-out infinite reverse;
@@ -222,7 +222,7 @@
     border-color: rgba(255, 255, 255, 0.2);
     box-shadow:
         0 15px 35px rgba(0, 0, 0, 0.2),
-        0 0 20px rgba(41, 121, 255, 0.1);
+        0 0 20px rgba(16, 185, 129, 0.1);
 }
 
 .glass-card:hover::before {
@@ -257,13 +257,13 @@
 
 /* Start Exam Card - Special Style */
 .exam-glass-card {
-    background: linear-gradient(135deg, rgba(124, 77, 255, 0.1), rgba(41, 121, 255, 0.05));
-    border: 1px solid rgba(124, 77, 255, 0.3);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+    border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .exam-glass-card:hover {
-    border-color: #7C4DFF;
-    box-shadow: 0 0 30px rgba(124, 77, 255, 0.25);
+    border-color: #10B981;
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.25);
 }
 
 /* --- Topics Grid (Right Col) --- */
@@ -304,8 +304,8 @@
 }
 
 .topic-glass-btn:hover {
-    background: rgba(41, 121, 255, 0.1);
-    border-color: rgba(41, 121, 255, 0.4);
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.4);
     transform: translateY(-4px) scale(1.02);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
@@ -314,13 +314,13 @@
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    background: linear-gradient(135deg, #2979FF, #1565C0);
+    background: linear-gradient(135deg, #10B981, #059669);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 18px;
     color: #fff;
-    box-shadow: 0 4px 12px rgba(41, 121, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .topic-name {
@@ -335,7 +335,7 @@
 }
 
 ::-webkit-scrollbar-track {
-    background: #090a1a;
+    background: #0A0A0A;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -463,8 +463,8 @@
 
 [data-theme="light"] .math-universe-background {
   background:
-    radial-gradient(circle at 15% 50%, rgba(124, 77, 255, 0.1) 0%, transparent 30%),
-    radial-gradient(circle at 85% 30%, rgba(0, 230, 118, 0.08) 0%, transparent 30%);
+    radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.1) 0%, transparent 30%),
+    radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.08) 0%, transparent 30%);
 }
 
 [data-theme="light"] .math-universe-page h1,

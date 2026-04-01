@@ -35,19 +35,20 @@ interface Subject {
   color: string;
 }
 
+type QuizLocationState = {
+  question: Question;
+  subject: Subject;
+  topic?: Topic;
+  mixImagesEnabled?: boolean;
+  backTo?: string;
+  board?: 'zimsec' | 'cambridge';
+  questionFormat?: 'mcq' | 'structured' | 'essay';
+  formLevel?: string;
+};
+
 export function QuizPage() {
-  const { state } = useLocation() as {
-    state?: {
-      question: Question;
-      subject: Subject;
-      topic?: Topic;
-      mixImagesEnabled?: boolean;
-      backTo?: string;
-      board?: 'zimsec' | 'cambridge';
-      questionFormat?: 'mcq' | 'structured' | 'essay';
-      formLevel?: string;
-    };
-  };
+  const location = useLocation();
+  const state = location.state as QuizLocationState | undefined;
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
   const subject = state?.subject ?? { id: 'mathematics', name: 'O Level Mathematics', color: '#2979FF' };
@@ -83,7 +84,9 @@ export function QuizPage() {
   const isCommerce = subject?.id === 'commerce';
   const isBES = subject?.id === 'business_enterprise_skills';
   const isStructured =
-    question?.question_type === 'structured' && question.structured_question;
+    Boolean(question?.structured_question?.parts?.length) ||
+    (String(question?.question_type).toLowerCase() === 'structured' &&
+      Boolean(question?.structured_question));
   const structParts = question?.structured_question?.parts ?? [];
   const hasStructAnswer = structParts.some(
     (p) => (structuredAnswers[p.label] ?? '').trim().length > 0
@@ -100,6 +103,19 @@ export function QuizPage() {
     : hasOptions
       ? !!selectedAnswer
       : !!textAnswer.trim() || !!answerImage;
+
+  useEffect(() => {
+    const s = location.state as QuizLocationState | undefined;
+    const q = s?.question;
+    if (!q || typeof q !== 'object') return;
+    setQuestion(q);
+    setResult(null);
+    setSelectedAnswer('');
+    setTextAnswer('');
+    setStructuredAnswers({});
+    setAnswerImage(null);
+    questionStartTime.current = Date.now();
+  }, [location.key]);
 
   // Cleanup media streams on unmount
   useEffect(() => {

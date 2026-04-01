@@ -237,7 +237,18 @@ export const quizApi = {
     if (board) payload.board = board;
     if (formLevel) payload.form_level = formLevel;
 
-    const timeout = type === 'essay' || questionType === 'structured' ? 120000 : 90000;
+    // Timeouts must cover slow LLM paths. Topic hub passes structured/mcq via questionFormat,
+    // not questionType — so structured was incorrectly capped at 90s. A-Level MCQ often exceeds 90s.
+    const fmt = (questionFormat || '').toLowerCase();
+    const qType = (questionType || '').toLowerCase();
+    const slowFormat =
+      type === 'essay' ||
+      fmt === 'structured' ||
+      fmt === 'essay' ||
+      qType === 'structured' ||
+      qType === 'essay';
+    const aLevel = subject.startsWith('a_level_');
+    const timeout = slowFormat || aLevel ? 180000 : 120000;
     const response = await api.post('/api/mobile/quiz/generate', payload, { timeout });
     const questionData = response.data.data || null;
     if (questionData && response.data.credits_remaining !== undefined) {

@@ -21,6 +21,8 @@ export type ExamSetupState = {
   subject: string;
   backTo: string;
   subjectLabel: string;
+  /** Topic display names to pre-select when the API topic list loads (e.g. from topic hub). */
+  preselectedTopicNames?: string[];
 };
 
 const DEFAULT_SETUP_STATE: ExamSetupState = {
@@ -89,7 +91,10 @@ function getInitialLevel(subject: string): Level {
 
 export function ExamSetupPage() {
   const { state: locationState } = useLocation() as { state?: Partial<ExamSetupState> | null };
-  const { subject, backTo, subjectLabel } = { ...DEFAULT_SETUP_STATE, ...locationState };
+  const { subject, backTo, subjectLabel, preselectedTopicNames } = {
+    ...DEFAULT_SETUP_STATE,
+    ...locationState,
+  };
   const navigate = useNavigate();
   const { user } = useAuth();
   const [level, setLevel] = useState<Level>(() => getInitialLevel(subject));
@@ -162,6 +167,16 @@ export function ExamSetupPage() {
     }
     return () => { cancelled = true; };
   }, [subject]);
+
+  useEffect(() => {
+    const want = (preselectedTopicNames ?? []).filter(Boolean);
+    if (!want.length || availableTopics.length === 0) return;
+    const matched = want.filter((n) => availableTopics.includes(n));
+    if (matched.length > 0) {
+      setAllTopics(false);
+      setSelectedTopics(matched);
+    }
+  }, [availableTopics, preselectedTopicNames]);
 
   const calculateTime = useCallback(async () => {
     setLoadingTime(true);

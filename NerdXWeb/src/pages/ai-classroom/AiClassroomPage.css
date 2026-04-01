@@ -1,0 +1,827 @@
+.ai-classroom-page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(160deg, #0b1220 0%, #111827 45%, #0f172a 100%);
+  color: #e2e8f0;
+}
+
+.ai-classroom-page--setup {
+  background: #080b0f;
+}
+
+.ai-classroom-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+}
+
+.ai-classroom-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  justify-content: flex-end;
+}
+
+.ai-classroom-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ai-classroom-toggle input {
+  accent-color: #10b981;
+  width: 14px;
+  height: 14px;
+}
+
+.ai-classroom-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(30, 41, 59, 0.6);
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.ai-classroom-tool-btn:hover {
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #fff;
+}
+
+.ai-classroom-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #94a3b8;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.ai-classroom-back:hover {
+  color: #e2e8f0;
+}
+
+.ai-classroom-title-block h1 {
+  margin: 8px 0 4px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.ai-classroom-meta {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.ai-classroom-stage-pill {
+  align-self: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.ai-classroom-setup {
+  padding: 24px;
+  max-width: 520px;
+}
+
+.ai-classroom-setup label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  margin-top: 14px;
+}
+
+.ai-classroom-setup input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f8fafc;
+  font-size: 15px;
+}
+
+.ai-classroom-setup input:focus {
+  outline: none;
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.ai-classroom-primary {
+  margin-top: 22px;
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 14px;
+  border: none;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #fff;
+}
+
+.ai-classroom-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ai-classroom-secondary {
+  margin-top: 10px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+  color: #e2e8f0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ai-classroom-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ai-classroom-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px 176px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ai-classroom-bubble {
+  max-width: min(720px, 100%);
+  padding: 14px 16px;
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.ai-classroom-bubble--teacher {
+  align-self: flex-start;
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.ai-classroom-bubble--classmate {
+  align-self: flex-start;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.35);
+}
+
+.ai-classroom-bubble--student {
+  align-self: flex-end;
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+}
+
+.ai-classroom-bubble-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.ai-classroom-bubble-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+}
+
+.ai-classroom-speak-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.5);
+  color: #a7f3d0;
+  cursor: pointer;
+}
+
+.ai-classroom-speak-btn:hover:not(:disabled) {
+  border-color: rgba(16, 185, 129, 0.5);
+  color: #6ee7b7;
+}
+
+.ai-classroom-speak-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.ai-classroom-live {
+  align-self: flex-start;
+  max-width: min(720px, 100%);
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px dashed rgba(16, 185, 129, 0.4);
+  color: #a7f3d0;
+  font-size: 15px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.ai-classroom-msg-content {
+  font-size: inherit;
+  line-height: 1.62;
+  color: inherit;
+}
+
+.ai-classroom-msg-content p {
+  margin: 0 0 0.46em;
+}
+
+.ai-classroom-msg-content p:last-child {
+  margin-bottom: 0;
+}
+
+.ai-classroom-msg-content .md-list-item {
+  margin: 0.15em 0;
+}
+
+.ai-classroom-msg-content .katex-display {
+  margin: 0.4em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.ai-classroom-msg-content code {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ai-classroom-msg-content--teacher {
+  color: #e2e8f0;
+}
+
+.ai-classroom-msg-content--classmate {
+  color: #dbeafe;
+}
+
+.ai-classroom-msg-content--note_taker {
+  color: #ffedd5;
+}
+
+.ai-classroom-msg-content--student {
+  color: #ecfdf5;
+}
+
+.ai-classroom-quiz {
+  margin: 0 24px 16px;
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+.ai-classroom-quiz h3 {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  color: #fcd34d;
+}
+
+.ai-classroom-quiz-q {
+  margin-bottom: 18px;
+}
+
+.ai-classroom-quiz-q p {
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+
+.ai-classroom-quiz-q label {
+  display: block;
+  margin: 6px 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.ai-classroom-quiz textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+  color: #f8fafc;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.ai-classroom-footer {
+  position: sticky;
+  bottom: 0;
+  padding: 14px 24px 22px;
+  background: linear-gradient(180deg, transparent, #0f172a 35%);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 6;
+}
+
+.ai-classroom-compose {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.ai-classroom-compose textarea {
+  flex: 1;
+  min-height: 44px;
+  max-height: 120px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f8fafc;
+  font-family: inherit;
+  font-size: 15px;
+  resize: vertical;
+}
+
+.ai-classroom-compose button {
+  padding: 12px 18px;
+  border-radius: 14px;
+  border: none;
+  font-weight: 700;
+  background: #10b981;
+  color: #052e1f;
+  cursor: pointer;
+}
+
+.ai-classroom-compose button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ai-classroom-error {
+  color: #fca5a5;
+  font-size: 14px;
+  padding: 0 24px;
+}
+
+.ai-classroom-outline {
+  margin: 0 24px 16px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+}
+
+.ai-classroom-outline ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.ai-classroom-recent {
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ai-classroom-recent-title {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+.ai-classroom-recent-hint {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.ai-classroom-recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-classroom-recent-item {
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e2e8f0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.ai-classroom-recent-item:hover:not(:disabled) {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.ai-classroom-recent-item:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.ai-classroom-recent-topic {
+  display: block;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.ai-classroom-recent-meta {
+  display: block;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.ai-classroom-bubble--board {
+  max-width: min(560px, 100%);
+}
+
+.maic-whiteboard-wrap {
+  margin-top: 4px;
+}
+
+.maic-whiteboard-label {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.maic-whiteboard-svg {
+  width: 100%;
+  height: auto;
+  max-height: 320px;
+  display: block;
+  border-radius: 12px;
+}
+
+.ai-classroom-projector {
+  margin: 0 24px 16px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.88), rgba(20, 36, 67, 0.86));
+}
+
+.ai-classroom-projector-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.ai-classroom-projector-tag {
+  margin: 0 0 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #93c5fd;
+  font-weight: 800;
+}
+
+.ai-classroom-projector-head h3 {
+  margin: 0;
+  font-size: 1.04rem;
+  line-height: 1.35;
+}
+
+.ai-classroom-projector-status {
+  font-size: 12px;
+  font-weight: 700;
+  color: #7dd3fc;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, 0.35);
+  background: rgba(2, 132, 199, 0.18);
+}
+
+.ai-classroom-focus-banner {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.16), transparent 38%),
+    rgba(7, 20, 41, 0.82);
+}
+
+.ai-classroom-focus-banner-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+}
+
+.ai-classroom-focus-banner-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #e0f2fe;
+  font-weight: 600;
+}
+
+.ai-classroom-slide-points {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.ai-classroom-slide-points li {
+  color: #cbd5e1;
+  transition: color 0.15s ease, transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  padding: 8px 10px;
+  margin-left: -10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+
+.ai-classroom-slide-points li.is-active {
+  color: #f8fafc;
+  font-weight: 700;
+  transform: translateX(2px);
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(96, 165, 250, 0.28);
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.22);
+}
+
+.ai-classroom-focus-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+.ai-classroom-focus-tags span {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #bae6fd;
+  border: 1px solid rgba(125, 211, 252, 0.28);
+}
+
+.ai-classroom-focus-tags span.is-active {
+  color: #fff;
+  border-color: rgba(59, 130, 246, 0.65);
+  background: rgba(37, 99, 235, 0.35);
+}
+
+.ai-classroom-slide-strip {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.ai-classroom-slide-chip {
+  flex: 0 0 auto;
+  max-width: 260px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 8px 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.5);
+  color: #bfdbfe;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ai-classroom-slide-chip.is-active {
+  border-color: rgba(59, 130, 246, 0.65);
+  color: #fff;
+  background: rgba(59, 130, 246, 0.25);
+}
+
+.ai-classroom-chat {
+  margin: 0 24px;
+}
+
+.ai-classroom-sync-panel {
+  margin: 0 24px 16px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ai-classroom-sync-card {
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.78);
+  color: #e2e8f0;
+  min-height: 132px;
+}
+
+button.ai-classroom-sync-card {
+  cursor: pointer;
+  font: inherit;
+}
+
+button.ai-classroom-sync-card:disabled {
+  cursor: default;
+  opacity: 0.82;
+}
+
+.ai-classroom-sync-card--focus {
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 42%),
+    rgba(15, 23, 42, 0.82);
+}
+
+.ai-classroom-sync-card--classmate {
+  background:
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.12), transparent 42%),
+    rgba(12, 27, 52, 0.82);
+}
+
+.ai-classroom-sync-card--notes {
+  background:
+    radial-gradient(circle at top right, rgba(251, 146, 60, 0.11), transparent 42%),
+    rgba(33, 21, 14, 0.82);
+}
+
+.ai-classroom-sync-label {
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #93c5fd;
+}
+
+.ai-classroom-sync-title {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.ai-classroom-sync-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #cbd5e1;
+}
+
+.ai-classroom-sync-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #fde7d2;
+}
+
+.ai-classroom-chat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.ai-classroom-chat-head h3 {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.ai-classroom-bubble--note_taker {
+  align-self: flex-start;
+  background: rgba(249, 115, 22, 0.14);
+  border: 1px solid rgba(251, 146, 60, 0.35);
+}
+
+.ai-classroom-bubble--speaking {
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.55), 0 0 0 4px rgba(34, 197, 94, 0.15);
+}
+
+.ai-classroom-mic-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.55);
+  color: #cbd5e1;
+  cursor: pointer;
+}
+
+.ai-classroom-mic-btn.is-recording {
+  border-color: rgba(244, 63, 94, 0.7);
+  color: #fecdd3;
+  background: rgba(190, 24, 93, 0.24);
+}
+
+.ai-classroom-compose .ai-classroom-mic-btn {
+  width: 42px;
+  min-width: 42px;
+  padding: 0;
+  background: rgba(15, 23, 42, 0.55);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.ai-classroom-compose .ai-classroom-mic-btn.is-recording {
+  border-color: rgba(244, 63, 94, 0.7);
+  color: #fecdd3;
+  background: rgba(190, 24, 93, 0.24);
+}
+
+.ai-classroom-audio-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.maic-whiteboard-wrap.is-focused .maic-whiteboard-svg {
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.6), 0 0 18px rgba(37, 99, 235, 0.35);
+}
+
+.maic-whiteboard-focus {
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #bfdbfe;
+  font-weight: 600;
+}
+
+@media (max-width: 920px) {
+  .ai-classroom-projector,
+  .ai-classroom-sync-panel,
+  .ai-classroom-chat,
+  .ai-classroom-outline {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .ai-classroom-sync-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-classroom-messages {
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-bottom: 210px;
+  }
+}

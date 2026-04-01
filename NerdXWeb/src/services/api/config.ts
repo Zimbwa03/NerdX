@@ -3,6 +3,19 @@ import axios from 'axios';
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
+const DEFAULT_PUBLIC_SITE = 'https://nerdx.co.zw';
+
+/**
+ * Canonical origin for shareable links (school portal, teacher login, referrals, OAuth redirects in production).
+ * Set VITE_PUBLIC_SITE_URL=https://nerdx.co.zw on production builds. If unset, uses the current browser origin (local dev).
+ */
+export function getPublicSiteOrigin(): string {
+  const fromEnv = (import.meta.env.VITE_PUBLIC_SITE_URL as string | undefined)?.trim().replace(/\/$/, '');
+  if (fromEnv) return fromEnv;
+  if (typeof window !== 'undefined') return window.location.origin;
+  return DEFAULT_PUBLIC_SITE;
+}
+
 const AUTH_TOKEN_KEY = '@auth_token';
 
 // Create axios instance with default config

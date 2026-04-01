@@ -31,7 +31,7 @@ const getDifficultyColor = (difficulty: string): string => {
         case 'easy': return '#22C55E';
         case 'medium': return '#F59E0B';
         case 'difficult': return '#EF4444';
-        default: return '#7C4DFF';
+        default: return '#10B981';
     }
 };
 

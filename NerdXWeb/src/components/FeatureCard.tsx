@@ -7,7 +7,7 @@ interface FeatureCardProps {
   glowColor?: string;
 }
 
-export function FeatureCard({ title, subtitle, imageSrc, onClick, fullWidth = false, glowColor = '#7C4DFF' }: FeatureCardProps) {
+export function FeatureCard({ title, subtitle, imageSrc, onClick, fullWidth = false, glowColor = '#10B981' }: FeatureCardProps) {
   return (
     <button
       type="button"

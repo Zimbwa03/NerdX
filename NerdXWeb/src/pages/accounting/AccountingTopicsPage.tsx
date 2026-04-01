@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ClipboardList, GraduationCap, MessageSquare, TrendingUp } from 'lucide-react';
 import { AILoadingOverlay } from '../../components/AILoadingOverlay';
+import { MaicTopicClassroomLink } from '../../components/MaicTopicClassroomLink';
 import { quizApi, type Topic } from '../../services/api/quizApi';
 import { useAuth } from '../../context/AuthContext';
 import { accountingTopics } from '../../data/accounting/topics';
@@ -176,12 +177,35 @@ export function AccountingTopicsPage() {
                 className="feature-card-v2"
                 onClick={() => navigate('/app/teacher', { state: { subject: 'Principles of Accounting', gradeLevel: 'Form 3-4 (O-Level)' } })}
               >
-                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #7C4DFF, #651FFF)' }}>
+                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}>
                   <MessageSquare size={24} />
                 </div>
                 <div className="feature-card-text">
                   <h3>AI Tutor</h3>
                   <p>Ask questions and get feedback</p>
+                </div>
+                <span className="feature-arrow">&rarr;</span>
+              </button>
+
+              <button
+                type="button"
+                className="feature-card-v2"
+                onClick={() =>
+                  navigate('/app/ai-classroom', {
+                    state: {
+                      subject: 'Principles of Accounting',
+                      formLevel: 'Form 3-4 (O-Level)',
+                      topic: '',
+                    },
+                  })
+                }
+              >
+                <div className="feature-card-icon" style={{ background: 'linear-gradient(135deg, #34d399, #059669)' }}>
+                  <GraduationCap size={24} />
+                </div>
+                <div className="feature-card-text">
+                  <h3>AI Classroom</h3>
+                  <p>Structured lesson, classmate prompts, and quiz checkpoint</p>
                 </div>
                 <span className="feature-arrow">&rarr;</span>
               </button>
@@ -209,12 +233,35 @@ export function AccountingTopicsPage() {
             ) : (
               <div className="topics-grid-v2">
                 {displayTopics.map((topic) => (
-                  <button key={topic.id} type="button" className="topic-card-v2" onClick={() => openStartQuiz(topic)}>
-                    <div className="topic-card-icon" style={{ background: 'linear-gradient(135deg, #D4AF37, #B8860B)' }}>
-                      <GraduationCap size={18} />
+                  <div
+                    key={topic.id}
+                    role="button"
+                    tabIndex={0}
+                    className="topic-card-v2"
+                    onClick={() => openStartQuiz(topic)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openStartQuiz(topic);
+                      }
+                    }}
+                  >
+                    <div className="topic-card-v2__row">
+                      <div className="topic-card-v2__lead">
+                        <div className="topic-card-icon" style={{ background: 'linear-gradient(135deg, #D4AF37, #B8860B)' }}>
+                          <GraduationCap size={18} />
+                        </div>
+                        <span className="topic-card-name">{topic.name}</span>
+                      </div>
+                      <MaicTopicClassroomLink
+                        navigate={navigate}
+                        subject="Principles of Accounting"
+                        gradeLevel="Form 3-4 (O-Level)"
+                        topicName={topic.name}
+                        variant="accounting"
+                      />
                     </div>
-                    <span className="topic-card-name">{topic.name}</span>
-                  </button>
+                  </div>
                 ))}
               </div>
             )}

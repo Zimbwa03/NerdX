@@ -327,6 +327,34 @@ def create_credit_costs_table():
                     'component': 'PDF Notes',
                     'description': '2 credits per PDF'
                 },
+                {
+                    'action_key': 'maic_classroom_start',
+                    'cost': 1,
+                    'category': 'MAIC Classroom',
+                    'component': 'Session start',
+                    'description': '0.1 credit to start AI Classroom'
+                },
+                {
+                    'action_key': 'maic_classroom_stream',
+                    'cost': 1,
+                    'category': 'MAIC Classroom',
+                    'component': 'Lesson segment',
+                    'description': '0.1 credit per streamed segment'
+                },
+                {
+                    'action_key': 'maic_classroom_message',
+                    'cost': 1,
+                    'category': 'MAIC Classroom',
+                    'component': 'Student message',
+                    'description': '0.1 credit per student question'
+                },
+                {
+                    'action_key': 'maic_classroom_quiz',
+                    'cost': 2,
+                    'category': 'MAIC Classroom',
+                    'component': 'Quiz marking',
+                    'description': '0.2 credit for quiz grading'
+                },
 
                 # Project Assistant (per response)
                 {
@@ -616,6 +644,12 @@ class CreditCostService:
             # AI Teacher Mode
             'teacher_mode_start': 1,  # 0.1 credit
             'teacher_mode_followup': 1,  # 0.1 credit
+
+            # MAIC AI Classroom
+            'maic_classroom_start': 1,
+            'maic_classroom_stream': 1,
+            'maic_classroom_message': 1,
+            'maic_classroom_quiz': 2,
 
             # Project Assistant (Basic) – 0.2 credit each
             'project_assistant_start': 2,

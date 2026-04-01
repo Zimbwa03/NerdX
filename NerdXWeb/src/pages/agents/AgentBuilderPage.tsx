@@ -83,7 +83,7 @@ export function AgentBuilderPage() {
     if (!agent.subtitle.trim()) return 'Subtitle is required.';
     if (!agent.subject.trim()) return 'Subject is required.';
     if (!agent.prompt.trim() || agent.prompt.trim().length < 10) return 'Prompt is required (min 10 characters).';
-    if (!isHexColor(agent.gradientFrom) || !isHexColor(agent.gradientTo)) return 'Gradient colors must be valid hex (example: #7C4DFF).';
+    if (!isHexColor(agent.gradientFrom) || !isHexColor(agent.gradientTo)) return 'Gradient colors must be valid hex (example: #10B981).';
     return null;
   };
 
@@ -391,12 +391,12 @@ export function AgentBuilderPage() {
                       className="agent-builder-input"
                       value={draft.gradientFrom}
                       onChange={(e) => setDraft((p) => ({ ...p, gradientFrom: e.target.value }))}
-                      placeholder="#7C4DFF"
+                      placeholder="#10B981"
                     />
                     <input
                       type="color"
                       aria-label="Gradient from color picker"
-                      value={isHexColor(draft.gradientFrom) ? draft.gradientFrom : '#7C4DFF'}
+                      value={isHexColor(draft.gradientFrom) ? draft.gradientFrom : '#10B981'}
                       onChange={(e) => setDraft((p) => ({ ...p, gradientFrom: e.target.value }))}
                     />
                   </div>
@@ -473,7 +473,7 @@ export function AgentBuilderPage() {
                       'End with a 5-question checkpoint.',
                     ].join('\n'),
                     iconKey: 'Sparkles',
-                    gradientFrom: '#7C4DFF',
+                    gradientFrom: '#10B981',
                     gradientTo: '#00E676',
                   }))
                 }
@@ -528,7 +528,7 @@ export function AgentBuilderPage() {
                     ].join('\n'),
                     iconKey: 'PenLine',
                     gradientFrom: '#FF9100',
-                    gradientTo: '#7C4DFF',
+                    gradientTo: '#10B981',
                   }))
                 }
               >

@@ -1,14 +1,14 @@
 """
 NerdX GeoTutor – Maps-based Geography Learning Lab (ZIMSEC O-Level + A-Level).
-Uses Vertex AI (primary) then DeepSeek (fallback) for teaching feedback from map_actions.
+Uses Vertex AI (primary); optional Google Gemini API (consumer key) if Vertex is unavailable.
 """
 
 import json
 import logging
-from typing import Any, Dict, List, Optional
+import os
+from typing import Any, Dict, Optional
 
 from utils.vertex_ai_helper import try_vertex_text
-from utils.deepseek import call_deepseek_chat
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ def get_geotutor_feedback(
     student_answer_text: Optional[str] = None,
 ) -> str:
     """
-    Call DeepSeek to generate NerdX GeoTutor feedback from map_actions.
+    Generate NerdX GeoTutor feedback from map_actions (Vertex AI, then optional Gemini API).
 
     Args:
         level: "O" or "A"
@@ -97,17 +97,21 @@ def get_geotutor_feedback(
         if response:
             return response.strip()
     except Exception as e:
-        logger.warning("GeoTutor Vertex AI error (will try DeepSeek): %s", e)
+        logger.warning("GeoTutor Vertex AI error (will try Gemini API if configured): %s", e)
 
-    # Fallback: DeepSeek
     try:
-        response = call_deepseek_chat(
-            system_prompt=SYSTEM_PROMPT,
-            user_prompt=user_prompt,
-            temperature=0.6,
-            max_tokens=2048,
-        )
-        return response.strip() if response else "Unable to generate feedback. Please try again."
+        import google.generativeai as genai
+
+        key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
+        if not key:
+            return "Sorry, the AI tutor is temporarily unavailable. Please try again later."
+        genai.configure(api_key=key)
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        full = f"{SYSTEM_PROMPT}\n\n{user_prompt}"
+        r = model.generate_content(full)
+        text = (getattr(r, "text", None) or "").strip()
+        if text:
+            return text
     except Exception as e:
-        logger.error("GeoTutor DeepSeek error: %s", e, exc_info=True)
-        return "Sorry, the AI tutor is temporarily unavailable. Please try again later."
+        logger.error("GeoTutor Gemini API fallback error: %s", e, exc_info=True)
+    return "Sorry, the AI tutor is temporarily unavailable. Please try again later."

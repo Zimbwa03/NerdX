@@ -180,7 +180,7 @@ export function AgentHubPage() {
         subtitle: 'Create your own subject tutor persona',
         icon: PenLine,
         from: '#111827',
-        to: '#7C4DFF',
+        to: '#10B981',
         onClick: () => navigate('/app/agents/builder'),
       },
       {
@@ -188,7 +188,7 @@ export function AgentHubPage() {
         title: 'Learning Coach',
         subtitle: 'Daily plan - accountability - mastery checks',
         icon: Sparkles,
-        from: '#7C4DFF',
+        from: '#10B981',
         to: '#00E676',
         onClick: () =>
           navigate('/app/teacher/chat', {
@@ -281,7 +281,7 @@ export function AgentHubPage() {
         subtitle: 'Grade - correct - improve your writing',
         icon: PenLine,
         from: '#FF9100',
-        to: '#7C4DFF',
+        to: '#10B981',
         onClick: () =>
           navigate('/app/teacher/chat', {
             state: {
@@ -357,8 +357,8 @@ export function AgentHubPage() {
         title: 'AI Insights',
         subtitle: 'Weak areas - daily review - progress map',
         icon: LineChart,
-        from: '#a18cd1',
-        to: '#8B7FD1',
+        from: '#10B981',
+        to: '#059669',
         onClick: () => navigate('/app/progress'),
       },
       ...customAgents.map((a) => ({

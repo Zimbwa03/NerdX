@@ -15,7 +15,7 @@ const ACTIVITY_CONFIG: Record<ActivityItem['type'], { icon: typeof Calendar; col
   lesson_completed: { icon: CheckCircle, color: '#00E676', bg: 'rgba(0,230,118,0.12)' },
   review: { icon: Star, color: '#FFAB00', bg: 'rgba(255,171,0,0.12)' },
   comment: { icon: MessageSquare, color: '#FF4081', bg: 'rgba(255,64,129,0.12)' },
-  post: { icon: FileText, color: '#7C4DFF', bg: 'rgba(124,77,255,0.12)' },
+  post: { icon: FileText, color: '#10B981', bg: 'rgba(124,77,255,0.12)' },
 };
 
 function timeAgo(dateStr: string): string {

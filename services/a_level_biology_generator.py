@@ -1,29 +1,17 @@
 """
 A Level Biology Question Generator.
-Uses Vertex AI as primary with DeepSeek (and Gemini) fallback.
+Uses Vertex AI (Gemini) for all AI-generated items.
 Supports MCQ, structured, and essay questions with marking schemes.
 """
 
 import json
 import logging
-import requests
 import os
 from typing import Dict, Optional, List
 from constants import A_LEVEL_BIOLOGY_TOPICS, A_LEVEL_BIOLOGY_ALL_TOPICS
-from utils.deepseek import get_deepseek_chat_model
 from utils.vertex_ai_helper import try_vertex_json
 
 logger = logging.getLogger(__name__)
-
-# Try to import Gemini AI
-try:
-    import google.generativeai as genai
-    GENAI_AVAILABLE = True
-    logger.info("google.generativeai loaded for A Level Biology Generator")
-except ImportError:
-    genai = None
-    GENAI_AVAILABLE = False
-    logger.warning("google.generativeai not available, will use DeepSeek only")
 
 # A Level Biology topic details for comprehensive prompts
 A_LEVEL_BIOLOGY_TOPIC_DETAILS = {
@@ -183,40 +171,10 @@ A_LEVEL_BIOLOGY_TOPIC_DETAILS = {
 
 
 class ALevelBiologyGenerator:
-    """Generator for A Level Biology questions with Vertex primary and DeepSeek/Gemini fallback."""
-    
+    """Generator for A Level Biology questions using Vertex AI (Gemini)."""
+
     def __init__(self):
-        # DeepSeek configuration (fallback)
-        self.deepseek_api_key = os.environ.get('DEEPSEEK_API_KEY')
-        self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
-        self.deepseek_model = get_deepseek_chat_model()
-        self.max_retries = 4  # Increased from 2 to 4 for better reliability
-        # Timeout varies by question type - structured/essay need more time
-        # Optimized timeouts - balanced for speed and reliability
-        self.timeout_base = 25  # Base timeout for MCQ (increased for better reliability)
-        self.connect_timeout = 10  # Connection timeout
-        
-        # Create a session for connection pooling and reuse
-        self.session = requests.Session()
-        self.session.headers.update({
-            'Content-Type': 'application/json',
-            'User-Agent': 'NerdX-Education/1.0'
-        })
-        
-        # Gemini configuration (fallback)
-        self.gemini_api_key = os.environ.get('GEMINI_API_KEY')
-        self._gemini_configured = False
-        
-        if self.gemini_api_key and GENAI_AVAILABLE:
-            try:
-                genai.configure(api_key=self.gemini_api_key)
-                self._gemini_configured = True
-                logger.info("Gemini AI configured as FALLBACK provider for A Level Biology")
-            except Exception as e:
-                logger.error(f"Failed to configure Gemini: {e}")
-        
-        if self.deepseek_api_key:
-            logger.info("DeepSeek AI configured as fallback provider for A Level Biology")
+        self.max_retries = int(os.environ.get("A_LEVEL_BIOLOGY_VERTEX_RETRIES", "4"))
     
 
     def generate_question(self, topic: str, difficulty: str = "medium", 
@@ -253,21 +211,18 @@ class ALevelBiologyGenerator:
             context = f"a_level_biology:{question_type}:{topic_name}:{difficulty}"
             vertex_prompt = f"{self._system_prompt()}\n\n{prompt}"
 
-            logger.info(f"Trying Vertex AI (primary) for {context}")
-            question_data = try_vertex_json(vertex_prompt, logger=logger, context=context)
-            if question_data and not _is_valid_candidate(question_data):
-                logger.warning(f"Vertex AI returned invalid structure for {context}")
-                question_data = None
-
-            if not question_data:
-                ai_model = "deepseek_fallback"
-                logger.info(f"Falling back to DeepSeek for {context}")
-                question_data = self._call_deepseek(prompt, question_type)
-
-            if not question_data and self._gemini_configured:
-                ai_model = "gemini_fallback"
-                logger.info(f"DeepSeek failed, falling back to Gemini for {context}")
-                question_data = self._call_gemini(prompt, question_type)
+            question_data = None
+            for attempt in range(self.max_retries):
+                logger.info("Vertex AI attempt %s/%s for %s", attempt + 1, self.max_retries, context)
+                raw = try_vertex_json(vertex_prompt, logger=logger, context=context, max_attempts=2)
+                if raw:
+                    normalized = self._validate_and_normalize_biology_question(raw, question_type)
+                    if normalized and _is_valid_candidate(normalized):
+                        question_data = normalized
+                        break
+                    logger.warning("Vertex AI returned invalid structure for %s (attempt %s)", context, attempt + 1)
+                else:
+                    logger.warning("Vertex AI returned no JSON for %s (attempt %s)", context, attempt + 1)
 
             if question_data:
                 question_data['subject'] = 'A Level Biology'
@@ -664,7 +619,7 @@ Generate now:"""
     
 
     def _system_prompt(self) -> str:
-        """System prompt shared by Vertex AI and DeepSeek."""
+        """System prompt for Vertex AI generation."""
         return """You are a senior A Level Biology teacher (15+ years) and examiner-style question designer.
 You teach and assess for BOTH ZIMSEC A Level Biology 6030 and Cambridge International AS & A Level Biology 9700.
 
@@ -685,453 +640,58 @@ CRITICAL: Use plain text notation and never use LaTeX or $ symbols:
 
 Always respond with valid JSON containing step-by-step solutions and marking schemes."""
 
-    def _call_deepseek(self, prompt: str, question_type: str = "mcq") -> Optional[Dict]:
-        """Call DeepSeek API with retries - optimized for Render's 30s timeout"""
-        
-        # Token allocation based on question complexity
-        max_tokens = {
-            "mcq": 1000,       # MCQ needs moderate tokens for good explanations
-            "structured": 2000, # Structured needs more for parts and marking schemes
-            "essay": 2500      # Essay needs most for comprehensive plans and criteria
-        }.get(question_type, 1500)
-        
-        # Optimized timeouts - balanced for speed and reliability
-        timeout = {
-            "mcq": self.timeout_base,              # 20s for MCQ
-            "structured": self.timeout_base + 8,   # 28s for structured (reduced from 40s)
-            "essay": self.timeout_base + 12        # 32s for essay (reduced from 45s)
-        }.get(question_type, self.timeout_base)
-        
-        for attempt in range(self.max_retries):
-            try:
-                if not self.deepseek_api_key:
-                    logger.error("DeepSeek API key not found")
-                    return None
-                
-                headers = {
-                    "Authorization": f"Bearer {self.deepseek_api_key}",
-                    "Content-Type": "application/json"
-                }
-                
-                payload = {
-                    "model": self.deepseek_model,
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": self._system_prompt()
-                        },
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
-                    ],
-                    "temperature": 0.6,  # Slightly lower for more focused responses
-                    "max_tokens": max_tokens
-                }
-                
-                logger.info(f"DeepSeek Biology {question_type} attempt {attempt + 1}/{self.max_retries} (timeout: {timeout}s, max_tokens: {max_tokens})")
-                
-                # Use session for connection pooling and better performance
-                # Add auth header to session
-                self.session.headers.update(headers)
-                
-                # Exponential backoff with jitter
-                if attempt > 0:
-                    import random
-                    backoff_delay = 1 * (2 ** (attempt - 1)) + random.uniform(0, 1)
-                    logger.info(f"Waiting {backoff_delay:.2f}s before retry {attempt + 1}/{self.max_retries}")
-                    time.sleep(backoff_delay)
-                
-                try:
-                    response = self.session.post(
-                        self.deepseek_url,
-                        json=payload,
-                        timeout=(self.connect_timeout, timeout)  # (connect, read) timeout tuple
-                    )
-                    if response.status_code == 429:
-                        # Rate limit - wait longer before retry
-                        retry_after = int(response.headers.get('Retry-After', 10))
-                        logger.warning(f"DeepSeek rate limit hit (429), waiting {retry_after}s before retry")
-                        if attempt < self.max_retries - 1:
-                            time.sleep(retry_after)
-                            continue
-                    elif response.status_code == 503:
-                        # Service unavailable - wait and retry
-                        logger.warning(f"DeepSeek service unavailable (503), will retry")
-                        if attempt < self.max_retries - 1:
-                            continue
-                    elif response.status_code != 200:
-                        logger.error(f"DeepSeek API error: {response.status_code} - {response.text[:200]}")
-                        if attempt < self.max_retries - 1:
-                            continue
-                    result = response.json()
-                    content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
-                    if not content:
-                        logger.warning(f"Empty response from DeepSeek on attempt {attempt + 1}")
-                        continue
-                    question_data = self._parse_response(content, question_type)
-                    if question_data:
-                        logger.info(f"Successfully generated {question_type} question on attempt {attempt + 1}")
-                        return question_data
-                    else:
-                        logger.warning(f"Failed to parse response on attempt {attempt + 1}")
-                        logger.debug(f"Response content preview (first 1000 chars): {content[:1000]}")
-                except requests.Timeout:
-                    logger.warning(f"DeepSeek timeout on attempt {attempt + 1}/{self.max_retries} after {timeout}s for {question_type}")
-                    # Reduce max_tokens and timeout for retry to speed up
-                    if attempt < self.max_retries - 1:
-                        import time
-                        max_tokens = int(max_tokens * 0.85)  # Reduce by 15% to speed up
-                        timeout = int(timeout * 0.9)  # Reduce timeout slightly
-                        logger.info(f"Retrying {question_type} with reduced max_tokens ({max_tokens}) and timeout ({timeout}s)")
-                        time.sleep(1)  # Brief wait before retry
-                    continue
-                except requests.exceptions.ConnectionError as e:
-                    logger.error(f"DeepSeek connection error on attempt {attempt + 1}: {e}")
-                    # Exponential backoff for connection errors
-                    if attempt < self.max_retries - 1:
-                        import time
-                        wait_time = min(2 ** attempt, 5)  # Cap at 5 seconds: 1s, 2s, 4s, 5s
-                        logger.info(f"Waiting {wait_time}s before retry...")
-                        time.sleep(wait_time)
-                    continue
-                except requests.exceptions.HTTPError as e:
-                    # Handle rate limiting and HTTP errors
-                    status_code = getattr(e.response, 'status_code', None)
-                    if status_code == 429:  # Rate limit
-                        logger.warning(f"DeepSeek rate limit hit on attempt {attempt + 1}")
-                        if attempt < self.max_retries - 1:
-                            import time
-                            wait_time = 5 * (attempt + 1)  # Wait longer for rate limits: 5s, 10s
-                            logger.info(f"Rate limited, waiting {wait_time}s before retry...")
-                            time.sleep(wait_time)
-                        continue
-                    else:
-                        logger.error(f"DeepSeek HTTP error {status_code} on attempt {attempt + 1}: {e}")
-                        if attempt < self.max_retries - 1:
-                            import time
-                            time.sleep(2)
-                        continue
-                except Exception as e:
-                    logger.error(f"Error calling DeepSeek API on attempt {attempt + 1}: {e}", exc_info=True)
-                    # Brief wait before retry for other errors
-                    if attempt < self.max_retries - 1:
-                        import time
-                        time.sleep(1)
-                    continue
-            except Exception:
-                continue  # outer try: continue to next attempt on any unexpected error
-        
-        logger.error(f"All {self.max_retries} DeepSeek attempts failed for Biology {question_type} question, trying Vertex AI fallback")
-        
-        # FALLBACK: Try Vertex AI when DeepSeek fails
-        try:
-            from services.vertex_service import vertex_service
-            
-            if vertex_service.is_available():
-                logger.info(f"🔄 Falling back to Vertex AI for Biology {question_type}")
-                
-                # Create system message for Vertex AI
-                system_message = self._system_prompt()
-                
-                # Combine system and user messages for Vertex AI
-                full_prompt = f"{system_message}\n\n{prompt}"
-                
-                result = vertex_service.generate_text(prompt=full_prompt, model="gemini-2.5-flash")
-                
-                if result and result.get('success'):
-                    text = result['text']
-                    logger.info(f"Raw Vertex AI response for {question_type}: {text[:200]}...")
-                    
-                    # Parse the response using the same method as DeepSeek
-                    question_data = self._parse_response(text, question_type)
-                    if question_data:
-                        logger.info(f"✅ Successfully generated Biology {question_type} with Vertex AI fallback")
-                        return question_data
-                    else:
-                        logger.error(f"Failed to parse Vertex AI response for {question_type}")
-                else:
-                    logger.error(f"Vertex AI fallback failed: {result.get('error', 'Unknown error') if result else 'No result'}")
-            else:
-                logger.warning("Vertex AI not available for fallback")
-        except Exception as e:
-            logger.error(f"Error in Vertex AI fallback: {e}")
-        
-        return None
-    
-    def _call_gemini(self, prompt: str, question_type: str = "mcq") -> Optional[Dict]:
-        """Call Gemini API as fallback when DeepSeek fails"""
-        
-        if not self._gemini_configured or not GENAI_AVAILABLE:
-            logger.warning("Gemini not configured, cannot use as fallback")
+    def _validate_and_normalize_biology_question(self, question_data: Optional[Dict], question_type: str) -> Optional[Dict]:
+        """Validate and normalize parsed JSON from Vertex for MCQ / structured / essay."""
+        if not isinstance(question_data, dict):
             return None
-        
         try:
-            # Adjust max tokens based on question type
-            max_tokens = {
-                "mcq": 1200,
-                "structured": 1800,
-                "essay": 2200
-            }.get(question_type, 1500)
-            
-            # Use Gemini Flash for speed
-            model = genai.GenerativeModel('gemini-2.0-flash-exp')
-            
-            logger.info(f"Calling Gemini for Biology {question_type} (max_tokens: {max_tokens})")
-            
-            # Request JSON response
-            response = model.generate_content(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
-                    response_mime_type="application/json",
-                    temperature=0.7,
-                    max_output_tokens=max_tokens
-                ),
-                request_options={'timeout': 20}  # 20 second timeout
-            )
-            
-            if response and hasattr(response, 'text') and response.text:
-                content = response.text.strip()
-                
-                # Parse the response using existing parser
-                question_data = self._parse_response(content, question_type)
-                if question_data:
-                    logger.info(f"Gemini successfully generated {question_type} question")
-                    return question_data
-                else:
-                    logger.warning(f"Failed to parse Gemini response for {question_type}")
-            else:
-                logger.warning("Empty response from Gemini")
-            
-            return None
-            
-        except Exception as e:
-            logger.error(f"Error calling Gemini API: {e}")
-            return None
-    
-    def _parse_response(self, content: str, question_type: str) -> Optional[Dict]:
-        """Parse JSON response from DeepSeek with truncation recovery"""
-        try:
-            content = content.strip()
-            
-            # Remove markdown code blocks
-            if '```json' in content:
-                start = content.find('```json') + 7
-                end = content.find('```', start)
-                if end > start:
-                    content = content[start:end].strip()
-                else:
-                    content = content[start:].strip()
-            elif '```' in content:
-                start = content.find('```') + 3
-                end = content.find('```', start)
-                if end > start:
-                    content = content[start:end].strip()
-                else:
-                    content = content[start:].strip()
-            
-            # Try to parse JSON, with recovery for truncated responses
-            try:
-                question_data = json.loads(content)
-            except json.JSONDecodeError as e:
-                logger.warning(f"Initial JSON parse failed for {question_type}: {e}")
-                # Attempt to recover truncated JSON
-                if question_type == "mcq":
-                    question_data = self._recover_truncated_json(content)
-                    if not question_data:
-                        return None
-                else:
-                    # For structured/essay, try to find and parse a partial JSON object
-                    question_data = self._recover_partial_json(content, question_type)
-                    if not question_data:
-                        logger.error(f"Could not recover JSON for {question_type} question")
-                        return None
-            
-            # Validate and normalize based on question type
             if question_type == "mcq":
-                required = ['question', 'options', 'correct_answer', 'explanation']
+                required = ["question", "options", "correct_answer", "explanation"]
                 for field in required:
                     if field not in question_data:
-                        logger.error(f"Missing required field for MCQ: {field}")
+                        logger.error("Missing required field for MCQ: %s", field)
                         return None
                 return question_data
-                
-            elif question_type == "structured":
-                # Structured questions can have 'question' or 'stimulus' field
-                if 'stimulus' in question_data and 'question' not in question_data:
-                    question_data['question'] = question_data.get('stimulus', '')
-                
-                # Check for required fields
-                if 'parts' not in question_data:
+            if question_type == "structured":
+                if "stimulus" in question_data and "question" not in question_data:
+                    question_data["question"] = question_data.get("stimulus", "")
+                if "parts" not in question_data:
                     logger.error("Missing required field 'parts' for structured question")
                     return None
-                
-                if not isinstance(question_data.get('parts'), list) or len(question_data['parts']) < 2:
-                    logger.error(f"Invalid parts format: expected list with at least 2 parts, got {type(question_data.get('parts'))}")
+                if not isinstance(question_data.get("parts"), list) or len(question_data["parts"]) < 2:
+                    logger.error("Invalid parts format for structured question")
                     return None
-                
-                # Ensure each part has required fields
-                for i, part in enumerate(question_data['parts']):
+                for i, part in enumerate(question_data["parts"]):
                     if not isinstance(part, dict):
-                        logger.error(f"Part {i} is not a dictionary")
+                        logger.error("Part %s is not a dictionary", i)
                         return None
-                    # Normalize part labels
-                    if 'label' not in part and 'part' in part:
-                        part['label'] = part['part']
-                    if 'part' not in part and 'label' in part:
-                        part['part'] = part['label']
-                    # Ensure model_answer exists (can be from expected_answer)
-                    if 'model_answer' not in part and 'expected_answer' in part:
-                        part['model_answer'] = part['expected_answer']
-                
-                # Calculate total_marks if not provided
-                if 'total_marks' not in question_data:
-                    total = sum(p.get('marks', 0) for p in question_data['parts'])
-                    question_data['total_marks'] = total
-                    logger.info(f"Calculated total_marks: {total}")
-                
+                    if "label" not in part and "part" in part:
+                        part["label"] = part["part"]
+                    if "part" not in part and "label" in part:
+                        part["part"] = part["label"]
+                    if "model_answer" not in part and "expected_answer" in part:
+                        part["model_answer"] = part["expected_answer"]
+                if "total_marks" not in question_data:
+                    question_data["total_marks"] = sum(p.get("marks", 0) for p in question_data["parts"])
                 return question_data
-                
-            elif question_type == "essay":
-                # Check for required fields
-                if 'essay_plan' not in question_data:
+            if question_type == "essay":
+                if "essay_plan" not in question_data:
                     logger.error("Missing required field 'essay_plan' for essay question")
                     return None
-                
-                if not isinstance(question_data.get('essay_plan'), dict):
-                    logger.error(f"Invalid essay_plan format: expected dict, got {type(question_data.get('essay_plan'))}")
+                if not isinstance(question_data.get("essay_plan"), dict):
+                    logger.error("Invalid essay_plan format")
                     return None
-                
-                # Calculate total_marks if not provided
-                if 'total_marks' not in question_data:
-                    # Default to 25 marks for essay
-                    question_data['total_marks'] = 25
-                    logger.info("Set default total_marks: 25")
-                
+                if "total_marks" not in question_data:
+                    question_data["total_marks"] = 25
                 return question_data
-            else:
-                if 'question' not in question_data:
-                    logger.error("Missing required field 'question'")
-                    return None
-                return question_data
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse JSON for {question_type}: {e}")
-            logger.error(f"Content preview (first 1000 chars): {content[:1000]}...")
-            logger.error(f"Content length: {len(content)} characters")
-            # Try to recover truncated JSON for MCQ only
-            if question_type == "mcq":
-                recovered = self._recover_truncated_json(content)
-                if recovered:
-                    logger.info("Successfully recovered truncated MCQ JSON")
-                    return recovered
-            else:
-                # For structured/essay, log more details for debugging
-                logger.error(f"JSON parse error details: {str(e)}")
-                logger.error(f"Error position: {getattr(e, 'pos', 'unknown')}")
-            return None
-        except Exception as e:
-            logger.error(f"Error parsing response for {question_type}: {e}", exc_info=True)
-            return None
-    
-    def _recover_truncated_json(self, content: str) -> Optional[Dict]:
-        """Attempt to recover data from a truncated JSON response (MCQ only)"""
-        try:
-            import re
-            
-            # Find where JSON starts
-            json_start = content.find('{')
-            if json_start == -1:
+            if "question" not in question_data:
+                logger.error("Missing required field 'question'")
                 return None
-            
-            content = content[json_start:]
-            
-            # Extract question
-            question_match = re.search(r'"question"\s*:\s*"([^"]+)"', content)
-            question = question_match.group(1) if question_match else None
-            
-            if not question:
-                return None
-            
-            # Extract options
-            options = {}
-            for letter in ['A', 'B', 'C', 'D']:
-                opt_match = re.search(rf'"{letter}"\s*:\s*"([^"]+)"', content)
-                if opt_match:
-                    options[letter] = opt_match.group(1)
-            
-            # Extract correct answer
-            answer_match = re.search(r'"correct_answer"\s*:\s*"([ABCD])"', content)
-            correct_answer = answer_match.group(1) if answer_match else 'A'
-            
-            # Extract explanation if available
-            explanation_match = re.search(r'"explanation"\s*:\s*"([^"]+)"', content)
-            explanation = explanation_match.group(1) if explanation_match else "See the worked solution."
-            
-            # If we have enough data, construct a valid response
-            if question and len(options) >= 4:
-                logger.info("Successfully recovered truncated JSON response for Biology MCQ")
-                return {
-                    "question": question,
-                    "options": options,
-                    "correct_answer": correct_answer,
-                    "explanation": explanation,
-                    "teaching_points": "Review the key biological concepts for this topic."
-                }
-            
-            return None
-            
+            return question_data
         except Exception as e:
-            logger.error(f"Failed to recover truncated JSON: {e}")
+            logger.error("Error normalizing biology question: %s", e, exc_info=True)
             return None
-    
-    def _recover_partial_json(self, content: str, question_type: str) -> Optional[Dict]:
-        """Attempt to recover partial JSON for structured/essay questions"""
-        try:
-            import re
-            
-            # Find where JSON starts
-            json_start = content.find('{')
-            if json_start == -1:
-                return None
-            
-            # Try to find the end of the JSON object by counting braces
-            brace_count = 0
-            json_end = json_start
-            for i, char in enumerate(content[json_start:], start=json_start):
-                if char == '{':
-                    brace_count += 1
-                elif char == '}':
-                    brace_count -= 1
-                    if brace_count == 0:
-                        json_end = i + 1
-                        break
-            
-            if json_end > json_start:
-                json_str = content[json_start:json_end]
-                try:
-                    question_data = json.loads(json_str)
-                    logger.info(f"Successfully recovered partial JSON for {question_type}")
-                    return question_data
-                except json.JSONDecodeError:
-                    pass
-            
-            # If that fails, try progressively truncating from the end
-            for truncate_pos in range(len(content), json_start + 50, -10):
-                try:
-                    json_str = content[json_start:truncate_pos] + '}'
-                    question_data = json.loads(json_str)
-                    logger.info(f"Successfully recovered truncated JSON for {question_type} by truncating at position {truncate_pos}")
-                    return question_data
-                except (json.JSONDecodeError, ValueError):
-                    continue
-            
-            return None
-            
-        except Exception as e:
-            logger.error(f"Failed to recover partial JSON for {question_type}: {e}")
-            return None
-    
+
     def generate_exam_question(self, level: str = "Lower Sixth", 
                               difficulty: str = "medium",
                               question_type: str = "mcq") -> Optional[Dict]:

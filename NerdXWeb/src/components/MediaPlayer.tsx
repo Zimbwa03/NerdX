@@ -35,7 +35,7 @@ function isEmbedUrl(url: string): boolean {
   return /youtube\.com\/embed|youtu\.be|vimeo\.com|dailymotion\.com/i.test(url);
 }
 
-export function VideoPlayer({ src, title, accentColor = '#7C4DFF', locked, unlockPath = '/app/credits' }: VideoPlayerProps) {
+export function VideoPlayer({ src, title, accentColor = '#10B981', locked, unlockPath = '/app/credits' }: VideoPlayerProps) {
   const embedMode = isEmbedUrl(src);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -323,7 +323,7 @@ interface AudioPlayerProps {
   unlockPath?: string;
 }
 
-export function AudioPlayer({ src, title, subject, accentColor = '#7C4DFF', locked, unlockPath = '/app/credits' }: AudioPlayerProps) {
+export function AudioPlayer({ src, title, subject, accentColor = '#10B981', locked, unlockPath = '/app/credits' }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
 

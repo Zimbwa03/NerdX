@@ -96,7 +96,7 @@ export function DifferentiationLab({ simulation }: { simulation: SimulationMetad
           <span>Back</span>
         </Link>
         <div className="subject-header-content">
-          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #2979FF, #7C4DFF)' }}>
+          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #2979FF, #10B981)' }}>
             <TrendingUp size={28} />
           </div>
           <div>
@@ -154,7 +154,7 @@ export function DifferentiationLab({ simulation }: { simulation: SimulationMetad
               <GraphSvg
                 bounds={cfg.bounds}
                 curves={[{ id: 'f', color: '#00E676', points: fPoints, width: 3 }]}
-                lines={[{ id: 'tangent', color: '#7C4DFF', p1: tangent.p1, p2: tangent.p2, width: 3 }]}
+                lines={[{ id: 'tangent', color: '#10B981', p1: tangent.p1, p2: tangent.p2, width: 3 }]}
                 markers={[{ id: 'p', color: '#FFD93D', p: { x: x0, y: y0 }, r: 5, label: 'P' }]}
               />
             </div>

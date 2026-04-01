@@ -4,6 +4,7 @@ import { User, Mail, Phone, Calendar, Lock, Eye, EyeOff, ArrowRight, GraduationC
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/api/authApi';
 import { supabase } from '../services/supabase';
+import { getPublicSiteOrigin } from '../services/api/config';
 
 const REFERRAL_STORAGE_KEY = 'nerdx_referral_code';
 
@@ -126,7 +127,7 @@ export function RegisterPage() {
     try {
       const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` }
+        options: { redirectTo: `${getPublicSiteOrigin()}/auth/callback` }
       });
       if (oauthError) throw oauthError;
       if (data?.url) window.location.href = data.url;

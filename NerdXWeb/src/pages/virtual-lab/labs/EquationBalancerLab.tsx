@@ -152,7 +152,7 @@ export function EquationBalancerLab({ simulation }: { simulation: SimulationMeta
           <span>Back</span>
         </Link>
         <div className="subject-header-content">
-          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #9C27B0, #651FFF)' }}>
+          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #9C27B0, #059669)' }}>
             <FlaskConical size={28} />
           </div>
           <div>

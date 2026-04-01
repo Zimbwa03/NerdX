@@ -1,11 +1,11 @@
 .alevel-pure-math-page .alevel-pure-badge {
-  background: rgba(139, 92, 246, 0.18);
-  border: 1px solid rgba(167, 139, 250, 0.45);
-  color: #ddd6fe;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #a7f3d0;
 }
 
 .alevel-pure-math-page .alevel-pure-title {
-  background: linear-gradient(135deg, #ddd6fe, #a78bfa, #f5d0fe);
+  background: linear-gradient(135deg, #a7f3d0, #34d399, #a7f3d0);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -52,8 +52,8 @@
 }
 
 .alevel-level-btn.active.lower {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.45), rgba(124, 58, 237, 0.42));
-  border-color: rgba(196, 181, 253, 0.6);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.45), rgba(5, 150, 105, 0.42));
+  border-color: rgba(110, 231, 183, 0.6);
 }
 
 .alevel-level-btn.active.upper {
@@ -120,12 +120,17 @@
 
 .alevel-pattern-card strong {
   font-size: 16px;
-  color: #c4b5fd;
+  color: #6ee7b7;
 }
 
 .alevel-pure-math-page .alevel-topic-card {
   text-align: left;
-  border: 1px solid rgba(167, 139, 250, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.alevel-pure-math-page .alevel-topic-card[role='button']:focus-visible {
+  outline: 2px solid rgba(52, 211, 153, 0.75);
+  outline-offset: 2px;
 }
 
 .alevel-topic-meta-row {
@@ -141,8 +146,8 @@
   letter-spacing: 0.04em;
   padding: 4px 8px;
   border-radius: 999px;
-  background: rgba(139, 92, 246, 0.2);
-  color: #ddd6fe;
+  background: rgba(16, 185, 129, 0.2);
+  color: #a7f3d0;
 }
 
 .alevel-topic-chip.muted {
@@ -175,7 +180,7 @@
 
 .alevel-modal {
   width: min(92vw, 470px);
-  background: #0f172a;
+  background: #0A0A0A;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 18px;
   padding: 22px;
@@ -239,8 +244,8 @@
 }
 
 .alevel-format-btn.active {
-  border-color: rgba(167, 139, 250, 0.65);
-  background: rgba(139, 92, 246, 0.24);
+  border-color: rgba(16, 185, 129, 0.65);
+  background: rgba(16, 185, 129, 0.24);
 }
 
 .alevel-credit-line {
@@ -262,7 +267,7 @@
   font-weight: 700;
   color: #fff;
   cursor: pointer;
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  background: linear-gradient(135deg, #059669, #10B981);
 }
 
 .alevel-start-btn:disabled {
@@ -316,13 +321,13 @@
 
 /* Light mode overrides */
 [data-theme="light"] .alevel-pure-math-page .alevel-pure-badge {
-  background: rgba(124, 77, 255, 0.12);
-  border-color: rgba(124, 77, 255, 0.25);
-  color: #4c1d95;
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.25);
+  color: #064e3b;
 }
 
 [data-theme="light"] .alevel-pure-math-page .alevel-pure-title {
-  color: #0f172a;
+  color: #0A0A0A;
   background: none;
   -webkit-text-fill-color: initial;
 }
@@ -338,8 +343,8 @@
 
 [data-theme="light"] .alevel-level-btn.active.lower,
 [data-theme="light"] .alevel-level-btn.active.upper {
-  background: rgba(124, 77, 255, 0.14);
-  border-color: rgba(124, 77, 255, 0.35);
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.35);
   color: var(--text-primary);
 }
 
@@ -363,17 +368,17 @@
 }
 
 [data-theme="light"] .alevel-pattern-card strong {
-  color: #7c3aed;
+  color: #059669;
 }
 
 [data-theme="light"] .alevel-pure-math-page .alevel-topic-card {
   background: #ffffff;
-  border-color: rgba(124, 77, 255, 0.2);
+  border-color: rgba(16, 185, 129, 0.2);
 }
 
 [data-theme="light"] .alevel-topic-chip {
-  background: rgba(124, 77, 255, 0.12);
-  color: #4c1d95;
+  background: rgba(16, 185, 129, 0.12);
+  color: #064e3b;
 }
 
 [data-theme="light"] .alevel-topic-chip.muted {
@@ -412,8 +417,8 @@
 }
 
 [data-theme="light"] .alevel-format-btn.active {
-  background: rgba(124, 77, 255, 0.14);
-  border-color: rgba(124, 77, 255, 0.35);
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.35);
 }
 
 [data-theme="light"] .alevel-credit-line {

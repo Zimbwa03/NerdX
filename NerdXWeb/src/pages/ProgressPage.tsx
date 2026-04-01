@@ -52,7 +52,7 @@ function LevelRingSVG({ level, currentXP, xpForNextLevel, rank, rankIcon }: Leve
         <defs>
           <linearGradient id="xpGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#60A5FA" />
-            <stop offset="100%" stopColor="#A78BFA" />
+            <stop offset="100%" stopColor="#34D399" />
           </linearGradient>
         </defs>
         <text x={radius} y={radius - 10} textAnchor="middle" className="level-ring-number"
@@ -286,7 +286,7 @@ function StreakCalendar({ history, streak }: { history: boolean[]; streak: numbe
 
 function BadgeCard({ badge }: { badge: Badge }) {
   const rarityColors: Record<string, string> = {
-    common: '#94A3B8', rare: '#3B82F6', epic: '#A855F7', legendary: '#F59E0B',
+    common: '#94A3B8', rare: '#3B82F6', epic: '#10B981', legendary: '#F59E0B',
   };
   return (
     <div className={`badge-card ${badge.isUnlocked ? 'unlocked' : 'locked'}`}
@@ -331,7 +331,7 @@ function LevelProgressSection({ levels }: { levels: DashboardData['levels'] }) {
     <div className="progress-levels-section">
       {levels.map((level) => {
         const barColor = level.percent >= 100 ? '#22C55E' :
-          level.percent >= 50 ? 'linear-gradient(90deg, #7C4DFF, #00E676)' :
+          level.percent >= 50 ? 'linear-gradient(90deg, #10B981, #00E676)' :
           level.percent > 0 ? 'linear-gradient(90deg, #3B82F6, #60A5FA)' :
           'rgba(148,163,184,0.3)';
         return (

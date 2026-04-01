@@ -7,9 +7,11 @@ COPY NerdXWeb/package.json NerdXWeb/package-lock.json ./NerdXWeb/
 RUN cd NerdXWeb && npm ci
 COPY NerdXWeb ./NerdXWeb
 
-# Set API Base URL for production build
-ARG VITE_API_BASE_URL=https://nerdx.onrender.com
+# Production web/API public host (same origin when SPA + API are served together)
+ARG VITE_API_BASE_URL=https://nerdx.co.zw
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ARG VITE_PUBLIC_SITE_URL=https://nerdx.co.zw
+ENV VITE_PUBLIC_SITE_URL=$VITE_PUBLIC_SITE_URL
 
 RUN cd NerdXWeb && npm run build \
     && test -f /web/NerdXWeb/dist/index.html || (echo "ERROR: NerdXWeb build failed - index.html not found" && exit 1)

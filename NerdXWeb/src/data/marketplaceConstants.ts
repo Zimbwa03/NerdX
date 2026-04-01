@@ -55,11 +55,11 @@ export const LEVEL_FORM_MAP: Record<string, string[]> = {
 
 /** Subject colors for the marketplace UI */
 export const MARKETPLACE_SUBJECT_COLORS: Record<string, string> = {
-  Mathematics: '#667eea',
+  Mathematics: '#10B981',
   Physics: '#2196F3',
   Chemistry: '#FF9800',
   Biology: '#4CAF50',
-  English: '#8B5CF6',
+  English: '#10B981',
   'Computer Science': '#009688',
   Geography: '#2E7D32',
   Commerce: '#FF6D00',

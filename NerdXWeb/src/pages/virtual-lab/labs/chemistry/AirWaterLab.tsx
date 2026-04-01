@@ -87,7 +87,7 @@ export function AirWaterLab({ simulation }: { simulation: SimulationMetadata }) 
                                         return (
                                             <g key={i}>
                                                 <path d={`M 130 110 L ${start.x} ${start.y} A 80 80 0 ${largeArc} 1 ${end.x} ${end.y} Z`}
-                                                    fill={s.color} opacity="0.6" stroke="#1a1a2e" strokeWidth="1" />
+                                                    fill={s.color} opacity="0.6" stroke="#141414" strokeWidth="1" />
                                                 {s.pct > 1 && (
                                                     <text x={mid.x} y={mid.y + 4} textAnchor="middle" fill="#FFF" fontSize="9" fontWeight="bold">{s.pct}%</text>
                                                 )}

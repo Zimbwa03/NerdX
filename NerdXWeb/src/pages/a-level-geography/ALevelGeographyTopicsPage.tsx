@@ -26,6 +26,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { AILoadingOverlay } from '../../components/AILoadingOverlay';
+import { MaicClassroomFeatureCard } from '../../components/MaicClassroomFeatureCard';
+import { MaicTopicClassroomLink } from '../../components/MaicTopicClassroomLink';
 import { aLevelGeographyTopics, type ALevelGeographyTopic } from '../../data/aLevelGeography';
 import '../sciences/ScienceUniverse.css';
 
@@ -227,12 +229,19 @@ export function ALevelGeographyTopicsPage() {
             className="science-feature-card"
             onClick={() => navigate('/app/teacher', { state: { subject: 'A Level Geography', gradeLevel: 'Form 5-6 (A-Level)' } })}
           >
-            <div className="feature-icon-box" style={{ background: 'rgba(124, 77, 255, 0.15)' }}>
-              <MessageSquare size={28} color="#B388FF" />
+            <div className="feature-icon-box" style={{ background: 'rgba(16, 185, 129, 0.15)' }}>
+              <MessageSquare size={28} color="#34D399" />
             </div>
             <h3 className="feature-card-title">AI Geography Tutor</h3>
             <p className="feature-card-desc">Interactive tutoring aligned to A-Level Geography objectives.</p>
           </div>
+
+          <MaicClassroomFeatureCard
+            navigate={navigate}
+            subject="A Level Geography"
+            gradeLevel="Form 5-6 (A-Level)"
+            accent="rgba(46, 125, 50, 0.22)"
+          />
 
           <div
             className="science-feature-card"
@@ -297,9 +306,23 @@ export function ALevelGeographyTopicsPage() {
             {filteredTopics.map((topic) => {
               const TopicIcon = TOPIC_ICONS[topic.id] ?? Globe;
               return (
-                <div key={topic.id} className="science-topic-card" onClick={() => openStartQuiz(topic)}>
-                  <div className="topic-icon-small">
-                    <TopicIcon size={20} />
+                <div
+                  key={topic.id}
+                  className="science-topic-card"
+                  onClick={() =>
+                    navigate(`/app/a-level-geography/topic/${encodeURIComponent(topic.id)}`)
+                  }
+                >
+                  <div className="science-topic-card__row">
+                    <div className="topic-icon-small">
+                      <TopicIcon size={20} />
+                    </div>
+                    <MaicTopicClassroomLink
+                      navigate={navigate}
+                      subject="A Level Geography"
+                      gradeLevel="Form 5-6 (A-Level)"
+                      topicName={topic.name}
+                    />
                   </div>
                   <span className="topic-card-name">{topic.name}</span>
                 </div>

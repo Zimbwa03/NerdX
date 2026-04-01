@@ -29,6 +29,10 @@ export interface SchoolProfile {
   subscription_type?: string;
   subscription_expires_at: string | null;
   subscription_started_at?: string | null;
+  group_id?: string | null;
+  campus_name?: string | null;
+  location?: string | null;
+  city?: string | null;
 }
 
 export interface SchoolLoginResponse {
@@ -69,6 +73,85 @@ export interface SchoolOverview {
   revenue: RevenueInfo;
   daily_activity: DailyActivity[];
   subject_distribution: SubjectDistribution[];
+}
+
+export interface GroupNetworkTotals {
+  portal_students: number;
+  active_30d: number;
+  subscribed_now: number;
+  retention_pct_30d: number;
+  subscription_pct: number;
+  sessions_30d: number;
+  questions_30d: number;
+  minutes_30d: number;
+  payments_paid_usd: number;
+  payments_pending_usd: number;
+  revenue_model_monthly_usd: number;
+  school_share_model_usd: number;
+  nerdx_share_model_usd: number;
+  eco_students: number;
+  teachers_registered: number;
+  performance_rows_students: number;
+  weighted_avg_accuracy: number | null;
+}
+
+export interface GroupNetworkSchoolRow {
+  school_id: string;
+  name: string | null;
+  slug: string | null;
+  city: string | null;
+  campus_name: string | null;
+  portal_students: number;
+  active_30d: number;
+  subscribed_now: number;
+  retention_pct: number;
+  subscription_pct: number;
+  eco_students: number;
+  teachers_registered: number;
+  payments_paid: number;
+  payments_pending: number;
+  sessions_30d: number;
+  questions_30d: number;
+  minutes_30d: number;
+  activity_score: number;
+  avg_topic_accuracy: number | null;
+}
+
+export interface GroupNetworkTopSchool {
+  name: string;
+  full_name: string | null;
+  activity: number;
+  sessions: number;
+  students: number;
+}
+
+export interface GroupNetworkPaymentRow {
+  name: string;
+  paid: number;
+  pending: number;
+}
+
+export interface GroupNetworkAnalytics {
+  group_id: string;
+  network_name: string | null;
+  school_count: number;
+  totals: GroupNetworkTotals;
+  schools: GroupNetworkSchoolRow[];
+  network_daily_activity: DailyActivity[];
+  monetization_funnel: { stage: string; value: number }[];
+  channel_engagement: { channel: string; learners: number; detail: string }[];
+  channel_devices: { name: string; value: number }[];
+  subject_distribution_network: SubjectDistribution[];
+  top_schools_by_activity: GroupNetworkTopSchool[];
+  payments_by_school: GroupNetworkPaymentRow[];
+  performance: {
+    weighted_avg_accuracy: number | null;
+    students_with_assessment_data: number;
+    eco_student_records: number;
+  };
+  projected_pass_rate_pct: number | null;
+  projected_pass_band: string | null;
+  executive_insight: string;
 }
 
 export interface SchoolStudent {
@@ -195,6 +278,15 @@ export const schoolApi = {
     }
   },
 
+  async getGroupNetworkAnalytics(token: string): Promise<GroupNetworkAnalytics | null> {
+    try {
+      const { data } = await axios.get(`${BASE}/group-network-analytics`, { headers: authHeaders(token) });
+      return data as GroupNetworkAnalytics;
+    } catch {
+      return null;
+    }
+  },
+
   async getStudents(token: string): Promise<{ students: SchoolStudent[]; total: number }> {
     try {
       const { data } = await axios.get(`${BASE}/students`, { headers: authHeaders(token) });
@@ -274,4 +366,107 @@ export const schoolApi = {
       return { success: false, error: getErrorMessage(error, 'Upload failed') };
     }
   },
+
+  async updateSchoolProfile(
+    token: string,
+    fields: Partial<Pick<SchoolProfile, 'email' | 'phone' | 'contact_person' | 'campus_name' | 'location' | 'city'>>
+  ): Promise<{ success: boolean; school?: SchoolProfile; error?: string }> {
+    try {
+      const { data } = await axios.patch(`${BASE}/school/profile`, fields, { headers: authHeaders(token) });
+      return data;
+    } catch (error: unknown) {
+      return { success: false, error: getErrorMessage(error, 'Update failed') };
+    }
+  },
+
+  async uploadSchoolLogo(token: string, logoDataUrl: string): Promise<{ success: boolean; logo_url?: string; error?: string }> {
+    try {
+      const { data } = await axios.post(`${BASE}/school/logo`, { logo_url: logoDataUrl }, { headers: authHeaders(token) });
+      return data;
+    } catch (error: unknown) {
+      return { success: false, error: getErrorMessage(error, 'Logo upload failed') };
+    }
+  },
+
+  async getAnalyticsExtras(token: string, periodDays: 30 | 90 = 30): Promise<PortalAnalyticsExtras | null> {
+    try {
+      const { data } = await axios.get(`${BASE}/analytics/extras`, {
+        params: { period: periodDays },
+        headers: authHeaders(token),
+      });
+      return data as PortalAnalyticsExtras;
+    } catch {
+      return null;
+    }
+  },
+
+  async herentalsAIChat(
+    token: string,
+    message: string,
+    options?: { history?: { role: string; text: string }[]; pageContext?: string }
+  ): Promise<{ reply?: string; error?: string }> {
+    try {
+      const { data } = await axios.post(
+        `${BASE}/herentals-ai/chat`,
+        {
+          message,
+          history: options?.history ?? [],
+          page_context: options?.pageContext,
+          stream: false,
+        },
+        { headers: authHeaders(token) }
+      );
+      return { reply: data.reply as string };
+    } catch (error: unknown) {
+      return { error: getErrorMessage(error, 'Chat failed') };
+    }
+  },
+
+  async downloadPortalExport(
+    token: string,
+    kind: 'pdf-summary' | 'students-xlsx' | 'pptx-highlights',
+    filename: string
+  ): Promise<{ ok: boolean; error?: string }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/school-portal/export/${kind}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        let errMsg = 'Download failed';
+        try {
+          const j = (await res.json()) as { error?: string };
+          if (j.error) errMsg = j.error;
+        } catch {
+          /* non-JSON body */
+        }
+        return { ok: false, error: errMsg };
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      return { ok: true };
+    } catch (e: unknown) {
+      return { ok: false, error: e instanceof Error ? e.message : 'Download failed' };
+    }
+  },
 };
+
+export interface PortalAnalyticsExtras {
+  period_days: number;
+  top_learners: {
+    id: number;
+    name: string;
+    xp: number;
+    streak: number;
+    school_name: string;
+    recently_active: boolean;
+  }[];
+  accuracy_histogram: { range: string; count: number }[];
+  accuracy_sample_size?: number;
+}

@@ -7,6 +7,11 @@ import type { SimulationMetadata } from '../../data/virtualLab';
 import { HandsOnActivityRenderer, type HandsOnProgress } from '../../components/virtualLab/activities/HandsOnActivityRenderer';
 import { KnowledgeCheckModal } from '../../components/virtualLab/KnowledgeCheckModal';
 import { getCustomLabComponent } from './labRegistry';
+import { labAccentIconStyle, VIRTUAL_LAB_HUB_HEADER_ICON } from './virtualLabTheme';
+
+function subjectDisplayName(raw: string): string {
+  return raw.replaceAll('_', ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
+}
 
 function computeSubjectIndex(simulation: SimulationMetadata, all: SimulationMetadata[]): number {
   const subjectSims = all.filter((s) => s.subject === simulation.subject);
@@ -82,40 +87,51 @@ export function VirtualLabSimulationPage() {
   if (loading) {
     return (
       <div className="subject-page-v2 virtual-lab-sim-page">
-        <header className="subject-header-v2">
+        <header className="subject-header-v2 virtual-lab-header">
           <Link to="/app/virtual-lab" className="back-btn-v2">
-            <ArrowLeft size={20} />
+            <ArrowLeft size={20} strokeWidth={1.75} />
             <span>Back</span>
           </Link>
           <div className="subject-header-content">
-            <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #1976D2, #1565C0)' }}>
-              <Sparkles size={28} />
+            <div className="subject-icon-v2" style={VIRTUAL_LAB_HUB_HEADER_ICON}>
+              <Sparkles size={28} strokeWidth={1.75} />
             </div>
             <div>
               <h1>Virtual Lab</h1>
-              <p>Loading simulation...</p>
+              <p>Loading simulation…</p>
             </div>
           </div>
         </header>
-        <div className="vl-card">Loading...</div>
+        <div className="vl-card vl-card--muted virtual-lab-loading-card" role="status" aria-live="polite">
+          <span className="virtual-lab-loading-dot" aria-hidden />
+          Loading…
+        </div>
       </div>
     );
   }
 
   if (!labId || !simulation) {
     return (
-      <div className="virtual-lab-placeholder-page">
-        <header className="virtual-lab-placeholder-header">
-          <Link to="/app/virtual-lab" className="back-link">
-            <span aria-hidden="true">&larr;</span> Back to Virtual Lab
+      <div className="subject-page-v2 virtual-lab-page virtual-lab-placeholder-page">
+        <header className="subject-header-v2 virtual-lab-header">
+          <Link to="/app/virtual-lab" className="back-btn-v2">
+            <ArrowLeft size={20} strokeWidth={1.75} />
+            <span>Back</span>
           </Link>
-          <h1>Virtual Lab</h1>
-          <p className="virtual-lab-placeholder-subtitle">Simulation not found.</p>
+          <div className="subject-header-content">
+            <div className="subject-icon-v2" style={VIRTUAL_LAB_HUB_HEADER_ICON}>
+              <Sparkles size={28} strokeWidth={1.75} />
+            </div>
+            <div>
+              <h1>Virtual Lab</h1>
+              <p>Simulation not found</p>
+            </div>
+          </div>
         </header>
 
         <div className="virtual-lab-placeholder-card">
-          <div className="virtual-lab-placeholder-icon">
-            <Sparkles size={32} />
+          <div className="virtual-lab-placeholder-icon" style={labAccentIconStyle('#f59e0b')}>
+            <Sparkles size={32} strokeWidth={1.75} />
           </div>
           <h2>Simulation not found</h2>
           <p>This lab route exists, but we couldn&apos;t find a matching simulation ID.</p>
@@ -132,14 +148,14 @@ export function VirtualLabSimulationPage() {
   if (lockState.locked) {
     return (
       <div className="subject-page-v2 virtual-lab-sim-page">
-        <header className="subject-header-v2">
+        <header className="subject-header-v2 virtual-lab-header">
           <Link to="/app/virtual-lab" className="back-btn-v2">
-            <ArrowLeft size={20} />
+            <ArrowLeft size={20} strokeWidth={1.75} />
             <span>Back</span>
           </Link>
           <div className="subject-header-content">
-            <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #FF1744, #FF6B6B)' }}>
-              <Lock size={28} />
+            <div className="subject-icon-v2" style={labAccentIconStyle('#f43f5e')}>
+              <Lock size={28} strokeWidth={1.75} />
             </div>
             <div>
               <h1>{simulation.title}</h1>
@@ -170,14 +186,14 @@ export function VirtualLabSimulationPage() {
 
   return (
     <div className="subject-page-v2 virtual-lab-sim-page">
-      <header className="subject-header-v2">
+      <header className="subject-header-v2 virtual-lab-header">
         <Link to="/app/virtual-lab" className="back-btn-v2">
-          <ArrowLeft size={20} />
+          <ArrowLeft size={20} strokeWidth={1.75} />
           <span>Back</span>
         </Link>
         <div className="subject-header-content">
-          <div className="subject-icon-v2" style={{ background: `linear-gradient(135deg, ${simulation.color}, #7C4DFF)` }}>
-            <Sparkles size={28} />
+          <div className="subject-icon-v2" style={labAccentIconStyle(simulation.color)}>
+            <Sparkles size={28} strokeWidth={1.75} />
           </div>
           <div>
             <h1>{simulation.title}</h1>
@@ -189,7 +205,7 @@ export function VirtualLabSimulationPage() {
       <div className="vl-grid">
         <div className="vl-col">
           <div className="vl-card">
-            <div className="vl-card-title">{simulation.subject.toUpperCase().replaceAll('_', ' ')}</div>
+            <div className="vl-card-title vl-card-title--eyebrow">{subjectDisplayName(simulation.subject)}</div>
             <div className="vl-card-subtitle">{simulation.description}</div>
             <div className="vl-meta">
               <span className="vl-meta-item">

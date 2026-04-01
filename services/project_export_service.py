@@ -13,13 +13,17 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 logger = logging.getLogger(__name__)
 
-# Try to import WeasyPrint for PDF generation
+# WeasyPrint needs GTK/Pango/Cairo native libs; on Windows without them, import raises OSError.
 try:
     from weasyprint import HTML, CSS
     WEASYPRINT_AVAILABLE = True
-except ImportError:
+except (ImportError, OSError) as e:
     WEASYPRINT_AVAILABLE = False
-    logger.warning("WeasyPrint not installed. PDF generation will use fallback method.")
+    HTML = CSS = None  # type: ignore[misc, assignment]
+    logger.warning(
+        "WeasyPrint unavailable (%s). PDF export will fall back to HTML until GTK runtime is installed.",
+        e,
+    )
 
 # Try to import python-docx for DOCX generation
 try:

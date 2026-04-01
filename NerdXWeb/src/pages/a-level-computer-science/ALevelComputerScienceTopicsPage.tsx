@@ -23,6 +23,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { AILoadingOverlay } from '../../components/AILoadingOverlay';
+import { MaicClassroomFeatureCard } from '../../components/MaicClassroomFeatureCard';
+import { MaicTopicClassroomLink } from '../../components/MaicTopicClassroomLink';
 import { aLevelComputerScienceTopics, type ALevelComputerScienceTopic } from '../../data/aLevelComputerScience';
 import '../sciences/ScienceUniverse.css';
 
@@ -281,6 +283,13 @@ export function ALevelComputerScienceTopicsPage() {
             <p className="feature-card-desc">Interactive tutoring for theory, algorithms, and systems.</p>
           </div>
 
+          <MaicClassroomFeatureCard
+            navigate={navigate}
+            subject="A Level Computer Science"
+            gradeLevel="Form 5-6 (A-Level)"
+            accent="rgba(13, 71, 161, 0.2)"
+          />
+
           <div className="science-feature-card" onClick={() => navigate('/app/virtual-lab?subject=computer_science')}>
             <div className="feature-icon-box" style={{ background: 'rgba(255, 145, 0, 0.15)' }}>
               <Cpu size={28} color="#FF9100" />
@@ -293,8 +302,8 @@ export function ALevelComputerScienceTopicsPage() {
             className="science-feature-card"
             onClick={() => navigate('/app/exam/setup', { state: { subject: 'a_level_computer_science', backTo: '/app/a-level-computer-science', subjectLabel: 'A Level Computer Science' } })}
           >
-            <div className="feature-icon-box" style={{ background: 'linear-gradient(135deg, rgba(124, 77, 255, 0.3), rgba(101, 31, 255, 0.3))' }}>
-              <FileText size={28} color="#B388FF" />
+            <div className="feature-icon-box" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3))' }}>
+              <FileText size={28} color="#34D399" />
             </div>
             <h3 className="feature-card-title">Simulated Exam</h3>
             <p className="feature-card-desc">Timed mixed practice across selected topics.</p>
@@ -341,9 +350,25 @@ export function ALevelComputerScienceTopicsPage() {
             {filteredTopics.map((topic) => {
               const TopicIcon = TOPIC_ICONS[topic.id] ?? Cpu;
               return (
-                <div key={topic.id} className="science-topic-card" onClick={() => openStartQuiz(topic)}>
-                  <div className="topic-icon-small">
-                    <TopicIcon size={20} />
+                <div
+                  key={topic.id}
+                  className="science-topic-card"
+                  onClick={() =>
+                    navigate(
+                      `/app/a-level-computer-science/topic/${encodeURIComponent(topic.id)}?board=${board}`,
+                    )
+                  }
+                >
+                  <div className="science-topic-card__row">
+                    <div className="topic-icon-small">
+                      <TopicIcon size={20} />
+                    </div>
+                    <MaicTopicClassroomLink
+                      navigate={navigate}
+                      subject="A Level Computer Science"
+                      gradeLevel="Form 5-6 (A-Level)"
+                      topicName={topic.name}
+                    />
                   </div>
                   <span className="topic-card-name">{topic.name}</span>
                   <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>

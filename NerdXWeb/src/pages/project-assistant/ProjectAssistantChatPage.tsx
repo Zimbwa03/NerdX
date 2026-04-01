@@ -17,6 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { PageLoadingView } from '../../components/PageLoadingView';
 import { MathRenderer } from '../../components/MathRenderer';
 import { attachmentsApi } from '../../services/api/attachmentsApi';
 import {
@@ -374,7 +375,11 @@ export function ProjectAssistantChatPage() {
   if (starting) {
     return (
       <div className="teacher-mode-page teacher-mode-page--v3">
-        <div className="teacher-mode-loading">{error || 'Loading Project Assistant...'}</div>
+        <PageLoadingView
+          title={error ? 'Something went wrong' : 'Loading project'}
+          subtitle={error || 'Preparing your Project Assistant workspace…'}
+          className="flex-1"
+        />
       </div>
     );
   }
@@ -382,7 +387,13 @@ export function ProjectAssistantChatPage() {
   if (!project) {
     return (
       <div className="teacher-mode-page teacher-mode-page--v3">
-        <div className="teacher-mode-loading">{error || 'Project not found.'}</div>
+        <div className="teacher-mode-loading">
+          <PageLoadingView
+            title={error ? 'Could not load project' : 'Project not found'}
+            subtitle={error || 'This project may have been removed or you may not have access.'}
+            className="min-h-0 py-8"
+          />
+        </div>
         <div className="teacher-chat-actions-row">
           <button type="button" onClick={() => void load()}>Retry</button>
           <Link to="/app/project-assistant">Back to projects</Link>

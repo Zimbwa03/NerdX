@@ -45,7 +45,7 @@ export function ALevelPureMathNotesPage() {
           <span>Back</span>
         </Link>
         <div className="subject-header-content">
-          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #7C3AED, #A855F7)' }}>
+          <div className="subject-icon-v2" style={{ background: 'linear-gradient(135deg, #059669, #10B981)' }}>
             <BookOpen size={28} />
           </div>
           <div>
