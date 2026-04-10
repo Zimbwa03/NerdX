@@ -31,7 +31,9 @@ bcrypt
 # AI and Machine Learning
 google-generativeai>=0.8.0
 google-genai>=1.55.0  # Required for Interactions API
+google-cloud-texttospeech>=2.16.3
 google-cloud-speech>=2.22.0  # Google Cloud Speech-to-Text API (recommended for audio transcription)
+redis>=5.2.0
 openai>=1.0.0
 sympy>=1.12
 

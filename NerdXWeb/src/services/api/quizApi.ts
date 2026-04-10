@@ -94,6 +94,8 @@ export interface AnswerResult {
   related_topic?: string;
 }
 
+const buildRequestNonce = () => `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
 export const quizApi = {
   getTopics: async (
     subject: string,
@@ -124,7 +126,12 @@ export const quizApi = {
     formLevel?: string
   ): Promise<Question | null> => {
     const token = getAuthToken();
-    const bodyPayload: Record<string, unknown> = { subject, topic, difficulty };
+    const bodyPayload: Record<string, unknown> = {
+      subject,
+      topic,
+      difficulty,
+      request_nonce: buildRequestNonce(),
+    };
     if (formLevel) bodyPayload.form_level = formLevel;
     const response = await fetch(`${API_BASE_URL}/api/mobile/quiz/generate-stream`, {
       method: 'POST',
@@ -227,6 +234,7 @@ export const quizApi = {
       subject,
       difficulty,
       type,
+      request_nonce: buildRequestNonce(),
     };
     if (topic) payload.topic = topic;
     if (parent_subject) payload.parent_subject = parent_subject;

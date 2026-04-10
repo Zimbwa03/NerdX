@@ -7,9 +7,13 @@ Handles: Classroom posts, assessments, student submissions,
 All endpoints prefixed with /api/v2/ (registered in routes.py).
 """
 import logging
+import os
+import uuid
+import json
 from datetime import datetime, timezone
 from functools import wraps
 from flask import Blueprint, request, jsonify
+from werkzeug.utils import secure_filename
 from database.external_db import make_supabase_request
 
 logger = logging.getLogger(__name__)
@@ -34,6 +38,50 @@ def _parse_utc(value):
         return dt
     except Exception:
         return None
+
+
+def _is_post_visible(post):
+    if not post.get("is_published"):
+        return False
+    scheduled_at = _parse_utc(post.get("scheduled_at"))
+    if scheduled_at and scheduled_at > _now_utc():
+        return False
+    return True
+
+
+def _get_classroom_context(classroom_id):
+    cr = make_supabase_request(
+        "GET", "ai_classrooms", select="*",
+        filters={"id": f"eq.{classroom_id}"},
+        use_service_role=True
+    )
+    if not cr:
+        return None, None, None, None
+
+    classroom = cr[0]
+    cs = make_supabase_request(
+        "GET", "class_subjects", select="*",
+        filters={"id": f"eq.{classroom['class_subject_id']}"},
+        use_service_role=True
+    )
+    class_subject = cs[0] if cs else None
+
+    subject = cls = None
+    if class_subject:
+        s = make_supabase_request(
+            "GET", "school_subjects", select="*",
+            filters={"id": f"eq.{class_subject['subject_id']}"},
+            use_service_role=True
+        )
+        subject = s[0] if s else None
+        c = make_supabase_request(
+            "GET", "school_classes", select="id,display_name,form_id",
+            filters={"id": f"eq.{class_subject['class_id']}"},
+            use_service_role=True
+        )
+        cls = c[0] if c else None
+
+    return classroom, class_subject, subject, cls
 
 
 def _get_teacher_from_token(token):
@@ -79,33 +127,15 @@ def teacher_auth_required(f):
 @teacher_classroom_bp.route("/classrooms/<int:classroom_id>", methods=["GET"])
 @teacher_auth_required
 def get_classroom(classroom_id):
-    cr = make_supabase_request(
-        "GET", "ai_classrooms", select="*",
-        filters={"id": f"eq.{classroom_id}"},
-        use_service_role=True
-    )
-    if not cr:
+    classroom, class_subject, subject, cls = _get_classroom_context(classroom_id)
+    if not classroom:
         return jsonify({"error": "Classroom not found"}), 404
 
-    classroom = cr[0]
-    cs = make_supabase_request(
-        "GET", "class_subjects", select="*",
-        filters={"id": f"eq.{classroom['class_subject_id']}"},
-        use_service_role=True
-    )
-    class_subject = cs[0] if cs else None
-
-    subject = teacher = cls = None
+    teacher = None
     if class_subject:
-        s = make_supabase_request("GET", "school_subjects", select="*",
-                                  filters={"id": f"eq.{class_subject['subject_id']}"}, use_service_role=True)
-        subject = s[0] if s else None
         t = make_supabase_request("GET", "school_teachers", select="id,first_name,last_name,photo_url,specialisation",
                                   filters={"id": f"eq.{class_subject['teacher_id']}"}, use_service_role=True)
         teacher = t[0] if t else None
-        c = make_supabase_request("GET", "school_classes", select="id,display_name,form_id",
-                                  filters={"id": f"eq.{class_subject['class_id']}"}, use_service_role=True)
-        cls = c[0] if c else None
 
     students = make_supabase_request(
         "GET", "school_students", select="id",
@@ -160,6 +190,105 @@ def create_post(classroom_id):
     if not result:
         return jsonify({"error": "Failed to create post"}), 500
     return jsonify({"success": True, "post": result[0]}), 201
+
+
+@teacher_classroom_bp.route("/classrooms/<int:classroom_id>/posts/ai-draft", methods=["POST"])
+@teacher_auth_required
+def generate_post_draft(classroom_id):
+    body = request.get_json(silent=True) or {}
+    classroom, _, subject, cls = _get_classroom_context(classroom_id)
+    if not classroom:
+        return jsonify({"error": "Classroom not found"}), 404
+
+    post_type = (body.get("post_type") or "assignment").strip()
+    topic = (body.get("topic") or "").strip()
+    objective = (body.get("objective") or "").strip()
+    due_date = body.get("due_date")
+
+    subject_name = (subject or {}).get("name") or "the subject"
+    class_name = (cls or {}).get("display_name") or classroom.get("name") or "the class"
+    due_text = f"Due date: {due_date}." if due_date else "No due date has been set yet."
+
+    system = (
+        "You are an expert Zimbabwean school teacher assistant writing polished, direct classroom instructions. "
+        "Return only valid JSON with keys: title, content, checklist. "
+        "The content should be concise, professional, and clear for students."
+    )
+    prompt = (
+        f"Draft a {post_type} for {subject_name}, class {class_name}.\n"
+        f"Topic: {topic or 'Current class topic'}.\n"
+        f"Objective: {objective or 'Help learners complete the required classwork successfully'}.\n"
+        f"{due_text}\n"
+        "Checklist must be a JSON array of 3 short learner actions."
+    )
+
+    try:
+        from services.classroom_ai_service import _call_ai
+        raw = _call_ai(prompt, system=system, max_tokens=600, json_mode=True)
+        payload = json.loads(raw)
+        return jsonify({
+            "success": True,
+            "title": payload.get("title") or f"{post_type.title()} on {topic or subject_name}",
+            "content": payload.get("content") or objective,
+            "checklist": payload.get("checklist") or [],
+        })
+    except Exception:
+        fallback_title = f"{post_type.title()} - {topic or subject_name}"
+        fallback_content = (
+            f"Complete the {post_type} for {subject_name}. Focus on {topic or 'the current topic'}, "
+            f"follow the instructions carefully, and submit clear work on time."
+        )
+        return jsonify({
+            "success": True,
+            "title": fallback_title,
+            "content": fallback_content,
+            "checklist": [
+                "Read the task carefully before starting.",
+                "Complete all required parts neatly.",
+                "Submit your work before the deadline.",
+            ],
+        })
+
+
+@teacher_classroom_bp.route("/classrooms/<int:classroom_id>/attachments", methods=["POST"])
+@teacher_auth_required
+def upload_classroom_attachment(classroom_id):
+    teacher = request.teacher
+    uploaded = request.files.get("file")
+    if not uploaded or not uploaded.filename:
+        return jsonify({"error": "file is required"}), 400
+
+    safe_name = secure_filename(uploaded.filename) or f"attachment-{uuid.uuid4().hex}"
+    ext = os.path.splitext(safe_name)[1]
+    relative_dir = os.path.join("static", "classroom_uploads", str(teacher["id"]))
+    absolute_dir = os.path.join(os.getcwd(), relative_dir)
+    os.makedirs(absolute_dir, exist_ok=True)
+    stored_name = f"{uuid.uuid4().hex}{ext}"
+    stored_path = os.path.join(absolute_dir, stored_name)
+    uploaded.save(stored_path)
+
+    from services.image_hosting_service import ImageHostingService
+
+    hosting = ImageHostingService()
+    mime_type = (uploaded.mimetype or "").lower()
+    if mime_type.startswith("image/"):
+        public_url = hosting.upload_image_with_fallback(stored_path)
+    else:
+        public_url = hosting.upload_document_with_fallback(stored_path)
+
+    if not public_url:
+        return jsonify({"error": "Failed to upload attachment"}), 500
+
+    return jsonify({
+        "success": True,
+        "attachment": {
+            "name": safe_name,
+            "url": public_url,
+            "mime_type": uploaded.mimetype or "application/octet-stream",
+            "size_bytes": os.path.getsize(stored_path),
+            "uploaded_at": _now_utc().isoformat(),
+        },
+    }), 201
 
 
 @teacher_classroom_bp.route("/posts/<int:post_id>", methods=["PATCH"])
@@ -530,6 +659,249 @@ def generate_assessment():
 # ═══════════════════════════════════════════════════════════════════════════════
 # CLASS ANALYTICS (teacher view)
 # ═══════════════════════════════════════════════════════════════════════════════
+
+@teacher_classroom_bp.route("/classrooms/<int:classroom_id>/schedule", methods=["GET"])
+@teacher_auth_required
+def get_classroom_schedule(classroom_id):
+    timetable = make_supabase_request(
+        "GET", "teacher_timetable_entries", select="*",
+        filters={"classroom_id": f"eq.{classroom_id}"},
+        use_service_role=True
+    ) or []
+    timetable.sort(key=lambda item: (item.get("weekday", 8), item.get("start_time", "")))
+
+    scheme = make_supabase_request(
+        "GET", "teacher_scheme_of_work", select="*",
+        filters={"classroom_id": f"eq.{classroom_id}"},
+        use_service_role=True
+    ) or []
+    scheme.sort(key=lambda item: (item.get("due_date") or "9999-12-31", item.get("created_at", "")))
+
+    return jsonify({
+        "timetable": timetable,
+        "scheme_of_work": scheme,
+    })
+
+
+@teacher_classroom_bp.route("/classrooms/<int:classroom_id>/schedule/timetable", methods=["POST"])
+@teacher_auth_required
+def create_timetable_entry(classroom_id):
+    teacher = request.teacher
+    body = request.get_json(silent=True) or {}
+    title = (body.get("title") or "").strip()
+    weekday = body.get("weekday")
+    start_time = (body.get("start_time") or "").strip()
+    end_time = (body.get("end_time") or "").strip()
+
+    if not title or weekday is None or not start_time or not end_time:
+        return jsonify({"error": "title, weekday, start_time and end_time are required"}), 400
+
+    result = make_supabase_request("POST", "teacher_timetable_entries", {
+        "classroom_id": classroom_id,
+        "teacher_id": teacher["id"],
+        "title": title,
+        "weekday": weekday,
+        "start_time": start_time,
+        "end_time": end_time,
+        "room": body.get("room"),
+        "cadence": body.get("cadence") or "weekly",
+        "notes": body.get("notes"),
+    }, use_service_role=True)
+
+    if not result:
+        return jsonify({"error": "Failed to create timetable entry"}), 500
+    return jsonify({"success": True, "entry": result[0]}), 201
+
+
+@teacher_classroom_bp.route("/schedule/timetable/<int:entry_id>", methods=["PATCH"])
+@teacher_auth_required
+def update_timetable_entry(entry_id):
+    body = request.get_json(silent=True) or {}
+    allowed = ["title", "weekday", "start_time", "end_time", "room", "cadence", "notes"]
+    updates = {k: v for k, v in body.items() if k in allowed}
+    if not updates:
+        return jsonify({"error": "No fields to update"}), 400
+
+    updates["updated_at"] = _now_utc().isoformat()
+    result = make_supabase_request(
+        "PATCH", "teacher_timetable_entries", updates,
+        filters={"id": f"eq.{entry_id}"},
+        use_service_role=True
+    )
+    if result is None:
+        return jsonify({"error": "Failed to update timetable entry"}), 500
+    return jsonify({"success": True, "entry": result[0] if result else None})
+
+
+@teacher_classroom_bp.route("/schedule/timetable/<int:entry_id>", methods=["DELETE"])
+@teacher_auth_required
+def delete_timetable_entry(entry_id):
+    make_supabase_request(
+        "DELETE", "teacher_timetable_entries",
+        filters={"id": f"eq.{entry_id}"},
+        use_service_role=True
+    )
+    return jsonify({"success": True})
+
+
+@teacher_classroom_bp.route("/classrooms/<int:classroom_id>/students/<int:student_id>/workspace", methods=["GET"])
+@teacher_auth_required
+def get_student_workspace_preview(classroom_id, student_id):
+    classroom, class_subject, subject, cls = _get_classroom_context(classroom_id)
+    if not classroom or not class_subject:
+        return jsonify({"error": "Classroom not found"}), 404
+
+    student_rows = make_supabase_request(
+        "GET", "school_students", select="id,first_name,last_name,student_code,photo_url,class_id",
+        filters={"id": f"eq.{student_id}"},
+        use_service_role=True
+    ) or []
+    if not student_rows:
+        return jsonify({"error": "Student not found"}), 404
+
+    student = student_rows[0]
+    if student.get("class_id") != class_subject.get("class_id"):
+        return jsonify({"error": "Student does not belong to this classroom"}), 403
+
+    posts = make_supabase_request(
+        "GET", "classroom_posts", select="*",
+        filters={"classroom_id": f"eq.{classroom_id}"},
+        use_service_role=True
+    ) or []
+    visible_posts = [post for post in posts if _is_post_visible(post)]
+    visible_posts.sort(key=lambda item: item.get("created_at", ""), reverse=True)
+
+    assessments = make_supabase_request(
+        "GET", "assessments", select="*",
+        filters={"classroom_id": f"eq.{classroom_id}", "is_released": "eq.true"},
+        use_service_role=True
+    ) or []
+    assessments.sort(key=lambda item: item.get("created_at", ""), reverse=True)
+
+    workspace_assessments = []
+    for assessment in assessments:
+        subs = make_supabase_request(
+            "GET", "student_submissions", select="*",
+            filters={"assessment_id": f"eq.{assessment['id']}", "student_id": f"eq.{student_id}"},
+            use_service_role=True
+        ) or []
+        workspace_assessments.append({
+            "assessment": assessment,
+            "submission": subs[0] if subs else None,
+        })
+
+    return jsonify({
+        "student": {
+            "id": student["id"],
+            "first_name": student.get("first_name"),
+            "last_name": student.get("last_name"),
+            "student_code": student.get("student_code"),
+            "photo_url": student.get("photo_url"),
+            "class_name": cls.get("display_name") if cls else None,
+            "subject_name": subject.get("name") if subject else None,
+        },
+        "posts": visible_posts,
+        "assessments": workspace_assessments,
+    })
+
+
+@teacher_classroom_bp.route("/classrooms/<int:classroom_id>/schedule/scheme", methods=["POST"])
+@teacher_auth_required
+def create_scheme_item(classroom_id):
+    teacher = request.teacher
+    body = request.get_json(silent=True) or {}
+    week_label = (body.get("week_label") or "").strip()
+    topic = (body.get("topic") or "").strip()
+    if not week_label or not topic:
+        return jsonify({"error": "week_label and topic are required"}), 400
+
+    result = make_supabase_request("POST", "teacher_scheme_of_work", {
+        "classroom_id": classroom_id,
+        "teacher_id": teacher["id"],
+        "week_label": week_label,
+        "topic": topic,
+        "objectives": body.get("objectives"),
+        "activities": body.get("activities"),
+        "homework": body.get("homework"),
+        "due_date": body.get("due_date"),
+        "ai_notes": body.get("ai_notes"),
+        "status": body.get("status") or "planned",
+    }, use_service_role=True)
+
+    if not result:
+        return jsonify({"error": "Failed to create scheme item"}), 500
+    return jsonify({"success": True, "item": result[0]}), 201
+
+
+@teacher_classroom_bp.route("/schedule/scheme/<int:item_id>", methods=["PATCH"])
+@teacher_auth_required
+def update_scheme_item(item_id):
+    body = request.get_json(silent=True) or {}
+    allowed = ["week_label", "topic", "objectives", "activities", "homework", "due_date", "ai_notes", "status"]
+    updates = {k: v for k, v in body.items() if k in allowed}
+    if not updates:
+        return jsonify({"error": "No fields to update"}), 400
+
+    updates["updated_at"] = _now_utc().isoformat()
+    result = make_supabase_request(
+        "PATCH", "teacher_scheme_of_work", updates,
+        filters={"id": f"eq.{item_id}"},
+        use_service_role=True
+    )
+    if result is None:
+        return jsonify({"error": "Failed to update scheme item"}), 500
+    return jsonify({"success": True, "item": result[0] if result else None})
+
+
+@teacher_classroom_bp.route("/schedule/scheme/<int:item_id>", methods=["DELETE"])
+@teacher_auth_required
+def delete_scheme_item(item_id):
+    make_supabase_request(
+        "DELETE", "teacher_scheme_of_work",
+        filters={"id": f"eq.{item_id}"},
+        use_service_role=True
+    )
+    return jsonify({"success": True})
+
+
+@teacher_classroom_bp.route("/classrooms/<int:classroom_id>/schedule/ai-suggest", methods=["POST"])
+@teacher_auth_required
+def ai_suggest_scheme_item(classroom_id):
+    body = request.get_json(silent=True) or {}
+    topic = (body.get("topic") or "").strip()
+    week_label = (body.get("week_label") or "").strip()
+    subject = (body.get("subject") or "").strip()
+    if not topic or not week_label:
+        return jsonify({"error": "topic and week_label are required"}), 400
+
+    try:
+        from services.classroom_ai_service import _call_ai
+        import json as _json
+
+        prompt = (
+            f"Generate a Zimbabwean teacher scheme-of-work entry.\n"
+            f"Subject: {subject or 'General'}\n"
+            f"Topic: {topic}\n"
+            f"Week label: {week_label}\n\n"
+            f"Return strict JSON with keys: objectives, activities, homework, ai_notes."
+        )
+        response = _call_ai(prompt, system="You are a professional Zimbabwean teacher planner. Return only JSON.", max_tokens=700, json_mode=True)
+        cleaned = response.strip().replace("```json", "").replace("```", "").strip()
+        payload = _json.loads(cleaned)
+        return jsonify({"success": True, "suggestion": payload})
+    except Exception as exc:
+        logger.warning("AI scheme suggestion failed for classroom %s: %s", classroom_id, exc)
+        return jsonify({
+            "success": True,
+            "suggestion": {
+                "objectives": f"Cover the core learning points for {topic}.",
+                "activities": f"Teacher exposition, guided examples, pair discussion, and exit quiz on {topic}.",
+                "homework": f"Complete a short written task on {topic} and submit before the next lesson.",
+                "ai_notes": "Vertex suggestion fallback used because live planning generation was unavailable.",
+            },
+            "note": "AI planning fallback returned",
+        })
+
 
 @teacher_classroom_bp.route("/classrooms/<int:classroom_id>/analytics", methods=["GET"])
 @teacher_auth_required

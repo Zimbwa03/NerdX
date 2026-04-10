@@ -44,6 +44,8 @@ export function MathTopicHubPage() {
   const [mixImages, setMixImages] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadingSubtitle, setLoadingSubtitle] = useState('Preparing your mathematics question');
+  const [loadingProgress, setLoadingProgress] = useState<number | undefined>(undefined);
 
   const quizTopic: Topic | null = useMemo(() => {
     if (!topic) return null;
@@ -90,6 +92,8 @@ export function MathTopicHubPage() {
       return;
     }
     setGenerating(true);
+    setLoadingSubtitle(`Preparing a ${topic.formLevel} ${topic.name} question`);
+    setLoadingProgress(undefined);
     setPracticeOpen(false);
     setError(null);
     try {
@@ -98,7 +102,16 @@ export function MathTopicHubPage() {
         'mathematics',
         quizTopic.id,
         'medium',
-        {},
+        {
+          onThinking: (update) => {
+            if (update.content) {
+              setLoadingSubtitle(update.content);
+            }
+            if (update.stage && update.total_stages) {
+              setLoadingProgress((update.stage / update.total_stages) * 100);
+            }
+          },
+        },
         topic.formLevel,
       );
       if (!question) {
@@ -134,6 +147,8 @@ export function MathTopicHubPage() {
       setPracticeOpen(true);
     } finally {
       setGenerating(false);
+      setLoadingSubtitle('Preparing your mathematics question');
+      setLoadingProgress(undefined);
     }
   };
 
@@ -398,7 +413,8 @@ export function MathTopicHubPage() {
       <AILoadingOverlay
         isVisible={generating}
         title="Generating question"
-        subtitle={`Creating a ${topic.formLevel} ZIMSEC mathematics question on ${topic.name}…`}
+        subtitle={loadingSubtitle}
+        progress={loadingProgress}
         accentColor={SUBJECT.color}
         variant="fullscreen"
       />

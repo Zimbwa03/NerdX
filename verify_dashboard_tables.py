@@ -38,7 +38,8 @@ def verify_dashboard_tables():
                 'daily_user_activity',
                 'user_engagement_metrics',
                 'subject_usage_analytics',
-                'feature_usage_analytics'
+                'feature_usage_analytics',
+                'scan_solve_runs',
             ],
             'Revenue': [
                 'packages',

@@ -1350,7 +1350,7 @@ const TopicsScreen: React.FC = () => {
                 </View>
               </Card>
 
-              {/* Scan & Solve - Offline Math Solver */}
+              {/* Scan & Solve - AI lesson builder */}
               <Card
                 variant="elevated"
                 onPress={() => navigation.navigate('MathSolver' as never)}
@@ -1374,20 +1374,20 @@ const TopicsScreen: React.FC = () => {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                       <Text style={styles.featureTitle}>Scan & Solve</Text>
                       <View style={{
-                        backgroundColor: '#4CAF50',
+                        backgroundColor: '#22c55e',
                         paddingHorizontal: 8,
                         paddingVertical: 3,
                         borderRadius: 10,
                       }}>
                         <Text style={{
-                          color: '#FFF',
+                          color: '#07120b',
                           fontSize: 10,
                           fontWeight: '700',
                           letterSpacing: 0.5,
-                        }}>OFFLINE</Text>
+                        }}>AI</Text>
                       </View>
                     </View>
-                    <Text style={styles.featureSubtitle}>Snap a photo or type any math problem - works completely offline!</Text>
+                    <Text style={styles.featureSubtitle}>Snap a photo or type any problem for a visual, audio, and step-by-step lesson.</Text>
                   </View>
                   {Icons.arrowRight(24, Colors.text.secondary)}
                 </View>

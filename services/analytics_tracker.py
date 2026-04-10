@@ -19,6 +19,7 @@ class AnalyticsTracker:
         self._subject_usage_table_initialized = False
         self._feature_usage_table_initialized = False
         self._olevel_maths_table_initialized = False
+        self._scan_solve_runs_table_initialized = False
     
     def _clean_connection_string(self, database_url: str) -> str:
         """Clean database URL by removing pgbouncer and other problematic parameters"""
@@ -237,6 +238,78 @@ class AnalyticsTracker:
             """
         )
         self._feature_usage_table_initialized = True
+
+    def _ensure_scan_solve_runs_table(self, cursor):
+        """Persisted audit rows for Scan & Solve (Supabase-compatible)."""
+        if self._scan_solve_runs_table_initialized:
+            return
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS scan_solve_runs (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                user_id TEXT NOT NULL,
+                subject VARCHAR(100) NOT NULL DEFAULT '',
+                difficulty VARCHAR(50) NOT NULL DEFAULT '',
+                duration_ms INTEGER NOT NULL DEFAULT 0,
+                cache_hit BOOLEAN NOT NULL DEFAULT FALSE,
+                solvable BOOLEAN NOT NULL DEFAULT TRUE,
+                input_kind VARCHAR(32) NOT NULL DEFAULT 'image',
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+            """
+        )
+        cursor.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_scan_solve_runs_user_created
+            ON scan_solve_runs (user_id, created_at DESC);
+            """
+        )
+        self._scan_solve_runs_table_initialized = True
+
+    def record_scan_solve_run(
+        self,
+        user_id: str,
+        *,
+        subject: str,
+        difficulty: str,
+        duration_ms: int,
+        cache_hit: bool,
+        solvable: bool,
+        input_kind: str,
+    ) -> bool:
+        """Insert one Scan & Solve run for analytics and ops (failures are logged only)."""
+        if not self.conn_string:
+            return False
+        try:
+            conn = self._get_connection()
+            if not conn:
+                return False
+
+            cursor = conn.cursor()
+            self._ensure_scan_solve_runs_table(cursor)
+            cursor.execute(
+                """
+                INSERT INTO scan_solve_runs (user_id, subject, difficulty, duration_ms, cache_hit, solvable, input_kind)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    user_id,
+                    (subject or "")[:100],
+                    (difficulty or "")[:50],
+                    max(0, int(duration_ms)),
+                    cache_hit,
+                    solvable,
+                    (input_kind or "image")[:32],
+                ),
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return True
+        except Exception as e:
+            logger.error("Error recording scan_solve run: %s", e)
+            return False
     
     def _ensure_olevel_maths_table(self, cursor):
         """Ensure the olevel_maths table exists with expected schema"""

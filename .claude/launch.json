@@ -1,0 +1,40 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "NerdXWeb (Vite dev)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "NerdXWeb",
+      "port": 5173
+    },
+    {
+      "name": "Flask Backend",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["main.py"],
+      "cwd": ".",
+      "port": 5000
+    },
+    {
+      "name": "Full Stack (Web + API together)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:full"],
+      "cwd": "NerdXWeb",
+      "port": 5173
+    },
+    {
+      "name": "NerdXApp (Expo mobile)",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["expo", "start", "--offline"],
+      "cwd": "NerdXApp",
+      "port": 8081
+    },
+    {
+      "name": "NerdXWeb (preview build)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview"],
+      "cwd": "NerdXWeb",
+      "port": 4173
+    }
+  ]
+}

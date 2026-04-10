@@ -10,6 +10,7 @@ import json
 import time
 import random
 import re
+import hashlib
 from typing import Dict, List, Optional
 from datetime import datetime
 from utils.vertex_ai_helper import try_vertex_json, extract_json_object
@@ -1076,6 +1077,7 @@ class MathQuestionGenerator:
         platform: str = 'mobile',
         form_level: str = "Form 1",
         student_name: Optional[str] = None,
+        request_nonce: Optional[str] = None,
     ) -> Optional[Dict]:
         """
         Generate a question with Vertex AI (Gemini) only.
@@ -1108,6 +1110,7 @@ class MathQuestionGenerator:
                     recent_subtopics,
                     form_level=form_level,
                     student_name=student_name,
+                    request_nonce=request_nonce,
                 )
                 if not prompt or not prompt.strip():
                     logger.error("Empty prompt for Vertex math generation (%s)", context)
@@ -1132,7 +1135,13 @@ class MathQuestionGenerator:
                     continue
 
                 question_data = self._validate_and_format_question(
-                    vertex_response, subject, topic, difficulty, user_id, student_name=student_name
+                    vertex_response,
+                    subject,
+                    topic,
+                    difficulty,
+                    user_id,
+                    student_name=student_name,
+                    request_nonce=request_nonce,
                 )
                 if question_data:
                     question_data["source"] = "vertex_ai"
@@ -1402,6 +1411,7 @@ Return JSON:
         recent_subtopics: list = None,
         form_level: str = "Form 1",
         student_name: Optional[str] = None,
+        request_nonce: Optional[str] = None,
     ) -> str:
         """Create optimized prompt using structured prompts when available with expert examiner persona"""
         
@@ -1451,6 +1461,16 @@ Return JSON:
         variation_note = ""
         if recent_topics and topic.lower() in [t.lower() for t in recent_topics]:
             variation_note = "\nIMPORTANT: Generate a DIFFERENT question from previous ones on this topic. Vary the numbers, scenario, or approach."
+        uniqueness_signature = hashlib.sha256(
+            f"{subject}|{topic}|{difficulty}|{form_level}|{student_name_for_prompt}|{request_nonce or 'auto'}".encode('utf-8')
+        ).hexdigest()[:16]
+        uniqueness_directive = f"""
+UNIQUENESS AND SCALE DIRECTIVE:
+- Treat this as a learner-specific one-off generation with signature `{uniqueness_signature}`.
+- Use fresh wording, fresh numeric values, and a fresh route to the answer.
+- Do NOT reuse a standard textbook stem verbatim.
+- Make the question materially different from recent attempts on this topic/subtopic for the same learner.
+"""
         
         points = 10 if difficulty == 'easy' else 20 if difficulty == 'medium' else 30
         
@@ -1508,6 +1528,8 @@ SUBJECT: Mathematics (ZIMSEC O-Level)
 TOPIC: {topic}
 SPECIFIC SUBTOPIC TO TEST: {subtopic}
 DIFFICULTY: {difficulty} - {difficulty_descriptions[difficulty]}
+{variation_note}
+{uniqueness_directive}
 
 COMPREHENSIVE COVERAGE REQUIREMENT:
 - This question MUST test understanding of a SPECIFIC subtopic: "{subtopic}"
@@ -1712,6 +1734,8 @@ SUBJECT: Mathematics (ZIMSEC O-Level)
 TOPIC: {topic}
 SPECIFIC SUBTOPIC TO TEST: {selected_subtopic}
 DIFFICULTY: {difficulty} - {difficulty_descriptions[difficulty]}
+{variation_note}
+{uniqueness_directive}
 
 COMPREHENSIVE COVERAGE REQUIREMENT:
 - This question MUST test understanding of a SPECIFIC subtopic: "{selected_subtopic}"
@@ -1831,6 +1855,7 @@ Generate the question now:"""
         user_id: str = None,
         form_level: str = "Form 1",
         student_name: Optional[str] = None,
+        request_nonce: Optional[str] = None,
     ):
         """
         Stream tokens from Vertex AI while building the final JSON question.
@@ -1848,6 +1873,7 @@ Generate the question now:"""
             difficulty,
             form_level=form_level,
             student_name=student_name,
+            request_nonce=request_nonce,
         )
         if not prompt or not prompt.strip():
             yield {"type": "error", "message": "Empty generation prompt"}
@@ -1898,6 +1924,7 @@ Generate the question now:"""
                     user_id,
                     form_level=form_level,
                     student_name=student_name,
+                    request_nonce=request_nonce,
                 )
                 if question:
                     yield {"type": "question", "data": question}
@@ -1906,7 +1933,13 @@ Generate the question now:"""
                 return
 
             formatted = self._validate_and_format_question(
-                question_data, subject, topic, difficulty, user_id, student_name=student_name
+                question_data,
+                subject,
+                topic,
+                difficulty,
+                user_id,
+                student_name=student_name,
+                request_nonce=request_nonce,
             )
             if formatted:
                 formatted["source"] = "vertex_ai_stream"
@@ -1919,6 +1952,7 @@ Generate the question now:"""
                     user_id,
                     form_level=form_level,
                     student_name=student_name,
+                    request_nonce=request_nonce,
                 )
                 if question:
                     yield {"type": "question", "data": question}
@@ -1933,6 +1967,7 @@ Generate the question now:"""
                 user_id,
                 form_level=form_level,
                 student_name=student_name,
+                request_nonce=request_nonce,
             )
             if question:
                 yield {"type": "question", "data": question}
@@ -1988,6 +2023,7 @@ Generate the question now:"""
         difficulty: str,
         user_id: str = None,
         student_name: Optional[str] = None,
+        request_nonce: Optional[str] = None,
     ) -> Dict:
         """Validate and format the question response"""
         try:
@@ -2039,6 +2075,9 @@ Generate the question now:"""
                 'difficulty': difficulty,
                 'topic': topic,
                 'subject': subject,
+                'generation_signature': hashlib.sha256(
+                    f"{user_id or 'anon'}|{topic}|{difficulty}|{question_text[:120]}|{request_nonce or 'auto'}".encode('utf-8')
+                ).hexdigest()[:20],
                 'generated_at': datetime.now().isoformat(),
                 'source': 'vertex_ai'
             }

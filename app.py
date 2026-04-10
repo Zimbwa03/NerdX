@@ -39,7 +39,9 @@ app.config.update(
     MAX_CONTENT_LENGTH=16 * 1024 * 1024,  # 16MB max upload
     JSON_SORT_KEYS=False,  # Faster JSON serialization
     JSONIFY_PRETTYPRINT_REGULAR=False,  # Faster JSON responses
-    TEMPLATES_AUTO_RELOAD=True  # Always reload templates from disk
+    TEMPLATES_AUTO_RELOAD=True,  # Always reload templates from disk
+    SOLUTION_CACHE_TTL=3600,
+    SCAN_SOLVE_MAX_IMAGE_MB=10,
 )
 
 # Configure the database with better connection handling

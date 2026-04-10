@@ -34,6 +34,7 @@ import ScienceNotesScreen from '../screens/ScienceNotesScreen';
 import ComputerScienceNotesScreen from '../screens/ComputerScienceNotesScreen';
 import TopicNotesDetailScreen from '../screens/TopicNotesDetailScreen';
 import MathSolverScreen from '../screens/MathSolverScreen';
+import ScanSolveResultScreen from '../screens/ScanSolveResultScreen';
 import OfflineSettingsScreen from '../screens/OfflineSettingsScreen';
 import ModelDownloadScreen from '../screens/ModelDownloadScreen';
 import MathNotesDetailScreen from '../screens/MathNotesDetailScreen';
@@ -895,6 +896,13 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
               name="MathSolver"
               component={MathSolverScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="ScanSolveResult"
+              component={ScanSolveResultScreen}
               options={{
                 headerShown: false,
               }}

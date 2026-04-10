@@ -67,6 +67,8 @@ export function QuizPage() {
   const [result, setResult] = useState<AnswerResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [generatingSubtitle, setGeneratingSubtitle] = useState('Crafting a mathematics problem');
+  const [generatingProgress, setGeneratingProgress] = useState<number | undefined>(undefined);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [voiceLoading, setVoiceLoading] = useState(false);
@@ -129,6 +131,8 @@ export function QuizPage() {
 
   const generateNext = useCallback(async () => {
     setGenerating(true);
+    setGeneratingSubtitle('Crafting a mathematics problem');
+    setGeneratingProgress(undefined);
     setQuestion(null);
     setResult(null);
     setSelectedAnswer('');
@@ -139,7 +143,22 @@ export function QuizPage() {
       const canStream = !!topic?.id && subject.id === 'mathematics';
       let q: Question | null = null;
       if (canStream) {
-        q = await quizApi.generateQuestionStream(subject.id, topic!.id, 'medium', {}, formLevel);
+        q = await quizApi.generateQuestionStream(
+          subject.id,
+          topic!.id,
+          'medium',
+          {
+            onThinking: (update) => {
+              if (update.content) {
+                setGeneratingSubtitle(update.content);
+              }
+              if (update.stage && update.total_stages) {
+                setGeneratingProgress((update.stage / update.total_stages) * 100);
+              }
+            },
+          },
+          formLevel
+        );
       }
       if (!q) {
         const csFormat = isComputerScience ? quizQuestionFormat : undefined;
@@ -178,6 +197,8 @@ export function QuizPage() {
       }
     } finally {
       setGenerating(false);
+      setGeneratingSubtitle('Crafting a mathematics problem');
+      setGeneratingProgress(undefined);
     }
   }, [subject.id, topic, mixImagesEnabled, updateUser, isComputerScience, isGeography, isCommerce, isBES, quizQuestionFormat, quizBoard, formLevel, navigate]);
 
@@ -446,7 +467,8 @@ export function QuizPage() {
         <AILoadingOverlay
           isVisible={true}
           title="Generating Question"
-          subtitle="Crafting a mathematics problem"
+          subtitle={generatingSubtitle}
+          progress={generatingProgress}
           accentColor={subject.color}
           variant="inline"
         />
@@ -588,9 +610,6 @@ export function QuizPage() {
 
         {!result && (
           <div className="quiz-result-actions">
-            <button type="button" className="quiz-next-btn" onClick={handleNext} disabled={generating || loading}>
-              Next Question
-            </button>
             <button
               type="button"
               className="quiz-submit-btn"
@@ -598,6 +617,9 @@ export function QuizPage() {
               disabled={!canSubmit || loading}
             >
               {loading ? 'Checking...' : 'Submit'}
+            </button>
+            <button type="button" className="quiz-next-btn" onClick={handleNext} disabled={generating || loading}>
+              Next Question
             </button>
           </div>
         )}

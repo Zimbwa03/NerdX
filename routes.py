@@ -13,6 +13,7 @@ from api.payment_admin import payment_admin_bp
 from api.paynow_webhook import paynow_webhook_bp
 from api.payment_sync import payment_sync_bp
 from api.mobile import mobile_bp
+from api.solve import solve_bp
 from api.schools import schools_bp
 from api.school_portal import school_portal_bp
 from api.school_ecosystem_v2 import school_ecosystem_bp
@@ -33,6 +34,7 @@ app.register_blueprint(credit_management_bp, url_prefix='')
 app.register_blueprint(paynow_webhook_bp, url_prefix='')
 app.register_blueprint(payment_sync_bp, url_prefix='')
 app.register_blueprint(mobile_bp, url_prefix='/api/mobile')
+app.register_blueprint(solve_bp, url_prefix='/api')
 app.register_blueprint(maic_classroom_bp, url_prefix='/api/mobile/classroom')
 app.register_blueprint(school_portal_bp, url_prefix='/api/school-portal')
 app.register_blueprint(school_ecosystem_bp, url_prefix='/api/v2')

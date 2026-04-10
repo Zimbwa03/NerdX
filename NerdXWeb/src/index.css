@@ -3989,7 +3989,8 @@ iframe {
 }
 
 .quiz-main {
-  max-width: 680px;
+  width: min(780px, 100%);
+  max-width: 780px;
 }
 
 .quiz-question-block,
@@ -4531,8 +4532,15 @@ iframe {
 
 .quiz-result-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   margin-top: 24px;
+}
+
+.quiz-result-actions .quiz-submit-btn,
+.quiz-result-actions .quiz-next-btn,
+.quiz-result-actions .quiz-back-btn {
+  flex: 1 1 220px;
 }
 
 .quiz-next-btn {
@@ -6931,26 +6939,214 @@ iframe {
 
 /* Scan & Solve Page */
 .scan-solve-page {
-  padding-bottom: 20px;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
 }
 
 .scan-solve-header,
 .scan-solve-header-bar {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
-.scan-solve-header h1,
-.scan-solve-header-bar h1 {
+.scan-solve-header h1:not(.scan-solve-hero-title),
+.scan-solve-header-bar h1:not(.scan-solve-hero-title) {
   font-size: 24px;
   font-weight: 700;
   color: #fff;
   margin-top: 8px;
 }
 
+.scan-solve-hero-kicker {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 12px 0 6px;
+  letter-spacing: 0.02em;
+}
+
+.scan-solve-hero-title {
+  font-size: clamp(26px, 4vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin: 0;
+  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.82) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .scan-solve-subtitle {
-  font-size: 14px;
+  font-size: 15px;
+  line-height: 1.5;
   color: var(--text-secondary);
-  margin-top: 4px;
+  margin: 12px 0 0;
+  max-width: 36rem;
+}
+
+.scan-solve-input-panel {
+  padding: 24px;
+  border-radius: var(--r-xl);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+}
+
+.scan-solve-upload-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 22px;
+  border: none;
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0a0f0c;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.scan-solve-upload-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(16, 185, 129, 0.45);
+}
+
+.scan-solve-upload-hint {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.45;
+}
+
+.scan-solve-field-label {
+  margin: 22px 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.scan-solve-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scan-solve-chip {
+  border-radius: 999px;
+  padding: 9px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.45);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.scan-solve-chip:hover {
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #fff;
+}
+
+.scan-solve-chip--active {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: rgba(16, 185, 129, 0.14);
+  color: #d1fae5;
+}
+
+.scan-solve-level-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 4px;
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.scan-solve-level-tab {
+  flex: 1;
+  padding: 12px 14px;
+  border: none;
+  border-radius: calc(var(--r-md) - 2px);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.scan-solve-level-tab:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.scan-solve-level-tab--active {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #0a0f0c;
+  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.35);
+}
+
+.scan-solve-preview--hero {
+  position: relative;
+  margin-top: 18px;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.scan-solve-preview--hero img {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  display: block;
+}
+
+.scan-solve-preview-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #d1fae5;
+  background: rgba(15, 17, 23, 0.85);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.scan-solve-solve-btn--block {
+  width: 100%;
+  margin-top: 22px;
+  min-height: 52px;
+  border-radius: var(--r-md);
+}
+
+.scan-solve-section {
+  margin-top: 36px;
+}
+
+.scan-solve-section-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
+
+.scan-solve-section-desc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.62);
+  margin: 0 0 16px;
+  line-height: 1.5;
 }
 
 .scan-solve-input-card {
@@ -7108,6 +7304,11 @@ iframe {
 .scan-solve-error {
   color: var(--error);
   margin-bottom: 16px;
+}
+
+.scan-solve-input-panel .scan-solve-error {
+  margin-top: 8px;
+  margin-bottom: 0;
 }
 
 .scan-solve-preview {
@@ -8936,7 +9137,7 @@ iframe {
 /* Science Quiz uses .quiz-page / .quiz-main - widen on desktop */
 @media (min-width: 1024px) {
   .quiz-page .quiz-main {
-    max-width: 720px;
+    max-width: 780px;
   }
 }
 

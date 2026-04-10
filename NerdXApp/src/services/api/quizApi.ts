@@ -107,6 +107,8 @@ export interface AnswerResult {
   related_topic?: string;
 }
 
+const buildRequestNonce = () => `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
 export const quizApi = {
   generateQuestionStream: async (
     subject: string,
@@ -132,6 +134,7 @@ export const quizApi = {
         subject,
         topic,
         difficulty,
+        request_nonce: buildRequestNonce(),
         ...(formLevel ? { form_level: formLevel } : {}),
       }),
     });
@@ -274,12 +277,13 @@ export const quizApi = {
     board?: 'zimsec' | 'cambridge',  // For Computer Science: exam board
     formLevel?: string
   ): Promise<Question | null> => {
+    const payload: any = {
+      subject,
+      difficulty,
+      type,
+      request_nonce: buildRequestNonce(),
+    };
     try {
-      const payload: any = {
-        subject,
-        difficulty,
-        type,
-      };
       if (topic) {
         payload.topic = topic;
       }
@@ -312,9 +316,16 @@ export const quizApi = {
       }
       // Use extended timeout for AI question generation
       // Essay and structured questions can take longer (up to 90 seconds)
-      const timeout = payload.question_type === 'essay' || payload.question_type === 'structured' 
-        ? 120000  // 120 seconds for essay/structured (more complex)
-        : 90000;  // 90 seconds for MCQ
+      const fmt = String(payload.question_format || '').toLowerCase();
+      const qType = String(payload.question_type || '').toLowerCase();
+      const slowFormat =
+        type === 'essay' ||
+        fmt === 'structured' ||
+        fmt === 'essay' ||
+        qType === 'structured' ||
+        qType === 'essay';
+      const aLevel = String(subject || '').startsWith('a_level_');
+      const timeout = slowFormat || aLevel ? 180000 : 120000;
       
       const response = await api.post('/api/mobile/quiz/generate', payload, {
         timeout: timeout,

@@ -238,6 +238,15 @@ def _get_student_first_name(user_id: Optional[str]) -> str:
     return "Student"
 
 
+def _build_request_nonce(data: Optional[dict]) -> str:
+    """Return a per-generation nonce so concurrent requests diversify prompts."""
+    if isinstance(data, dict):
+        raw = data.get('request_nonce')
+        if raw:
+            return str(raw).strip()
+    return uuid.uuid4().hex
+
+
 def _deduct_credits_or_fail(user_id: str, cost_units: int, transaction_type: str, description: str):
     """
     Deduct credits and return remaining displayed credits (real-time from RPC when possible).
@@ -2129,6 +2138,7 @@ def generate_question():
         difficulty = data.get('difficulty', 'medium')
         form_level = data.get('form_level', 'Form 1')
         student_first_name = _get_student_first_name(g.current_user_id)
+        request_nonce = _build_request_nonce(data)
         question_type = data.get('type', 'topical')  # 'topical' or 'exam'
         question_format = (data.get('question_format') or 'mcq').lower()  # 'mcq' or 'structured'
         
@@ -2274,6 +2284,7 @@ def generate_question():
                                 timeout_seconds=attempt_timeout,
                                 form_level=form_level,
                                 student_name=student_first_name,
+                                request_nonce=request_nonce,
                             )
                             
                             # Reject fallback questions - they are default/static questions
@@ -2836,6 +2847,8 @@ def generate_question():
             'topic': topic or '',
             'difficulty': difficulty,
             'form_level': form_level if subject in ('mathematics', 'a_level_pure_math') else question_data.get('form_level', ''),
+            'request_nonce': request_nonce,
+            'generation_signature': question_data.get('generation_signature', ''),
             'prompt_to_student': question_data.get('prompt_to_student') or math_prompt,
             'allows_text_input': (
                 subject == 'mathematics' or 
@@ -3178,6 +3191,7 @@ def generate_question_stream():
         difficulty = data.get('difficulty', 'medium')
         form_level = data.get('form_level', 'Form 1')
         student_first_name = _get_student_first_name(g.current_user_id)
+        request_nonce = _build_request_nonce(data)
         
         # Only allow streaming for mathematics subjects
         if subject not in ['mathematics', 'a_level_pure_math', 'a_level_statistics']:
@@ -3213,6 +3227,7 @@ def generate_question_stream():
                     user_id,
                     form_level=form_level,
                     student_name=student_first_name,
+                    request_nonce=request_nonce,
                 ):
                     event_type = event.get('type', 'unknown')
                     
@@ -3252,6 +3267,8 @@ def generate_question_stream():
                             'topic': topic,
                             'difficulty': difficulty,
                             'form_level': form_level,
+                            'request_nonce': request_nonce,
+                            'generation_signature': question_data.get('generation_signature', ''),
                             'prompt_to_student': personalized_prompt,
                             'allows_text_input': True,
                             'allows_image_upload': True,

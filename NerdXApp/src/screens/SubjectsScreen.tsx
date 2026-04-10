@@ -472,7 +472,7 @@ const SubjectsScreen: React.FC = () => {
             />
             <ModalOptionCard
               icon="📸"
-              title="Scan & Solve ⚡ OFFLINE"
+              title="Scan & Solve"
               description="Snap a photo or type any math problem - works completely offline! No internet required."
               onPress={() => {
                 setMathModalVisible(false);

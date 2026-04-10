@@ -69,6 +69,14 @@ export interface ClassroomInfo {
   student_count: number;
 }
 
+export interface ClassroomAttachment {
+  name: string;
+  url: string;
+  mime_type: string;
+  size_bytes: number;
+  uploaded_at?: string | null;
+}
+
 export interface ClassroomPost {
   id: number;
   classroom_id: number;
@@ -76,9 +84,10 @@ export interface ClassroomPost {
   post_type: string;
   title: string;
   content: string | null;
-  attachments: unknown[];
+  attachments: ClassroomAttachment[];
   due_date: string | null;
   is_published: boolean;
+  scheduled_at?: string | null;
   created_at: string;
 }
 
@@ -136,6 +145,21 @@ export interface StudentSubmission {
   };
 }
 
+export interface StudentWorkspacePreview {
+  student: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    student_code: string;
+    photo_url: string | null;
+  };
+  posts: ClassroomPost[];
+  assessments: Array<{
+    assessment: Assessment;
+    submission: StudentSubmission | null;
+  }>;
+}
+
 export interface StudentPerformance {
   overall_accuracy: number;
   topics: { topic: string; accuracy: number; attempts: number; trend: string; weak_areas: string[] }[];
@@ -157,6 +181,42 @@ export interface ClassAnalytics {
     topics_assessed: number;
   }[];
   badge_distribution: Record<string, number>;
+}
+
+export interface TeacherTimetableEntry {
+  id: number;
+  classroom_id: number;
+  teacher_id: number;
+  title: string;
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  room: string | null;
+  cadence: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TeacherSchemeOfWorkItem {
+  id: number;
+  classroom_id: number;
+  teacher_id: number;
+  week_label: string;
+  topic: string;
+  objectives: string | null;
+  activities: string | null;
+  homework: string | null;
+  due_date: string | null;
+  ai_notes: string | null;
+  status: 'planned' | 'in_progress' | 'completed';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TeacherClassroomSchedule {
+  timetable: TeacherTimetableEntry[];
+  scheme_of_work: TeacherSchemeOfWorkItem[];
 }
 
 // ─── API ─────────────────────────────────────────────────────────────────────
@@ -220,6 +280,11 @@ export const teacherPortalApi = {
     return data;
   },
 
+  async draftClassroomPost(token: string, classroomId: number, payload: Record<string, unknown>) {
+    const { data } = await axios.post(`${BASE}/classrooms/${classroomId}/posts/ai-draft`, payload, { headers: authHeaders(token) });
+    return data as { success: boolean; title: string; content: string; checklist: string[] };
+  },
+
   async updatePost(token: string, postId: number, updates: Record<string, unknown>) {
     const { data } = await axios.patch(`${BASE}/posts/${postId}`, updates, { headers: authHeaders(token) });
     return data;
@@ -227,6 +292,18 @@ export const teacherPortalApi = {
 
   async deletePost(token: string, postId: number) {
     await axios.delete(`${BASE}/posts/${postId}`, { headers: authHeaders(token) });
+  },
+
+  async uploadClassroomAttachment(token: string, classroomId: number, file: File): Promise<ClassroomAttachment> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    const { data } = await axios.post(`${BASE}/classrooms/${classroomId}/attachments`, formData, {
+      headers: {
+        ...authHeaders(token),
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return data.attachment as ClassroomAttachment;
   },
 
   // Assessments
@@ -295,6 +372,42 @@ export const teacherPortalApi = {
     try {
       const { data } = await axios.get(`${BASE}/classrooms/${classroomId}/analytics`, { headers: authHeaders(token) });
       return data;
+    } catch {
+      return null;
+    }
+  },
+
+  async getClassroomSchedule(token: string, classroomId: number): Promise<TeacherClassroomSchedule> {
+    try {
+      const { data } = await axios.get(`${BASE}/classrooms/${classroomId}/schedule`, { headers: authHeaders(token) });
+      return {
+        timetable: data.timetable || [],
+        scheme_of_work: data.scheme_of_work || [],
+      };
+    } catch {
+      return { timetable: [], scheme_of_work: [] };
+    }
+  },
+
+  async createTimetableEntry(token: string, classroomId: number, payload: Record<string, unknown>) {
+    const { data } = await axios.post(`${BASE}/classrooms/${classroomId}/schedule/timetable`, payload, { headers: authHeaders(token) });
+    return data;
+  },
+
+  async createSchemeItem(token: string, classroomId: number, payload: Record<string, unknown>) {
+    const { data } = await axios.post(`${BASE}/classrooms/${classroomId}/schedule/scheme`, payload, { headers: authHeaders(token) });
+    return data;
+  },
+
+  async suggestSchemeItem(token: string, classroomId: number, payload: Record<string, unknown>) {
+    const { data } = await axios.post(`${BASE}/classrooms/${classroomId}/schedule/ai-suggest`, payload, { headers: authHeaders(token) });
+    return data;
+  },
+
+  async getStudentWorkspacePreview(token: string, classroomId: number, studentId: number): Promise<StudentWorkspacePreview | null> {
+    try {
+      const { data } = await axios.get(`${BASE}/classrooms/${classroomId}/students/${studentId}/workspace`, { headers: authHeaders(token) });
+      return data as StudentWorkspacePreview;
     } catch {
       return null;
     }
