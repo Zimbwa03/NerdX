@@ -11,6 +11,15 @@ services:
         value: production
       - key: FLASK_DEBUG
         value: false
+      - key: WEB_CONCURRENCY
+        value: 2
+      - key: WORKER_CONNECTIONS
+        value: 100
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: nerdx-cache
+          property: connectionString
       # Add your API keys as environment variables in Render dashboard
       # - key: DEEPSEEK_API_KEY
       # - key: GEMINI_API_KEY
@@ -22,3 +31,24 @@ services:
       mountPath: /app/data
       sizeGB: 5  # For ML models and media files
 
+  - type: worker
+    name: nerdx-worker
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerCommand: bash start_worker.sh
+    autoDeploy: true
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: nerdx-cache
+          property: connectionString
+      # Add your API keys as environment variables in Render dashboard
+      # - key: DEEPSEEK_API_KEY
+      # - key: GEMINI_API_KEY
+      # - key: DATABASE_URL
+
+  - type: keyvalue
+    name: nerdx-cache
+    plan: starter

@@ -13,6 +13,8 @@ import re
 from typing import Dict, List, Optional
 from datetime import datetime
 from utils.vertex_ai_helper import try_vertex_json, extract_json_object
+from config import Config
+from services.model_router import get_model_for_task
 
 logger = logging.getLogger(__name__)
 
@@ -1016,13 +1018,19 @@ class MathQuestionGenerator:
 
         # Budget hints for callers (e.g. mobile API); Vertex retries are cheap vs extra HTTP providers
         self.base_timeout = int(os.environ.get("MATH_GENERATION_TIMEOUT_SECONDS", "45"))
-        self.max_retries = int(os.environ.get("VERTEX_MATH_MAX_ATTEMPTS", "3"))
+        self.max_retries = max(1, int(os.environ.get("VERTEX_MATH_MAX_ATTEMPTS", str(Config.AI_MAX_RETRIES))))
         self.timeouts = [
             self.base_timeout,
             int(self.base_timeout * 1.25),
             int(self.base_timeout * 1.5),
         ]
-        self.retry_delay = 1
+        self.retry_delay = max(0.1, float(getattr(Config, "AI_RETRY_DELAY", 0.5)))
+
+    def _get_task_type(self, subject: str, difficulty: str = 'medium') -> str:
+        normalized_subject = (subject or '').strip().lower()
+        if normalized_subject == 'a level pure mathematics':
+            return 'a_level_pure_math_topical_structured' if difficulty == 'difficult' else 'a_level_pure_math_topical'
+        return 'math_quiz'
     
     def _init_gemini_client(self):
         """Initialize Gemini client with Vertex AI or API key."""
@@ -1803,7 +1811,7 @@ Generate the question now:"""
 
             result = vertex_service.generate_text(
                 prompt=prompt,
-                model=os.environ.get("VERTEX_GEMINI_TEXT_MODEL", "gemini-2.5-flash"),
+                model=get_model_for_task(self._get_task_type("Mathematics"))[0],
                 json_mode=True,
                 temperature=0.75,
                 max_output_tokens=8192,
@@ -1863,8 +1871,9 @@ Generate the question now:"""
         try:
             full_content = ""
             stage = 1
+            model_name, _timeout = get_model_for_task(self._get_task_type(subject, difficulty))
             stream = vertex_service.client.models.generate_content_stream(
-                model=os.environ.get("VERTEX_GEMINI_TEXT_MODEL", "gemini-2.5-flash"),
+                model=model_name,
                 contents=prompt,
                 config={
                     "response_mime_type": "application/json",

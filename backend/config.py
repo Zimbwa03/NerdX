@@ -213,9 +213,22 @@ class Config:
     # Low Credit Threshold (units)
     LOW_CREDIT_THRESHOLD = 200            # 20 credits
 
-    # AI API timeouts and retries
-    AI_REQUEST_TIMEOUT = [30, 45, 60]
-    AI_MAX_RETRIES = 3
+    # === AI TIMEOUT CONFIGURATION ===
+    # Fast path: navigation, simple MCQ, menu responses
+    AI_TIMEOUT_FAST = 8
+    # Standard path: quiz generation, explanations, chat
+    AI_TIMEOUT_STANDARD = 15
+    # Heavy path: A-Level essays, marking, deep reasoning
+    AI_TIMEOUT_HEAVY = 25
+    # Streaming: fail fast if no first token arrives within this time
+    AI_TIMEOUT_STREAM_FIRST_TOKEN = 5
+
+    AI_MAX_RETRIES = 1        # ONE retry only — fail fast, never make students wait 3 min
+    AI_RETRY_DELAY = 0.5      # 500 ms between retry attempts
+
+    # Legacy alias kept so any code that still reads the old list doesn't crash.
+    # New code should use AI_TIMEOUT_FAST / AI_TIMEOUT_STANDARD / AI_TIMEOUT_HEAVY.
+    AI_REQUEST_TIMEOUT = [AI_TIMEOUT_STANDARD, AI_TIMEOUT_HEAVY]
 
     # Enhanced Learning Features — default subject AI model IDs refer to Gemini on Vertex
     _vertex_text = os.getenv('VERTEX_GEMINI_TEXT_MODEL', 'gemini-2.5-flash')
@@ -237,6 +250,76 @@ class Config:
 
     # ZIMSEC Beta Math Prompts (template-based from ZIMSEC MD files)
     USE_ZIMSEC_BETA_MATH_PROMPTS = os.getenv('USE_ZIMSEC_BETA_MATH_PROMPTS', 'false').lower() in ('true', '1', 'yes')
+
+    # === INTELLIGENT MODEL ROUTING ===
+    # Route requests to the right Gemini tier based on task type.
+    # Tier 1 (Flash-Lite): navigation, simple MCQ        → target <3 s
+    # Tier 2 (Flash):      standard quiz, explanations   → target <8 s
+    # Tier 3 (Pro):        A-Level, essays, marking      → target <20 s (streamed)
+    MODEL_ROUTING = {
+        'tier_1_flash_lite': 'gemini-2.5-flash-lite',
+        'tier_1_tasks': [
+            'menu_navigation', 'help_command', 'check_balance', 'settings_access',
+            'registration_step', 'flashcard_single', 'geo_maps_feedback',
+            'programming_lab_ai', 'teacher_mode_followup', 'maic_classroom_message',
+        ],
+        'tier_2_flash': 'gemini-2.5-flash',
+        'tier_2_tasks': [
+            'combined_science_exam', 'combined_science_topical',
+            'combined_science_topical_mcq', 'combined_science_topical_structured',
+            'math_topical', 'math_exam', 'math_quiz', 'math_graph_practice',
+            'english_topical', 'computer_science_topical_mcq',
+            'computer_science_exam_mcq', 'teacher_mode_start',
+            'maic_classroom_start', 'maic_classroom_quiz',
+            'virtual_lab_knowledge_check', 'ocr_solve', 'image_solve',
+            'project_assistant_start', 'project_assistant_followup',
+        ],
+        'tier_3_pro': 'gemini-2.5-pro',
+        'tier_3_tasks': [
+            'a_level_pure_math_topical', 'a_level_pure_math_topical_structured',
+            'a_level_pure_math_exam', 'a_level_chemistry_topical_structured',
+            'a_level_chemistry_exam', 'a_level_physics_topical_structured',
+            'a_level_physics_exam', 'a_level_biology_topical_essay',
+            'a_level_biology_exam_essay', 'a_level_computer_science_topical_essay',
+            'a_level_computer_science_exam_essay', 'a_level_geography_topical_essay',
+            'a_level_geography_exam_essay', 'english_comprehension',
+            'english_essay_writing', 'english_essay_marking',
+            'english_comprehension_grading', 'english_summary_grading',
+            'history_topical_essay', 'history_exam_essay',
+            'project_web_search', 'project_deep_research', 'teacher_mode_pdf',
+        ],
+    }
+
+    # === CACHING CONFIGURATION ===
+    REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+
+    CACHE_TTL = {
+        'mcq_question':        86400,   # 24 h — MCQ answers don't change
+        'structured_question': 43200,   # 12 h
+        'explanation':         86400,   # 24 h
+        'math_solution':       86400,   # 24 h — deterministic
+        'essay_question':      21600,   # 6 h
+        'student_profile':     300,     # 5 min
+        'dkt_state':           60,      # 1 min — knowledge state updates often
+    }
+
+    # === STREAMING CONFIGURATION ===
+    ENABLE_STREAMING = True
+    STREAM_CHUNK_SIZE = 50           # characters per SSE chunk
+    STREAM_FLUSH_INTERVAL = 0.05     # 50 ms between flushes
+
+    # === BACKGROUND TASK CONFIGURATION (Celery + Redis) ===
+    CELERY_BROKER_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+    CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+
+    # DKT writes are background tasks — never block question generation
+    DKT_ASYNC_WRITE = True
+    DKT_BATCH_SIZE = 10
+    DKT_FLUSH_INTERVAL = 30          # flush DKT batch every 30 s
+
+    # Manim rendering is always async — never run in the request thread
+    MANIM_RENDER_ASYNC = True
+    MANIM_RENDER_TIMEOUT = _env_int('MANIM_RENDER_TIMEOUT', 60)   # fine async
 
     @classmethod
     def validate_config(cls):

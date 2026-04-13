@@ -32,6 +32,31 @@ export interface GraphData {
   graph_type?: string;
 }
 
+interface GraphJobResponse {
+  video_path?: string;
+  job_id?: string;
+}
+
+async function resolveAnimation(data: GraphJobResponse | null): Promise<{ video_path: string } | null> {
+  if (!data) return null;
+  if (data.video_path) return { video_path: data.video_path };
+  if (!data.job_id) return null;
+
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < 70000) {
+    await new Promise((resolve) => window.setTimeout(resolve, 1500));
+    const statusRes = await api.get(`/api/jobs/${data.job_id}/status`);
+    const status = statusRes.data?.status;
+    if (status === 'success' && statusRes.data?.result?.video_path) {
+      return { video_path: statusRes.data.result.video_path };
+    }
+    if (status === 'failure') {
+      return null;
+    }
+  }
+  return null;
+}
+
 export const graphApi = {
   generateGraph: async (
     graphType: string,
@@ -112,7 +137,7 @@ export const graphApi = {
   ): Promise<{ video_path: string } | null> => {
     try {
       const res = await api.post('/api/mobile/math/animate/quadratic', { a, b, c, x_range, y_range });
-      return res.data?.data ?? null;
+      return await resolveAnimation(res.data?.data ?? null);
     } catch {
       return null;
     }
@@ -126,7 +151,7 @@ export const graphApi = {
   ): Promise<{ video_path: string } | null> => {
     try {
       const res = await api.post('/api/mobile/math/animate/linear', { m, c, x_range, y_range });
-      return res.data?.data ?? null;
+      return await resolveAnimation(res.data?.data ?? null);
     } catch {
       return null;
     }
@@ -139,7 +164,7 @@ export const graphApi = {
   ): Promise<{ video_path: string } | null> => {
     try {
       const res = await api.post('/api/mobile/math/animate/expression', { expression, x_range, y_range });
-      return res.data?.data ?? null;
+      return await resolveAnimation(res.data?.data ?? null);
     } catch {
       return null;
     }

@@ -26,6 +26,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install system dependencies for Manim and media processing
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # Manim dependencies
+    curl \
     ffmpeg \
     libcairo2-dev \
     libpango1.0-dev \
@@ -72,4 +73,15 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:10000/health || exit 1
 
 # Start command
-CMD sh -c "gunicorn backend.main:app --bind 0.0.0.0:${PORT:-10000} --workers 1 --timeout 300 --preload"
+# Uses gevent workers so multiple concurrent AI requests don't block each other.
+# --worker-class gevent + --worker-connections 50 handles up to 200 concurrent
+# students on a single Render instance without any student blocking another.
+CMD sh -c "gunicorn backend.main:app \
+  --bind 0.0.0.0:${PORT:-10000} \
+  --worker-class gevent \
+  --workers ${WEB_CONCURRENCY:-2} \
+  --worker-connections ${WORKER_CONNECTIONS:-100} \
+  --timeout 30 \
+  --keep-alive 5 \
+  --log-level info \
+  --preload"

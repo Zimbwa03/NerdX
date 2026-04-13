@@ -3172,19 +3172,25 @@ def generate_question_stream():
     from flask import Response
     
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         subject = data.get('subject', 'mathematics')
         topic = data.get('topic', 'Algebra')
-        difficulty = data.get('difficulty', 'medium')
+        difficulty = data.get('difficulty')
         form_level = data.get('form_level', 'Form 1')
         student_first_name = _get_student_first_name(g.current_user_id)
-        
+        from services.cache_service import cache_question, get_cached_question
+        from services.dkt_service import get_recommended_difficulty
+
         # Only allow streaming for mathematics subjects
         if subject not in ['mathematics', 'a_level_pure_math', 'a_level_statistics']:
             return jsonify({
                 'success': False,
                 'message': 'Streaming only available for Mathematics subjects'
             }), 400
+
+        if not difficulty:
+            dkt_subject = 'A Level Pure Mathematics' if subject == 'a_level_pure_math' else 'Mathematics'
+            difficulty = get_recommended_difficulty(g.current_user_id, dkt_subject, topic)
         
         # Check credits
         credit_cost = advanced_credit_service.get_credit_cost('math_quiz')
@@ -3197,15 +3203,37 @@ def generate_question_stream():
             }), 402
         
         user_id = g.current_user_id
+        subject_name = 'Mathematics' if subject == 'mathematics' else 'A Level Pure Mathematics'
+        cache_topic = f"{form_level}:{topic}"
         
         def generate():
             """SSE generator for streaming thinking updates."""
             try:
+                cached_question = get_cached_question(subject_name, cache_topic, difficulty, 'math_stream')
+                if cached_question:
+                    credits_remaining = _deduct_credits_or_fail(
+                        user_id,
+                        int(credit_cost),
+                        'math_quiz',
+                        f'Math question: {topic} (cached)'
+                    )
+                    if credits_remaining is None:
+                        yield f"data: {json.dumps({'type': 'error', 'message': 'Transaction failed. Please try again.'})}\n\n"
+                        return
+
+                    cached_payload = dict(cached_question)
+                    cached_payload['id'] = str(uuid.uuid4())
+                    cached_payload['credits_remaining'] = credits_remaining
+                    cached_payload['source'] = cached_payload.get('source', 'cache')
+                    yield f"data: {json.dumps({'type': 'thinking', 'content': '⚡ Loading a cached practice question…', 'stage': 1, 'total_stages': 1})}\n\n"
+                    yield f"data: {json.dumps({'type': 'question', 'data': cached_payload})}\n\n"
+                    yield f"data: {json.dumps({'type': 'done'})}\n\n"
+                    return
+
                 from services.math_question_generator import MathQuestionGenerator
                 math_generator = MathQuestionGenerator()
                 
                 # Stream thinking updates and final question
-                subject_name = 'Mathematics' if subject == 'mathematics' else 'A Level Pure Mathematics'
                 for event in math_generator.generate_question_stream(
                     subject_name,
                     topic,
@@ -3258,6 +3286,18 @@ def generate_question_stream():
                             'source': 'deepseek_reasoner',
                             'credits_remaining': credits_remaining
                         }
+
+                        cache_question(
+                            subject_name,
+                            cache_topic,
+                            difficulty,
+                            'math_stream',
+                            {
+                                key: value
+                                for key, value in question.items()
+                                if key not in {'id', 'credits_remaining'}
+                            },
+                        )
                         
                         yield f"data: {json.dumps({'type': 'question', 'data': question})}\n\n"
                     
@@ -5879,10 +5919,19 @@ def _manim_video_path_to_url(relative_path: str) -> str:
         path = '/' + path
     return path
 
+
+def _queue_animation_job(graph_type: str, payload: dict, user_id: str):
+    from services.task_queue import enqueue_manim_render
+
+    result = enqueue_manim_render(graph_type, payload, user_id)
+    if result.get('video_path'):
+        return jsonify({'success': True, 'data': {'video_path': _manim_video_path_to_url(result['video_path'])}}), 200
+    return jsonify({'success': True, 'data': {'job_id': result.get('job_id')}}), 202
+
 @mobile_bp.route('/math/animate/quadratic', methods=['POST'])
 @require_auth
 def animate_quadratic():
-    """Generate Manim quadratic animation; returns video_path for frontend (e.g. /static/media/videos/.../file.mp4)."""
+    """Queue Manim quadratic animation and return a job_id or immediate cached video_path."""
     try:
         data = request.get_json() or {}
         a = float(data.get('a', 1))
@@ -5890,17 +5939,11 @@ def animate_quadratic():
         c = float(data.get('c', 0))
         x_range = data.get('x_range')
         y_range = data.get('y_range')
-        from services.manim_service import get_manim_service
-        manim = get_manim_service()
-        result = manim.render_quadratic(a, b, c, quality='l', x_range=x_range, y_range=y_range)
-        if not result.get('success') or not result.get('video_path'):
-            return jsonify({
-                'success': False,
-                'message': result.get('error', 'Animation failed'),
-                'data': None
-            }), 500
-        video_path = _manim_video_path_to_url(result['video_path'])
-        return jsonify({'success': True, 'data': {'video_path': video_path}}), 200
+        return _queue_animation_job(
+            'quadratic',
+            {'a': a, 'b': b, 'c': c, 'x_range': x_range, 'y_range': y_range},
+            g.current_user_id,
+        )
     except Exception as e:
         logger.error(f"Animate quadratic error: {e}")
         return jsonify({'success': False, 'message': 'Server error', 'data': None}), 500
@@ -5908,24 +5951,18 @@ def animate_quadratic():
 @mobile_bp.route('/math/animate/linear', methods=['POST'])
 @require_auth
 def animate_linear():
-    """Generate Manim linear animation; returns video_path for frontend."""
+    """Queue Manim linear animation and return a job_id or immediate cached video_path."""
     try:
         data = request.get_json() or {}
         m = float(data.get('m', 1))
         c = float(data.get('c', 0))
         x_range = data.get('x_range')
         y_range = data.get('y_range')
-        from services.manim_service import get_manim_service
-        manim = get_manim_service()
-        result = manim.render_linear(m, c, quality='l', x_range=x_range, y_range=y_range)
-        if not result.get('success') or not result.get('video_path'):
-            return jsonify({
-                'success': False,
-                'message': result.get('error', 'Animation failed'),
-                'data': None
-            }), 500
-        video_path = _manim_video_path_to_url(result['video_path'])
-        return jsonify({'success': True, 'data': {'video_path': video_path}}), 200
+        return _queue_animation_job(
+            'linear',
+            {'m': m, 'c': c, 'x_range': x_range, 'y_range': y_range},
+            g.current_user_id,
+        )
     except Exception as e:
         logger.error(f"Animate linear error: {e}")
         return jsonify({'success': False, 'message': 'Server error', 'data': None}), 500
@@ -5933,7 +5970,7 @@ def animate_linear():
 @mobile_bp.route('/math/animate/expression', methods=['POST'])
 @require_auth
 def animate_expression():
-    """Generate Manim expression animation (trig, exponential, etc.); returns video_path for frontend."""
+    """Queue Manim expression animation and return a job_id or immediate cached video_path."""
     try:
         data = request.get_json() or {}
         expression = (data.get('expression') or '').strip()
@@ -5941,17 +5978,11 @@ def animate_expression():
             return jsonify({'success': False, 'message': 'Expression is required', 'data': None}), 400
         x_range = data.get('x_range')
         y_range = data.get('y_range')
-        from services.manim_service import get_manim_service
-        manim = get_manim_service()
-        result = manim.render_expression(expression, quality='l', x_range=x_range, y_range=y_range)
-        if not result.get('success') or not result.get('video_path'):
-            return jsonify({
-                'success': False,
-                'message': result.get('error', 'Animation failed'),
-                'data': None
-            }), 500
-        video_path = _manim_video_path_to_url(result['video_path'])
-        return jsonify({'success': True, 'data': {'video_path': video_path}}), 200
+        return _queue_animation_job(
+            'expression',
+            {'expression': expression, 'x_range': x_range, 'y_range': y_range},
+            g.current_user_id,
+        )
     except Exception as e:
         logger.error(f"Animate expression error: {e}")
         return jsonify({'success': False, 'message': 'Server error', 'data': None}), 500

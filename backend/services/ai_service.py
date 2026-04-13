@@ -3,11 +3,246 @@ import json
 import logging
 import requests
 import time
-from typing import Dict, List, Optional
+from typing import Dict, Generator, List, Optional
 from config import Config
 from utils.vertex_ai_helper import try_vertex_json
+from services.model_router import derive_task_type
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Streaming + cached question generation
+# ---------------------------------------------------------------------------
+
+def generate_question_streamed(
+    subject: str,
+    topic: str,
+    difficulty: str,
+    question_type: str,
+    student_id: str = 'anonymous',
+    additional_context: str = '',
+    task_type: Optional[str] = None,
+) -> Generator[str, None, None]:
+    """
+    Generate a question and stream it chunk-by-chunk to the caller.
+
+    Algorithm:
+      1. Check Redis cache — cache hit returns the stored response instantly.
+      2. Route to the correct Gemini tier (Flash-Lite / Flash / Pro).
+      3. Stream the Gemini response; yield each text chunk as it arrives.
+      4. Cache the full assembled response for future hits.
+
+    Yields plain text chunks.  The calling Flask route wraps them in SSE
+    ``data: {...}\\n\\n`` frames.
+    """
+    from services.cache_service import get_cached_question, cache_question
+    from services.model_router import get_model_for_task, get_model_display_name
+    import google.generativeai as genai
+
+    genai.configure(api_key=Config.GEMINI_API_KEY)
+
+    start_time = time.time()
+
+    # 1. Cache check
+    cached = get_cached_question(subject, topic, difficulty, question_type)
+    if cached:
+        logger.info(
+            f"Cache HIT: {subject}/{topic}/{difficulty} "
+            f"({time.time() - start_time:.3f}s)"
+        )
+        content = cached.get('content', '')
+        chunk_size = Config.STREAM_CHUNK_SIZE
+        for i in range(0, len(content), chunk_size):
+            yield content[i:i + chunk_size]
+        return
+
+    # 2. Model routing
+    effective_task = task_type or derive_task_type(subject, question_type, topic)
+    model_name, timeout = get_model_for_task(effective_task)
+    logger.info(
+        f"Cache MISS: {subject}/{topic} → "
+        f"{get_model_display_name(model_name)} (timeout={timeout}s)"
+    )
+
+    # 3. Build prompt
+    prompt = _build_question_prompt(subject, topic, difficulty, question_type, additional_context)
+
+    # 4. Generation configs per tier
+    _gen_configs = {
+        'gemini-2.5-flash-lite': {'temperature': 0.7, 'top_p': 0.9, 'max_output_tokens': 800},
+        'gemini-2.5-flash':      {'temperature': 0.75, 'top_p': 0.9, 'max_output_tokens': 1500},
+        'gemini-2.5-pro':        {'temperature': 0.7, 'top_p': 0.85, 'max_output_tokens': 3000},
+    }
+    cfg = _gen_configs.get(model_name, _gen_configs['gemini-2.5-flash'])
+    gen_config = genai.types.GenerationConfig(**cfg)
+
+    # 5. Stream from Gemini
+    try:
+        model = genai.GenerativeModel(model_name=model_name, generation_config=gen_config)
+        full_parts: List[str] = []
+        first_token_logged = False
+
+        response = model.generate_content(
+            prompt,
+            stream=True,
+            request_options={"timeout": timeout},
+        )
+
+        for chunk in response:
+            if chunk.text:
+                if not first_token_logged:
+                    first_token_logged = True
+                    logger.info(
+                        f"First token: {subject}/{topic} in "
+                        f"{time.time() - start_time:.2f}s via {model_name}"
+                    )
+                full_parts.append(chunk.text)
+                yield chunk.text
+
+        # 6. Cache assembled response
+        if full_parts:
+            cache_question(
+                subject, topic, difficulty, question_type,
+                {'content': ''.join(full_parts), 'model': model_name},
+            )
+
+        logger.info(
+            f"Generation done: {subject}/{topic} in "
+            f"{time.time() - start_time:.2f}s"
+        )
+
+    except Exception as exc:
+        logger.error(f"Streaming generation failed for {subject}/{topic}: {exc}")
+        yield "\n\n[Generation error — please try again]"
+
+
+def generate_question_direct(
+    subject: str,
+    topic: str,
+    difficulty: str,
+    question_type: str,
+    additional_context: str = '',
+    task_type: Optional[str] = None,
+) -> Optional[dict]:
+    """
+    Non-streaming question generation.
+    For background cache pre-warming ONLY — never call from a request handler.
+    """
+    from services.model_router import get_model_for_task
+    import google.generativeai as genai
+
+    genai.configure(api_key=Config.GEMINI_API_KEY)
+
+    effective_task = task_type or derive_task_type(subject, question_type, topic)
+    model_name, timeout = get_model_for_task(effective_task)
+
+    prompt = _build_question_prompt(subject, topic, difficulty, question_type, additional_context)
+
+    try:
+        model = genai.GenerativeModel(model_name=model_name)
+        response = model.generate_content(
+            prompt,
+            request_options={"timeout": timeout},
+        )
+        return {'content': response.text, 'model': model_name}
+    except Exception as exc:
+        logger.error(f"Direct generation failed for {subject}/{topic}: {exc}")
+        return None
+
+
+def generate_chat_response_streamed(
+    message: str,
+    conversation_history: list,
+    subject: str,
+    student_id: str,
+) -> Generator[str, None, None]:
+    """
+    Stream a conversational tutor response (teacher mode, MAIC, project assistant).
+    """
+    from services.model_router import get_model_for_task
+    import google.generativeai as genai
+
+    genai.configure(api_key=Config.GEMINI_API_KEY)
+
+    model_name, timeout = get_model_for_task('teacher_mode_followup')
+
+    system_prompt = (
+        f"You are NerdX, an AI tutor helping a ZIMSEC student with {subject}. "
+        "Be encouraging, clear, and concise. Use simple English. "
+        "Ask guiding questions rather than giving direct answers — help the student think. "
+        "Keep responses under 150 words unless a detailed explanation is explicitly needed."
+    )
+
+    try:
+        import google.generativeai as genai
+        model = genai.GenerativeModel(
+            model_name=model_name,
+            generation_config=genai.types.GenerationConfig(
+                temperature=0.7, top_p=0.9, max_output_tokens=800,
+            ),
+            system_instruction=system_prompt,
+        )
+        chat = model.start_chat(history=conversation_history)
+        response = chat.send_message(
+            message,
+            stream=True,
+            request_options={"timeout": timeout},
+        )
+        for chunk in response:
+            if chunk.text:
+                yield chunk.text
+    except Exception as exc:
+        logger.error(f"Chat response failed for student {student_id}: {exc}")
+        yield "I'm having trouble responding right now. Please try again in a moment."
+
+
+def _build_question_prompt(
+    subject: str,
+    topic: str,
+    difficulty: str,
+    question_type: str,
+    additional_context: str = '',
+) -> str:
+    """
+    Concise ZIMSEC-aligned prompt.
+    Keep prompts SHORT: every extra token = extra latency + cost.
+    Target: <200 tokens for MCQ, <350 for structured.
+    """
+    difficulty_desc = {
+        'easy':      'straightforward, suitable for a student just learning the topic',
+        'medium':    'requires understanding and application of the concept',
+        'difficult': 'requires deep analysis, multi-step reasoning, or synthesis',
+    }.get(difficulty, 'standard level')
+
+    type_desc = {
+        'mcq': (
+            "Multiple choice with 4 options (A–D). "
+            "Include the correct answer and a brief 2–3 sentence explanation."
+        ),
+        'structured': (
+            "Structured question with parts (a), (b), (c) as appropriate. "
+            "Include mark allocation and model answers."
+        ),
+        'essay': (
+            "ZIMSEC-format essay question. Include a marking rubric with key points "
+            "and state total marks clearly."
+        ),
+    }.get(question_type, "Multiple choice with 4 options.")
+
+    extra = f"\nAdditional context: {additional_context}" if additional_context else ""
+
+    return (
+        f"You are a ZIMSEC {subject} examiner for Zimbabwe O-Level students.\n\n"
+        f"Generate ONE {question_type.upper()} question on: {topic}\n"
+        f"Difficulty: {difficulty} — {difficulty_desc}\n"
+        f"Format: {type_desc}{extra}\n\n"
+        "RULES:\n"
+        "- Follow ZIMSEC syllabus exactly\n"
+        "- Use clear simple English (students are 13–18 years old)\n"
+        "- For maths: show clear working steps\n"
+        "- Be concise — no padding or unnecessary text\n"
+        "- Output the question immediately, no preamble"
+    )
 
 class AIService:
     """Service for AI-powered question generation with Vertex primary and DeepSeek fallback."""
@@ -476,10 +711,10 @@ Generate a high-quality, professional ZIMSEC exam-style question now!"""
                 'temperature': 0.7
             }
 
-            # Retry with different timeouts
+            # Retry with fixed timeout — AI_MAX_RETRIES is now 1 (fail fast)
             for attempt in range(Config.AI_MAX_RETRIES):
                 try:
-                    timeout = Config.AI_REQUEST_TIMEOUT[min(attempt, len(Config.AI_REQUEST_TIMEOUT) - 1)]
+                    timeout = Config.AI_TIMEOUT_STANDARD
                     logger.info(f"DeepSeek API attempt {attempt + 1}/{Config.AI_MAX_RETRIES} with {timeout}s timeout")
 
                     response = requests.post(
@@ -510,12 +745,12 @@ Generate a high-quality, professional ZIMSEC exam-style question now!"""
                     else:
                         logger.error(f"DeepSeek API error: {response.status_code} - {response.text}")
                         if attempt < Config.AI_MAX_RETRIES - 1:
-                            time.sleep(2 ** attempt)  # Exponential backoff
+                            time.sleep(Config.AI_RETRY_DELAY)
 
                 except requests.Timeout:
                     logger.warning(f"Timeout on attempt {attempt + 1}")
                     if attempt < Config.AI_MAX_RETRIES - 1:
-                        time.sleep(2 ** attempt)
+                        time.sleep(Config.AI_RETRY_DELAY)
 
             logger.error("All DeepSeek API attempts failed")
             return None

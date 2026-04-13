@@ -10,6 +10,7 @@ Based on research:
 import os
 import logging
 import json
+import threading
 import numpy as np
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime, timedelta
@@ -111,38 +112,85 @@ class DeepKnowledgeTracing:
         Returns:
             interaction_id: ID of logged interaction
         """
+        # Build the interaction payload for the async writer
+        interaction_payload = {
+            'user_id':            user_id,
+            'subject':            subject,
+            'topic':              topic,
+            'skill_id':           skill_id,
+            'question_id':        question_id,
+            'is_correct':         correct,
+            'confidence':         confidence,
+            'time_taken_seconds': time_spent,
+            'hints_used':         hints_used or 0,
+            'session_id':         session_id,
+            'device_id':          device_id,
+            'timestamp':          datetime.utcnow().isoformat(),
+        }
+
         try:
-            query = """
-            INSERT INTO student_interactions (
-                user_id, subject, topic, skill_id, question_id,
-                response, confidence, time_spent_seconds, hints_used,
-                session_id, device_id, timestamp
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-            RETURNING id
-            """
-            
-            with self.db.cursor() as cur:
-                cur.execute(query, (
-                    user_id, subject, topic, skill_id, question_id,
-                    correct, confidence, time_spent, hints_used,
-                    session_id, device_id
-                ))
-                interaction_id = cur.fetchone()[0]
-                self.db.commit()
-            
-            # Trigger knowledge state update (async in production)
-            self.update_knowledge_state(user_id, skill_id)
-            
-            # Trigger SRS update
-            self.update_srs_state(user_id, skill_id, correct, confidence)
-            
-            logger.info(f"Logged interaction {interaction_id} for user {user_id}, skill {skill_id}")
-            return interaction_id
-            
-        except Exception as e:
-            logger.error(f"Error logging interaction: {str(e)}")
-            self.db.rollback()
-            return -1
+            # Queue via Celery / thread — NEVER blocks the HTTP request
+            from services.task_queue import queue_dkt_interaction
+            queue_dkt_interaction(interaction_payload)
+        except Exception as exc:
+            logger.warning(f"Task queue unavailable, falling back to thread: {exc}")
+            t = threading.Thread(
+                target=self._write_interaction_sync,
+                args=(interaction_payload,),
+                daemon=True,
+            )
+            t.start()
+
+        # Update the in-memory / Redis mastery cache immediately (fast, local)
+        try:
+            from services.cache_service import get_cached_value, set_cached_value
+            cache_key = f"student:{user_id}:mastery:{subject}:{skill_id}"
+            current = get_cached_value(cache_key) or 0.3
+            # Quick BKT step so the next recommendation reflects this answer
+            updated = min(1.0, max(0.0, current + (0.07 if correct else -0.05)))
+            set_cached_value(cache_key, updated, ttl=60)
+        except Exception:
+            pass  # Cache update is best-effort
+
+        logger.info(f"DKT interaction queued: user={user_id}, skill={skill_id}, correct={correct}")
+        return 0  # Interaction ID unknown until async write completes
+
+    def _write_interaction_sync(self, payload: dict) -> None:
+        """Fallback synchronous writer used when the task queue is unavailable."""
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO student_interactions
+                        (user_id, subject, topic, skill_id, question_id,
+                         response, confidence, time_spent_seconds, hints_used,
+                         session_id, device_id, timestamp)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT DO NOTHING
+                    """,
+                    (
+                        payload['user_id'], payload['subject'], payload['topic'],
+                        payload['skill_id'], payload['question_id'],
+                        payload['is_correct'], payload['confidence'],
+                        payload['time_taken_seconds'], payload['hints_used'],
+                        payload['session_id'], payload['device_id'],
+                        payload['timestamp'],
+                    ),
+                )
+                conn.commit()
+            # Fire off knowledge-state and SRS updates in the same background thread
+            self.update_knowledge_state(payload['user_id'], payload['skill_id'])
+            self.update_srs_state(
+                payload['user_id'], payload['skill_id'],
+                payload['is_correct'], payload.get('confidence'),
+            )
+        except Exception as exc:
+            logger.error(f"Fallback sync write failed: {exc}")
+            try:
+                conn.rollback()
+            except Exception:
+                pass
     
     def get_interaction_history(
         self,

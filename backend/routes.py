@@ -18,6 +18,7 @@ from api.school_portal import school_portal_bp
 from api.school_ecosystem_v2 import school_ecosystem_bp
 from api.teacher_classroom_v2 import teacher_classroom_bp
 from api.maic_classroom import maic_classroom_bp
+from api.stream import stream_bp
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ app.register_blueprint(maic_classroom_bp, url_prefix='/api/mobile/classroom')
 app.register_blueprint(school_portal_bp, url_prefix='/api/school-portal')
 app.register_blueprint(school_ecosystem_bp, url_prefix='/api/v2')
 app.register_blueprint(teacher_classroom_bp, url_prefix='/api/v2')
+app.register_blueprint(stream_bp)  # /api/questions/stream  +  /api/jobs/<id>/status
 
 # Add route to serve graph images for WhatsApp access
 @app.route('/static/graphs/<filename>')
