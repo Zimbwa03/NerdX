@@ -232,7 +232,7 @@ if not app.debug:
         ))
         console_handler.setLevel(logging.INFO)
         app.logger.addHandler(console_handler)
-        print(f"File logging failed, using console logging: {e}")
+        logger.warning(f"File logging unavailable, using console logging: {e}")
     
     app.logger.setLevel(logging.INFO)
     app.logger.info('NerdX Quiz Bot startup')

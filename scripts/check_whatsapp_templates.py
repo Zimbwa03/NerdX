@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+"""
+Check WhatsApp Templates
+=========================
+Verifies that all registered WhatsApp message templates are valid and approved.
+Run: python scripts/check_whatsapp_templates.py
+"""
+
 import sys
 from pathlib import Path
 

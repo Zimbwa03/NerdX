@@ -6693,11 +6693,7 @@ The menstrual cycle averages **28 days** and has four main phases:
 
 // Helper function to get notes for a topic
 export function getTopicNotes(topicName: string): TopicNotes | null {
-    console.log('🔍 Biology getTopicNotes called with:', topicName);
-    console.log('Available keys:', Object.keys(aLevelBiologyNotes).slice(0, 5));
-    const result = aLevelBiologyNotes[topicName] || null;
-    console.log('Result found:', !!result);
-    return result;
+    return aLevelBiologyNotes[topicName] || null;
 }
 
 // Get all available topic names

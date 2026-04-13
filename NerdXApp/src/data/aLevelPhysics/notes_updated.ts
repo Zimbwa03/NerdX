@@ -20359,15 +20359,7 @@ T = **5800 K** (same as Sun)
 
 // Helper function to get notes for a topic
 export function getTopicNotes(topicName: string): TopicNotes | null {
-    console.log('🔍 Physics getTopicNotes called with:', topicName);
-    console.log('Available keys:', Object.keys(aLevelPhysicsNotes).slice(0, 5));
-    const result = aLevelPhysicsNotes[topicName] || null;
-    console.log('Result found:', !!result);
-    if (result) {
-        console.log('Result has videoUrl:', !!result.videoUrl);
-        console.log('Result has audioUrl:', !!result.audioUrl);
-    }
-    return result;
+    return aLevelPhysicsNotes[topicName] || null;
 }
 
 // Get all available topic names

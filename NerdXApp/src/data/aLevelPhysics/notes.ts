@@ -1,8 +1,6 @@
 // A Level Physics Notes - Comprehensive notes for each topic
 import { TopicNotes } from '../scienceNotes/types';
 
-console.log('🚀 A Level Physics notes.ts file is being loaded!');
-
 // Complete notes for each A Level Physics topic
 export const aLevelPhysicsNotes: Record<string, TopicNotes> = {
     "Physical Quantities and Units": {
@@ -7522,20 +7520,7 @@ t ≈ 14 billion years`,
 };
 
 export function getTopicNotes(topicName: string): TopicNotes | null {
-    console.log('🔍 Physics getTopicNotes called with:', topicName);
-    console.log('Available keys:', Object.keys(aLevelPhysicsNotes).slice(0, 5));
-    const result = aLevelPhysicsNotes[topicName] || null;
-    console.log('Result found:', !!result);
-    if (result) {
-        console.log('ALL OBJECT KEYS:', Object.keys(result));
-        console.log('TEST_MARKER value:', (result as any).TEST_MARKER);
-        console.log('Result has videoUrl:', !!result.videoUrl);
-        console.log('Result has audioUrl:', !!result.audioUrl);
-        if (result.videoUrl) {
-            console.log('videoUrl value:', result.videoUrl.substring(0, 100));
-        }
-    }
-    return result;
+    return aLevelPhysicsNotes[topicName] || null;
 }
 
 // Get all available topic names

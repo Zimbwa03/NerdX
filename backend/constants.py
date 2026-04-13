@@ -1,4 +1,7 @@
-# Constants for NerdX Quiz Bot
+"""
+NerdX Constants — ZIMSEC topic definitions, difficulty levels,
+credit costs, and message templates.
+"""
 
 # ZIMSEC Combined Science and English Topics
 TOPICS = {

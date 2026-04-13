@@ -47,8 +47,6 @@ class ErrorBoundary extends Component<EBProps, EBState> {
   }
 }
 
-console.log('NerdX Web starting...');
-
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {

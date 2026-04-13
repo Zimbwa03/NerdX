@@ -86,7 +86,6 @@ export function AuthCallbackPage() {
           return;
         }
 
-        console.log('[AuthCallback] Waiting for Supabase session...');
         const { session, error: sessionError } = await waitForSession(15000);
 
         if (sessionError) {
@@ -101,7 +100,6 @@ export function AuthCallbackPage() {
           return;
         }
 
-        console.log('[AuthCallback] Session obtained for:', session.user.email);
         window.history.replaceState({}, document.title, `${getPublicSiteOrigin()}/auth/callback`);
 
         const user = session.user;
@@ -125,12 +123,10 @@ export function AuthCallbackPage() {
           sub: user.id,
         };
 
-        console.log('[AuthCallback] Calling backend socialLogin...');
         const referralCode = consumeStoredReferral();
         const response = await authApi.socialLogin('google', googleUser, referralCode);
 
         if (response.success && response.token && response.user) {
-          console.log('[AuthCallback] Backend login success, navigating to /app');
           await login(response.user, response.token);
           navigate('/app', { replace: true });
         } else {

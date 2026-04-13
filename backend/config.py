@@ -196,13 +196,14 @@ class Config:
         'history_exam_essay': 10,         # 1 credit (10 units) per exam essay question
         'history_essay_marking': 0,       # no extra – 1 credit total per essay (10 units)
 
-        # Legacy compatibility (Mapped values)
-        'math': 5,                         # Maps to math_topical (0.5 credit)
-        'science': 5,                      # Maps to combined_science_topical (0.5 credit)
-        'english': 5,                     # Maps to english_topical (0.5 credit)
-        'graph_generation': 5,            # Maps to math_graph_practice (0.5 credit)
-        'web_search': 20,
-        'deep_research': 20
+        # --- Legacy aliases (deprecated) ---
+        # TODO: Remove these in v3.0 — use the canonical keys above instead.
+        'math': 5,                         # alias → math_topical
+        'science': 5,                      # alias → combined_science_topical
+        'english': 5,                      # alias → english_topical
+        'graph_generation': 5,             # alias → math_graph_practice
+        'web_search': 20,                  # alias → project_web_search
+        'deep_research': 20,               # alias → project_deep_research
     }
     
     # Registration and Referral Credits (units)

@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+"""
+Verify Payment Credit Addition
+================================
+Unit tests / integration check for the payment → credit flow.
+Run: python scripts/verify_payment_credit_addition.py
+"""
+
 import unittest
 from unittest.mock import MagicMock, patch
 import sys
