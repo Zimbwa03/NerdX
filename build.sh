@@ -6,7 +6,11 @@
 set -e  # Exit on any error
 
 echo "==> Installing Python dependencies..."
-pip install -r requirements.txt
+if [ -f requirements_render.txt ]; then
+  pip install -r requirements_render.txt
+else
+  pip install -r requirements.txt
+fi
 
 echo "==> Building NerdXWeb (React frontend)..."
 cd NerdXWeb
