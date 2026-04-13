@@ -2,6 +2,8 @@ import { StrictMode, Component, type ReactNode, type ErrorInfo } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import './styles/tailwind.css';
+import './styles/typography.css';
+import './styles/animations.css';
 import App from './App.tsx';
 
 interface EBProps { children: ReactNode; }

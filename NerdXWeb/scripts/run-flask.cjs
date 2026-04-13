@@ -7,7 +7,7 @@ const path = require('path');
 const root = path.resolve(__dirname, '..', '..');
 const isWin = process.platform === 'win32';
 const py = isWin ? 'python' : 'python3';
-const child = spawn(py, ['main.py'], {
+const child = spawn(py, ['backend/main.py'], {
   cwd: root,
   stdio: 'inherit',
   shell: isWin,

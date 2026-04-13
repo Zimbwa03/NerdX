@@ -1,226 +1,159 @@
-// Professional Color Theme System
-// Dark Theme Colors (Default - Space Theme)
-export const DarkColors = {
-  // Space Theme - Deep Universe & Neon Accents
-  primary: {
-    main: '#7C4DFF', // Electric Violet
-    light: '#B47CFF', // Soft Neon Purple
-    dark: '#3F1DCB', // Deep Cosmos
-    darker: '#12005E', // Black Hole
-    contrastText: '#FFFFFF',
-  },
+/**
+ * NerdX Brand Kit — Mobile Color Tokens
+ * "Academic Precision meets Youthful Energy"
+ * Primary Brand: Indigo (#6366F1 dark / #4F46E5 light)
+ */
 
-  // Secondary Colors - Cyberpunk Accents
-  secondary: {
-    main: '#00E5FF', // Cyan Neon
-    light: '#6EFFFF',
-    dark: '#00B2CC',
-    contrastText: '#000000',
-  },
+/* ════════════════════════════════════════
+   DARK MODE — Default & Primary Experience
+   ════════════════════════════════════════ */
+export const darkColors = {
+  /* Backgrounds (layered depth system) */
+  bgBase:        '#0A0E1A',  // Deepest — page base
+  bgElevated:    '#0F1629',  // Cards, panels
+  bgOverlay:     '#161D35',  // Modals, dropdowns
+  bgSurface:     '#1C2440',  // Input fields, secondary cards
+  bgHover:       '#232C4A',  // Hover states
+  bgActive:      '#2A3558',  // Active / selected
 
-  // Success Colors
-  success: {
-    main: '#00E676', // Neon Green
-    light: '#66FFA6',
-    dark: '#00B248',
-  },
+  /* Borders */
+  borderSubtle:  '#1E2740',
+  borderDefault: '#2A3558',
+  borderStrong:  '#3D4F7C',
+  borderBrand:   '#4F46E5',
 
-  // Warning Colors
-  warning: {
-    main: '#FFC400', // Amber Neon
-    light: '#FFF350',
-    dark: '#C79400',
-  },
+  /* Text */
+  textPrimary:   '#F0F4FF',
+  textSecondary: '#8B9CC8',
+  textTertiary:  '#5A6A94',
+  textInverse:   '#0A0E1A',
+  textLink:      '#818CF8',
+  textBrand:     '#6366F1',
 
-  // Error Colors
-  error: {
-    main: '#FF1744', // Red Neon
-    light: '#FF616F',
-    dark: '#C4001D',
-  },
+  /* Primary — Indigo (brand identity, active states) */
+  primary:        '#6366F1',
+  primaryHover:   '#4F46E5',
+  primarySubtle:  '#1E1B4B',
+  primaryGlow:    'rgba(99, 102, 241, 0.25)',
 
-  // Info Colors
-  info: {
-    main: '#2979FF', // Blue Neon
-    light: '#75A7FF',
-    dark: '#004ECB',
-  },
+  /* Success — Emerald (correct answers, streaks, CTAs) */
+  success:        '#10B981',
+  successHover:   '#059669',
+  successSubtle:  '#022C22',
+  successGlow:    'rgba(16, 185, 129, 0.25)',
 
-  // Subject Colors - Neon Variants
-  subjects: {
-    mathematics: '#2979FF', // Electric Blue
-    science: '#00E676', // Neon Green
-    english: '#FF9100', // Neon Orange
-    combinedScience: '#00E5FF', // Cyan
-    accounting: '#B8860B', // Dark Goldenrod (Principles of Accounting)
-  },
+  /* Warning — Amber (credits, rewards, badges) */
+  warning:        '#F59E0B',
+  warningHover:   '#D97706',
+  warningSubtle:  '#1C1400',
 
-  // Background Colors
-  background: {
-    default: '#0A0E21', // Deep Space Blue
-    paper: '#1D1E33', // Dark Nebula
-    dark: '#050510', // Void
-    subtle: '#2D2F45', // Starlight Grey
-  },
+  /* Danger — Coral (errors, low credits) */
+  danger:         '#F43F5E',
+  dangerSubtle:   '#1F0A10',
 
-  // Text Colors
-  text: {
-    primary: '#FFFFFF', // White Star
-    secondary: '#B0BEC5', // Stardust Grey
-    disabled: '#546E7A',
-    white: '#FFFFFF',
-    hint: '#78909C',
-  },
+  /* Info — Sky (hints, help) */
+  info:           '#0EA5E9',
+  infoSubtle:     '#082034',
 
-  // Border Colors
-  border: {
-    light: '#2D2F45',
-    medium: '#455A64',
-    dark: '#102027',
-  },
-
-  // Icon Background Colors
-  iconBg: {
-    mathematics: 'rgba(41, 121, 255, 0.15)',
-    science: 'rgba(0, 230, 118, 0.15)',
-    english: 'rgba(255, 145, 0, 0.15)',
-    accounting: 'rgba(184, 134, 11, 0.2)',
-    default: 'rgba(124, 77, 255, 0.15)',
-  },
-
-  // Gradients
-  gradients: {
-    primary: ['#7C4DFF', '#3F1DCB'] as [string, string], // Violet Nebula
-    secondary: ['#00E5FF', '#00B2CC'] as [string, string], // Cyan Pulse
-    success: ['#00E676', '#00B248'] as [string, string],
-    warning: ['#FFC400', '#C79400'] as [string, string],
-    error: ['#FF1744', '#C4001D'] as [string, string],
-    dark: ['#1D1E33', '#0A0E21'] as [string, string], // Deep Space
-    card: ['#2D2F45', '#1D1E33'] as [string, string],
-    gold: ['#FFD700', '#FDB931'] as [string, string], // Premium Gold
-  },
-
-  // Premium / Gold Theme
-  premium: {
-    gold: '#FFD700',
-    goldDark: '#BF9500',
-    goldLight: '#FFF7CC',
-    accent: '#FFA500',
-    text: '#2D2006', // Dark Brown for contrast on gold
-    cardBg: '#1A1100', // Very dark gold/brown
-  }
+  /* Gradients (as arrays for LinearGradient) */
+  gradientBrand:   ['#4F46E5', '#7C3AED'] as [string, string],
+  gradientSuccess: ['#059669', '#10B981'] as [string, string],
+  gradientStreak:  ['#F59E0B', '#EF4444'] as [string, string],
+  gradientCredits: ['#10B981', '#059669'] as [string, string],
+  gradientHero:    ['#0F1629', '#1C2440'] as [string, string],
 };
 
-// Light Theme Colors
-export const LightColors = {
-  // Professional Purple Theme
-  primary: {
-    main: '#6200EE',
-    light: '#9D46FF',
-    dark: '#3700B3',
-    darker: '#1A0066',
-    contrastText: '#FFFFFF',
-  },
+/* ════════════════════════════════════════
+   LIGHT MODE — Premium & Crisp
+   ════════════════════════════════════════ */
+export const lightColors = {
+  /* Backgrounds */
+  bgBase:        '#F8FAFF',
+  bgElevated:    '#FFFFFF',
+  bgOverlay:     '#FFFFFF',
+  bgSurface:     '#F1F5FF',
+  bgHover:       '#E8EEFF',
+  bgActive:      '#DDE4FF',
 
-  secondary: {
-    main: '#03DAC6',
-    light: '#66FFF9',
-    dark: '#018786',
-    contrastText: '#000000',
-  },
+  /* Borders */
+  borderSubtle:  '#E8EEFF',
+  borderDefault: '#D1D9F0',
+  borderStrong:  '#A5B4D4',
+  borderBrand:   '#6366F1',
 
-  success: {
-    main: '#4CAF50',
-    light: '#81C784',
-    dark: '#388E3C',
-  },
+  /* Text */
+  textPrimary:   '#0F172A',
+  textSecondary: '#475569',
+  textTertiary:  '#94A3B8',
+  textInverse:   '#FFFFFF',
+  textLink:      '#4F46E5',
+  textBrand:     '#4F46E5',
 
-  warning: {
-    main: '#FF9800',
-    light: '#FFB74D',
-    dark: '#F57C00',
-  },
+  /* Primary */
+  primary:        '#4F46E5',
+  primaryHover:   '#4338CA',
+  primarySubtle:  '#EEF2FF',
+  primaryGlow:    'rgba(79, 70, 229, 0.15)',
 
-  error: {
-    main: '#F44336',
-    light: '#E57373',
-    dark: '#D32F2F',
-  },
+  /* Success */
+  success:        '#059669',
+  successHover:   '#047857',
+  successSubtle:  '#ECFDF5',
+  successGlow:    'rgba(5, 150, 105, 0.15)',
 
-  info: {
-    main: '#2196F3',
-    light: '#64B5F6',
-    dark: '#1976D2',
-  },
+  /* Warning */
+  warning:        '#D97706',
+  warningHover:   '#B45309',
+  warningSubtle:  '#FFFBEB',
 
-  subjects: {
-    mathematics: '#1976D2',
-    science: '#388E3C',
-    english: '#E65100',
-    combinedScience: '#00796B',
-    accounting: '#B8860B',
-  },
+  /* Danger */
+  danger:         '#DC2626',
+  dangerSubtle:   '#FEF2F2',
 
-  // Light Background Colors
-  background: {
-    default: '#FAFAFA',
-    paper: '#FFFFFF',
-    dark: '#F5F5F5',
-    subtle: '#EEEEEE',
-  },
+  /* Info */
+  info:           '#0284C7',
+  infoSubtle:     '#F0F9FF',
 
-  // Text Colors for Light
-  text: {
-    primary: '#1A1A1A',
-    secondary: '#666666',
-    disabled: '#9E9E9E',
-    white: '#FFFFFF',
-    hint: '#9E9E9E',
-  },
-
-  // Border Colors
-  border: {
-    light: '#E0E0E0',
-    medium: '#BDBDBD',
-    dark: '#9E9E9E',
-  },
-
-  // Icon Background Colors
-  iconBg: {
-    mathematics: 'rgba(25, 118, 210, 0.1)',
-    science: 'rgba(56, 142, 60, 0.1)',
-    english: 'rgba(230, 81, 0, 0.1)',
-    accounting: 'rgba(184, 134, 11, 0.2)',
-    default: 'rgba(98, 0, 238, 0.1)',
-  },
-
-  // Gradients for Light
-  gradients: {
-    primary: ['#7C4DFF', '#6200EE'] as [string, string],
-    secondary: ['#03DAC6', '#00796B'] as [string, string],
-    success: ['#4CAF50', '#388E3C'] as [string, string],
-    warning: ['#FF9800', '#F57C00'] as [string, string],
-    error: ['#F44336', '#D32F2F'] as [string, string],
-    dark: ['#E0E0E0', '#BDBDBD'] as [string, string],
-    card: ['#FFFFFF', '#F5F5F5'] as [string, string],
-    gold: ['#FFD700', '#FDB931'] as [string, string],
-  },
-
-  // Premium / Gold Theme for Light Mode
-  premium: {
-    gold: '#FFD700',
-    goldDark: '#BF9500',
-    goldLight: '#FFF7CC',
-    accent: '#FFA500',
-    text: '#2D2006',
-    cardBg: '#FFFDF5', // Light cream
-  }
+  /* Gradients */
+  gradientBrand:   ['#4F46E5', '#6366F1'] as [string, string],
+  gradientSuccess: ['#047857', '#059669'] as [string, string],
+  gradientStreak:  ['#D97706', '#DC2626'] as [string, string],
+  gradientCredits: ['#059669', '#047857'] as [string, string],
+  gradientHero:    ['#EEF2FF', '#F8FAFF'] as [string, string],
 };
 
-// Function to get colors based on theme
-export const getColors = (isDarkMode: boolean) => isDarkMode ? DarkColors : LightColors;
+/* ════════════════════════════════════════
+   SUBJECT COLORS — theme-independent
+   Each subject has a unique visual identity
+   ════════════════════════════════════════ */
+export const subjectColors = {
+  mathematics:             '#F59E0B',  // Amber
+  biology:                 '#10B981',  // Emerald
+  chemistry:               '#8B5CF6',  // Violet
+  physics:                 '#0EA5E9',  // Sky
+  english:                 '#EC4899',  // Pink
+  sciences:                '#14B8A6',  // Teal — Combined Science
+  geography:               '#22C55E',  // Green
+  commerce:                '#F97316',  // Orange
+  accounting:              '#A78BFA',  // Light Violet
+  computer_science:        '#06B6D4',  // Cyan
+  business_enterprise_skills: '#FB923C', // Orange-Red
+  history:                 '#DC2626',  // Red
+  pure_mathematics:        '#6366F1',  // Indigo — A Level
+};
 
-// Default export (Dark theme for backward compatibility)
-export const Colors = DarkColors;
+export type SubjectColorKey = keyof typeof subjectColors;
 
+export function getSubjectColor(id: string): string {
+  return subjectColors[id as SubjectColorKey] ?? subjectColors.mathematics;
+}
+
+/* Helper: get colors for current theme */
+export function getColors(isDarkMode: boolean) {
+  return isDarkMode ? darkColors : lightColors;
+}
+
+export type NerdXColors = typeof darkColors;
+
+export const Colors = darkColors;
 export default Colors;

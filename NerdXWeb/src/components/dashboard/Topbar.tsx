@@ -4,9 +4,9 @@ import { Bell, Calendar, Menu, Moon, Search, Sun } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { NerdXMark } from '../brand/NerdXMark';
 
-/** Raised, bordered controls so icons read clearly on the dark dashboard shell */
+/** Raised, bordered icon buttons for the topbar */
 const topbarActionClass =
-  'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--border-accent)] bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[0_1px_2px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)] transition-[color,background-color,border-color,box-shadow,transform] duration-200 hover:border-[var(--brand)]/50 hover:bg-[var(--bg-surface)] hover:text-[var(--brand)] hover:shadow-[0_2px_10px_rgba(16,185,129,0.14),inset_0_1px_0_rgba(255,255,255,0.08)] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)]';
+  'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] shadow-[var(--shadow-sm)] transition-all duration-150 hover:border-[var(--border-accent)] hover:bg-[var(--bg-surface)] hover:text-[var(--brand)] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)]';
 
 const iconStroke = 2.25 as const;
 
@@ -55,15 +55,9 @@ export function Topbar({
           aria-label="NerdX home"
         >
           <NerdXMark className="transition-transform duration-200 group-hover:scale-[1.03]" />
-          <span className="font-sora text-lg font-bold tracking-tight text-[var(--text-primary)]">
+          <span className="font-sora text-[18px] font-extrabold tracking-[-0.03em] text-[var(--text-primary)]">
             Nerd
-            <span className="relative inline-block">
-              X
-              <span
-                className="absolute -right-1 top-0 h-1.5 w-1.5 rounded-full bg-[var(--brand)]"
-                aria-hidden
-              />
-            </span>
+            <span className="text-[var(--brand)]">X</span>
           </span>
         </Link>
 
@@ -80,7 +74,7 @@ export function Topbar({
             id="dash-search"
             type="search"
             placeholder="Search topics, subjects..."
-            className="h-10 w-full rounded-lg border border-transparent bg-[var(--bg-elevated)] py-2 pl-10 pr-16 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-shadow focus:border-[var(--brand)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-glow)]"
+            className="h-10 w-full rounded-[10px] border border-[var(--border)] bg-[var(--bg-surface)] py-2 pl-10 pr-16 font-dm text-sm text-[var(--text-primary)] placeholder:italic placeholder:text-[var(--text-muted)] transition-all duration-150 focus:border-[var(--brand)] focus:outline-none focus:shadow-[0_0_0_3px_var(--brand-glow)] focus:w-[360px]"
             aria-label="Search topics, subjects"
             onKeyDown={(e) => {
               if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -136,7 +130,7 @@ export function Topbar({
           className={`${topbarActionClass} ml-0.5 overflow-hidden p-[3px] hover:text-[var(--text-primary)]`}
           aria-label="Account and settings"
         >
-          <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-gradient-to-br from-emerald-500 to-teal-600 p-[2px] shadow-inner">
+          <div className="flex h-full w-full items-center justify-center rounded-[10px] p-[2px] shadow-inner" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}>
             <div className="flex h-[30px] w-[30px] items-center justify-center rounded-[9px] bg-[var(--bg-elevated)] font-sora text-[14px] font-semibold text-[var(--text-primary)]">
               {userInitial.slice(0, 1).toUpperCase()}
             </div>

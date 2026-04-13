@@ -1,34 +1,29 @@
-// Theme configuration for NerdX App
-import { Theme } from '../types';
+/**
+ * NerdX Brand Kit — React Navigation theme compatibility
+ * These theme objects match the React Navigation `Theme` interface.
+ */
+import type { Theme } from '@react-navigation/native';
 
 export const lightTheme: Theme = {
   dark: false,
   colors: {
-    primary: '#1976D2',
-    secondary: '#424242',
-    accent: '#FF9800',
-    background: '#FFFFFF',
-    surface: '#F5F5F5',
-    text: '#212121',
-    textSecondary: '#757575',
-    error: '#D32F2F',
-    success: '#388E3C',
-    warning: '#F57C00',
+    primary:    '#4F46E5',  // Indigo
+    background: '#F8FAFF',
+    card:       '#FFFFFF',
+    text:       '#0F172A',
+    border:     '#D1D9F0',
+    notification: '#F43F5E',
   },
 };
 
 export const darkTheme: Theme = {
   dark: true,
   colors: {
-    primary: '#90CAF9',
-    secondary: '#BDBDBD',
-    accent: '#FFB74D',
-    background: '#121212',
-    surface: '#1E1E1E',
-    text: '#FFFFFF',
-    textSecondary: '#BDBDBD',
-    error: '#EF5350',
-    success: '#4CAF50',
-    warning: '#FF9800',
+    primary:    '#6366F1',  // Indigo
+    background: '#0A0E1A',
+    card:       '#0F1629',
+    text:       '#F0F4FF',
+    border:     '#2A3558',
+    notification: '#F43F5E',
   },
 };

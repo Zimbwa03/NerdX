@@ -1,21 +1,89 @@
+@import './tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer components {
+  /* ═══════════════════════════════════════════════════════════
+     NerdX Dashboard Shell — Brand Kit v2
+     Primary brand: Indigo (#6366F1 dark / #4F46E5 light)
+     All --brand references = Indigo (primary brand identity)
+     Emerald (#10B981) = success, CTAs, streaks (--success)
+  ═══════════════════════════════════════════════════════════ */
+
   .dashboard-premium-shell {
-    --bg-base: #0a0c0f;
-    --bg-surface: #111318;
-    --bg-elevated: #191d24;
-    --border: #1e2430;
-    --border-accent: #2a3344;
-    --brand: #10b981;
-    --brand-dim: #064e3b;
-    --brand-glow: rgba(16, 185, 129, 0.15);
-    --text-primary: #f0f4f8;
-    --text-secondary: #8b95a3;
-    --text-muted: #4b5563;
-    --accent-gold: #f59e0b;
-    --accent-rose: #f43f5e;
+    /* ─── BACKGROUNDS ─── */
+    --bg-base:        var(--color-bg-base,        #0A0E1A);
+    --bg-elevated:    var(--color-bg-elevated,    #0F1629);
+    --bg-overlay:     var(--color-bg-overlay,     #161D35);
+    --bg-surface:     var(--color-bg-surface,     #1C2440);
+    --bg-hover:       var(--color-bg-hover,       #232C4A);
+    --bg-active:      var(--color-bg-active,      #2A3558);
+
+    /* ─── BORDERS ─── */
+    --border:         var(--color-border-default, #2A3558);
+    --border-subtle:  var(--color-border-subtle,  #1E2740);
+    --border-accent:  var(--color-border-strong,  #3D4F7C);
+    --border-brand:   var(--color-border-brand,   #4F46E5);
+
+    /* ─── TEXT ─── */
+    --text-primary:   var(--color-text-primary,   #F0F4FF);
+    --text-secondary: var(--color-text-secondary, #8B9CC8);
+    --text-muted:     var(--color-text-tertiary,  #5A6A94);
+    --text-link:      var(--color-text-link,      #818CF8);
+    --text-brand:     var(--color-text-brand,     #6366F1);
+
+    /* ─── PRIMARY BRAND — INDIGO ─── */
+    --brand:          var(--color-primary,        #6366F1);
+    --brand-hover:    var(--color-primary-hover,  #4F46E5);
+    --brand-dim:      var(--color-primary-subtle, #1E1B4B);
+    --brand-glow:     var(--color-primary-glow,   rgba(99,102,241,0.25));
+
+    /* ─── SUCCESS — EMERALD (CTAs, Streaks, Correct) ─── */
+    --success:        var(--color-success,        #10B981);
+    --success-hover:  var(--color-success-hover,  #059669);
+    --success-dim:    var(--color-success-subtle, #022C22);
+    --success-glow:   var(--color-success-glow,   rgba(16,185,129,0.25));
+
+    /* ─── WARNING — AMBER (Credits, Achievements) ─── */
+    --accent-gold:    var(--color-warning,        #F59E0B);
+    --warning:        var(--color-warning,        #F59E0B);
+    --warning-hover:  var(--color-warning-hover,  #D97706);
+    --warning-dim:    var(--color-warning-subtle, #1C1400);
+
+    /* ─── DANGER — CORAL (Errors, Alerts) ─── */
+    --accent-rose:    var(--color-danger,         #F43F5E);
+    --danger:         var(--color-danger,         #F43F5E);
+    --danger-dim:     var(--color-danger-subtle,  #1F0A10);
+
+    /* ─── INFO — SKY ─── */
+    --info:           var(--color-info,           #0EA5E9);
+    --info-dim:       var(--color-info-subtle,    #082034);
+
+    /* ─── SHADOWS (inherited from tokens.css via [data-theme] on :root) ─── */
+    /* No re-declaration needed — --shadow-* vars are set in tokens.css and
+       cascade down correctly. Redeclaring them here with var(--shadow-*) as
+       the value creates a CSS circular reference, breaking light-mode shadows. */
+
+    /* ─── RADIUS ALIASES ─── */
+    --r-sm:   var(--radius-sm,   0.25rem);
+    --r-md:   var(--radius-md,   0.5rem);
+    --r-lg:   var(--radius-lg,   0.75rem);
+    --r-xl:   var(--radius-xl,   1rem);
+    --r-pill: var(--radius-full, 9999px);
+  }
+
+  /* ── Smooth theme transitions on root elements ── */
+  .dashboard-premium-shell,
+  .dashboard-premium-shell * {
+    transition-property: background-color, border-color, color;
+    transition-duration: 250ms;
+    transition-timing-function: var(--ease-standard, cubic-bezier(0.4,0,0.2,1));
+  }
+
+  /* ── Override: don't transition transform/opacity (breaks animations) ── */
+  .dashboard-premium-shell .no-theme-transition {
+    transition: none !important;
   }
 }

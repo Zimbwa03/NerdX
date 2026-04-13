@@ -1,0 +1,138 @@
+/* ═══════════════════════════════════════════════════
+   NerdX Brand Kit — Keyframe Animations
+   ═══════════════════════════════════════════════════ */
+
+/* ─── PAGE ENTRY (staggered) ─── */
+@keyframes nx-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes nx-fade-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes nx-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ─── GLOW PULSE (brand identity) ─── */
+@keyframes nx-glow-brand {
+  0%, 100% { box-shadow: 0 0 0 rgba(99,102,241,0); }
+  50%       { box-shadow: 0 0 24px rgba(99,102,241,0.4); }
+}
+
+@keyframes nx-glow-success {
+  0%   { box-shadow: 0 0 0 rgba(16,185,129,0); }
+  50%  { box-shadow: 0 0 20px rgba(16,185,129,0.45); }
+  100% { box-shadow: 0 0 0 rgba(16,185,129,0); }
+}
+
+/* ─── ANSWER FEEDBACK ─── */
+@keyframes nx-shake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-5px); }
+  30%       { transform: translateX(5px); }
+  45%       { transform: translateX(-4px); }
+  60%       { transform: translateX(4px); }
+  75%       { transform: translateX(-2px); }
+  90%       { transform: translateX(2px); }
+}
+
+/* ─── CREDITS TICK ─── */
+@keyframes nx-credits-bounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.12); }
+  60%  { transform: scale(0.95); }
+  80%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+/* ─── STREAK / ACHIEVEMENT SPARKLE ─── */
+@keyframes nx-sparkle {
+  0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+  50%  { transform: scale(1.15) rotate(5deg); opacity: 1; }
+  75%  { transform: scale(0.95) rotate(-2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+/* ─── PROGRESS BAR SPRING FILL ─── */
+@keyframes nx-progress-fill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* ─── SIDEBAR WIDTH EXPAND ─── */
+@keyframes nx-sidebar-expand {
+  from { width: 72px; }
+  to   { width: 260px; }
+}
+
+/* ─── SHIMMER (loading skeleton) ─── */
+@keyframes nx-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ─── UTILITY CLASSES ─── */
+.nx-animate-fade-up {
+  animation: nx-fade-up 0.45s cubic-bezier(0, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+.nx-animate-fade-in {
+  animation: nx-fade-in 0.4s cubic-bezier(0, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+.nx-animate-scale-in {
+  animation: nx-scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  opacity: 0;
+}
+
+.nx-animate-shake {
+  animation: nx-shake 0.35s ease-in-out;
+}
+
+.nx-animate-success-pulse {
+  animation: nx-glow-success 0.5s ease-out forwards;
+}
+
+.nx-animate-credits-bounce {
+  animation: nx-credits-bounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.nx-animate-sparkle {
+  animation: nx-sparkle 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ─── SKELETON SHIMMER ─── */
+.nx-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-surface, #1C2440) 25%,
+    var(--color-bg-hover, #232C4A) 50%,
+    var(--color-bg-surface, #1C2440) 75%
+  );
+  background-size: 200% 100%;
+  animation: nx-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md, 8px);
+}
+
+/* ─── HOVER LIFT (standard for interactive cards) ─── */
+.nx-hover-lift {
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nx-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg, 0 8px 32px rgba(0,0,0,0.5));
+}

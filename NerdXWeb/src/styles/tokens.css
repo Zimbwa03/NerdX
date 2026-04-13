@@ -1,0 +1,227 @@
+/* ═══════════════════════════════════════════════════════════════
+   NerdX Design System — Master Brand Token File
+   "Academic Precision meets Youthful Energy"
+   Source of truth for all CSS custom properties.
+   Scoped to [data-theme="dark"] (default) and [data-theme="light"]
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── TYPE SCALE ─────────────────────────────────────── */
+:root {
+  --text-xs:    0.75rem;    /* 12px */
+  --text-sm:    0.875rem;   /* 14px */
+  --text-base:  1rem;       /* 16px */
+  --text-lg:    1.125rem;   /* 18px */
+  --text-xl:    1.25rem;    /* 20px */
+  --text-2xl:   1.5rem;     /* 24px */
+  --text-3xl:   1.875rem;   /* 30px */
+  --text-4xl:   2.25rem;    /* 36px */
+  --text-5xl:   3rem;       /* 48px */
+
+  /* ─── FONT WEIGHTS ─── */
+  --font-normal:    400;
+  --font-medium:    500;
+  --font-semibold:  600;
+  --font-bold:      700;
+  --font-extrabold: 800;
+
+  /* ─── LINE HEIGHTS ─── */
+  --leading-tight:   1.25;
+  --leading-snug:    1.375;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.625;
+
+  /* ─── LETTER SPACING ─── */
+  --tracking-tight:   -0.025em;
+  --tracking-normal:   0em;
+  --tracking-wide:     0.025em;
+  --tracking-wider:    0.05em;
+  --tracking-widest:   0.1em;
+
+  /* ─── SPACING (4px base unit) ─── */
+  --space-0:   0;
+  --space-1:   0.25rem;   /* 4px */
+  --space-2:   0.5rem;    /* 8px */
+  --space-3:   0.75rem;   /* 12px */
+  --space-4:   1rem;      /* 16px */
+  --space-5:   1.25rem;   /* 20px */
+  --space-6:   1.5rem;    /* 24px */
+  --space-8:   2rem;      /* 32px */
+  --space-10:  2.5rem;    /* 40px */
+  --space-12:  3rem;      /* 48px */
+  --space-16:  4rem;      /* 64px */
+  --space-20:  5rem;      /* 80px */
+  --space-24:  6rem;      /* 96px */
+
+  /* ─── BORDER RADIUS ─── */
+  --radius-sm:   0.25rem;  /* 4px  — badges, tags */
+  --radius-md:   0.5rem;   /* 8px  — buttons */
+  --radius-lg:   0.75rem;  /* 12px — cards */
+  --radius-xl:   1rem;     /* 16px — modals, panels */
+  --radius-2xl:  1.5rem;   /* 24px — large cards */
+  --radius-full: 9999px;   /* pill — badges, avatars */
+
+  /* ─── SUBJECT BRAND COLORS (theme-independent) ─── */
+  --subject-math:        #F59E0B;
+  --subject-biology:     #10B981;
+  --subject-chemistry:   #8B5CF6;
+  --subject-physics:     #0EA5E9;
+  --subject-english:     #EC4899;
+  --subject-combined:    #14B8A6;
+  --subject-geography:   #22C55E;
+  --subject-commerce:    #F97316;
+  --subject-accounting:  #A78BFA;
+  --subject-cs:          #06B6D4;
+  --subject-business:    #FB923C;
+  --subject-history:     #DC2626;
+
+  /* ─── MOTION ─── */
+  --ease-standard:    cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-decelerate:  cubic-bezier(0, 0, 0.2, 1);
+  --ease-accelerate:  cubic-bezier(0.4, 0, 1, 1);
+  --ease-spring:      cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-sharp:       cubic-bezier(0.4, 0, 0.6, 1);
+
+  --duration-instant: 50ms;
+  --duration-fast:    100ms;
+  --duration-normal:  200ms;
+  --duration-medium:  300ms;
+  --duration-slow:    500ms;
+  --duration-xslow:   700ms;
+}
+
+/* ════════════════════════════════════════════════
+   DARK MODE — Default & Primary Experience
+   ════════════════════════════════════════════════ */
+[data-theme="dark"],
+:root:not([data-theme="light"]) {
+  /* ─── BACKGROUNDS (layered depth) ─── */
+  --color-bg-base:        #0A0E1A;
+  --color-bg-elevated:    #0F1629;
+  --color-bg-overlay:     #161D35;
+  --color-bg-surface:     #1C2440;
+  --color-bg-hover:       #232C4A;
+  --color-bg-active:      #2A3558;
+
+  /* ─── BORDERS ─── */
+  --color-border-subtle:  #1E2740;
+  --color-border-default: #2A3558;
+  --color-border-strong:  #3D4F7C;
+  --color-border-brand:   #4F46E5;
+
+  /* ─── TEXT ─── */
+  --color-text-primary:   #F0F4FF;
+  --color-text-secondary: #8B9CC8;
+  --color-text-tertiary:  #5A6A94;
+  --color-text-inverse:   #0A0E1A;
+  --color-text-link:      #818CF8;
+  --color-text-brand:     #6366F1;
+
+  /* ─── PRIMARY (Indigo — Brand Identity) ─── */
+  --color-primary:        #6366F1;
+  --color-primary-hover:  #4F46E5;
+  --color-primary-subtle: #1E1B4B;
+  --color-primary-glow:   rgba(99, 102, 241, 0.25);
+
+  /* ─── SUCCESS (Emerald — Correct, Streaks, CTAs) ─── */
+  --color-success:        #10B981;
+  --color-success-hover:  #059669;
+  --color-success-subtle: #022C22;
+  --color-success-glow:   rgba(16, 185, 129, 0.25);
+
+  /* ─── WARNING (Amber — Credits, Achievements) ─── */
+  --color-warning:        #F59E0B;
+  --color-warning-hover:  #D97706;
+  --color-warning-subtle: #1C1400;
+
+  /* ─── DANGER (Coral — Errors, Low Credits) ─── */
+  --color-danger:         #F43F5E;
+  --color-danger-subtle:  #1F0A10;
+
+  /* ─── INFO (Sky — Hints, Help) ─── */
+  --color-info:           #0EA5E9;
+  --color-info-subtle:    #082034;
+
+  /* ─── GRADIENTS ─── */
+  --gradient-brand:       linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  --gradient-success:     linear-gradient(135deg, #059669 0%, #10B981 100%);
+  --gradient-hero:        linear-gradient(135deg, #0F1629 0%, #1C2440 50%, #0F1629 100%);
+  --gradient-card-shine:  linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 100%);
+  --gradient-streak:      linear-gradient(90deg, #F59E0B, #EF4444);
+  --gradient-credits:     linear-gradient(90deg, #10B981, #059669);
+
+  /* ─── SHADOWS ─── */
+  --shadow-sm:      0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md:      0 4px 16px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3);
+  --shadow-lg:      0 8px 32px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-brand:   0 4px 20px rgba(99,102,241,0.35);
+  --shadow-success: 0 4px 20px rgba(16,185,129,0.35);
+  --shadow-glow:    0 0 40px rgba(99,102,241,0.15);
+}
+
+/* ════════════════════════════════════════════════
+   LIGHT MODE — Premium & Crisp
+   ════════════════════════════════════════════════ */
+[data-theme="light"] {
+  /* ─── BACKGROUNDS ─── */
+  --color-bg-base:        #F8FAFF;
+  --color-bg-elevated:    #FFFFFF;
+  --color-bg-overlay:     #FFFFFF;
+  --color-bg-surface:     #F1F5FF;
+  --color-bg-hover:       #E8EEFF;
+  --color-bg-active:      #DDE4FF;
+
+  /* ─── BORDERS ─── */
+  --color-border-subtle:  #E8EEFF;
+  --color-border-default: #D1D9F0;
+  --color-border-strong:  #A5B4D4;
+  --color-border-brand:   #6366F1;
+
+  /* ─── TEXT ─── */
+  --color-text-primary:   #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-tertiary:  #94A3B8;
+  --color-text-inverse:   #FFFFFF;
+  --color-text-link:      #4F46E5;
+  --color-text-brand:     #4F46E5;
+
+  /* ─── PRIMARY ─── */
+  --color-primary:        #4F46E5;
+  --color-primary-hover:  #4338CA;
+  --color-primary-subtle: #EEF2FF;
+  --color-primary-glow:   rgba(79, 70, 229, 0.15);
+
+  /* ─── SUCCESS ─── */
+  --color-success:        #059669;
+  --color-success-hover:  #047857;
+  --color-success-subtle: #ECFDF5;
+  --color-success-glow:   rgba(5, 150, 105, 0.15);
+
+  /* ─── WARNING ─── */
+  --color-warning:        #D97706;
+  --color-warning-hover:  #B45309;
+  --color-warning-subtle: #FFFBEB;
+
+  /* ─── DANGER ─── */
+  --color-danger:         #DC2626;
+  --color-danger-subtle:  #FEF2F2;
+
+  /* ─── INFO ─── */
+  --color-info:           #0284C7;
+  --color-info-subtle:    #F0F9FF;
+
+  /* ─── GRADIENTS ─── */
+  --gradient-brand:       linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+  --gradient-success:     linear-gradient(135deg, #047857 0%, #059669 100%);
+  --gradient-hero:        linear-gradient(135deg, #EEF2FF 0%, #F8FAFF 60%, #E0E7FF 100%);
+  --gradient-card-shine:  linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 100%);
+  --gradient-streak:      linear-gradient(90deg, #D97706, #DC2626);
+  --gradient-credits:     linear-gradient(90deg, #059669, #047857);
+
+  /* ─── SHADOWS ─── */
+  --shadow-sm:      0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+  --shadow-md:      0 4px 16px rgba(15,23,42,0.08), 0 2px 6px rgba(15,23,42,0.05);
+  --shadow-lg:      0 8px 32px rgba(15,23,42,0.10), 0 4px 12px rgba(15,23,42,0.06);
+  --shadow-brand:   0 4px 20px rgba(79,70,229,0.20);
+  --shadow-success: 0 4px 20px rgba(5,150,105,0.20);
+  --shadow-glow:    0 0 40px rgba(79,70,229,0.10);
+}

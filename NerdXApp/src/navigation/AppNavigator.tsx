@@ -5,161 +5,21 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as Linking from 'expo-linking';
 import { useAuth } from '../context/AuthContext';
-
-// Screens
-import LoginScreen from '../screens/LoginScreen';
-import RegisterScreen from '../screens/RegisterScreen';
-import DashboardScreen from '../screens/DashboardScreen';
-import SubjectsScreen from '../screens/SubjectsScreen';
-import TopicsScreen from '../screens/TopicsScreen';
-import QuizScreen from '../screens/QuizScreen';
-import CreditsScreen from '../screens/CreditsScreen';
-import ProgressScreen from '../screens/ProgressScreen';
-import ProfileScreen from '../screens/ProfileScreen';
-import TeacherModeSetupScreen from '../screens/TeacherModeSetupScreen';
-import TeacherModeScreen from '../screens/TeacherModeScreen';
-import TeacherHistoryScreen from '../screens/TeacherHistoryScreen';
-import ProjectAssistantSetupScreen from '../screens/ProjectAssistantSetupScreen';
-import ProjectAssistantScreen from '../screens/ProjectAssistantScreen';
-import ProjectListScreen from '../screens/ProjectListScreen';
-import GraphPracticeScreen from '../screens/GraphPracticeScreen';
-import EnglishComprehensionScreen from '../screens/EnglishComprehensionScreen';
-import EnglishEssayScreen from '../screens/EnglishEssayScreen';
-import HistoryEssayScreen from '../screens/HistoryEssayScreen';
-import CombinedScienceExamScreen from '../screens/CombinedScienceExamScreen';
-import VirtualLabScreen from '../screens/VirtualLabScreen';
-import FormulaSheetScreen from '../screens/FormulaSheetScreen';
-import PastPaperScreen from '../screens/PastPaperScreen';
-import ScienceNotesScreen from '../screens/ScienceNotesScreen';
-import ComputerScienceNotesScreen from '../screens/ComputerScienceNotesScreen';
-import TopicNotesDetailScreen from '../screens/TopicNotesDetailScreen';
-import MathSolverScreen from '../screens/MathSolverScreen';
-import OfflineSettingsScreen from '../screens/OfflineSettingsScreen';
-import ModelDownloadScreen from '../screens/ModelDownloadScreen';
-import MathNotesDetailScreen from '../screens/MathNotesDetailScreen';
-import OfflineChatScreen from '../screens/OfflineChatScreen';
-import ALevelPhysicsScreen from '../screens/ALevelPhysicsScreen';
-import ALevelPhysicsNotesScreen from '../screens/ALevelPhysicsNotesScreen';
-import ALevelChemistryScreen from '../screens/ALevelChemistryScreen';
-import ALevelChemistryNotesScreen from '../screens/ALevelChemistryNotesScreen';
-import ALevelPureMathScreen from '../screens/ALevelPureMathScreen';
-import ALevelPureMathNotesScreen from '../screens/ALevelPureMathNotesScreen';
-import ALevelBiologyScreen from '../screens/ALevelBiologyScreen';
-import ALevelBiologyNotesScreen from '../screens/ALevelBiologyNotesScreen';
-import GeographyNotesScreen from '../screens/GeographyNotesScreen';
-import AccountingNotesScreen from '../screens/AccountingNotesScreen';
-import CommerceNotesScreen from '../screens/CommerceNotesScreen';
-import BusinessEnterpriseSkillsNotesScreen from '../screens/BusinessEnterpriseSkillsNotesScreen';
-import HistoryNotesScreen from '../screens/HistoryNotesScreen';
-import NotificationsScreen from '../screens/NotificationsScreen';
-import NotificationDetailScreen from '../screens/NotificationDetailScreen';
-import UpdateRequiredScreen from '../screens/UpdateRequiredScreen';
 import { checkUpdateRequired } from '../services/appVersion';
 
-// Account Management Screens
-import AccountScreen from '../screens/AccountScreen';
-import ReferralHubScreen from '../screens/ReferralHubScreen';
-import BillingHistoryScreen from '../screens/BillingHistoryScreen';
-import SecurityCenterScreen from '../screens/SecurityCenterScreen';
-import LearningPreferencesScreen from '../screens/LearningPreferencesScreen';
-import AIInsightsScreen from '../screens/AIInsightsScreen';
+// Auth screens
+import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
+import UpdateRequiredScreen from '../screens/UpdateRequiredScreen';
 
-// NerdX Live Voice/Video Screens
-import NerdXLiveModeScreen from '../screens/NerdXLiveModeScreen';
-import NerdXLiveAudioScreen from '../screens/NerdXLiveAudioScreen';
-import NerdXLiveVideoScreen from '../screens/NerdXLiveVideoScreen';
-
-// CBT Exam Screens
-import ExamSetupScreen from '../screens/ExamSetupScreen';
-import ExamSessionScreen from '../screens/ExamSessionScreen';
-import ExamResultsScreen from '../screens/ExamResultsScreen';
-import ExamReviewScreen from '../screens/ExamReviewScreen';
-
-// Virtual Lab Simulation Screens
-import CellExplorerScreen from '../screens/virtualLab/CellExplorerScreen';
-import OsmosisScreen from '../screens/virtualLab/OsmosisScreen';
-import AtomBuilderScreen from '../screens/virtualLab/AtomBuilderScreen';
-import EquationBalancerScreen from '../screens/virtualLab/EquationBalancerScreen';
-import CircuitBuilderScreen from '../screens/virtualLab/CircuitBuilderScreen';
-import ProjectileMotionScreen from '../screens/virtualLab/ProjectileMotionScreen';
-// Phase 2 - Biology
-import FoodTestLabScreen from '../screens/virtualLab/FoodTestLabScreen';
-import PhotosynthesisReactorScreen from '../screens/virtualLab/PhotosynthesisReactorScreen';
-import EnzymeActionLabScreen from '../screens/virtualLab/EnzymeActionLabScreen';
-import TranspirationTrackerScreen from '../screens/virtualLab/TranspirationTrackerScreen';
-import HeartPumpScreen from '../screens/virtualLab/HeartPumpScreen';
-// Phase 2 - Chemistry
-import TitrationMasterScreen from '../screens/virtualLab/TitrationMasterScreen';
-import PHScaleExplorerScreen from '../screens/virtualLab/pHScaleExplorerScreen';
-import ElectrolysisSimulatorScreen from '../screens/virtualLab/ElectrolysisSimulatorScreen';
-// Phase 2 - Physics
-import MotionGrapherScreen from '../screens/virtualLab/MotionGrapherScreen';
-import NewtonsLawsLabScreen from '../screens/virtualLab/NewtonsLawsLabScreen';
-import ThermalExpansionScreen from '../screens/virtualLab/ThermalExpansionScreen';
-import WavePropertiesScreen from '../screens/virtualLab/WavePropertiesScreen';
-import VirtualLabTemplateScreen from '../screens/virtualLab/VirtualLabTemplateScreen';
-import VirtualLabInteractiveScreen from '../screens/virtualLab/VirtualLabInteractiveScreen';
-import MapWorkLabScreen from '../screens/virtualLab/MapWorkLabScreen';
-import SixFigureGridLabScreen from '../screens/virtualLab/SixFigureGridLabScreen';
-import CompassBearingLabScreen from '../screens/virtualLab/CompassBearingLabScreen';
-import ContourLinesLabScreen from '../screens/virtualLab/ContourLinesLabScreen';
-import ScaleDistanceLabScreen from '../screens/virtualLab/ScaleDistanceLabScreen';
-import CrossSectionLabScreen from '../screens/virtualLab/CrossSectionLabScreen';
-import MapLayersLabScreen from '../screens/virtualLab/MapLayersLabScreen';
-import GeoMapsLabScreen from '../screens/virtualLab/GeoMapsLabScreen';
-
-// Mathematics Virtual Lab Screens
-import DifferentiationLabScreen from '../screens/virtualLab/DifferentiationLabScreen';
-import IntegrationLabScreen from '../screens/virtualLab/IntegrationLabScreen';
-import QuadraticExplorerScreen from '../screens/virtualLab/QuadraticExplorerScreen';
-import ComplexNumbersLabScreen from '../screens/virtualLab/ComplexNumbersLabScreen';
-import TrigFunctionsLabScreen from '../screens/virtualLab/TrigFunctionsLabScreen';
-import VectorVisualizerScreen from '../screens/virtualLab/VectorVisualizerScreen';
-import MatrixSandboxScreen from '../screens/virtualLab/MatrixSandboxScreen';
-import LinearProgrammingLabScreen from '../screens/virtualLab/LinearProgrammingLabScreen';
-
-// New English Labs
-import MarketNegotiationScreen from '../screens/virtualLab/MarketNegotiationScreen';
-import JobInterviewScreen from '../screens/virtualLab/JobInterviewScreen';
-import UniversityCampusLifeScreen from '../screens/virtualLab/UniversityCampusLifeScreen';
-import MedicalConsultationScreen from '../screens/virtualLab/MedicalConsultationScreen';
-import InternationalTravelScreen from '../screens/virtualLab/InternationalTravelScreen';
-import SocialGatheringsScreen from '../screens/virtualLab/SocialGatheringsScreen';
-import BankingServicesScreen from '../screens/virtualLab/BankingServicesScreen';
-
-// New Math Labs
-import ProbabilitySimulatorScreen from '../screens/virtualLab/ProbabilitySimulatorScreen';
-import StatisticsExplorerScreen from '../screens/virtualLab/StatisticsExplorerScreen';
-import LogarithmsLabScreen from '../screens/virtualLab/LogarithmsLabScreen';
-import SequencesSeriesLabScreen from '../screens/virtualLab/SequencesSeriesLabScreen';
-import SimultaneousEquationsLabScreen from '../screens/virtualLab/SimultaneousEquationsLabScreen';
-import RatioProportionLabScreen from '../screens/virtualLab/RatioProportionLabScreen';
-import IndicesStandardFormLabScreen from '../screens/virtualLab/IndicesStandardFormLabScreen';
-import BoundsAccuracyLabScreen from '../screens/virtualLab/BoundsAccuracyLabScreen';
-import LinearGraphsLabScreen from '../screens/virtualLab/LinearGraphsLabScreen';
-import InequalitiesRegionLabScreen from '../screens/virtualLab/InequalitiesRegionLabScreen';
-import AngleRulesLabScreen from '../screens/virtualLab/AngleRulesLabScreen';
-import SimilarityScaleLabScreen from '../screens/virtualLab/SimilarityScaleLabScreen';
-import MensurationLabScreen from '../screens/virtualLab/MensurationLabScreen';
-import PythagorasTrigLabScreen from '../screens/virtualLab/PythagorasTrigLabScreen';
-import TransformationsLabScreen from '../screens/virtualLab/TransformationsLabScreen';
-import BalanceSheetLabScreen from '../screens/virtualLab/BalanceSheetLabScreen';
-import IncomeStatementLabScreen from '../screens/virtualLab/IncomeStatementLabScreen';
-import PartnershipAppropriationLabScreen from '../screens/virtualLab/PartnershipAppropriationLabScreen';
-import CashFlowStatementLabScreen from '../screens/virtualLab/CashFlowStatementLabScreen';
-import ManufacturingAccountLabScreen from '../screens/virtualLab/ManufacturingAccountLabScreen';
-import CorrectionOfErrorsLabScreen from '../screens/virtualLab/CorrectionOfErrorsLabScreen';
-import NotForProfitLabScreen from '../screens/virtualLab/NotForProfitLabScreen';
-import ProgrammingLabEditorScreen from '../screens/virtualLab/ProgrammingLabEditorScreen';
-import WebDesignLabEditorScreen from '../screens/virtualLab/WebDesignLabEditorScreen';
-import DatabaseLabEditorScreen from '../screens/virtualLab/DatabaseLabEditorScreen';
-import ProjectGatesLabScreen from '../screens/virtualLab/ProjectGatesLabScreen';
+// Main tab navigator (authenticated experience)
+import { MainTabNavigator } from './MainTabNavigator';
 
 const Stack = createStackNavigator();
 
 const LoadingScreen: React.FC = () => (
   <View style={styles.loadingContainer}>
-    <ActivityIndicator size="large" color="#1976D2" />
+    <ActivityIndicator size="large" color="#6366F1" />
     <Text style={styles.loadingText}>Loading NerdX...</Text>
   </View>
 );
@@ -174,7 +34,6 @@ const AppNavigator: React.FC = () => {
   } | null>(null);
   const [checkingUpdate, setCheckingUpdate] = React.useState(true);
 
-  // Check for app update requirement
   React.useEffect(() => {
     const checkUpdate = async () => {
       try {
@@ -200,7 +59,7 @@ const AppNavigator: React.FC = () => {
     return <LoadingScreen />;
   }
 
-  // Show update required screen if needed
+  // Hard update — show standalone screen, no tab bar
   if (updateRequired && updateRequired.isHardUpdate) {
     return (
       <NavigationContainer>
@@ -212,43 +71,42 @@ const AppNavigator: React.FC = () => {
               versionInfo: updateRequired.versionInfo,
               installedVersion: updateRequired.installedVersion,
             }}
-            options={{
-              gestureEnabled: false,
-            }}
+            options={{ gestureEnabled: false }}
           />
         </Stack.Navigator>
       </NavigationContainer>
     );
   }
 
-  // Configure deep linking for password reset and OAuth callbacks
-  // Supabase sends: token_hash (for OTP verification), type (recovery), and sometimes access_token/refresh_token
+  // Deep linking — password reset and OAuth callbacks
   const linking = {
-    prefixes: ['nerdx://', 'https://nerdx.app', 'com.Ngoni03.nerdxapp://', 'nerdxapp://', 'https://lzteiewcvxoazqfxfjgg.supabase.co'],
+    prefixes: [
+      'nerdx://',
+      'https://nerdx.app',
+      'com.Ngoni03.nerdxapp://',
+      'nerdxapp://',
+      'https://lzteiewcvxoazqfxfjgg.supabase.co',
+    ],
     config: {
       screens: {
         ResetPassword: {
-          // Handle both direct reset-password path and Supabase callback with type=recovery
           path: 'reset-password',
           parse: {
-            // Supabase password reset parameters
-            token_hash: (token_hash: string) => token_hash,  // Primary: Supabase OTP token hash
-            type: (type: string) => type,                     // Type: 'recovery' for password reset
-            access_token: (access_token: string) => access_token,  // Alternative: direct access token
-            refresh_token: (refresh_token: string) => refresh_token,
-            // Legacy parameters
-            token: (token: string) => token,
-            hash: (hash: string) => hash,
+            token_hash:    (v: string) => v,
+            type:          (v: string) => v,
+            access_token:  (v: string) => v,
+            refresh_token: (v: string) => v,
+            token:         (v: string) => v,
+            hash:          (v: string) => v,
           },
         },
         Login: {
-          // Handle Supabase callback - will redirect to ResetPassword if type=recovery
           path: 'auth/callback',
           parse: {
-            access_token: (access_token: string) => access_token,
-            refresh_token: (refresh_token: string) => refresh_token,
-            type: (type: string) => type,
-            token_hash: (token_hash: string) => token_hash,
+            access_token:  (v: string) => v,
+            refresh_token: (v: string) => v,
+            type:          (v: string) => v,
+            token_hash:    (v: string) => v,
           },
         },
         ForgotPassword: 'forgot-password',
@@ -258,824 +116,38 @@ const AppNavigator: React.FC = () => {
 
   return (
     <NavigationContainer linking={linking}>
-      <Stack.Navigator
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: '#1976D2',
-          },
-          headerTintColor: '#FFFFFF',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-        }}
-      >
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!isAuthenticated ? (
-          // Auth Stack
+          // ── Auth flow ─────────────────────────────────────────────────────
           <Stack.Group>
-            <Stack.Screen
-              name="Login"
-              component={LoginScreen}
-              options={{ headerShown: false }}
-            />
+            <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen
               name="Register"
               component={RegisterScreen}
               options={{
+                headerShown: true,
                 title: 'Create Account',
-                headerStyle: { backgroundColor: '#1976D2' },
+                headerStyle: { backgroundColor: '#6366F1' },
                 headerTintColor: '#FFFFFF',
               }}
             />
             <Stack.Screen
               name="EmailVerification"
               component={require('../screens/EmailVerificationScreen').default}
-              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="ForgotPassword"
               component={require('../screens/ForgotPasswordScreen').default}
-              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="ResetPassword"
               component={require('../screens/ResetPasswordScreen').default}
-              options={{ headerShown: false }}
             />
-
           </Stack.Group>
         ) : (
-          // Main App Stack
+          // ── Authenticated app — all navigation lives inside MainTabNavigator
           <Stack.Group>
-            <Stack.Screen
-              name="Dashboard"
-              component={DashboardScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="Subjects"
-              component={SubjectsScreen}
-              options={{
-                title: 'Choose Subject',
-              }}
-            />
-            <Stack.Screen
-              name="Topics"
-              component={TopicsScreen}
-              options={{
-                title: 'Choose Topic',
-              }}
-            />
-            <Stack.Screen
-              name="Quiz"
-              component={QuizScreen}
-              options={{
-                title: 'Quiz',
-                headerBackTitle: 'Back',
-              }}
-            />
-            <Stack.Screen
-              name="Credits"
-              component={CreditsScreen}
-              options={{
-                title: 'Buy Credits',
-              }}
-            />
-            <Stack.Screen
-              name="Progress"
-              component={ProgressScreen}
-              options={{
-                title: 'Your Progress',
-              }}
-            />
-            <Stack.Screen
-              name="Profile"
-              component={ProfileScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="Account"
-              component={AccountScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="ReferralHub"
-              component={ReferralHubScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="BillingHistory"
-              component={BillingHistoryScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="SecurityCenter"
-              component={SecurityCenterScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="LearningPreferences"
-              component={LearningPreferencesScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="AIInsights"
-              component={AIInsightsScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="Notifications"
-              component={NotificationsScreen}
-              options={{
-                title: 'Notifications',
-              }}
-            />
-            <Stack.Screen
-              name="NotificationDetail"
-              component={NotificationDetailScreen}
-              options={{
-                title: 'Notification',
-              }}
-            />
-            <Stack.Screen
-              name="UpdateRequired"
-              component={UpdateRequiredScreen}
-              options={{
-                headerShown: false,
-                gestureEnabled: false,
-              }}
-            />
-            <Stack.Screen
-              name="TeacherModeSetup"
-              component={TeacherModeSetupScreen}
-              options={{
-                title: 'Teacher Mode Setup',
-              }}
-            />
-            <Stack.Screen
-              name="TeacherMode"
-              component={TeacherModeScreen}
-              options={{
-                title: 'Teacher Mode',
-                headerBackTitle: 'Back',
-              }}
-            />
-            <Stack.Screen
-              name="TeacherHistory"
-              component={TeacherHistoryScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="ProjectAssistantSetup"
-              component={ProjectAssistantSetupScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="ProjectAssistant"
-              component={ProjectAssistantScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="ProjectList"
-              component={ProjectListScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="GraphPractice"
-              component={GraphPracticeScreen}
-              options={{
-                title: 'Graph Practice',
-              }}
-            />
-            <Stack.Screen
-              name="EnglishComprehension"
-              component={EnglishComprehensionScreen}
-              options={{
-                title: 'Comprehension',
-              }}
-            />
-            <Stack.Screen
-              name="EnglishEssay"
-              component={EnglishEssayScreen}
-              options={{
-                title: 'Essay Writing',
-              }}
-            />
-            <Stack.Screen
-              name="HistoryEssay"
-              component={HistoryEssayScreen}
-              options={{
-                title: 'History Essay',
-              }}
-            />
-            <Stack.Screen
-              name="CombinedScienceExam"
-              component={CombinedScienceExamScreen}
-              options={{
-                title: 'Combined Science Exam',
-                headerBackTitle: 'Back',
-              }}
-            />
-            <Stack.Screen
-              name="VirtualLab"
-              component={VirtualLabScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            {/* Virtual Lab Simulation Screens */}
-            <Stack.Screen
-              name="CellExplorer"
-              component={CellExplorerScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="Osmosis"
-              component={OsmosisScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="AtomBuilder"
-              component={AtomBuilderScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="EquationBalancer"
-              component={EquationBalancerScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CircuitBuilder"
-              component={CircuitBuilderScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="ProjectileMotion"
-              component={ProjectileMotionScreen}
-              options={{ headerShown: false }}
-            />
-            {/* Phase 2 Virtual Lab Screens */}
-            <Stack.Screen
-              name="FoodTestLab"
-              component={FoodTestLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="pHScaleExplorer"
-              component={PHScaleExplorerScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="WaveProperties"
-              component={WavePropertiesScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="ThermalExpansion"
-              component={ThermalExpansionScreen}
-              options={{ headerShown: false }}
-            />
-            {/* Additional Phase 2 Screens */}
-            <Stack.Screen
-              name="PhotosynthesisReactor"
-              component={PhotosynthesisReactorScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="EnzymeActionLab"
-              component={EnzymeActionLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="TranspirationTracker"
-              component={TranspirationTrackerScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="HeartPump"
-              component={HeartPumpScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="TitrationMaster"
-              component={TitrationMasterScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="ElectrolysisSimulator"
-              component={ElectrolysisSimulatorScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="MotionGrapher"
-              component={MotionGrapherScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="NewtonsLawsLab"
-              component={NewtonsLawsLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="VirtualLabTemplate"
-              component={VirtualLabTemplateScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="VirtualLabInteractive"
-              component={VirtualLabInteractiveScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="ProgrammingLabEditor"
-              component={ProgrammingLabEditorScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="WebDesignLabEditor"
-              component={WebDesignLabEditorScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="DatabaseLabEditor"
-              component={DatabaseLabEditorScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="ProjectGatesLab"
-              component={ProjectGatesLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="MapWorkLab"
-              component={MapWorkLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="SixFigureGridLab"
-              component={SixFigureGridLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CompassBearingLab"
-              component={CompassBearingLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="ContourLinesLab"
-              component={ContourLinesLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="ScaleDistanceLab"
-              component={ScaleDistanceLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CrossSectionLab"
-              component={CrossSectionLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="MapLayersLab"
-              component={MapLayersLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="GeoMapsLab"
-              component={GeoMapsLabScreen}
-              options={{ headerShown: false }}
-            />
-            {/* Mathematics Virtual Lab Screens */}
-            <Stack.Screen
-              name="DifferentiationLab"
-              component={DifferentiationLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="IntegrationLab"
-              component={IntegrationLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="QuadraticExplorer"
-              component={QuadraticExplorerScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="ComplexNumbersLab"
-              component={ComplexNumbersLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="TrigFunctionsLab"
-              component={TrigFunctionsLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="VectorVisualizer"
-              component={VectorVisualizerScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="MatrixSandbox"
-              component={MatrixSandboxScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="LinearProgrammingLab"
-              component={LinearProgrammingLabScreen}
-              options={{ headerShown: false }}
-            />
-            {/* New English Labs */}
-            <Stack.Screen
-              name="MarketNegotiationScreen"
-              component={MarketNegotiationScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="JobInterviewScreen"
-              component={JobInterviewScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="UniversityCampusLifeScreen"
-              component={UniversityCampusLifeScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="MedicalConsultationScreen"
-              component={MedicalConsultationScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="InternationalTravelScreen"
-              component={InternationalTravelScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="SocialGatheringsScreen"
-              component={SocialGatheringsScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="BankingServicesScreen"
-              component={BankingServicesScreen}
-              options={{ headerShown: false }}
-            />
-            {/* New Math Labs */}
-            <Stack.Screen
-              name="ProbabilitySimulatorScreen"
-              component={ProbabilitySimulatorScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="StatisticsExplorerScreen"
-              component={StatisticsExplorerScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="LogarithmsLabScreen"
-              component={LogarithmsLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="SequencesSeriesLabScreen"
-              component={SequencesSeriesLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="SimultaneousEquationsLabScreen"
-              component={SimultaneousEquationsLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="RatioProportionLabScreen"
-              component={RatioProportionLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="IndicesStandardFormLabScreen"
-              component={IndicesStandardFormLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="BoundsAccuracyLabScreen"
-              component={BoundsAccuracyLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="LinearGraphsLabScreen"
-              component={LinearGraphsLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="InequalitiesRegionLabScreen"
-              component={InequalitiesRegionLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="AngleRulesLabScreen"
-              component={AngleRulesLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="SimilarityScaleLabScreen"
-              component={SimilarityScaleLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="MensurationLabScreen"
-              component={MensurationLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="PythagorasTrigLabScreen"
-              component={PythagorasTrigLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="TransformationsLabScreen"
-              component={TransformationsLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="BalanceSheetLabScreen"
-              component={BalanceSheetLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="IncomeStatementLabScreen"
-              component={IncomeStatementLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="PartnershipAppropriationLabScreen"
-              component={PartnershipAppropriationLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CashFlowStatementLabScreen"
-              component={CashFlowStatementLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="ManufacturingAccountLabScreen"
-              component={ManufacturingAccountLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CorrectionOfErrorsLabScreen"
-              component={CorrectionOfErrorsLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="NotForProfitLabScreen"
-              component={NotForProfitLabScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="FormulaSheet"
-              component={FormulaSheetScreen}
-              options={{
-                title: 'Formula Sheet',
-              }}
-            />
-            <Stack.Screen
-              name="PastPaper"
-              component={PastPaperScreen}
-              options={{
-                title: 'Past Papers',
-              }}
-            />
-            <Stack.Screen
-              name="ScienceNotes"
-              component={ScienceNotesScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="ComputerScienceNotes"
-              component={ComputerScienceNotesScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="TopicNotesDetail"
-              component={TopicNotesDetailScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="MathSolver"
-              component={MathSolverScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="MathNotesDetail"
-              component={MathNotesDetailScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="OfflineSettings"
-              component={OfflineSettingsScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="ModelDownload"
-              component={ModelDownloadScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="OfflineChat"
-              component={OfflineChatScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            {/* A Level Physics Screens */}
-            <Stack.Screen
-              name="ALevelPhysics"
-              component={ALevelPhysicsScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="ALevelPhysicsNotes"
-              component={ALevelPhysicsNotesScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            {/* A Level Chemistry Screens */}
-            <Stack.Screen
-              name="ALevelChemistry"
-              component={ALevelChemistryScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="ALevelChemistryNotes"
-              component={ALevelChemistryNotesScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            {/* A Level Pure Mathematics Screens */}
-            <Stack.Screen
-              name="ALevelPureMath"
-              component={ALevelPureMathScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="ALevelPureMathNotes"
-              component={ALevelPureMathNotesScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            {/* A Level Biology Screens */}
-            <Stack.Screen
-              name="ALevelBiology"
-              component={ALevelBiologyScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="ALevelBiologyNotes"
-              component={ALevelBiologyNotesScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            {/* Geography Notes (O-Level and A-Level) */}
-            <Stack.Screen
-              name="GeographyNotes"
-              component={GeographyNotesScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="AccountingNotes"
-              component={AccountingNotesScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="BESNotes"
-              component={BusinessEnterpriseSkillsNotesScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="HistoryNotes"
-              component={HistoryNotesScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="CommerceNotes"
-              component={CommerceNotesScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            {/* NerdX Live Voice/Video Screens */}
-            <Stack.Screen
-              name="NerdXLiveMode"
-              component={NerdXLiveModeScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="NerdXLiveAudio"
-              component={NerdXLiveAudioScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="NerdXLiveVideo"
-              component={NerdXLiveVideoScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            {/* CBT Exam Screens */}
-            <Stack.Screen
-              name="ExamSetup"
-              component={ExamSetupScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="ExamSession"
-              component={ExamSessionScreen}
-              options={{
-                headerShown: false,
-                gestureEnabled: false, // Prevent swipe back during exam
-              }}
-            />
-            <Stack.Screen
-              name="ExamResults"
-              component={ExamResultsScreen}
-              options={{
-                headerShown: false,
-                gestureEnabled: false, // Prevent going back to exam
-              }}
-            />
-            <Stack.Screen
-              name="ExamReview"
-              component={ExamReviewScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
+            <Stack.Screen name="Main" component={MainTabNavigator} />
           </Stack.Group>
         )}
       </Stack.Navigator>
@@ -1088,12 +160,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0A0E1A',
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#757575',
+    fontFamily: 'DMSans-Regular',
+    color: '#8B9CC8',
   },
 });
 

@@ -44,7 +44,7 @@ export function DashboardLayout({
           className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain bg-[var(--bg-base)] px-5 py-8 md:px-6 md:py-10 lg:px-8"
           tabIndex={-1}
         >
-          <div className="mx-auto w-full max-w-[900px]">{children}</div>
+          <div className="mx-auto w-full max-w-[1024px]">{children}</div>
         </main>
 
         {rightPanel}

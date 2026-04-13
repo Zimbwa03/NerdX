@@ -1,94 +1,150 @@
-// useThemedStyles Hook - Provides theme-aware colors for screens
+/**
+ * NerdX Brand Kit — Themed Style Hooks
+ * Updated to use the NerdX brand color system.
+ */
 import { useMemo } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { getColors, DarkColors, LightColors } from './colors';
+import { getColors, type NerdXColors } from './colors';
+import { getShadows } from './shadows';
 
-export type ThemedColors = typeof DarkColors;
+export type ThemedColors = NerdXColors & { isDarkMode: boolean };
 
 /**
- * Hook that returns colors based on current theme
- * Use this in screens to get theme-aware colors
- * 
+ * Hook that returns NerdX brand colors for the current theme.
+ *
  * Usage:
- * const colors = useThemedColors();
- * <View style={{ backgroundColor: colors.background.default }}>
+ *   const colors = useThemedColors();
+ *   <View style={{ backgroundColor: colors.bgBase }}>
  */
-export const useThemedColors = (): ThemedColors & { isDarkMode: boolean } => {
-    const { isDarkMode } = useTheme();
-
-    const colors = useMemo(() => {
-        return {
-            ...getColors(isDarkMode),
-            isDarkMode,
-        };
-    }, [isDarkMode]);
-
-    return colors;
+export const useThemedColors = (): ThemedColors => {
+  const { isDarkMode } = useTheme();
+  return useMemo(() => ({
+    ...getColors(isDarkMode),
+    isDarkMode,
+  }), [isDarkMode]);
 };
 
 /**
- * Get StatusBar style based on theme
+ * Returns StatusBar style string for the current theme.
  */
 export const useStatusBarStyle = () => {
-    const { isDarkMode } = useTheme();
-    return isDarkMode ? 'light-content' : 'dark-content';
+  const { isDarkMode } = useTheme();
+  return isDarkMode ? 'light-content' : 'dark-content';
 };
 
 /**
- * Get dynamic styles for common UI elements
+ * Returns pre-built style objects using NerdX design tokens.
  */
 export const useThemedStyles = () => {
-    const colors = useThemedColors();
+  const colors = useThemedColors();
+  const shadows = getShadows(colors.isDarkMode);
 
-    return useMemo(() => ({
-        container: {
-            flex: 1,
-            backgroundColor: colors.background.default,
-        },
-        card: {
-            backgroundColor: colors.background.paper,
-            borderColor: colors.border.light,
-            borderWidth: 1,
-        },
-        text: {
-            color: colors.text.primary,
-        },
-        textSecondary: {
-            color: colors.text.secondary,
-        },
-        input: {
-            backgroundColor: colors.background.subtle,
-            borderColor: colors.border.medium,
-            color: colors.text.primary,
-        },
-        divider: {
-            backgroundColor: colors.border.light,
-            height: 1,
-        },
-        button: {
-            backgroundColor: colors.primary.main,
-        },
-        buttonText: {
-            color: '#FFFFFF',
-        },
-        shadow: colors.isDarkMode ? {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 8,
-        } : {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 4,
-        },
-        // Helper to get the right gradient colors
-        getGradient: (type: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'dark' | 'card') => {
-            return colors.gradients[type];
-        },
-    }), [colors]);
+  return useMemo(() => ({
+    /* ─── Layout ─── */
+    container: {
+      flex: 1,
+      backgroundColor: colors.bgBase,
+    },
+    safeContainer: {
+      flex: 1,
+      backgroundColor: colors.bgBase,
+    },
+
+    /* ─── Cards ─── */
+    card: {
+      backgroundColor: colors.bgElevated,
+      borderColor: colors.borderDefault,
+      borderWidth: 1,
+      borderRadius: 12,
+      ...shadows.sm,
+    },
+    cardSurface: {
+      backgroundColor: colors.bgSurface,
+      borderColor: colors.borderSubtle,
+      borderWidth: 1,
+      borderRadius: 12,
+    },
+
+    /* ─── Text ─── */
+    text: {
+      color: colors.textPrimary,
+    },
+    textSecondary: {
+      color: colors.textSecondary,
+    },
+    textTertiary: {
+      color: colors.textTertiary,
+    },
+    textBrand: {
+      color: colors.primary,
+    },
+    textWarning: {
+      color: colors.warning,
+    },
+    textSuccess: {
+      color: colors.success,
+    },
+    textDanger: {
+      color: colors.danger,
+    },
+
+    /* ─── Input fields ─── */
+    input: {
+      backgroundColor: colors.bgSurface,
+      borderColor: colors.borderDefault,
+      borderWidth: 1.5,
+      color: colors.textPrimary,
+      borderRadius: 8,
+    },
+    inputFocused: {
+      borderColor: colors.primary,
+    },
+
+    /* ─── Dividers ─── */
+    divider: {
+      backgroundColor: colors.borderSubtle,
+      height: 1,
+    },
+
+    /* ─── Buttons ─── */
+    btnPrimary: {
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      ...shadows.brand,
+    },
+    btnSuccess: {
+      backgroundColor: colors.success,
+      borderRadius: 8,
+      ...shadows.success,
+    },
+    btnWarning: {
+      backgroundColor: colors.warning,
+      borderRadius: 8,
+    },
+    btnGhost: {
+      backgroundColor: 'transparent',
+      borderColor: colors.borderDefault,
+      borderWidth: 1.5,
+      borderRadius: 8,
+    },
+    btnText: {
+      color: '#FFFFFF',
+      fontWeight: '600' as const,
+    },
+
+    /* ─── Shadows ─── */
+    shadow: shadows.md,
+    shadowSm: shadows.sm,
+    shadowLg: shadows.lg,
+    shadowBrand: shadows.brand,
+
+    /* ─── Gradients (arrays for LinearGradient) ─── */
+    gradientBrand:   colors.gradientBrand,
+    gradientSuccess: colors.gradientSuccess,
+    gradientStreak:  colors.gradientStreak,
+    gradientCredits: colors.gradientCredits,
+    gradientHero:    colors.gradientHero,
+  }), [colors, shadows]);
 };
 
 export default useThemedColors;
