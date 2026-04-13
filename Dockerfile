@@ -35,7 +35,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     texlive-fonts-recommended \
     texlive-latex-extra \
     # For Pix2Text OCR
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     # Build tools
     gcc \
