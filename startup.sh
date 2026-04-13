@@ -13,7 +13,7 @@ fi
 # python -c "from app import app, db; app.app_context().push(); db.create_all()"
 
 # Start the application with gunicorn
-exec gunicorn main:app \
+exec gunicorn backend.main:app \
     --bind 0.0.0.0:${PORT:-8000} \
     --workers 1 \
     --timeout 180 \

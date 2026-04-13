@@ -1,13 +1,26 @@
-# Environment Variables - NEVER COMMIT THESE!
+# =============================================================================
+# NerdX — .gitignore
+# =============================================================================
+
+# =============================================================================
+# Environment Variables — NEVER COMMIT THESE
+# =============================================================================
 .env
 .env.local
+.env.*.local
 .env.production
+.env.staging
 
+# =============================================================================
 # Python
+# =============================================================================
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyo
+*.pyd
 .Python
 build/
 develop-eggs/
@@ -36,7 +49,42 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
+# Virtual environments
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# =============================================================================
+# Database & Runtime Artifacts
+# =============================================================================
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Flask instance path (runtime SQLite, session files)
+instance/
+
+# ChromaDB vector store (runtime artifact — regenerated from source data)
+chroma_db/
+
+# Temporary audio files generated at runtime
+temp_audio/
+
+# =============================================================================
+# Logs
+# =============================================================================
+*.log
+logs/
+debug.log
+pip-log.txt
+
+# =============================================================================
+# Test & Coverage Artifacts
+# =============================================================================
 htmlcov/
 .tox/
 .nox/
@@ -49,24 +97,55 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+.mypy_cache/
 
-# Virtual environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+# =============================================================================
+# Secrets & Credentials
+# =============================================================================
+credentials.json
+service-account*.json
+credentials/
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+*.keystore
+local_config.py
 
-# IDEs
+# =============================================================================
+# Node / JavaScript / Frontend
+# =============================================================================
+node_modules/
+.expo/
+.expo-shared/
+.next/
+.cache/
+# Note: dist/ and build/ are NOT ignored here because Dockerfile copies NerdXWeb/dist
+
+# =============================================================================
+# Mobile — Android
+# =============================================================================
+android/.gradle/
+android/app/build/
+android/local.properties
+*.apk
+*.aab
+
+# =============================================================================
+# Static generated files (runtime)
+# =============================================================================
+static/graphs/*.png
+static/pdfs/*.pdf
+
+# =============================================================================
+# IDE & OS
+# =============================================================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-
-# OS
 .DS_Store
 .DS_Store?
 ._*
@@ -75,43 +154,18 @@ venv.bak/
 ehthumbs.db
 Thumbs.db
 
-# Application specific
-*.log
-temp_audio/
-static/graphs/*.png
-static/pdfs/*.pdf
-nerdx_quiz.db
-*.sqlite
-*.sqlite3
-
-# Temporary files
+# =============================================================================
+# Temporary & Backup Files
+# =============================================================================
 *.tmp
 *.temp
-temp/
-
-# Secrets and credentials
-credentials.json
-service-account*.json
-credentials/
-*.pem
-*.key
-*.crt
-*.p12
-
-# Node modules (if any)
-node_modules/
-
-# Expo
-.expo/
-
-# Backup files
 *.bak
 *.backup
+*.orig
+temp/
 
-# Local development
-local_config.py
-debug.log
-
-
-
-
+# =============================================================================
+# Project-specific holding areas (review before deleting permanently)
+# =============================================================================
+_archive/
+attached_assets/

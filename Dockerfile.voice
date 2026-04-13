@@ -24,8 +24,8 @@ RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements_voice.txt
 
 # Copy voice agent code
-COPY services/voice_agent.py ./services/
-COPY run_voice_agent.py .
+COPY backend/services/voice_agent.py ./services/
+COPY backend/run_voice_agent.py .
 
 # Create empty __init__.py for services module
 RUN touch services/__init__.py

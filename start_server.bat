@@ -7,9 +7,9 @@ echo    NerdX Server - Starting Up
 echo ========================================
 echo.
 
-REM Set DeepSeek API Key
-set DEEPSEEK_API_KEY=sk-5e3b99e25a5246eb8df7f480e4989677
-echo [OK] DeepSeek API Key set
+REM Set environment variables — copy values from your .env file
+REM set DEEPSEEK_API_KEY=your_deepseek_api_key_here
+echo [INFO] Load env vars from .env or set them above
 echo.
 
 REM Set other environment variables if needed
@@ -23,4 +23,4 @@ echo Press Ctrl+C to stop the server
 echo.
 
 REM Start the Flask server
-python main.py
+python backend/main.py
